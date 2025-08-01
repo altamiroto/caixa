@@ -188,6 +188,10 @@
             <input type="number" id="valorBase" placeholder="Ex: 500.00" step="0.01">
         </div>
         <div class="input-group">
+            <label for="parcelaEspecifica">Parcela Específica (opcional):</label>
+            <input type="number" id="parcelaEspecifica" placeholder="Ex: 8" step="1">
+        </div>
+        <div class="input-group">
             <label for="lucroAdicional">Lucro Adicional (opcional, R$):</label>
             <input type="number" id="lucroAdicional" placeholder="Ex: 50.00" step="0.01">
         </div>
@@ -239,6 +243,7 @@
 
     <script>
         const valorBaseInput = document.getElementById('valorBase');
+        const parcelaEspecificaInput = document.getElementById('parcelaEspecifica');
         const lucroAdicionalInput = document.getElementById('lucroAdicional');
         const valorEntradaInput = document.getElementById('valorEntrada');
         const resultadoTextarea = document.getElementById('resultado');
@@ -302,6 +307,7 @@
         gerarCheckboxesAvancadas();
 
         valorBaseInput.addEventListener('input', calcularParcelas);
+        parcelaEspecificaInput.addEventListener('input', calcularParcelas);
         lucroAdicionalInput.addEventListener('input', calcularParcelas);
         valorEntradaInput.addEventListener('input', calcularParcelas);
         hideDinheiroPixCheckbox.addEventListener('change', calcularParcelas);
@@ -327,6 +333,7 @@
 
         function calcularParcelas() {
             let valorBase = parseFloat(valorBaseInput.value);
+            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
             let lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
             let valorEntrada = parseFloat(valorEntradaInput.value) || 0;
 
@@ -341,23 +348,28 @@
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
             const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
             
-            if (!hideDinheiroPixCheckbox.checked) {
-                resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-            }
-
             const valorAParcelar = valorTotalComLucro - valorEntrada;
 
             if (valorAParcelar > 0) {
-                const parcelasSelecionadas = [];
-                if (toggleAdvancedOptions.checked) {
-                    const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-                    checkboxes.forEach(cb => {
-                        if (cb.checked) {
-                            parcelasSelecionadas.push(parseInt(cb.value));
-                        }
-                    });
+                let parcelasSelecionadas = [];
+
+                if (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0) {
+                    parcelasSelecionadas.push(parcelaEspecifica);
                 } else {
-                    parcelasSelecionadas.push(...parcelasPadrao);
+                    if (!hideDinheiroPixCheckbox.checked) {
+                        resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                    }
+
+                    if (toggleAdvancedOptions.checked) {
+                        const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
+                        checkboxes.forEach(cb => {
+                            if (cb.checked) {
+                                parcelasSelecionadas.push(parseInt(cb.value));
+                            }
+                        });
+                    } else {
+                        parcelasSelecionadas.push(...parcelasPadrao);
+                    }
                 }
 
                 for (const parcelas of parcelasSelecionadas) {
@@ -370,13 +382,14 @@
                     let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
                     
                     if (showTotalValueCheckbox.checked) {
-                        const totalFormatado = (valorParcela * parcelas + valorEntrada).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const totalComEntrada = valorParcela * parcelas + valorEntrada;
+                        const totalFormatado = totalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         linhaParcela += ` (R$ ${totalFormatado})`;
                     }
                     
                     resultado.push(linhaParcela);
                 }
-            } else if (valorAParcelar === 0 && !hideDinheiroPixCheckbox.checked) {
+            } else if (valorAParcelar === 0 && (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0 ? false : !hideDinheiroPixCheckbox.checked)) {
                  resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorAParcelar < 0) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
