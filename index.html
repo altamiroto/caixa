@@ -108,7 +108,7 @@
         .advanced-options-toggle {
             display: flex;
             align-items: center;
-            margin-top: -10px; /* Alinhar com o campo anterior */
+            margin-top: -10px;
             margin-bottom: 10px;
         }
         .advanced-options-toggle label {
@@ -125,7 +125,7 @@
             transition: max-height 0.5s ease-out;
         }
         #advancedOptions.show {
-            max-height: 500px; /* Valor grande o suficiente para a seção */
+            max-height: 500px;
             transition: max-height 0.5s ease-in;
         }
         .option-group {
@@ -148,10 +148,19 @@
         .parcelas-checkboxes .checkbox-item {
             display: flex;
             align-items: center;
+            width: calc(33.33% - 15px); /* Para 3 colunas em tela cheia */
         }
         .parcelas-checkboxes .checkbox-item input[type="checkbox"] {
             width: auto;
             margin-right: 5px;
+        }
+
+        /* Estilo para a hr dentro do option-group */
+        .option-group hr {
+            border: 0;
+            height: 1px;
+            background: #ddd;
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -190,28 +199,8 @@
                 </div>
                 <hr>
                 <h4>Selecionar parcelas</h4>
-                <div class="parcelas-checkboxes">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="parcela3x" checked>
-                        <label for="parcela3x">3x</label>
+                <div class="parcelas-checkboxes" id="parcelasAvancadas">
                     </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="parcela6x" checked>
-                        <label for="parcela6x">6x</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="parcela10x" checked>
-                        <label for="parcela10x">10x</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="parcela12x" checked>
-                        <label for="parcela12x">12x</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="parcela18x" checked>
-                        <label for="parcela18x">18x</label>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -237,16 +226,59 @@
         const advancedOptionsDiv = document.getElementById('advancedOptions');
         const hideDinheiroPixCheckbox = document.getElementById('hideDinheiroPix');
         const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
-        const parcelaCheckboxes = document.querySelectorAll('.parcelas-checkboxes input[type="checkbox"]');
+        
+        const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
 
         // *** AQUI VOCÊ PODE MUDAR AS TAXAS DE JUROS ***
         const taxasDeJuros = {
-            3: 0.05,
-            6: 0.10,
-            10: 0.15,
-            12: 0.18,
-            18: 0.25
+            1: 0.045,   // Juros para 1x (4,5%)
+            2: 0.06,  // Juros para 2x (6%)
+            3: 0.07,  // Juros para 3x (7%)
+            4: 0.075,  // Juros para 4x (7,5%)
+            5: 0.08,  // Juros para 5x (8%)
+            6: 0.09,  // Juros para 6x (9%)
+            7: 0.095,  // Juros para 7x (9,5%)
+            8: 0.10,  // Juros para 8x (10%)
+            9: 0.105,  // Juros para 9x (10,5%)
+            10: 0.115, // Juros para 10x (11,5%)
+            11: 0.12, // Juros para 11x (16%)
+            12: 0.125, // Juros para 12x (12,5%)
+            13: 0.135, // Juros para 13x (13,5%)
+            14: 0.145, // Juros para 14x (14,5%)
+            15: 0.15, // Juros para 15x (15%)
+            16: 0.155, // Juros para 16x (15,5%)
+            17: 0.16, // Juros para 17x (16%)
+            18: 0.17  // Juros para 18x (17%)
         };
+
+        const parcelasPadrao = [3, 6, 10, 12];
+
+        // Função para gerar os checkboxes de 1x a 18x
+        function gerarCheckboxesAvancadas() {
+            parcelasAvancadasDiv.innerHTML = '';
+            for (let i = 1; i <= 18; i++) {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = `parcela${i}x`;
+                input.value = i;
+                input.checked = parcelasPadrao.includes(i); // Marcar por padrão as parcelas padrão
+                input.addEventListener('change', calcularParcelas);
+
+                const label = document.createElement('label');
+                label.htmlFor = `parcela${i}x`;
+                label.textContent = `${i}x`;
+
+                div.appendChild(input);
+                div.appendChild(label);
+                parcelasAvancadasDiv.appendChild(div);
+            }
+        }
+
+        // Gera os checkboxes ao carregar a página
+        gerarCheckboxesAvancadas();
 
         // Event Listeners para acionar o cálculo em qualquer mudança
         valorBaseInput.addEventListener('input', calcularParcelas);
@@ -254,10 +286,10 @@
         valorEntradaInput.addEventListener('input', calcularParcelas);
         hideDinheiroPixCheckbox.addEventListener('change', calcularParcelas);
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
-        parcelaCheckboxes.forEach(checkbox => checkbox.addEventListener('change', calcularParcelas));
         
         toggleAdvancedOptions.addEventListener('change', () => {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
+            calcularParcelas();
         });
 
         function calcularParcelas() {
@@ -285,17 +317,32 @@
             const valorAParcelar = valorTotalComLucro - valorEntrada;
 
             if (valorAParcelar > 0) {
-                for (const parcelas in taxasDeJuros) {
-                    const checkbox = document.getElementById(`parcela${parcelas}x`);
-                    if (checkbox && checkbox.checked) {
-                        const juros = taxasDeJuros[parcelas];
-                        const valorComJuros = valorAParcelar * (1 + juros);
-                        const valorParcela = Math.ceil(valorComJuros * 100 / parcelas) / 100;
-                        
-                        const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        
-                        resultado.push(`${textoEntrada}${parcelas}x de R$ ${valorFormatado}`);
+                // Selecionar as parcelas que serão exibidas
+                const parcelasSelecionadas = [];
+                const parcelasDisponiveis = toggleAdvancedOptions.checked ? 
+                                              document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]') : 
+                                              parcelasPadrao.map(p => ({ value: p }));
+
+                for (const parcela of parcelasDisponiveis) {
+                    const checkbox = document.getElementById(`parcela${parcela.value}x`);
+                    if (toggleAdvancedOptions.checked) {
+                        if (checkbox && checkbox.checked) {
+                            parcelasSelecionadas.push(parcela.value);
+                        }
+                    } else {
+                        // Modo padrão
+                        parcelasSelecionadas.push(parcela.value);
                     }
+                }
+
+                for (const parcelas of parcelasSelecionadas) {
+                    const juros = taxasDeJuros[parcelas] || 0;
+                    const valorComJuros = valorAParcelar * (1 + juros);
+                    const valorParcela = Math.ceil(valorComJuros * 100 / parcelas) / 100;
+                    
+                    const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    
+                    resultado.push(`${textoEntrada}${parcelas}x de R$ ${valorFormatado}`);
                 }
             } else if (valorAParcelar === 0 && !hideDinheiroPixCheckbox.checked) {
                  resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
