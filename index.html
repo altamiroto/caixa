@@ -522,64 +522,70 @@
             productListResult.innerHTML = `<div class="error-message">${message}</div>`;
         }
 
-        function calcularParcelas() {
-            const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
-            const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
-            const textoAdicionalLinha = textoAdicionalLinhaInput.value;
-            const textoFinalMensagem = textoFinalMensagemTextarea.value;
-            
-            let resultado = [];
-            
-            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
-            const isSpecificParcel = !isNaN(parcelaEspecifica) && parcelaEspecifica > 0;
-            const parcelasToCalculate = isSpecificParcel ? [parcelaEspecifica] : getParcelasSelecionadas();
+function calcularParcelas() {
+    const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
+    const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
+    const textoAdicionalLinha = textoAdicionalLinhaInput.value;
+    const textoFinalMensagem = textoFinalMensagemTextarea.value;
+    
+    let resultado = [];
+    
+    let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
+    const isSpecificParcel = !isNaN(parcelaEspecifica) && parcelaEspecifica > 0;
+    const parcelasToCalculate = isSpecificParcel ? [parcelaEspecifica] : getParcelasSelecionadas();
 
-            if (selectedProducts.length > 0) {
-                selectedProducts.forEach(product => {
-                    const valorLiquido = product.preco + lucroAdicional;
-                    const nomeProduto = product.produto;
-                    const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
-                    if (produtoResultado) {
-                        resultado.push(produtoResultado);
-                    }
-                });
-            } else {
-                const valorBase = parseFloat(valorBaseInput.value);
-                if (isNaN(valorBase) || valorBase <= 0) {
-                    resultadoTextarea.value = '';
-                    return;
-                }
-                const valorLiquido = valorBase + lucroAdicional;
-                const nomeProduto = textoCabecalhoMensagemTextarea.value;
-                const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
-                if (produtoResultado) {
-                    resultado.push(produtoResultado);
-                }
-            }
-            
-            let resultadoFinal = [...resultado];
-            const cabecalhoMensagemGlobal = textoCabecalhoMensagemTextarea.value;
-
-            // Adiciona o cabeçalho global se não for modo lista
-            if (cabecalhoMensagemGlobal && selectedProducts.length === 0) {
-                 resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
-            } else if (cabecalhoMensagemGlobal && selectedProducts.length > 0) {
-                // Adiciona o cabeçalho global apenas uma vez no topo, se o modo lista for usado
-                resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
-            } else {
-                resultadoFinal = [...resultado];
+    if (selectedProducts.length > 0) {
+        selectedProducts.forEach((product, index) => {
+            const valorLiquido = product.preco + lucroAdicional;
+            const nomeProduto = product.produto;
+            const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
+            if (produtoResultado) {
+                resultado.push(produtoResultado);
             }
 
-            if (textoFinalMensagem) {
-                if (resultadoFinal.length > 0) {
-                    resultadoFinal.push(`\n${textoFinalMensagem}`);
-                } else {
-                    resultadoFinal.push(textoFinalMensagem);
-                }
+            // ADIÇÃO: Adiciona o separador se houver mais de um produto
+            if (selectedProducts.length > 1 && index < selectedProducts.length - 1) {
+                resultado.push('\n---------------------------');
             }
-
-            resultadoTextarea.value = resultadoFinal.join('\n');
+        });
+    } else {
+        const valorBase = parseFloat(valorBaseInput.value);
+        if (isNaN(valorBase) || valorBase <= 0) {
+            resultadoTextarea.value = '';
+            return;
         }
+        const valorLiquido = valorBase + lucroAdicional;
+        const nomeProduto = textoCabecalhoMensagemTextarea.value;
+        const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
+        if (produtoResultado) {
+            resultado.push(produtoResultado);
+        }
+    }
+    
+    let resultadoFinal = [...resultado];
+    const cabecalhoMensagemGlobal = textoCabecalhoMensagemTextarea.value;
+
+    // Adiciona o cabeçalho global se não for modo lista
+    if (cabecalhoMensagemGlobal && selectedProducts.length === 0) {
+        resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
+    } else if (cabecalhoMensagemGlobal && selectedProducts.length > 0) {
+        // Adiciona o cabeçalho global apenas uma vez no topo, se o modo lista for usado
+        resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
+    } else {
+        resultadoFinal = [...resultado];
+    }
+
+    if (textoFinalMensagem) {
+        if (resultadoFinal.length > 0) {
+            resultadoFinal.push(`\n${textoFinalMensagem}`);
+        } else {
+            resultadoFinal.push(textoFinalMensagem);
+        }
+    }
+
+    resultadoTextarea.value = resultadoFinal.join('\n');
+}
+
 
         function getParcelasSelecionadas() {
             let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
