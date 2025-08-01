@@ -612,7 +612,7 @@ function calcularParcelas() {
             let resultadoProduto = [];
             
             if (nomeProduto && nomeProduto.trim().length > 0) {
-                 resultadoProduto.push(`\n${nomeProduto}`);
+                 resultadoProduto.push(`\n${nomeProduto}\n`);
             }
             
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
@@ -621,7 +621,7 @@ function calcularParcelas() {
 
             if (valorLiquido > valorEntrada) {
                 if (!isSpecificParcel && !hideDinheiroPixCheckbox.checked) {
-                    resultadoProduto.push(`\nDinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                    resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                 }
                 if (!isSpecificParcel && showDebitoCheckbox.checked && valorEntrada === 0) {
                     const jurosDebito = taxasDeJuros['debito'];
@@ -649,7 +649,7 @@ function calcularParcelas() {
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultadoProduto.push(`\nDinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                 resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
                  resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
             }
