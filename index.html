@@ -125,7 +125,7 @@
             transition: max-height 0.5s ease-out;
         }
         #advancedOptions.show {
-            max-height: 1000px; /* Aumentado para garantir que todo o conteúdo caiba */
+            max-height: 1000px;
             transition: max-height 0.5s ease-in;
         }
         .option-group {
@@ -172,7 +172,7 @@
             background-color: #f9f9f9;
             border-radius: 5px;
             cursor: pointer;
-            box-sizing: border-box; /* Adicionado para garantir o alinhamento */
+            box-sizing: border-box;
         }
         .select-all-buttons button:hover {
             background-color: #eee;
@@ -212,6 +212,10 @@
                     <input type="checkbox" id="hideEntradaText">
                     <label for="hideEntradaText">Não mostrar "Entrada"</label>
                 </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="showTotalValue">
+                    <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
+                </div>
                 <hr>
                 <h4>Selecionar parcelas</h4>
                 <div class="parcelas-checkboxes" id="parcelasAvancadas">
@@ -244,6 +248,7 @@
         const advancedOptionsDiv = document.getElementById('advancedOptions');
         const hideDinheiroPixCheckbox = document.getElementById('hideDinheiroPix');
         const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
+        const showTotalValueCheckbox = document.getElementById('showTotalValue');
         const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
         const selectAllButton = document.getElementById('selectAll');
         const deselectAllButton = document.getElementById('deselectAll');
@@ -301,6 +306,7 @@
         valorEntradaInput.addEventListener('input', calcularParcelas);
         hideDinheiroPixCheckbox.addEventListener('change', calcularParcelas);
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
+        showTotalValueCheckbox.addEventListener('change', calcularParcelas);
         
         toggleAdvancedOptions.addEventListener('change', () => {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
@@ -361,7 +367,14 @@
                     
                     const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     
-                    resultado.push(`${textoEntrada}${parcelas}x de R$ ${valorFormatado}`);
+                    let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
+                    
+                    if (showTotalValueCheckbox.checked) {
+                        const totalFormatado = (valorParcela * parcelas + valorEntrada).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        linhaParcela += ` (R$ ${totalFormatado})`;
+                    }
+                    
+                    resultado.push(linhaParcela);
                 }
             } else if (valorAParcelar === 0 && !hideDinheiroPixCheckbox.checked) {
                  resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
