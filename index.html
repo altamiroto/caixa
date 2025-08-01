@@ -19,7 +19,7 @@
         }
         .container {
             width: 100%;
-            max-width: 450px;
+            max-width: 600px;
             background-color: #fff;
             padding: 25px;
             border-radius: 10px;
@@ -46,7 +46,7 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type="number"], input[type="text"] {
+        input[type="number"], input[type="text"], textarea {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -54,16 +54,10 @@
             border-radius: 5px;
             box-sizing: border-box;
             -moz-appearance: textfield;
+            resize: vertical;
         }
         textarea {
-            width: 100%;
-            height: 150px;
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            resize: none;
+            height: 100px;
             background-color: #e9e9e9;
         }
         .copy-actions {
@@ -105,27 +99,27 @@
         }
 
         /* Estilos para as opções avançadas */
-        .advanced-options-toggle {
+        .advanced-options-toggle, .product-list-toggle {
             display: flex;
             align-items: center;
-            margin-top: -10px;
+            margin-top: 10px;
             margin-bottom: 10px;
         }
-        .advanced-options-toggle label {
+        .advanced-options-toggle label, .product-list-toggle label {
             margin-bottom: 0;
             font-weight: normal;
         }
-        .advanced-options-toggle input {
+        .advanced-options-toggle input, .product-list-toggle input {
             width: auto;
             margin-right: 10px;
         }
-        #advancedOptions {
+        #advancedOptions, #productListSection {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease-out;
         }
-        #advancedOptions.show {
-            max-height: 1000px;
+        #advancedOptions.show, #productListSection.show {
+            max-height: 2000px;
             transition: max-height 0.5s ease-in;
         }
         .option-group {
@@ -177,12 +171,68 @@
         .select-all-buttons button:hover {
             background-color: #eee;
         }
+        .error-message {
+            color: #d9534f;
+            background-color: #f2dede;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        /* Estilos para a tabela de produtos */
+        #productListResult table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 15px;
+        }
+        #productListResult th, #productListResult td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        #productListResult th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        #productListResult td:first-child {
+            width: 20px;
+            text-align: center;
+        }
+        .product-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .product-button:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Calculadora de Parcelas</h1>
+
+        <div class="product-list-toggle">
+            <input type="checkbox" id="toggleProductList">
+            <label for="toggleProductList">Usar lista de produtos</label>
+        </div>
+
+        <div id="productListSection">
+            <div class="input-group">
+                <label for="productList">Cole a lista de produtos:</label>
+                <textarea id="productList" placeholder="Ex:&#10;Arroz 5kg R$ 25,50&#10;Feijão R$ 8,00&#10;Açúcar 1kg R$ 6,50"></textarea>
+            </div>
+            <button class="product-button" onclick="processList()">Processar Lista</button>
+            <div id="productListLoading" style="text-align: center; display: none;">Processando...</div>
+            <div id="productListResult"></div>
+        </div>
+        
         <div class="input-group">
             <label for="valorBase">Valor Base (R$):</label>
             <input type="number" id="valorBase" placeholder="Ex: 500.00" step="0.01">
@@ -208,6 +258,7 @@
         <div id="advancedOptions">
             <div class="option-group">
                 <h4>Personalizar texto de saída</h4>
+                
                 <div class="checkbox-item">
                     <input type="checkbox" id="hideDinheiroPix">
                     <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
@@ -232,10 +283,15 @@
                 <hr>
                 <h4>Selecionar parcelas</h4>
                 <div class="parcelas-checkboxes" id="parcelasAvancadas">
-                    </div>
+                </div>
                 <div class="select-all-buttons">
                     <button type="button" id="selectAll">Marcar Todas</button>
                     <button type="button" id="deselectAll">Desmarcar Todas</button>
+                </div>
+                
+                <div class="input-group" style="margin-top: 10px;">
+                    <label for="textoCabecalhoMensagem">Mensagem de cabeçalho (opcional):</label>
+                    <textarea id="textoCabecalhoMensagem" placeholder="Ex: 'Olá, segue as opções de pagamento:'"></textarea>
                 </div>
                 <div class="input-group" style="margin-top: 10px;">
                     <label for="textoFinalMensagem">Texto final da mensagem (opcional):</label>
@@ -270,9 +326,18 @@
         const showTotalValueCheckbox = document.getElementById('showTotalValue');
         const textoAdicionalLinhaInput = document.getElementById('textoAdicionalLinha');
         const textoFinalMensagemTextarea = document.getElementById('textoFinalMensagem');
+        const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
         const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
         const selectAllButton = document.getElementById('selectAll');
         const deselectAllButton = document.getElementById('deselectAll');
+
+        // Novas constantes para o processador de lista
+        const toggleProductList = document.getElementById('toggleProductList');
+        const productListSection = document.getElementById('productListSection');
+        const productListTextarea = document.getElementById('productList');
+        const productListButton = document.querySelector('.product-button');
+        const productListLoading = document.getElementById('productListLoading');
+        const productListResult = document.getElementById('productListResult');
 
         const taxasDeJuros = {
             'debito': 0.025,
@@ -297,24 +362,22 @@
         };
 
         const parcelasPadrao = [3, 6, 10, 12];
+        let products = []; // Array para armazenar os produtos processados
 
         function gerarCheckboxesAvancadas() {
             parcelasAvancadasDiv.innerHTML = '';
             for (let i = 1; i <= 18; i++) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-
                 const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.id = `parcela${i}x`;
                 input.value = i;
                 input.checked = parcelasPadrao.includes(i);
                 input.addEventListener('change', calcularParcelas);
-
                 const label = document.createElement('label');
                 label.htmlFor = `parcela${i}x`;
                 label.textContent = `${i}x`;
-
                 div.appendChild(input);
                 div.appendChild(label);
                 parcelasAvancadasDiv.appendChild(div);
@@ -333,6 +396,7 @@
         showTotalValueCheckbox.addEventListener('change', calcularParcelas);
         textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
         textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
+        textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
         
         toggleAdvancedOptions.addEventListener('change', () => {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
@@ -350,6 +414,101 @@
             checkboxes.forEach(cb => cb.checked = false);
             calcularParcelas();
         });
+        
+        // Listener para mostrar/esconder a seção da lista de produtos
+        toggleProductList.addEventListener('change', () => {
+            productListSection.classList.toggle('show', toggleProductList.checked);
+            if (!toggleProductList.checked) {
+                productListResult.innerHTML = '';
+                valorBaseInput.value = '';
+                textoCabecalhoMensagemTextarea.value = '';
+                calcularParcelas();
+            }
+        });
+
+        function processList() {
+            const productList = productListTextarea.value;
+            if (!productList) {
+                displayErrorList('Por favor, cole a lista de produtos para processar.');
+                return;
+            }
+            
+            productListLoading.style.display = 'block';
+            productListResult.innerHTML = '';
+
+            try {
+                products = parseProducts(productList);
+                displayTable(products);
+            } catch (error) {
+                displayErrorList(`Erro ao processar a lista: ${error.message}`);
+            } finally {
+                productListLoading.style.display = 'none';
+            }
+        }
+
+        function parseProducts(text) {
+            const cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u00A9|\u00AE|[\u2000-\u3300]|\uD83C[\uDDE0-\uDDFF]|\uD83D[\uDE00-\uDE4F]|\uD83E[\uDD00-\uDDFF]/g, '');
+            const lines = cleanText.split('\n');
+            const products = [];
+            const priceRegex = /(?:R\$\s*|[-])?\s*([\d\.]+,?\d{2}|\d+)\s*$/;
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (trimmedLine.length === 0 || trimmedLine.match(/^[📌📢Ⓜ️✳️❇☑️📺]/)) {
+                    return;
+                }
+                const match = trimmedLine.match(priceRegex);
+                if (match) {
+                    const priceString = match[1];
+                    const price = parseFloat(priceString.replace(/\./g, '').replace(',', '.'));
+                    const productNameWithSeparators = trimmedLine.substring(0, match.index).trim();
+                    const productName = productNameWithSeparators.replace(/`|\*|\-/g, '').trim();
+                    
+                    if (productName && !isNaN(price)) {
+                        products.push({
+                            produto: productName,
+                            preco: price
+                        });
+                    }
+                }
+            });
+
+            if (products.length === 0) {
+                throw new Error('Nenhum produto foi encontrado. Verifique se o formato da lista está correto.');
+            }
+            return products;
+        }
+
+        function displayTable(products) {
+            let tableHTML = '<table><thead><tr><th></th><th>Produto</th><th>Preço</th></tr></thead><tbody>';
+            products.forEach((product, index) => {
+                const precoFormatado = `R$ ${parseFloat(product.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                tableHTML += `<tr>
+                                <td><input type="radio" name="selectedProduct" value="${index}" onchange="handleProductSelection(this)"></td>
+                                <td>${product.produto}</td>
+                                <td>${precoFormatado}</td>
+                              </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            productListResult.innerHTML = tableHTML;
+        }
+
+        function displayErrorList(message) {
+            productListResult.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        function handleProductSelection(radio) {
+            const selectedIndex = parseInt(radio.value);
+            const selectedProduct = products[selectedIndex];
+            if (selectedProduct) {
+                valorBaseInput.value = selectedProduct.preco;
+                textoCabecalhoMensagemTextarea.value = selectedProduct.produto;
+            } else {
+                valorBaseInput.value = '';
+                textoCabecalhoMensagemTextarea.value = '';
+            }
+            calcularParcelas();
+        }
 
         function calcularParcelas() {
             let valorBase = parseFloat(valorBaseInput.value);
@@ -358,6 +517,7 @@
             let valorEntrada = parseFloat(valorEntradaInput.value) || 0;
             const textoAdicionalLinha = textoAdicionalLinhaInput.value;
             const textoFinalMensagem = textoFinalMensagemTextarea.value;
+            const textoCabecalhoMensagem = textoCabecalhoMensagemTextarea.value;
 
             if (isNaN(valorBase) || valorBase <= 0) {
                 resultadoTextarea.value = '';
@@ -366,6 +526,10 @@
 
             const valorLiquido = valorBase + lucroAdicional;
             let resultado = [];
+            
+            if (textoCabecalhoMensagem) {
+                resultado.push(`${textoCabecalhoMensagem}\n`);
+            }
             
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
             const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
@@ -398,7 +562,7 @@
                     }
                 } else {
                     if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
+                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                     }
 
                     if (showDebitoCheckbox.checked && valorEntrada === 0) {
@@ -444,14 +608,17 @@
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
+                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
             }
 
-            // Adicionar o texto final, se existir
             if (textoFinalMensagem) {
-                resultado.push(`\n${textoFinalMensagem}`);
+                if (resultado.length > 0) {
+                    resultado.push(`\n${textoFinalMensagem}`);
+                } else {
+                    resultado.push(textoFinalMensagem);
+                }
             }
 
             resultadoTextarea.value = resultado.join('\n');
@@ -485,6 +652,5 @@
             }
         }
     </script>
-
 </body>
 </html>
