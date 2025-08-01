@@ -615,7 +615,7 @@
 
             if (valorLiquido > valorEntrada) {
                 if (!isSpecificParcel && !hideDinheiroPixCheckbox.checked) {
-                    resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                    resultadoProduto.push(`\nDinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                 }
                 if (!isSpecificParcel && showDebitoCheckbox.checked && valorEntrada === 0) {
                     const jurosDebito = taxasDeJuros['debito'];
@@ -643,7 +643,7 @@
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                 resultadoProduto.push(`\nDinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
                  resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
             }
