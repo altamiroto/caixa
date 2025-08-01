@@ -115,10 +115,11 @@
         }
         #advancedOptions, #productListSection {
             max-height: 0;
+            overflow: hidden;
             transition: max-height 0.5s ease-out;
         }
         #advancedOptions.show, #productListSection.show {
-            max-height: 2000px;
+            max-height: 5000px;
             transition: max-height 0.5s ease-in;
         }
         .option-group {
@@ -478,19 +479,19 @@
             return products;
         }
 
-            function displayTable(products) {
-        let tableHTML = '<div style="overflow-x:auto;"><table><thead><tr><th></th><th>Produto</th><th>Preço</th></tr></thead><tbody>';
-        products.forEach((product, index) => {
-            const precoFormatado = `R$ ${parseFloat(product.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            tableHTML += `<tr>
-                            <td><input type="radio" name="selectedProduct" value="${index}" onchange="handleProductSelection(this)"></td>
-                            <td>${product.produto}</td>
-                            <td>${precoFormatado}</td>
-                          </tr>`;
-        });
-        tableHTML += '</tbody></table></div>'; // Feche a nova div aqui
-        productListResult.innerHTML = tableHTML;
-    }
+        function displayTable(products) {
+            let tableHTML = '<table><thead><tr><th></th><th>Produto</th><th>Preço</th></tr></thead><tbody>';
+            products.forEach((product, index) => {
+                const precoFormatado = `R$ ${parseFloat(product.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                tableHTML += `<tr>
+                                <td><input type="radio" name="selectedProduct" value="${index}" onchange="handleProductSelection(this)"></td>
+                                <td>${product.produto}</td>
+                                <td>${precoFormatado}</td>
+                              </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            productListResult.innerHTML = tableHTML;
+        }
 
         function displayErrorList(message) {
             productListResult.innerHTML = `<div class="error-message">${message}</div>`;
