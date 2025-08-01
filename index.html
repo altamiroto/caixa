@@ -46,7 +46,7 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type="number"], input[type="text"], textarea {
+        input[type="number"], input[type="text"] {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -57,6 +57,7 @@
             resize: vertical;
         }
         textarea {
+            width: 100%;
             height: 100px;
             background-color: #e9e9e9;
         }
@@ -193,7 +194,7 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
-        #productListResult td:first-child {
+        #productListResult th:first-child, #productListResult td:first-child {
             width: 20px;
             text-align: center;
         }
@@ -326,12 +327,11 @@
         const showTotalValueCheckbox = document.getElementById('showTotalValue');
         const textoAdicionalLinhaInput = document.getElementById('textoAdicionalLinha');
         const textoFinalMensagemTextarea = document.getElementById('textoFinalMensagem');
-        const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
         const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
         const selectAllButton = document.getElementById('selectAll');
         const deselectAllButton = document.getElementById('deselectAll');
+        const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
 
-        // Novas constantes para o processador de lista
         const toggleProductList = document.getElementById('toggleProductList');
         const productListSection = document.getElementById('productListSection');
         const productListTextarea = document.getElementById('productList');
@@ -362,7 +362,8 @@
         };
 
         const parcelasPadrao = [3, 6, 10, 12];
-        let products = []; // Array para armazenar os produtos processados
+        let products = [];
+        let selectedProducts = [];
 
         function gerarCheckboxesAvancadas() {
             parcelasAvancadasDiv.innerHTML = '';
@@ -415,16 +416,22 @@
             calcularParcelas();
         });
         
-        // Listener para mostrar/esconder a seção da lista de produtos
-        toggleProductList.addEventListener('change', () => {
-            productListSection.classList.toggle('show', toggleProductList.checked);
-            if (!toggleProductList.checked) {
-                productListResult.innerHTML = '';
-                valorBaseInput.value = '';
-                textoCabecalhoMensagemTextarea.value = '';
-                calcularParcelas();
-            }
-        });
+    toggleProductList.addEventListener('change', () => {
+        productListSection.classList.toggle('show', toggleProductList.checked);
+        valorBaseInput.disabled = toggleProductList.checked;
+
+        if (!toggleProductList.checked) {
+            // Se o checkbox for desmarcado, limpe o estado da lista
+            products = [];
+            selectedProducts = [];
+            productListResult.innerHTML = '';
+            // Habilite o campo de valor base novamente
+            valorBaseInput.disabled = false;
+        }
+
+        // Recalcule as parcelas em ambos os casos (marcado ou desmarcado)
+        calcularParcelas();
+    });
 
         function processList() {
             const productList = productListTextarea.value;
@@ -439,6 +446,8 @@
             try {
                 products = parseProducts(productList);
                 displayTable(products);
+                selectedProducts = [];
+                handleProductSelection();
             } catch (error) {
                 displayErrorList(`Erro ao processar a lista: ${error.message}`);
             } finally {
@@ -463,7 +472,6 @@
                     const price = parseFloat(priceString.replace(/\./g, '').replace(',', '.'));
                     const productNameWithSeparators = trimmedLine.substring(0, match.index).trim();
                     const productName = productNameWithSeparators.replace(/`|\*|\-/g, '').trim();
-                    
                     if (productName && !isNaN(price)) {
                         products.push({
                             produto: productName,
@@ -480,156 +488,173 @@
         }
 
         function displayTable(products) {
-            let tableHTML = '<table><thead><tr><th></th><th>Produto</th><th>Preço</th></tr></thead><tbody>';
+            let tableHTML = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th></tr></thead><tbody>';
             products.forEach((product, index) => {
                 const precoFormatado = `R$ ${parseFloat(product.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                tableHTML += `<tr>
-                                <td><input type="radio" name="selectedProduct" value="${index}" onchange="handleProductSelection(this)"></td>
-                                <td>${product.produto}</td>
-                                <td>${precoFormatado}</td>
-                              </tr>`;
+                tableHTML += `<tr><td><input type="checkbox" class="product-checkbox" value="${index}"></td><td>${product.produto}</td><td>${precoFormatado}</td></tr>`;
             });
             tableHTML += '</tbody></table>';
             productListResult.innerHTML = tableHTML;
+            
+            document.getElementById('selectAllProducts').addEventListener('change', (e) => {
+                const checkboxes = document.querySelectorAll('.product-checkbox');
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                handleProductSelection();
+            });
+
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            checkboxes.forEach(cb => cb.addEventListener('change', handleProductSelection));
+        }
+
+        function handleProductSelection() {
+            selectedProducts = [];
+            const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+            selectedCheckboxes.forEach(cb => {
+                const product = products[parseInt(cb.value)];
+                if (product) {
+                    selectedProducts.push(product);
+                }
+            });
+            calcularParcelas();
         }
 
         function displayErrorList(message) {
             productListResult.innerHTML = `<div class="error-message">${message}</div>`;
         }
 
-        function handleProductSelection(radio) {
-            const selectedIndex = parseInt(radio.value);
-            const selectedProduct = products[selectedIndex];
-            if (selectedProduct) {
-                valorBaseInput.value = selectedProduct.preco;
-                textoCabecalhoMensagemTextarea.value = selectedProduct.produto;
-            } else {
-                valorBaseInput.value = '';
-                textoCabecalhoMensagemTextarea.value = '';
-            }
-            calcularParcelas();
-        }
-
         function calcularParcelas() {
-            let valorBase = parseFloat(valorBaseInput.value);
-            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
-            let lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
-            let valorEntrada = parseFloat(valorEntradaInput.value) || 0;
+            const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
+            const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
             const textoAdicionalLinha = textoAdicionalLinhaInput.value;
             const textoFinalMensagem = textoFinalMensagemTextarea.value;
-            const textoCabecalhoMensagem = textoCabecalhoMensagemTextarea.value;
-
-            if (isNaN(valorBase) || valorBase <= 0) {
-                resultadoTextarea.value = '';
-                return;
-            }
-
-            const valorLiquido = valorBase + lucroAdicional;
+            
             let resultado = [];
             
-            if (textoCabecalhoMensagem) {
-                resultado.push(`${textoCabecalhoMensagem}\n`);
+            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
+            const isSpecificParcel = !isNaN(parcelaEspecifica) && parcelaEspecifica > 0;
+            const parcelasToCalculate = isSpecificParcel ? [parcelaEspecifica] : getParcelasSelecionadas();
+
+            if (selectedProducts.length > 0) {
+                selectedProducts.forEach(product => {
+                    const valorLiquido = product.preco + lucroAdicional;
+                    const nomeProduto = product.produto;
+                    const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
+                    if (produtoResultado) {
+                        resultado.push(produtoResultado);
+                    }
+                });
+            } else {
+                const valorBase = parseFloat(valorBaseInput.value);
+                if (isNaN(valorBase) || valorBase <= 0) {
+                    resultadoTextarea.value = '';
+                    return;
+                }
+                const valorLiquido = valorBase + lucroAdicional;
+                const nomeProduto = textoCabecalhoMensagemTextarea.value;
+                const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
+                if (produtoResultado) {
+                    resultado.push(produtoResultado);
+                }
+            }
+            
+            let resultadoFinal = [...resultado];
+            const cabecalhoMensagemGlobal = textoCabecalhoMensagemTextarea.value;
+
+            // Adiciona o cabeçalho global se não for modo lista
+            if (cabecalhoMensagemGlobal && selectedProducts.length === 0) {
+                 resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
+            } else if (cabecalhoMensagemGlobal && selectedProducts.length > 0) {
+                // Adiciona o cabeçalho global apenas uma vez no topo, se o modo lista for usado
+                resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
+            } else {
+                resultadoFinal = [...resultado];
+            }
+
+            if (textoFinalMensagem) {
+                if (resultadoFinal.length > 0) {
+                    resultadoFinal.push(`\n${textoFinalMensagem}`);
+                } else {
+                    resultadoFinal.push(textoFinalMensagem);
+                }
+            }
+
+            resultadoTextarea.value = resultadoFinal.join('\n');
+        }
+
+        function getParcelasSelecionadas() {
+            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
+            let parcelasSelecionadas = [];
+
+            if (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0) {
+                parcelasSelecionadas.push(parcelaEspecifica);
+            } else {
+                if (toggleAdvancedOptions.checked) {
+                    const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        if (cb.checked) {
+                            parcelasSelecionadas.push(parseInt(cb.value));
+                        }
+                    });
+                } else {
+                    parcelasSelecionadas.push(...parcelasPadrao);
+                }
+            }
+            return parcelasSelecionadas;
+        }
+
+        function calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValue, nomeProduto, isSpecificParcel, parcelasToCalculate) {
+            let resultadoProduto = [];
+            
+            if (nomeProduto && nomeProduto.trim().length > 0) {
+                 resultadoProduto.push(`\n${nomeProduto}`);
             }
             
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
             const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
-            
             const valorAParcelarBruto = valorLiquido - valorEntrada;
 
-            if (valorLiquido > 0) {
-                if (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0) {
-                    if (taxasDeJuros.hasOwnProperty(parcelaEspecifica)) {
-                        const juros = taxasDeJuros[parcelaEspecifica];
+            if (valorLiquido > valorEntrada) {
+                if (!isSpecificParcel && !hideDinheiroPixCheckbox.checked) {
+                    resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                }
+                if (!isSpecificParcel && showDebitoCheckbox.checked && valorEntrada === 0) {
+                    const jurosDebito = taxasDeJuros['debito'];
+                    const valorAPagarDebito = valorLiquido / (1 - jurosDebito);
+                    const valorFormatadoDebito = valorAPagarDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    resultadoProduto.push(`Débito: R$ ${valorFormatadoDebito}`);
+                }
+                
+                for (const parcelas of parcelasToCalculate) {
+                    if (taxasDeJuros.hasOwnProperty(parcelas)) {
+                        const juros = taxasDeJuros[parcelas];
                         const valorAPagar = valorAParcelarBruto / (1 - juros);
-                        const valorParcela = Math.ceil((valorAPagar / parcelaEspecifica) * 100) / 100;
-                        
+                        const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
                         const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        
-                        let linhaParcela = `${textoEntrada}${parcelaEspecifica}x de R$ ${valorFormatado}`;
-                        
-                        if (showTotalValueCheckbox.checked) {
+                        let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
+                        if (showTotalValue) {
                             const valorTotalComEntrada = valorEntrada + valorAPagar;
                             const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             linhaParcela += ` (R$ ${totalFormatado})`;
                         }
-                        
                         if (textoAdicionalLinha) {
                             linhaParcela += ` ${textoAdicionalLinha}`;
                         }
-                        resultado.push(linhaParcela);
-                    } else {
-                        resultado.push(`Erro: A parcela ${parcelaEspecifica} não está disponível.`);
-                    }
-                } else {
-                    if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-                    }
-
-                    if (showDebitoCheckbox.checked && valorEntrada === 0) {
-                        const jurosDebito = taxasDeJuros['debito'];
-                        const valorAPagarDebito = valorLiquido / (1 - jurosDebito);
-                        const valorFormatadoDebito = valorAPagarDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        resultado.push(`Débito: R$ ${valorFormatadoDebito}`);
-                    }
-                    
-                    const parcelasSelecionadas = [];
-                    if (toggleAdvancedOptions.checked) {
-                        const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-                        checkboxes.forEach(cb => {
-                            if (cb.checked) {
-                                parcelasSelecionadas.push(parseInt(cb.value));
-                            }
-                        });
-                    } else {
-                        parcelasSelecionadas.push(...parcelasPadrao);
-                    }
-
-                    for (const parcelas of parcelasSelecionadas) {
-                        if (taxasDeJuros.hasOwnProperty(parcelas)) {
-                            const juros = taxasDeJuros[parcelas];
-                            const valorAPagar = valorAParcelarBruto / (1 - juros);
-                            const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
-                            
-                            const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            
-                            let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
-                            
-                            if (showTotalValueCheckbox.checked) {
-                                const valorTotalComEntrada = valorEntrada + valorAPagar;
-                                const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                linhaParcela += ` (R$ ${totalFormatado})`;
-                            }
-
-                            if (textoAdicionalLinha) {
-                                linhaParcela += ` ${textoAdicionalLinha}`;
-                            }
-                            resultado.push(linhaParcela);
-                        }
+                        resultadoProduto.push(linhaParcela);
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                 resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
-                 resultado = [`O valor da entrada não pode ser maior que o valor total.`];
+                 resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
             }
-
-            if (textoFinalMensagem) {
-                if (resultado.length > 0) {
-                    resultado.push(`\n${textoFinalMensagem}`);
-                } else {
-                    resultado.push(textoFinalMensagem);
-                }
-            }
-
-            resultadoTextarea.value = resultado.join('\n');
+            return resultadoProduto.join('\n');
         }
 
         function copiarTexto() {
             const textoParaCopiar = resultadoTextarea.value;
-            if (!textoParaCopiar || resultadoTextarea.value.includes('O valor da entrada não pode ser maior que o valor total.') || resultadoTextarea.value.includes('Erro: A parcela')) {
+            if (!textoParaCopiar || textoParaCopiar.includes('O valor da entrada não pode ser maior que o valor total.') || textoParaCopiar.includes('Erro: A parcela')) {
                 return;
             }
-
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(textoParaCopiar)
                     .then(() => {
