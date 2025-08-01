@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Parcelas Completa</title>
+    <title>Calculadora de Parcelas</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,14 +46,14 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        input {
+        input[type="number"] {
             width: 100%;
             padding: 12px;
             font-size: 16px;
             border: 1px solid #ddd;
             border-radius: 5px;
             box-sizing: border-box;
-            -moz-appearance: textfield; /* Remove arrows on Firefox */
+            -moz-appearance: textfield;
         }
         textarea {
             width: 100%;
@@ -71,6 +71,7 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            margin-top: 20px;
         }
         .copy-button {
             background-color: #4CAF50;
@@ -102,6 +103,56 @@
         .copy-message.show {
             opacity: 1;
         }
+
+        /* Estilos para as opções avançadas */
+        .advanced-options-toggle {
+            display: flex;
+            align-items: center;
+            margin-top: -10px; /* Alinhar com o campo anterior */
+            margin-bottom: 10px;
+        }
+        .advanced-options-toggle label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        .advanced-options-toggle input {
+            width: auto;
+            margin-right: 10px;
+        }
+        #advancedOptions {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        #advancedOptions.show {
+            max-height: 500px; /* Valor grande o suficiente para a seção */
+            transition: max-height 0.5s ease-in;
+        }
+        .option-group {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-group h4 {
+            margin: 0 0 10px 0;
+        }
+        .parcelas-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .parcelas-checkboxes .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+        .parcelas-checkboxes .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -120,8 +171,52 @@
             <label for="valorEntrada">Valor da Entrada (opcional, R$):</label>
             <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01">
         </div>
+
+        <div class="advanced-options-toggle">
+            <input type="checkbox" id="toggleAdvancedOptions">
+            <label for="toggleAdvancedOptions">Opções Avançadas</label>
+        </div>
+
+        <div id="advancedOptions">
+            <div class="option-group">
+                <h4>Personalizar texto de saída</h4>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hideDinheiroPix">
+                    <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hideEntradaText">
+                    <label for="hideEntradaText">Não mostrar "Entrada"</label>
+                </div>
+                <hr>
+                <h4>Selecionar parcelas</h4>
+                <div class="parcelas-checkboxes">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="parcela3x" checked>
+                        <label for="parcela3x">3x</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="parcela6x" checked>
+                        <label for="parcela6x">6x</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="parcela10x" checked>
+                        <label for="parcela10x">10x</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="parcela12x" checked>
+                        <label for="parcela12x">12x</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="parcela18x" checked>
+                        <label for="parcela18x">18x</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="input-group">
-            <label for="resultado">Resultado (copiar e colar):</label>
+            <label for="resultado">Resultado:</label>
             <textarea id="resultado" readonly placeholder="Os valores de parcelamento aparecerão aqui."></textarea>
         </div>
         <div class="copy-actions">
@@ -137,19 +232,33 @@
         const resultadoTextarea = document.getElementById('resultado');
         const mensagemCopiado = document.getElementById('mensagemCopiado');
 
+        // Checkboxes de opções avançadas
+        const toggleAdvancedOptions = document.getElementById('toggleAdvancedOptions');
+        const advancedOptionsDiv = document.getElementById('advancedOptions');
+        const hideDinheiroPixCheckbox = document.getElementById('hideDinheiroPix');
+        const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
+        const parcelaCheckboxes = document.querySelectorAll('.parcelas-checkboxes input[type="checkbox"]');
+
         // *** AQUI VOCÊ PODE MUDAR AS TAXAS DE JUROS ***
-        // Exemplo: 0.05 é 5%
         const taxasDeJuros = {
-            3: 0.05,  // Juros para 3x (5%)
-            6: 0.10,  // Juros para 6x (10%)
-            10: 0.15, // Juros para 10x (15%)
-            12: 0.18, // Juros para 12x (18%)
-            18: 0.25  // Juros para 18x (25%)
+            3: 0.05,
+            6: 0.10,
+            10: 0.15,
+            12: 0.18,
+            18: 0.25
         };
 
+        // Event Listeners para acionar o cálculo em qualquer mudança
         valorBaseInput.addEventListener('input', calcularParcelas);
         lucroAdicionalInput.addEventListener('input', calcularParcelas);
         valorEntradaInput.addEventListener('input', calcularParcelas);
+        hideDinheiroPixCheckbox.addEventListener('change', calcularParcelas);
+        hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
+        parcelaCheckboxes.forEach(checkbox => checkbox.addEventListener('change', calcularParcelas));
+        
+        toggleAdvancedOptions.addEventListener('change', () => {
+            advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
+        });
 
         function calcularParcelas() {
             let valorBase = parseFloat(valorBaseInput.value);
@@ -162,30 +271,35 @@
             }
 
             const valorTotalComLucro = valorBase + lucroAdicional;
-
             let resultado = [];
-            const textoEntrada = valorEntrada > 0 ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
             
-            // Opção Dinheiro/Pix
-            resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
+            const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
+            
+            // Opção Dinheiro/Pix (condicional)
+            if (!hideDinheiroPixCheckbox.checked) {
+                resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            }
 
             // Parcelamento
             const valorAParcelar = valorTotalComLucro - valorEntrada;
 
             if (valorAParcelar > 0) {
                 for (const parcelas in taxasDeJuros) {
-                    const juros = taxasDeJuros[parcelas];
-                    const valorComJuros = valorAParcelar * (1 + juros);
-                    const valorParcela = Math.ceil(valorComJuros * 100 / parcelas) / 100; // Arredonda para cima
-                    
-                    const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    
-                    resultado.push(`${textoEntrada}${parcelas}x de R$ ${valorFormatado}`);
+                    const checkbox = document.getElementById(`parcela${parcelas}x`);
+                    if (checkbox && checkbox.checked) {
+                        const juros = taxasDeJuros[parcelas];
+                        const valorComJuros = valorAParcelar * (1 + juros);
+                        const valorParcela = Math.ceil(valorComJuros * 100 / parcelas) / 100;
+                        
+                        const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        
+                        resultado.push(`${textoEntrada}${parcelas}x de R$ ${valorFormatado}`);
+                    }
                 }
-            } else if (valorAParcelar === 0) {
-                 // Caso o valor da entrada seja igual ao total, só exibe o Pix/Dinheiro
-                 resultado = [`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`];
-            } else {
+            } else if (valorAParcelar === 0 && !hideDinheiroPixCheckbox.checked) {
+                 resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            } else if (valorAParcelar < 0) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
             }
 
@@ -195,7 +309,7 @@
         function copiarTexto() {
             const textoParaCopiar = resultadoTextarea.value;
             if (!textoParaCopiar || resultadoTextarea.value.includes('O valor da entrada não pode ser maior que o valor total.')) {
-                return; // Não faz nada se não houver texto ou se houver erro
+                return;
             }
 
             if (navigator.clipboard) {
@@ -211,7 +325,6 @@
                         alert('Não foi possível copiar o texto para a área de transferência.');
                     });
             } else {
-                // Fallback para navegadores mais antigos
                 resultadoTextarea.select();
                 document.execCommand('copy');
                 mensagemCopiado.classList.add('show');
