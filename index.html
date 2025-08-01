@@ -46,7 +46,7 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -225,12 +225,21 @@
                     <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
                 </div>
                 <hr>
+                <div class="input-group">
+                    <label for="textoAdicionalLinha">Texto adicional por linha (opcional):</label>
+                    <input type="text" id="textoAdicionalLinha" placeholder="Ex: 'sem juros no cartão'">
+                </div>
+                <hr>
                 <h4>Selecionar parcelas</h4>
                 <div class="parcelas-checkboxes" id="parcelasAvancadas">
                     </div>
                 <div class="select-all-buttons">
                     <button type="button" id="selectAll">Marcar Todas</button>
                     <button type="button" id="deselectAll">Desmarcar Todas</button>
+                </div>
+                <div class="input-group" style="margin-top: 10px;">
+                    <label for="textoFinalMensagem">Texto final da mensagem (opcional):</label>
+                    <textarea id="textoFinalMensagem" placeholder="Ex: 'Entre em contato para mais informações!'"></textarea>
                 </div>
             </div>
         </div>
@@ -259,12 +268,14 @@
         const showDebitoCheckbox = document.getElementById('showDebito');
         const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
         const showTotalValueCheckbox = document.getElementById('showTotalValue');
+        const textoAdicionalLinhaInput = document.getElementById('textoAdicionalLinha');
+        const textoFinalMensagemTextarea = document.getElementById('textoFinalMensagem');
         const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
         const selectAllButton = document.getElementById('selectAll');
         const deselectAllButton = document.getElementById('deselectAll');
 
         const taxasDeJuros = {
-            'debito': 0.025, // Taxa de 2,5% 
+            'debito': 0.025,
             1: 0.045,
             2: 0.06,
             3: 0.07,
@@ -320,6 +331,8 @@
         showDebitoCheckbox.addEventListener('change', calcularParcelas);
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
         showTotalValueCheckbox.addEventListener('change', calcularParcelas);
+        textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
+        textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
         
         toggleAdvancedOptions.addEventListener('change', () => {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
@@ -343,6 +356,8 @@
             let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
             let lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
             let valorEntrada = parseFloat(valorEntradaInput.value) || 0;
+            const textoAdicionalLinha = textoAdicionalLinhaInput.value;
+            const textoFinalMensagem = textoFinalMensagemTextarea.value;
 
             if (isNaN(valorBase) || valorBase <= 0) {
                 resultadoTextarea.value = '';
@@ -374,13 +389,16 @@
                             linhaParcela += ` (R$ ${totalFormatado})`;
                         }
                         
+                        if (textoAdicionalLinha) {
+                            linhaParcela += ` ${textoAdicionalLinha}`;
+                        }
                         resultado.push(linhaParcela);
                     } else {
                         resultado.push(`Erro: A parcela ${parcelaEspecifica} não está disponível.`);
                     }
                 } else {
                     if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
+                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`\n);
                     }
 
                     if (showDebitoCheckbox.checked && valorEntrada === 0) {
@@ -417,15 +435,23 @@
                                 const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                                 linhaParcela += ` (R$ ${totalFormatado})`;
                             }
-                            
+
+                            if (textoAdicionalLinha) {
+                                linhaParcela += ` ${textoAdicionalLinha}`;
+                            }
                             resultado.push(linhaParcela);
                         }
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
+                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`\n);
             } else if (valorLiquido < valorEntrada) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
+            }
+
+            // Adicionar o texto final, se existir
+            if (textoFinalMensagem) {
+                resultado.push(`\n${textoFinalMensagem}`);
             }
 
             resultadoTextarea.value = resultado.join('\n');
