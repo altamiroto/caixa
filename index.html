@@ -342,22 +342,27 @@
                 return;
             }
 
-            const valorTotalComLucro = valorBase + lucroAdicional;
+            const valorLiquido = valorBase + lucroAdicional;
             let resultado = [];
             
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
             const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
             
-            const valorAParcelar = valorTotalComLucro - valorEntrada;
+            // O valor a ser parcelado no cartão, sem a entrada
+            const valorAParcelarBruto = valorLiquido - valorEntrada;
 
-            if (valorAParcelar > 0) {
+            if (valorLiquido > valorEntrada) {
                 let parcelasSelecionadas = [];
 
                 if (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0) {
-                    parcelasSelecionadas.push(parcelaEspecifica);
+                    if (taxasDeJuros.hasOwnProperty(parcelaEspecifica)) {
+                        parcelasSelecionadas.push(parcelaEspecifica);
+                    } else {
+                        resultado.push(`Erro: A parcela ${parcelaEspecifica} não está disponível.`);
+                    }
                 } else {
                     if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                     }
 
                     if (toggleAdvancedOptions.checked) {
@@ -373,25 +378,27 @@
                 }
 
                 for (const parcelas of parcelasSelecionadas) {
-                    const juros = taxasDeJuros[parcelas] || 0;
-                    const valorComJuros = valorAParcelar * (1 + juros);
-                    const valorParcela = Math.ceil(valorComJuros * 100 / parcelas) / 100;
-                    
-                    const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    
-                    let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
-                    
-                    if (showTotalValueCheckbox.checked) {
-                        const totalComEntrada = valorParcela * parcelas + valorEntrada;
-                        const totalFormatado = totalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        linhaParcela += ` (R$ ${totalFormatado})`;
+                    if (taxasDeJuros.hasOwnProperty(parcelas)) {
+                        const juros = taxasDeJuros[parcelas];
+                        const valorAPagar = valorAParcelarBruto / (1 - juros);
+                        const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
+                        
+                        const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        
+                        let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
+                        
+                        if (showTotalValueCheckbox.checked) {
+                            const valorTotalComEntrada = valorEntrada + valorAPagar;
+                            const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            linhaParcela += ` (R$ ${totalFormatado})`;
+                        }
+                        
+                        resultado.push(linhaParcela);
                     }
-                    
-                    resultado.push(linhaParcela);
                 }
-            } else if (valorAParcelar === 0 && (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0 ? false : !hideDinheiroPixCheckbox.checked)) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorTotalComLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-            } else if (valorAParcelar < 0) {
+            } else if (valorLiquido === valorEntrada) {
+                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            } else if (valorLiquido < valorEntrada) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
             }
 
@@ -400,7 +407,7 @@
 
         function copiarTexto() {
             const textoParaCopiar = resultadoTextarea.value;
-            if (!textoParaCopiar || resultadoTextarea.value.includes('O valor da entrada não pode ser maior que o valor total.')) {
+            if (!textoParaCopiar || resultadoTextarea.value.includes('O valor da entrada não pode ser maior que o valor total.') || resultadoTextarea.value.includes('Erro: A parcela')) {
                 return;
             }
 
