@@ -275,7 +275,7 @@
         const deselectAllButton = document.getElementById('deselectAll');
 
         const taxasDeJuros = {
-            'debito': 0.025,
+            'debito': 0.02,
             1: 0.045,
             2: 0.06,
             3: 0.07,
@@ -398,7 +398,7 @@
                     }
                 } else {
                     if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`\n);
+                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                     }
 
                     if (showDebitoCheckbox.checked && valorEntrada === 0) {
@@ -444,7 +444,7 @@
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`\n);
+                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
             }
