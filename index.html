@@ -398,7 +398,7 @@
                     }
                 } else {
                     if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
                     }
 
                     if (showDebitoCheckbox.checked && valorEntrada === 0) {
@@ -444,7 +444,7 @@
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
             } else if (valorLiquido < valorEntrada) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
             }
