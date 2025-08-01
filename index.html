@@ -213,6 +213,10 @@
                     <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
                 </div>
                 <div class="checkbox-item">
+                    <input type="checkbox" id="showDebito">
+                    <label for="showDebito">Mostrar "Débito"</label>
+                </div>
+                <div class="checkbox-item">
                     <input type="checkbox" id="hideEntradaText">
                     <label for="hideEntradaText">Não mostrar "Entrada"</label>
                 </div>
@@ -252,6 +256,7 @@
         const toggleAdvancedOptions = document.getElementById('toggleAdvancedOptions');
         const advancedOptionsDiv = document.getElementById('advancedOptions');
         const hideDinheiroPixCheckbox = document.getElementById('hideDinheiroPix');
+        const showDebitoCheckbox = document.getElementById('showDebito');
         const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
         const showTotalValueCheckbox = document.getElementById('showTotalValue');
         const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
@@ -259,6 +264,7 @@
         const deselectAllButton = document.getElementById('deselectAll');
 
         const taxasDeJuros = {
+            'debito': 0.025, // Taxa de 2,5% 
             1: 0.045,
             2: 0.06,
             3: 0.07,
@@ -311,6 +317,7 @@
         lucroAdicionalInput.addEventListener('input', calcularParcelas);
         valorEntradaInput.addEventListener('input', calcularParcelas);
         hideDinheiroPixCheckbox.addEventListener('change', calcularParcelas);
+        showDebitoCheckbox.addEventListener('change', calcularParcelas);
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
         showTotalValueCheckbox.addEventListener('change', calcularParcelas);
         
@@ -348,23 +355,42 @@
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
             const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
             
-            // O valor a ser parcelado no cartão, sem a entrada
             const valorAParcelarBruto = valorLiquido - valorEntrada;
 
-            if (valorLiquido > valorEntrada) {
-                let parcelasSelecionadas = [];
-
+            if (valorLiquido > 0) {
                 if (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0) {
                     if (taxasDeJuros.hasOwnProperty(parcelaEspecifica)) {
-                        parcelasSelecionadas.push(parcelaEspecifica);
+                        const juros = taxasDeJuros[parcelaEspecifica];
+                        const valorAPagar = valorAParcelarBruto / (1 - juros);
+                        const valorParcela = Math.ceil((valorAPagar / parcelaEspecifica) * 100) / 100;
+                        
+                        const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        
+                        let linhaParcela = `${textoEntrada}${parcelaEspecifica}x de R$ ${valorFormatado}`;
+                        
+                        if (showTotalValueCheckbox.checked) {
+                            const valorTotalComEntrada = valorEntrada + valorAPagar;
+                            const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            linhaParcela += ` (R$ ${totalFormatado})`;
+                        }
+                        
+                        resultado.push(linhaParcela);
                     } else {
                         resultado.push(`Erro: A parcela ${parcelaEspecifica} não está disponível.`);
                     }
                 } else {
                     if (!hideDinheiroPixCheckbox.checked) {
-                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
+                        resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                     }
 
+                    if (showDebitoCheckbox.checked && valorEntrada === 0) {
+                        const jurosDebito = taxasDeJuros['debito'];
+                        const valorAPagarDebito = valorLiquido / (1 - jurosDebito);
+                        const valorFormatadoDebito = valorAPagarDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        resultado.push(`Débito: R$ ${valorFormatadoDebito}`);
+                    }
+                    
+                    const parcelasSelecionadas = [];
                     if (toggleAdvancedOptions.checked) {
                         const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
                         checkboxes.forEach(cb => {
@@ -375,29 +401,29 @@
                     } else {
                         parcelasSelecionadas.push(...parcelasPadrao);
                     }
-                }
 
-                for (const parcelas of parcelasSelecionadas) {
-                    if (taxasDeJuros.hasOwnProperty(parcelas)) {
-                        const juros = taxasDeJuros[parcelas];
-                        const valorAPagar = valorAParcelarBruto / (1 - juros);
-                        const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
-                        
-                        const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        
-                        let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
-                        
-                        if (showTotalValueCheckbox.checked) {
-                            const valorTotalComEntrada = valorEntrada + valorAPagar;
-                            const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            linhaParcela += ` (R$ ${totalFormatado})`;
+                    for (const parcelas of parcelasSelecionadas) {
+                        if (taxasDeJuros.hasOwnProperty(parcelas)) {
+                            const juros = taxasDeJuros[parcelas];
+                            const valorAPagar = valorAParcelarBruto / (1 - juros);
+                            const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
+                            
+                            const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            
+                            let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
+                            
+                            if (showTotalValueCheckbox.checked) {
+                                const valorTotalComEntrada = valorEntrada + valorAPagar;
+                                const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                linhaParcela += ` (R$ ${totalFormatado})`;
+                            }
+                            
+                            resultado.push(linhaParcela);
                         }
-                        
-                        resultado.push(linhaParcela);
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`);
+                 resultado.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
                  resultado = [`O valor da entrada não pode ser maior que o valor total.`];
             }
