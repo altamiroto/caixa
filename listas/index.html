@@ -150,6 +150,40 @@
             align-items: center;
             gap: 10px;
         }
+        /* Novos estilos para o link personalizado */
+        .share-link-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            display: none; /* Oculta por padrão */
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .share-link-container.show {
+            display: flex;
+        }
+        #shareableLink {
+            flex-grow: 1;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #copyLinkButton {
+            width: auto;
+            padding: 8px 12px;
+            background-color: #6c757d;
+        }
+        #copyLinkButton:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
@@ -161,6 +195,12 @@
         <div class="input-group">
             <label for="productList">Cole sua lista de produtos aqui:</label>
             <textarea id="productList" placeholder="Cole sua lista completa aqui, incluindo todos os cabeçalhos."></textarea>
+        </div>
+
+        <div class="share-link-container" id="shareLinkContainer">
+            <strong>Link para Compartilhar:</strong>
+            <input type="text" id="shareableLink" readonly>
+            <button id="copyLinkButton" onclick="copyShareableLink()">Copiar</button>
         </div>
 
         <button id="processButton" onclick="processList()">Processar Lista</button>
@@ -179,26 +219,34 @@
     </div>
 
     <script>
-        function processList() {
-            const listText = document.getElementById('productList').value;
+        // MODIFICAÇÃO: A função agora aceita um parâmetro opcional
+        function processList(listText = null) {
+            const listTextarea = document.getElementById('productList');
             const errorMessageDiv = document.getElementById('errorMessage');
             const processedListDiv = document.getElementById('processedProductList');
             const listContainer = document.querySelector('.product-list-container');
             const copyButton = document.getElementById('copyButton');
             const selectAllCheckbox = document.getElementById('selectAll');
+            // NOVO ELEMENTO: Referência ao container do link
+            const shareLinkContainer = document.getElementById('shareLinkContainer');
+
+            // Lógica para decidir qual texto usar
+            const sourceText = listText || listTextarea.value;
 
             errorMessageDiv.style.display = 'none';
             processedListDiv.innerHTML = '';
             listContainer.style.display = 'none';
             copyButton.style.display = 'none';
+            // Garante que o link esteja oculto se a lista estiver vazia
+            shareLinkContainer.classList.remove('show'); 
 
-            if (!listText.trim()) {
+            if (!sourceText.trim()) {
                 errorMessageDiv.textContent = 'Por favor, cole sua lista de produtos para processar.';
                 errorMessageDiv.style.display = 'block';
                 return;
             }
 
-            const products = parseProducts(listText);
+            const products = parseProducts(sourceText);
 
             if (products.length === 0) {
                 errorMessageDiv.textContent = 'Não foi possível encontrar produtos na lista. Verifique o formato.';
@@ -209,6 +257,10 @@
             displayProducts(products);
             listContainer.style.display = 'block';
             copyButton.style.display = 'block';
+
+            // NOVO: Exibe o container do link e o gera após o processamento
+            shareLinkContainer.classList.add('show');
+            generateShareableLink(sourceText);
 
             selectAllCheckbox.checked = false;
             selectAllCheckbox.onclick = () => {
@@ -341,6 +393,34 @@
                 copyMessage.classList.remove('show');
             }, 2000);
         }
+
+        // NOVAS FUNÇÕES
+        // Função para gerar o link com a lista codificada na URL
+        function generateShareableLink(listText) {
+            const encodedList = encodeURIComponent(listText);
+            const shareableLink = `${window.location.href.split('?')[0]}?list=${encodedList}`;
+            document.getElementById('shareableLink').value = shareableLink;
+        }
+
+        // Função para copiar o link para a área de transferência
+        function copyShareableLink() {
+            const shareableLinkInput = document.getElementById('shareableLink');
+            shareableLinkInput.select();
+            document.execCommand('copy');
+            showCopyMessage();
+        }
+
+        // NOVO: Lógica para verificar a URL ao carregar a página
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const listFromUrl = urlParams.get('list');
+
+            if (listFromUrl) {
+                const decodedList = decodeURIComponent(listFromUrl);
+                document.getElementById('productList').value = decodedList;
+                processList(decodedList); // Processa a lista automaticamente
+            }
+        };
     </script>
 </body>
 </html>
