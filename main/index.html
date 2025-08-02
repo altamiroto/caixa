@@ -67,9 +67,6 @@
         }
         .product-list-container {
             margin-top: 20px;
-            /* As propriedades abaixo foram removidas para expandir a lista */
-            /* max-height: 400px; */
-            /* overflow-y: auto; */
             border: 1px solid #ddd;
             padding: 10px;
             border-radius: 5px;
@@ -77,6 +74,7 @@
         .product-item {
             display: flex;
             align-items: flex-start;
+            justify-content: space-between; /* Para separar o conteúdo do link de busca */
             margin-bottom: 15px;
             padding: 10px;
             border: 1px solid #eee;
@@ -86,6 +84,11 @@
         .product-item:hover {
             background-color: #f0f0f0;
         }
+        .product-content {
+            display: flex;
+            align-items: flex-start;
+            flex-grow: 1;
+        }
         .product-checkbox {
             margin-right: 15px;
             margin-top: 5px;
@@ -94,6 +97,20 @@
         .product-text {
             white-space: pre-wrap;
             font-size: 14px;
+            flex-grow: 1;
+        }
+        .image-search-link {
+            margin-left: 15px;
+            margin-top: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #4CAF50;
+            display: flex;
+            align-items: center;
+        }
+        .image-search-link:hover {
+            color: #2e7d32;
         }
         .copy-message {
             background-color: #d4edda;
@@ -198,7 +215,6 @@
             lines.forEach(line => {
                 const trimmedLine = line.trim();
 
-                // Identifica o início de um bloco de produto por um emoji ou cabeçalho de categoria
                 const isProductStart = trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌)/) || trimmedLine.match(/^([>⚜️]|\*`)/);
 
                 if (isProductStart && !trimmedLine.includes('DISPONÍVEIS')) {
@@ -208,11 +224,9 @@
                     currentProductLines = [line];
                     isProductBlock = true;
                 } else if (isProductBlock) {
-                    // Adiciona linhas subsequentes que são parte do produto
                     if (trimmedLine) {
                         currentProductLines.push(line);
                     } else {
-                        // Se a linha for vazia, encerra o bloco do produto
                         products.push(currentProductLines.join('\n'));
                         currentProductLines = [];
                         isProductBlock = false;
@@ -220,7 +234,6 @@
                 }
             });
 
-            // Adiciona o último bloco de produto, se houver
             if (currentProductLines.length > 0) {
                 products.push(currentProductLines.join('\n'));
             }
@@ -235,6 +248,9 @@
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
 
+                const productContent = document.createElement('div');
+                productContent.className = 'product-content';
+
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.className = 'product-checkbox';
@@ -244,8 +260,18 @@
                 textContainer.className = 'product-text';
                 textContainer.innerHTML = productText.replace(/\n/g, '<br>');
 
-                productItem.appendChild(checkbox);
-                productItem.appendChild(textContainer);
+                // Adiciona o link de busca de imagem usando o texto completo do produto
+                const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(productText.trim())}`;
+                const searchLink = document.createElement('a');
+                searchLink.href = searchUrl;
+                searchLink.target = '_blank';
+                searchLink.className = 'image-search-link';
+                searchLink.innerHTML = '🔍';
+                
+                productContent.appendChild(checkbox);
+                productContent.appendChild(textContainer);
+                productItem.appendChild(productContent);
+                productItem.appendChild(searchLink); // Adiciona o link no final do item para que ele fique à direita
                 processedListDiv.appendChild(productItem);
             });
         }
