@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Lista de Produtos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #processButton {
+            background-color: #28a745;
+        }
+        #processButton:hover {
+            background-color: #218838;
+        }
+        #copyButton {
+            background-color: #007bff;
+            margin-top: 20px;
+        }
+        #copyButton:hover {
+            background-color: #0056b3;
+        }
+        .product-list-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .product-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .product-item:hover {
+            background-color: #f0f0f0;
+        }
+        .product-content {
+            display: flex;
+            align-items: flex-start;
+            flex-grow: 1;
+            pointer-events: none;
+        }
+        .product-checkbox {
+            margin-right: 15px;
+            margin-top: 5px;
+            transform: scale(1.5);
+            pointer-events: all;
+        }
+        .product-text {
+            white-space: pre-wrap;
+            font-size: 14px;
+            flex-grow: 1;
+            pointer-events: none;
+        }
+        .image-search-link {
+            margin-left: 15px;
+            margin-top: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #4CAF50;
+            display: flex;
+            align-items: center;
+            pointer-events: all;
+        }
+        .image-search-link:hover {
+            color: #2e7d32;
+        }
+        /* MENSAGEM FIXA */
+        .copy-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .copy-message.show {
+            opacity: 1;
+        }
+        .error-message {
+            color: #d9534f;
+            background-color: #f2dede;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .select-all-container {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Processador de Lista de Produtos</h1>
+        <span id="copyMessage" class="copy-message">Copiado!</span>
+
+        <div class="input-group">
+            <label for="productList">Cole sua lista de produtos aqui:</label>
+            <textarea id="productList" placeholder="Cole sua lista completa aqui, incluindo todos os cabeçalhos."></textarea>
+        </div>
+
+        <button id="processButton" onclick="processList()">Processar Lista</button>
+        <span id="errorMessage" class="error-message" style="display: none;"></span>
+
+        <div class="product-list-container" style="display: none;">
+            <div class="select-all-container">
+                <input type="checkbox" id="selectAll">
+                <label for="selectAll">Selecionar/Desselecionar todos</label>
+            </div>
+            <div id="processedProductList"></div>
+        </div>
+        
+        <button id="copyButton" style="display: none;" onclick="copySelectedProducts()">Copiar Itens Selecionados</button>
+        
+    </div>
+
+    <script>
+        function processList() {
+            const listText = document.getElementById('productList').value;
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const processedListDiv = document.getElementById('processedProductList');
+            const listContainer = document.querySelector('.product-list-container');
+            const copyButton = document.getElementById('copyButton');
+            const selectAllCheckbox = document.getElementById('selectAll');
+
+            errorMessageDiv.style.display = 'none';
+            processedListDiv.innerHTML = '';
+            listContainer.style.display = 'none';
+            copyButton.style.display = 'none';
+
+            if (!listText.trim()) {
+                errorMessageDiv.textContent = 'Por favor, cole sua lista de produtos para processar.';
+                errorMessageDiv.style.display = 'block';
+                return;
+            }
+
+            const products = parseProducts(listText);
+
+            if (products.length === 0) {
+                errorMessageDiv.textContent = 'Não foi possível encontrar produtos na lista. Verifique o formato.';
+                errorMessageDiv.style.display = 'block';
+                return;
+            }
+
+            displayProducts(products);
+            listContainer.style.display = 'block';
+            copyButton.style.display = 'block';
+
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.onclick = () => {
+                document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            };
+        }
+
+        function parseProducts(text) {
+            const lines = text.split('\n');
+            const products = [];
+            let currentProductLines = [];
+            let isProductBlock = false;
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+
+                const isProductStart = trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌)/) || trimmedLine.match(/^([>⚜️]|\*`)/);
+
+                if (isProductStart && !trimmedLine.includes('DISPONÍVEIS')) {
+                    if (currentProductLines.length > 0) {
+                        products.push(currentProductLines.join('\n'));
+                    }
+                    currentProductLines = [line];
+                    isProductBlock = true;
+                } else if (isProductBlock) {
+                    if (trimmedLine) {
+                        currentProductLines.push(line);
+                    } else {
+                        products.push(currentProductLines.join('\n'));
+                        currentProductLines = [];
+                        isProductBlock = false;
+                    }
+                }
+            });
+
+            if (currentProductLines.length > 0) {
+                products.push(currentProductLines.join('\n'));
+            }
+            return products;
+        }
+
+        function displayProducts(products) {
+            const processedListDiv = document.getElementById('processedProductList');
+            processedListDiv.innerHTML = '';
+            
+            products.forEach((productText, index) => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                
+                productItem.addEventListener('click', (event) => {
+                    if (event.target.type === 'checkbox' || event.target.tagName === 'A') {
+                        return;
+                    }
+                    copySingleProduct(productText);
+                });
+
+                const productContent = document.createElement('div');
+                productContent.className = 'product-content';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'product-checkbox';
+                checkbox.setAttribute('data-index', index);
+                
+                const textContainer = document.createElement('div');
+                textContainer.className = 'product-text';
+                textContainer.innerHTML = productText.replace(/\n/g, '<br>');
+
+                const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(productText.trim())}`;
+                const searchLink = document.createElement('a');
+                searchLink.href = searchUrl;
+                searchLink.target = '_blank';
+                searchLink.className = 'image-search-link';
+                searchLink.innerHTML = '🔍';
+                
+                productContent.appendChild(checkbox);
+                productContent.appendChild(textContainer);
+                productItem.appendChild(productContent);
+                productItem.appendChild(searchLink);
+                processedListDiv.appendChild(productItem);
+            });
+        }
+        
+        function copySingleProduct(text) {
+            navigator.clipboard.writeText(text.trim())
+                .then(() => {
+                    showCopyMessage();
+                })
+                .catch(err => {
+                    console.error('Falha ao copiar texto: ', err);
+                    alert('Erro ao copiar o texto. Tente novamente.');
+                });
+        }
+
+        function copySelectedProducts() {
+            const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Por favor, selecione pelo menos um produto para copiar.');
+                return;
+            }
+
+            let textToCopy = '';
+            const productList = document.getElementById('productList').value;
+            const products = parseProducts(productList);
+
+            checkboxes.forEach(checkbox => {
+                const index = checkbox.getAttribute('data-index');
+                const product = products[index];
+                if (product) {
+                    textToCopy += product + '\n\n';
+                }
+            });
+
+            navigator.clipboard.writeText(textToCopy.trim())
+                .then(() => {
+                    showCopyMessage();
+                })
+                .catch(err => {
+                    console.error('Falha ao copiar texto: ', err);
+                    alert('Erro ao copiar o texto. Tente novamente.');
+                });
+        }
+        
+        function showCopyMessage() {
+            const copyMessage = document.getElementById('copyMessage');
+            copyMessage.classList.add('show');
+            setTimeout(() => {
+                copyMessage.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
