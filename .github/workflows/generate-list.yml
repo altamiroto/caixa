@@ -1,0 +1,30 @@
+name: Generate List File
+
+on:
+  repository_dispatch:
+    types: [generate-list]
+
+jobs:
+  create-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Create list file
+        run: |
+          mkdir -p lists
+          echo "${{ github.event.client_payload.list }}" > lists/${{ github.event.client_payload.hash }}.txt
+        
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lists
+          git commit -m "Generated list file ${{ github.event.client_payload.hash }}"
+          git push
