@@ -74,12 +74,13 @@
         .product-item {
             display: flex;
             align-items: flex-start;
-            justify-content: space-between; /* Para separar o conteúdo do link de busca */
+            justify-content: space-between;
             margin-bottom: 15px;
             padding: 10px;
             border: 1px solid #eee;
             border-radius: 5px;
             background-color: #f9f9f9;
+            cursor: pointer;
         }
         .product-item:hover {
             background-color: #f0f0f0;
@@ -88,16 +89,19 @@
             display: flex;
             align-items: flex-start;
             flex-grow: 1;
+            pointer-events: none;
         }
         .product-checkbox {
             margin-right: 15px;
             margin-top: 5px;
             transform: scale(1.5);
+            pointer-events: all;
         }
         .product-text {
             white-space: pre-wrap;
             font-size: 14px;
             flex-grow: 1;
+            pointer-events: none;
         }
         .image-search-link {
             margin-left: 15px;
@@ -108,19 +112,26 @@
             color: #4CAF50;
             display: flex;
             align-items: center;
+            pointer-events: all;
         }
         .image-search-link:hover {
             color: #2e7d32;
         }
+        /* MENSAGEM FIXA */
         .copy-message {
             background-color: #d4edda;
             color: #155724;
-            padding: 10px;
+            padding: 10px 20px;
             border-radius: 5px;
             text-align: center;
-            margin-top: 10px;
             opacity: 0;
             transition: opacity 0.5s ease;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .copy-message.show {
             opacity: 1;
@@ -145,6 +156,7 @@
 
     <div class="container">
         <h1>Processador de Lista de Produtos</h1>
+        <span id="copyMessage" class="copy-message">Copiado!</span>
 
         <div class="input-group">
             <label for="productList">Cole sua lista de produtos aqui:</label>
@@ -163,7 +175,7 @@
         </div>
         
         <button id="copyButton" style="display: none;" onclick="copySelectedProducts()">Copiar Itens Selecionados</button>
-        <span id="copyMessage" class="copy-message">Copiado!</span>
+        
     </div>
 
     <script>
@@ -247,6 +259,13 @@
             products.forEach((productText, index) => {
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
+                
+                productItem.addEventListener('click', (event) => {
+                    if (event.target.type === 'checkbox' || event.target.tagName === 'A') {
+                        return;
+                    }
+                    copySingleProduct(productText);
+                });
 
                 const productContent = document.createElement('div');
                 productContent.className = 'product-content';
@@ -260,7 +279,6 @@
                 textContainer.className = 'product-text';
                 textContainer.innerHTML = productText.replace(/\n/g, '<br>');
 
-                // Adiciona o link de busca de imagem usando o texto completo do produto
                 const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(productText.trim())}`;
                 const searchLink = document.createElement('a');
                 searchLink.href = searchUrl;
@@ -271,9 +289,20 @@
                 productContent.appendChild(checkbox);
                 productContent.appendChild(textContainer);
                 productItem.appendChild(productContent);
-                productItem.appendChild(searchLink); // Adiciona o link no final do item para que ele fique à direita
+                productItem.appendChild(searchLink);
                 processedListDiv.appendChild(productItem);
             });
+        }
+        
+        function copySingleProduct(text) {
+            navigator.clipboard.writeText(text.trim())
+                .then(() => {
+                    showCopyMessage();
+                })
+                .catch(err => {
+                    console.error('Falha ao copiar texto: ', err);
+                    alert('Erro ao copiar o texto. Tente novamente.');
+                });
         }
 
         function copySelectedProducts() {
@@ -297,16 +326,20 @@
 
             navigator.clipboard.writeText(textToCopy.trim())
                 .then(() => {
-                    const copyMessage = document.getElementById('copyMessage');
-                    copyMessage.classList.add('show');
-                    setTimeout(() => {
-                        copyMessage.classList.remove('show');
-                    }, 2000);
+                    showCopyMessage();
                 })
                 .catch(err => {
                     console.error('Falha ao copiar texto: ', err);
                     alert('Erro ao copiar o texto. Tente novamente.');
                 });
+        }
+        
+        function showCopyMessage() {
+            const copyMessage = document.getElementById('copyMessage');
+            copyMessage.classList.add('show');
+            setTimeout(() => {
+                copyMessage.classList.remove('show');
+            }, 2000);
         }
     </script>
 </body>
