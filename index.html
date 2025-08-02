@@ -276,7 +276,15 @@
                     <input type="checkbox" id="showTotalValue">
                     <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
                 </div>
+                <div class="checkbox-item" >
+                    <input type="checkbox" id="boldProductName" checked>
+                    <label for="boldProductName">Nome do produto em negrito (*texto*)</label>
+                </div>
                 <hr>
+                <div class="input-group">
+                    <label for="produtoPrefix">Prefixo do produto (Sugestões 📱  🍏   🍎   📺    💻  ✳️  📦  🔌 ⬛  ):</label>
+                    <input type="text" id="produtoPrefix" placeholder="Ex: 📦" value="➡️ ">
+                </div>
                 <div class="input-group">
                     <label for="textoAdicionalLinha">Texto adicional por linha (opcional):</label>
                     <input type="text" id="textoAdicionalLinha" placeholder="Ex: 'sem juros no cartão'">
@@ -325,7 +333,9 @@
         const showDebitoCheckbox = document.getElementById('showDebito');
         const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
         const showTotalValueCheckbox = document.getElementById('showTotalValue');
+        const boldProductNameCheckbox = document.getElementById('boldProductName');
         const textoAdicionalLinhaInput = document.getElementById('textoAdicionalLinha');
+        const produtoPrefixInput = document.getElementById('produtoPrefix');
         const textoFinalMensagemTextarea = document.getElementById('textoFinalMensagem');
         const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
         const selectAllButton = document.getElementById('selectAll');
@@ -395,7 +405,9 @@
         showDebitoCheckbox.addEventListener('change', calcularParcelas);
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
         showTotalValueCheckbox.addEventListener('change', calcularParcelas);
+        boldProductNameCheckbox.addEventListener('change', calcularParcelas);
         textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
+        produtoPrefixInput.addEventListener('input', calcularParcelas);
         textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
         textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
         
@@ -532,6 +544,8 @@
             const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
             const textoAdicionalLinha = textoAdicionalLinhaInput.value;
             const textoFinalMensagem = textoFinalMensagemTextarea.value;
+            const produtoPrefix = produtoPrefixInput.value;
+            const boldProductName = boldProductNameCheckbox.checked;
             
             let resultado = [];
             
@@ -542,7 +556,15 @@
             if (selectedProducts.length > 0) {
                 selectedProducts.forEach((product, index) => {
                     const valorLiquido = product.preco + lucroAdicional;
-                    const nomeProduto = product.produto;
+                    let nomeProduto = product.produto;
+                    
+                    if (boldProductName) {
+                        nomeProduto = `*${nomeProduto}*`;
+                    }
+                    if (produtoPrefix) {
+                        nomeProduto = `${produtoPrefix} ${nomeProduto}`;
+                    }
+                    
                     const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
                     if (produtoResultado) {
                         resultado.push(produtoResultado);
@@ -586,7 +608,6 @@
 
             resultadoTextarea.value = resultadoFinal.join('\n');
         }
-
 
         function getParcelasSelecionadas() {
             let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
