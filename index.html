@@ -416,22 +416,19 @@
             calcularParcelas();
         });
         
-    toggleProductList.addEventListener('change', () => {
-        productListSection.classList.toggle('show', toggleProductList.checked);
-        valorBaseInput.disabled = toggleProductList.checked;
+        toggleProductList.addEventListener('change', () => {
+            productListSection.classList.toggle('show', toggleProductList.checked);
+            valorBaseInput.disabled = toggleProductList.checked;
 
-        if (!toggleProductList.checked) {
-            // Se o checkbox for desmarcado, limpe o estado da lista
-            products = [];
-            selectedProducts = [];
-            productListResult.innerHTML = '';
-            // Habilite o campo de valor base novamente
-            valorBaseInput.disabled = false;
-        }
+            if (!toggleProductList.checked) {
+                products = [];
+                selectedProducts = [];
+                productListResult.innerHTML = '';
+                valorBaseInput.disabled = false;
+            }
 
-        // Recalcule as parcelas em ambos os casos (marcado ou desmarcado)
-        calcularParcelas();
-    });
+            calcularParcelas();
+        });
 
         function processList() {
             const productList = productListTextarea.value;
@@ -488,10 +485,18 @@
         }
 
         function displayTable(products) {
-            let tableHTML = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th></tr></thead><tbody>';
+            let tableHTML = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th><th>Imagem</th></tr></thead><tbody>';
             products.forEach((product, index) => {
                 const precoFormatado = `R$ ${parseFloat(product.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                tableHTML += `<tr><td><input type="checkbox" class="product-checkbox" value="${index}"></td><td>${product.produto}</td><td>${precoFormatado}</td></tr>`;
+                const encodedProductName = encodeURIComponent(product.produto);
+                const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${encodedProductName}`;
+                
+                tableHTML += `<tr>
+                    <td><input type="checkbox" class="product-checkbox" value="${index}"></td>
+                    <td>${product.produto}</td>
+                    <td>${precoFormatado}</td>
+                    <td><a href="${googleImagesUrl}" target="_blank">Ver Imagens</a></td>
+                </tr>`;
             });
             tableHTML += '</tbody></table>';
             productListResult.innerHTML = tableHTML;
@@ -522,69 +527,65 @@
             productListResult.innerHTML = `<div class="error-message">${message}</div>`;
         }
 
-function calcularParcelas() {
-    const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
-    const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
-    const textoAdicionalLinha = textoAdicionalLinhaInput.value;
-    const textoFinalMensagem = textoFinalMensagemTextarea.value;
-    
-    let resultado = [];
-    
-    let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
-    const isSpecificParcel = !isNaN(parcelaEspecifica) && parcelaEspecifica > 0;
-    const parcelasToCalculate = isSpecificParcel ? [parcelaEspecifica] : getParcelasSelecionadas();
+        function calcularParcelas() {
+            const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
+            const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
+            const textoAdicionalLinha = textoAdicionalLinhaInput.value;
+            const textoFinalMensagem = textoFinalMensagemTextarea.value;
+            
+            let resultado = [];
+            
+            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
+            const isSpecificParcel = !isNaN(parcelaEspecifica) && parcelaEspecifica > 0;
+            const parcelasToCalculate = isSpecificParcel ? [parcelaEspecifica] : getParcelasSelecionadas();
 
-    if (selectedProducts.length > 0) {
-        selectedProducts.forEach((product, index) => {
-            const valorLiquido = product.preco + lucroAdicional;
-            const nomeProduto = product.produto;
-            const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
-            if (produtoResultado) {
-                resultado.push(produtoResultado);
+            if (selectedProducts.length > 0) {
+                selectedProducts.forEach((product, index) => {
+                    const valorLiquido = product.preco + lucroAdicional;
+                    const nomeProduto = product.produto;
+                    const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
+                    if (produtoResultado) {
+                        resultado.push(produtoResultado);
+                    }
+                    if (selectedProducts.length > 1 && index < selectedProducts.length - 1) {
+                        resultado.push('\n----------------------------------------');
+                    }
+                });
+            } else {
+                const valorBase = parseFloat(valorBaseInput.value);
+                if (isNaN(valorBase) || valorBase <= 0) {
+                    resultadoTextarea.value = '';
+                    return;
+                }
+                const valorLiquido = valorBase + lucroAdicional;
+                const nomeProduto = textoCabecalhoMensagemTextarea.value;
+                const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
+                if (produtoResultado) {
+                    resultado.push(produtoResultado);
+                }
+            }
+            
+            let resultadoFinal = [...resultado];
+            const cabecalhoMensagemGlobal = textoCabecalhoMensagemTextarea.value;
+
+            if (cabecalhoMensagemGlobal && selectedProducts.length === 0) {
+                resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
+            } else if (cabecalhoMensagemGlobal && selectedProducts.length > 0) {
+                resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
+            } else {
+                resultadoFinal = [...resultado];
             }
 
-            // ADIÇÃO: Adiciona o separador se houver mais de um produto
-            if (selectedProducts.length > 1 && index < selectedProducts.length - 1) {
-                resultado.push('\n----------------------------------------');
+            if (textoFinalMensagem) {
+                if (resultadoFinal.length > 0) {
+                    resultadoFinal.push(`\n${textoFinalMensagem}`);
+                } else {
+                    resultadoFinal.push(textoFinalMensagem);
+                }
             }
-        });
-    } else {
-        const valorBase = parseFloat(valorBaseInput.value);
-        if (isNaN(valorBase) || valorBase <= 0) {
-            resultadoTextarea.value = '';
-            return;
-        }
-        const valorLiquido = valorBase + lucroAdicional;
-        const nomeProduto = textoCabecalhoMensagemTextarea.value;
-        const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
-        if (produtoResultado) {
-            resultado.push(produtoResultado);
-        }
-    }
-    
-    let resultadoFinal = [...resultado];
-    const cabecalhoMensagemGlobal = textoCabecalhoMensagemTextarea.value;
 
-    // Adiciona o cabeçalho global se não for modo lista
-    if (cabecalhoMensagemGlobal && selectedProducts.length === 0) {
-        resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
-    } else if (cabecalhoMensagemGlobal && selectedProducts.length > 0) {
-        // Adiciona o cabeçalho global apenas uma vez no topo, se o modo lista for usado
-        resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
-    } else {
-        resultadoFinal = [...resultado];
-    }
-
-    if (textoFinalMensagem) {
-        if (resultadoFinal.length > 0) {
-            resultadoFinal.push(`\n${textoFinalMensagem}`);
-        } else {
-            resultadoFinal.push(textoFinalMensagem);
+            resultadoTextarea.value = resultadoFinal.join('\n');
         }
-    }
-
-    resultadoTextarea.value = resultadoFinal.join('\n');
-}
 
 
         function getParcelasSelecionadas() {
@@ -612,7 +613,7 @@ function calcularParcelas() {
             let resultadoProduto = [];
             
             if (nomeProduto && nomeProduto.trim().length > 0) {
-                 resultadoProduto.push(`\n${nomeProduto}\n`);
+                resultadoProduto.push(`\n${nomeProduto}\n`);
             }
             
             const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
@@ -649,9 +650,9 @@ function calcularParcelas() {
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                 resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             } else if (valorLiquido < valorEntrada) {
-                 resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
+                resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
             }
             return resultadoProduto.join('\n');
         }
