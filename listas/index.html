@@ -405,7 +405,8 @@
         // NOVAS FUNÇÕES
         // Função para gerar o link com a lista codificada na URL
         function generateShareableLink(listText) {
-            const encodedList = encodeURIComponent(listText);
+            const compressedList = btoa(unescape(encodeURIComponent(listText)));
+            const encodedList = encodeURIComponent(compressedList);
             const shareableLink = `${window.location.href.split('?')[0]}?list=${encodedList}`;
             document.getElementById('shareableLink').value = shareableLink;
         }
@@ -424,9 +425,15 @@
             const listFromUrl = urlParams.get('list');
 
             if (listFromUrl) {
-                const decodedList = decodeURIComponent(listFromUrl);
-                document.getElementById('productList').value = decodedList;
-                processList(decodedList); // Processa a lista automaticamente
+                try {
+                    const decodedList = decodeURIComponent(urlParams.get('list'));
+                    const originalList = decodeURIComponent(escape(atob(decodedList)));
+                    
+                    document.getElementById('productList').value = originalList;
+                    processList(originalList); // Processa a lista automaticamente
+                } catch (e) {
+                    console.error('Falha ao decodificar a lista da URL:', e);
+                }
             }
         };
     </script>
