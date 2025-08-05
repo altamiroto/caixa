@@ -287,7 +287,7 @@
             lines.forEach(line => {
                 const trimmedLine = line.trim();
 
-                const isProductStart = trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌)/) || trimmedLine.match(/^([>⚜️]|\*`)/);
+                const isProductStart = trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌|📲)/) || trimmedLine.match(/^([>⚜️]|\*`)/);
 
                 if (isProductStart && !trimmedLine.includes('DISPONÍVEIS')) {
                     if (currentProductLines.length > 0) {
