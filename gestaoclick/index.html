@@ -5,186 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Produtos da Loja com Busca via API</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f7f9fc;
-      color: #333;
-    }
-    
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #004a99;
-      font-size: 1.8rem;
-    }
-    
-    #container-busca {
-      max-width: 600px;
-      margin: 0 auto 20px auto;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      padding: 0 10px;
-      flex-wrap: wrap;
-    }
-    
-    #campo-busca {
-      flex-grow: 1;
-      padding: 10px 15px;
-      font-size: 16px;
-      border: 2px solid #004a99;
-      border-radius: 6px;
-      outline: none;
-      transition: border-color 0.3s ease;
-      min-width: 200px;
-    }
-    
-    #campo-busca:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-    
-    #btn-buscar {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #004a99;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      white-space: nowrap;
-    }
-    
-    #btn-buscar:hover {
-      background-color: #0066cc;
-    }
-
-    .table-wrapper {
-      max-width: 700px;
-      width: 90%;
-      margin: 0 auto;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      table-layout: fixed;
-    }
-    
-    th,
-    td {
-      padding: 8px 10px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-      word-break: break-word;
-      font-size: 14px;
-    }
-
-    th {
-      background-color: #004a99;
-      color: white;
-      user-select: none;
-      cursor: pointer;
-      position: relative;
-    }
-    
-    th:hover {
-      background-color: #0066cc;
-    }
-
-    th.ordenado-asc::after {
-      content: '▲';
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    th.ordenado-desc::after {
-      content: '▼';
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-    
-    th:nth-child(1), td:nth-child(1) { width: 75%; }
-    th:nth-child(2), td:nth-child(2) { width: 25%; }
-    
-    tbody tr:nth-child(odd) {
-      background-color: #f2f2f2;
-    }
-
-    tr:hover {
-      background-color: #e0eaf5;
-    }
-    
-    #opcoes-avancadas-container {
-      max-width: 600px;
-      margin: 0 auto 20px auto;
-      padding: 0 10px;
-    }
-    details {
-      border: 1px solid #004a99;
-      border-radius: 6px;
-      padding: 10px 15px;
-      background: #e9f0fa;
-      max-width: 600px;
-      margin: 0 auto 20px auto;
-    }
-    summary {
-      font-weight: bold;
-      font-size: 1.1rem;
-      cursor: pointer;
-      outline: none;
-      user-select: none;
-    }
-    .checkbox-group label {
-      display: flex;
-      align-items: center;
-      margin-top: 8px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .checkbox-group input[type="checkbox"] {
-      margin-right: 8px;
-      cursor: pointer;
-    }
-    
-    @media (max-width: 600px) {
-      #container-busca {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0 15px;
-      }
-
-      #btn-buscar {
-        width: 100%;
-        margin-top: 10px;
-      }
-      
-      .table-wrapper {
-        max-width: 100%;
-        width: 95%;
-      }
-      
-      table {
-        table-layout: auto;
-      }
-      
-      th:nth-child(1), td:nth-child(1) { width: auto; }
-      th:nth-child(2), td:nth-child(2) { width: auto; }
-
-      th::after {
-        content: none !important;
-      }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f9fc; color: #333; }
+    h1 { text-align: center; margin-bottom: 20px; color: #004a99; font-size: 1.6rem; }
+    #container-busca { max-width: 700px; margin: 0 auto 12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    #campo-busca { flex:1 1 220px; padding:10px 12px; border:2px solid #004a99; border-radius:6px; font-size:15px; }
+    #btn-buscar { padding:10px 16px; background:#004a99; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+    #btn-buscar:hover { background:#0066cc; }
+    details { max-width:700px; margin: 10px auto; background:#e9f0fa; border:1px solid #004a99; border-radius:6px; padding:10px 14px; }
+    summary { font-weight:600; cursor:pointer; }
+    .checkbox-group label { display:flex; align-items:center; gap:8px; margin-top:8px; cursor:pointer; }
+    .table-wrapper { max-width:700px; width:90%; margin: 14px auto; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-radius:8px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; background:white; }
+    th, td { padding:10px; text-align:left; border-bottom:1px solid #eee; font-size:14px; }
+    th { background:#004a99; color:#fff; }
+    tbody tr:nth-child(odd){ background:#fafafa; }
+    @media (max-width:600px){
+      #container-busca { padding:0 12px; flex-direction:column; }
+      #btn-buscar { width:100%; }
     }
   </style>
 </head>
@@ -192,189 +29,113 @@
   <h1>Produtos da Loja</h1>
 
   <div id="container-busca">
-    <input
-      type="text"
-      id="campo-busca"
-      placeholder="Digite o nome do produto..."
-      aria-label="Campo de busca de produtos"
-    />
+    <input id="campo-busca" type="text" placeholder="Digite o nome do produto..." aria-label="Campo de busca" />
     <button id="btn-buscar" type="button">Buscar</button>
   </div>
 
   <details id="opcoes-avancadas">
     <summary>Opções avançadas</summary>
-    <div class="checkbox-group">
-      <label>
-        <input type="checkbox" name="grupo" value="todos" checked />
-        Todos Grupos (padrão)
-      </label>
-      <label>
-        <input type="checkbox" name="grupo" value="5372327" />
-        Grupo Ativos (ID 5372327)
-      </label>
-      <label>
-        <input type="checkbox" name="grupo" value="5372327-inativos" />
-        Grupo Inativos (ID 5372327)
-      </label>
+    <div class="checkbox-group" role="group" aria-label="Filtro de grupos">
+      <label><input type="checkbox" name="grupo" value="todos" id="grupo-todos" checked /> Todos Grupos (padrão)</label>
+      <!-- Substitua os IDs abaixo caso sejam diferentes -->
+      <label><input type="checkbox" name="grupo" value="5372327" id="grupo-ativos" /> Ativos (ID 5372327)</label>
+      <label><input type="checkbox" name="grupo" value="5372328" id="grupo-inativos" /> Inativos (ID 5372328)</label>
     </div>
   </details>
 
   <div class="table-wrapper">
     <table id="tabela-produtos" aria-label="Tabela de produtos">
       <thead>
-        <tr>
-          <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
-          <th data-coluna="estoque" data-ordem="asc">Estoque</th>
-        </tr>
+        <tr><th>Nome</th><th>Estoque</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td colspan="2" style="text-align:center;">Por favor, faça uma busca para ver os produtos.</td>
-        </tr>
+        <tr><td colspan="2" style="text-align:center;">Realize uma busca para listar produtos.</td></tr>
       </tbody>
     </table>
   </div>
 
   <script>
-    const lojaIdJeta = "361408";
+    const lojaIdJeta = "361408"; // mantém a loja
     let todosProdutos = [];
 
-    async function buscarProdutos(nomeBusca = "", pagina = 1, gruposSelecionados = []) {
+    // Garante comportamento: se marcar "todos" limpa os outros; se marcar qualquer outro, desmarca "todos"
+    const chkTodos = document.getElementById('grupo-todos');
+    const chks = Array.from(document.querySelectorAll('input[name="grupo"]')).filter(c => c.id !== 'grupo-todos');
+
+    chkTodos.addEventListener('change', () => {
+      if (chkTodos.checked) chks.forEach(c => c.checked = false);
+    });
+    chks.forEach(ch => ch.addEventListener('change', () => {
+      if (ch.checked) chkTodos.checked = false;
+      // se nenhum marcado, reativa 'todos'
+      const any = chks.some(c => c.checked);
+      if (!any) chkTodos.checked = true;
+    }));
+
+    function getGruposSelecionados() {
+      const checked = Array.from(document.querySelectorAll('input[name="grupo"]:checked')).map(c => c.value);
+      // se "todos" está selecionado ou não houver seleção -> retorna empty (interpretação: sem filtro)
+      if (checked.includes('todos') || checked.length === 0) return [];
+      return checked; // array de IDs (strings)
+    }
+
+    async function buscarProdutos(nomeBusca = "", pagina = 1, grupos = []) {
       const url = new URL("https://caixa-three.vercel.app/api/produtos");
       url.searchParams.append("loja_id", lojaIdJeta);
       url.searchParams.append("pagina", pagina);
-      if (nomeBusca.trim() !== "") {
-        url.searchParams.append("nome", nomeBusca.trim());
+      if (nomeBusca && nomeBusca.trim()) url.searchParams.append("nome", nomeBusca.trim());
+      if (grupos && grupos.length > 0) {
+        // envia como comma-separated para o backend
+        url.searchParams.append("grupo_id", grupos.join(','));
       }
-
-      // Se "Todos Grupos" estiver selecionado, não filtramos por grupo (usa padrão da API)
-      // Caso contrário, adicionamos os grupos selecionados (IDs) separados por vírgula
-      if (gruposSelecionados.length > 0 && !gruposSelecionados.includes("todos")) {
-        // Removemos as strings "inativos" do valor para enviar só o número
-        const gruposIds = gruposSelecionados.map(g => g.replace("-inativos", "")).join(",");
-        url.searchParams.append("grupo_id", gruposIds);
-      }
-
-      try {
-        const resposta = await fetch(url.toString());
-        if (!resposta.ok) {
-          throw new Error("Erro na requisição: " + resposta.statusText);
-        }
-        return await resposta.json();
-      } catch (error) {
-        console.error("Erro na busca de produtos:", error);
-        throw new Error("Não foi possível conectar-se ao servidor ou a busca falhou.");
-      }
+      const resp = await fetch(url.toString());
+      if (!resp.ok) throw new Error('Erro: ' + resp.status + ' ' + resp.statusText);
+      return await resp.json();
     }
 
     function renderizarTabela(produtos) {
-      const tbody = document.querySelector("#tabela-produtos tbody");
+      const tbody = document.querySelector('#tabela-produtos tbody');
       if (!produtos || produtos.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
         return;
       }
-      
-      tbody.innerHTML = "";
-      produtos.forEach(produto => {
-        const linha = document.createElement("tr");
-        linha.innerHTML = `
-          <td>${produto.nome}</td>
-          <td>${produto.estoque}</td>
-        `;
-        tbody.appendChild(linha);
+      tbody.innerHTML = '';
+      produtos.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${p.nome}</td><td>${p.estoque}</td>`;
+        tbody.appendChild(tr);
       });
     }
 
     async function carregarProdutos(nomeBusca = "") {
-      const tbody = document.querySelector("#tabela-produtos tbody");
-      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
-
+      const tbody = document.querySelector('#tabela-produtos tbody');
+      tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Carregando...</td></tr>';
+      const grupos = getGruposSelecionados(); // array vazio => todos
       let pagina = 1;
       let totalPaginas = 1;
       todosProdutos = [];
-
-      // Busca os grupos selecionados nas opções avançadas
-      const checkboxes = document.querySelectorAll('details#opcoes-avancadas input[name="grupo"]:checked');
-      const gruposSelecionados = Array.from(checkboxes).map(cb => cb.value);
-
       try {
         do {
-          const dados = await buscarProdutos(nomeBusca, pagina, gruposSelecionados);
-          if (dados.code !== 200) {
-            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
-          }
-
+          const dados = await buscarProdutos(nomeBusca, pagina, grupos);
+          if (dados.code !== 200) throw new Error(dados.data?.mensagem || 'Erro ao buscar produtos');
           todosProdutos = todosProdutos.concat(dados.data);
-          totalPaginas = dados.meta.total_paginas;
+          totalPaginas = dados.meta?.total_paginas || 1;
           pagina++;
         } while (pagina <= totalPaginas);
-
-        // Ordena os produtos por nome (crescente) após o carregamento
-        todosProdutos.sort((a, b) => {
-          const nomeA = a.nome.toLowerCase();
-          const nomeB = b.nome.toLowerCase();
-          if (nomeA < nomeB) return -1;
-          if (nomeA > nomeB) return 1;
-          return 0;
-        });
-
+        // opcional: ordenar por nome
+        todosProdutos.sort((a,b)=> (a.nome||'').localeCompare(b.nome||''));
         renderizarTabela(todosProdutos);
-      } catch (error) {
-        tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;color:red;">${err.message}</td></tr>`;
       }
     }
 
-    function ordenarTabela(coluna, ordem) {
-      if (todosProdutos.length === 0) return;
-
-      const produtosOrdenados = [...todosProdutos].sort((a, b) => {
-        let valorA = a[coluna];
-        let valorB = b[coluna];
-
-        if (typeof valorA === 'string') {
-          valorA = valorA.toLowerCase();
-          valorB = valorB.toLowerCase();
-        } else {
-          valorA = Number(valorA);
-          valorB = Number(valorB);
-        }
-
-        if (valorA < valorB) return ordem === 'asc' ? -1 : 1;
-        if (valorA > valorB) return ordem === 'asc' ? 1 : -1;
-        return 0;
-      });
-
-      renderizarTabela(produtosOrdenados);
-    }
-    
-    document.getElementById("btn-buscar").addEventListener("click", () => {
-      const nomeBusca = document.getElementById("campo-busca").value;
-      carregarProdutos(nomeBusca);
+    document.getElementById('btn-buscar').addEventListener('click', () => {
+      const nome = document.getElementById('campo-busca').value;
+      carregarProdutos(nome);
     });
-
-    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        document.getElementById("btn-buscar").click();
-      }
-    });
-
-    document.querySelectorAll('#tabela-produtos thead th').forEach(header => {
-      header.addEventListener('click', () => {
-        const coluna = header.dataset.coluna;
-        let ordem = header.dataset.ordem;
-
-        document.querySelectorAll('#tabela-produtos thead th').forEach(th => {
-          th.classList.remove('ordenado-asc', 'ordenado-desc');
-        });
-
-        ordem = ordem === 'asc' ? 'desc' : 'asc';
-        header.dataset.ordem = ordem;
-
-        header.classList.add(`ordenado-${ordem}`);
-        
-        ordenarTabela(coluna, ordem);
-      });
+    document.getElementById('campo-busca').addEventListener('keypress', e => {
+      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn-buscar').click(); }
     });
   </script>
 </body>
