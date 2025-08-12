@@ -1,218 +1,61 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Produtos da Loja Jeta com Busca via API</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f7f9fc;
-      color: #333;
-    }
-    
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #004a99;
-      font-size: 1.8rem;
-    }
-    
-    #container-busca {
-      max-width: 600px;
-      margin: 0 auto 20px auto;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      padding: 0 10px;
-    }
-    
-    #campo-busca {
-      flex-grow: 1;
-      padding: 10px 15px;
-      font-size: 16px;
-      border: 2px solid #004a99;
-      border-radius: 6px;
-      outline: none;
-      transition: border-color 0.3s ease;
-    }
-    
-    #campo-busca:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-    
-    #btn-buscar {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #004a99;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    
-    #btn-buscar:hover {
-      background-color: #0066cc;
-    }
+// arquivo: api/produtos.js (Vercel)
 
-    .table-wrapper {
-        max-width: 90%;
-        margin: 0 auto;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
-    }
+export default async function handler(req, res) {
+  // Configura CORS para liberar requisições de qualquer origem
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,access-token,secret-access-token');
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        table-layout: auto;
-    }
-    
-    th,
-    td {
-        padding: 8px 10px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-        word-wrap: break-word;
-        font-size: 14px;
-    }
-    
-    th {
-        background-color: #004a99;
-        color: white;
-        user-select: none;
-    }
-    
-    tbody tr:nth-child(odd) {
-        background-color: #f2f2f2;
-    }
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-    tr:hover {
-        background-color: #e0eaf5;
-    }
-    
-    @media (max-width: 600px) {
-        #container-busca {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 0 15px;
-        }
+  // Tokens lidos das variáveis de ambiente configuradas no Vercel
+  const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
+  const SECRET_TOKEN = process.env.SECRET_TOKEN;
 
-        #btn-buscar {
-            width: 100%;
-            margin-top: 10px;
-        }
-    }
-  </style>
-</head>
-<body>
-  <h1>Produtos da Loja Jeta</h1>
+  if (!ACCESS_TOKEN || !SECRET_TOKEN) {
+    return res.status(500).json({
+      code: 500,
+      status: 'error',
+      data: { mensagem: 'Tokens de acesso não configurados nas variáveis de ambiente.' }
+    });
+  }
 
-  <div id="container-busca">
-    <input
-      type="text"
-      id="campo-busca"
-      placeholder="Digite o nome do produto..."
-      aria-label="Campo de busca de produtos"
-    />
-    <button id="btn-buscar" type="button">Buscar</button>
-  </div>
+  const { loja_id, pagina = "1", nome = "" } = req.query;
 
-  <div class="table-wrapper">
-    <table id="tabela-produtos" aria-label="Tabela de produtos">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Estoque</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td colspan="2" style="text-align:center;">Por favor, faça uma busca para ver os produtos.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  const urlApi = new URL("https://api.beteltecnologia.com/produtos");
+  urlApi.searchParams.append("pagina", pagina);
+  if (loja_id) urlApi.searchParams.append("loja_id", loja_id);
+  if (nome) urlApi.searchParams.append("nome", nome);
 
-  <script>
-    const lojaIdJeta = "361408";
-
-    async function buscarProdutos(nomeBusca = "", pagina = 1) {
-      const url = new URL("https://caixa-three.vercel.app/api/produtos");
-      url.searchParams.append("loja_id", lojaIdJeta);
-      url.searchParams.append("pagina", pagina);
-      if (nomeBusca.trim() !== "") {
-        url.searchParams.append("nome", nomeBusca.trim());
+  try {
+    const resposta = await fetch(urlApi.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "access-token": ACCESS_TOKEN,
+        "secret-access-token": SECRET_TOKEN
       }
-      
-      try {
-        const resposta = await fetch(url.toString());
-        if (!resposta.ok) {
-          throw new Error("Erro na requisição: " + resposta.statusText);
-        }
-        return await resposta.json();
-      } catch (error) {
-        console.error("Erro na busca de produtos:", error);
-        throw new Error("Não foi possível conectar-se ao servidor ou a busca falhou.");
-      }
-    }
-
-    async function carregarProdutos(nomeBusca = "") {
-      const tbody = document.querySelector("#tabela-produtos tbody");
-      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
-
-      let pagina = 1;
-      let totalPaginas = 1;
-      let todosProdutos = [];
-
-      try {
-        do {
-          const dados = await buscarProdutos(nomeBusca, pagina);
-          if (dados.code !== 200) {
-            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
-          }
-
-          todosProdutos = todosProdutos.concat(dados.data);
-          totalPaginas = dados.meta.total_paginas;
-          pagina++;
-        } while (pagina <= totalPaginas);
-
-        if (todosProdutos.length === 0) {
-          tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
-          return;
-        }
-
-        tbody.innerHTML = "";
-        todosProdutos.forEach(produto => {
-          const linha = document.createElement("tr");
-          linha.innerHTML = `
-            <td>${produto.nome}</td>
-            <td>${produto.estoque}</td>
-          `;
-          tbody.appendChild(linha);
-        });
-      } catch (error) {
-        tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
-      }
-    }
-
-    document.getElementById("btn-buscar").addEventListener("click", () => {
-      const nomeBusca = document.getElementById("campo-busca").value;
-      carregarProdutos(nomeBusca);
     });
 
-    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        document.getElementById("btn-buscar").click();
-      }
+    if (!resposta.ok) {
+      const erro = await resposta.json().catch(() => ({}));
+      return res.status(resposta.status).json({
+        code: resposta.status,
+        status: "error",
+        data: erro || { mensagem: "Erro desconhecido da API Betel" }
+      });
+    }
+
+    const dados = await resposta.json();
+    return res.status(200).json(dados);
+
+  } catch (error) {
+    return res.status(500).json({
+      code: 500,
+      status: "error",
+      data: { mensagem: "Erro interno no servidor: " + error.message }
     });
-  </script>
-</body>
-</html>
+  }
+}
