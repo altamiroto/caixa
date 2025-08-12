@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Produtos</title>
+</head>
+<body>
+  <h1>Produtos</h1>
+  <table border="1" id="tabela-produtos">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Estoque</th>
+        <th>Preço de Venda</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function carregarProdutos() {
+      const resposta = await fetch("https://caixa-beu84gqav-orimates.vercel.app/api/produtos");
+      const dados = await resposta.json();
+
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      dados.data.forEach(produto => {
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${produto.id}</td>
+          <td>${produto.nome}</td>
+          <td>${produto.estoque}</td>
+          <td>${produto.valor_venda}</td>
+        `;
+        tbody.appendChild(linha);
+      });
+    }
+    carregarProdutos();
+  </script>
+</body>
+</html>
