@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Teste API GET</title>
+  <title>Teste API Proxy Betel</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,6 +19,7 @@
       margin-right: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
+      margin-bottom: 10px;
     }
     button {
       padding: 8px 15px;
@@ -27,11 +28,11 @@
       background-color: #004a99;
       color: white;
       border-radius: 4px;
+      margin-bottom: 20px;
     }
     pre {
       background: white;
       padding: 15px;
-      margin-top: 20px;
       max-height: 400px;
       overflow: auto;
       border: 1px solid #ccc;
@@ -39,25 +40,55 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      max-width: 600px;
+    }
   </style>
 </head>
 <body>
-  <h2>Teste API GET</h2>
-  <label for="url">URL da API:</label>
-  <input type="text" id="url" placeholder="Cole a URL aqui" value="https://caixa-three.vercel.app/api/produtos?loja_id=361408" />
+  <h2>Teste API Proxy Betel</h2>
+  <div class="form-group">
+    <label for="rota">Rota API:</label>
+    <input type="text" id="rota" placeholder="Ex: produtos, grupos_produtos" value="produtos" />
+  </div>
+  <div class="form-group">
+    <label for="params">Parâmetros (query string):</label>
+    <input type="text" id="params" placeholder="Ex: loja_id=361408&pagina=1" />
+  </div>
   <button id="btn-get">Enviar GET</button>
 
   <pre id="resultado">Resultado aparecerá aqui...</pre>
 
   <script>
+    function buildUrl(base, rota, params) {
+      let url = base + '?rota=' + encodeURIComponent(rota.trim());
+      if (params.trim()) {
+        // Remove espaços, split por & e adiciona params válidos
+        const pares = params.split('&').map(p => p.trim()).filter(p => p.includes('='));
+        pares.forEach(p => {
+          url += '&' + encodeURIComponent(p.split('=')[0]) + '=' + encodeURIComponent(p.split('=')[1]);
+        });
+      }
+      return url;
+    }
+
     document.getElementById('btn-get').addEventListener('click', async () => {
-      const url = document.getElementById('url').value.trim();
+      const rota = document.getElementById('rota').value;
+      const params = document.getElementById('params').value;
       const resultado = document.getElementById('resultado');
-      if (!url) {
-        resultado.textContent = 'Por favor, insira uma URL.';
+
+      if (!rota.trim()) {
+        resultado.textContent = 'Por favor, informe a rota da API.';
         return;
       }
+
+      const url = buildUrl('https://caixa-three.vercel.app/api/proxy', rota, params);
       resultado.textContent = 'Carregando...';
+
       try {
         const response = await fetch(url);
         if (!response.ok) {
