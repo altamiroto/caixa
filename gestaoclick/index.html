@@ -2,10 +2,26 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Produtos da Loja Jeta</title>
+  <title>Produtos da Loja Jeta com Filtro</title>
+  <style>
+    #filtro {
+      margin-bottom: 10px;
+      padding: 5px;
+      width: 300px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
   <h1>Produtos da Loja Jeta</h1>
+
+  <input
+    type="text"
+    id="filtro"
+    placeholder="Buscar por nome do produto..."
+    oninput="filtrarTabela()"
+  />
+
   <table border="1" id="tabela-produtos">
     <thead>
       <tr>
@@ -19,8 +35,10 @@
   </table>
 
   <script>
+    let produtos = [];
+
     async function carregarProdutosJeta() {
-      const lojaIdJeta = "361408"; // Substitua pelo ID correto da loja Jeta
+      const lojaIdJeta = "12345"; // Substitua pelo ID correto da loja Jeta
 
       try {
         const resposta = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${lojaIdJeta}`);
@@ -29,27 +47,40 @@
           return;
         }
         const dados = await resposta.json();
+        produtos = dados.data || [];
 
-        const tbody = document.querySelector("#tabela-produtos tbody");
-        tbody.innerHTML = "";
-
-        dados.data.forEach(produto => {
-          const precoVenda = produto.valores && produto.valores.length > 0 
-            ? produto.valores[0].valor_venda 
-            : 'N/A';
-
-          const linha = document.createElement("tr");
-          linha.innerHTML = `
-            <td>${produto.id}</td>
-            <td>${produto.nome}</td>
-            <td>${produto.estoque}</td>
-            <td>R$ ${precoVenda}</td>
-          `;
-          tbody.appendChild(linha);
-        });
+        mostrarProdutos(produtos);
       } catch (error) {
         console.error("Erro ao carregar produtos:", error);
       }
+    }
+
+    function mostrarProdutos(lista) {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      tbody.innerHTML = "";
+
+      lista.forEach(produto => {
+        const precoVenda = produto.valores && produto.valores.length > 0
+          ? produto.valores[0].valor_venda
+          : "N/A";
+
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${produto.id}</td>
+          <td>${produto.nome}</td>
+          <td>${produto.estoque}</td>
+          <td>R$ ${precoVenda}</td>
+        `;
+        tbody.appendChild(linha);
+      });
+    }
+
+    function filtrarTabela() {
+      const filtro = document.getElementById("filtro").value.toLowerCase();
+      const filtrados = produtos.filter(p =>
+        p.nome.toLowerCase().includes(filtro)
+      );
+      mostrarProdutos(filtrados);
     }
 
     carregarProdutosJeta();
