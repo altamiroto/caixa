@@ -2,10 +2,10 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Lista Completa de Produtos</title>
+  <title>Produtos da Loja Jeta</title>
 </head>
 <body>
-  <h1>Produtos</h1>
+  <h1>Produtos da Loja Jeta</h1>
   <table border="1" id="tabela-produtos">
     <thead>
       <tr>
@@ -19,46 +19,40 @@
   </table>
 
   <script>
-    async function carregarTodasPaginas() {
-      const tbody = document.querySelector("#tabela-produtos tbody");
-      tbody.innerHTML = "";
-      let paginaAtual = 1;
-      let totalPaginas = 1;
+    async function carregarProdutosJeta() {
+      const lojaIdJeta = "12345"; // Substitua pelo ID correto da loja Jeta
 
       try {
-        while (paginaAtual <= totalPaginas) {
-          const resposta = await fetch(`https://caixa-three.vercel.app/api/produtos?pagina=${paginaAtual}`);
-          if (!resposta.ok) {
-            console.error("Erro ao buscar produtos na página", paginaAtual);
-            break;
-          }
-
-          const dados = await resposta.json();
-
-          dados.data.forEach(produto => {
-            const precoVenda = produto.valores && produto.valores.length > 0
-              ? produto.valores[0].valor_venda
-              : 'N/A';
-
-            const linha = document.createElement("tr");
-            linha.innerHTML = `
-              <td>${produto.id}</td>
-              <td>${produto.nome}</td>
-              <td>${produto.estoque}</td>
-              <td>R$ ${precoVenda}</td>
-            `;
-            tbody.appendChild(linha);
-          });
-
-          totalPaginas = dados.meta.total_paginas;
-          paginaAtual++;
+        const resposta = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${lojaIdJeta}`);
+        if (!resposta.ok) {
+          console.error("Erro ao buscar produtos:", resposta.statusText);
+          return;
         }
+        const dados = await resposta.json();
+
+        const tbody = document.querySelector("#tabela-produtos tbody");
+        tbody.innerHTML = "";
+
+        dados.data.forEach(produto => {
+          const precoVenda = produto.valores && produto.valores.length > 0 
+            ? produto.valores[0].valor_venda 
+            : 'N/A';
+
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+            <td>${produto.id}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.estoque}</td>
+            <td>R$ ${precoVenda}</td>
+          `;
+          tbody.appendChild(linha);
+        });
       } catch (error) {
         console.error("Erro ao carregar produtos:", error);
       }
     }
 
-    carregarTodasPaginas();
+    carregarProdutosJeta();
   </script>
 </body>
 </html>
