@@ -58,52 +58,53 @@
     #btn-buscar:hover {
       background-color: #0066cc;
     }
-    
-    /* Wrapper para a tabela se adaptar */
+
     .table-wrapper {
-      overflow-x: auto;
-      max-width: 90%;
-      margin: 0 auto;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
+        max-width: 90%;
+        margin: 0 auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden; /* Garante que a borda arredondada seja visível */
     }
 
     table {
-      width: 100%;
-      min-width: 600px; /* Garante que a tabela tenha uma largura mínima para ser scrollável */
-      border-collapse: collapse;
-      background: white;
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        table-layout: auto; /* Permite que as colunas se ajustem ao conteúdo */
     }
     
     th,
     td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-      word-wrap: break-word;
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        word-wrap: break-word; /* A chave para quebrar as palavras */
+        font-size: 14px; /* Diminui um pouco a fonte para melhor ajuste */
     }
     
     th {
-      background-color: #004a99;
-      color: white;
-      user-select: none;
+        background-color: #004a99;
+        color: white;
+        user-select: none;
     }
     
     tr:hover {
-      background-color: #f1f8ff;
+        background-color: #f1f8ff;
     }
     
     /* Ajustes para telas pequenas */
     @media (max-width: 600px) {
-      #container-busca {
-        flex-direction: column;
-        align-items: stretch;
-      }
+        #container-busca {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0 15px;
+        }
 
-      #btn-buscar {
-        width: 100%;
-        margin-top: 10px;
-      }
+        #btn-buscar {
+            width: 100%;
+            margin-top: 10px;
+        }
     }
   </style>
 </head>
