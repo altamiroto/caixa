@@ -27,6 +27,7 @@
       align-items: center;
       justify-content: center;
       padding: 0 10px;
+      flex-wrap: wrap;
     }
     
     #campo-busca {
@@ -37,6 +38,7 @@
       border-radius: 6px;
       outline: none;
       transition: border-color 0.3s ease;
+      min-width: 200px;
     }
     
     #campo-busca:focus {
@@ -53,6 +55,7 @@
       border-radius: 6px;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      white-space: nowrap;
     }
     
     #btn-buscar:hover {
@@ -123,6 +126,38 @@
       background-color: #e0eaf5;
     }
     
+    #opcoes-avancadas-container {
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      padding: 0 10px;
+    }
+    details {
+      border: 1px solid #004a99;
+      border-radius: 6px;
+      padding: 10px 15px;
+      background: #e9f0fa;
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+    }
+    summary {
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      outline: none;
+      user-select: none;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    
     @media (max-width: 600px) {
       #container-busca {
         flex-direction: column;
@@ -166,6 +201,24 @@
     <button id="btn-buscar" type="button">Buscar</button>
   </div>
 
+  <details id="opcoes-avancadas">
+    <summary>Opções avançadas</summary>
+    <div class="checkbox-group">
+      <label>
+        <input type="checkbox" name="grupo" value="todos" checked />
+        Todos Grupos (padrão)
+      </label>
+      <label>
+        <input type="checkbox" name="grupo" value="5372327" />
+        Grupo Ativos (ID 5372327)
+      </label>
+      <label>
+        <input type="checkbox" name="grupo" value="5372327-inativos" />
+        Grupo Inativos (ID 5372327)
+      </label>
+    </div>
+  </details>
+
   <div class="table-wrapper">
     <table id="tabela-produtos" aria-label="Tabela de produtos">
       <thead>
@@ -186,14 +239,22 @@
     const lojaIdJeta = "361408";
     let todosProdutos = [];
 
-    async function buscarProdutos(nomeBusca = "", pagina = 1) {
+    async function buscarProdutos(nomeBusca = "", pagina = 1, gruposSelecionados = []) {
       const url = new URL("https://caixa-three.vercel.app/api/produtos");
       url.searchParams.append("loja_id", lojaIdJeta);
       url.searchParams.append("pagina", pagina);
       if (nomeBusca.trim() !== "") {
         url.searchParams.append("nome", nomeBusca.trim());
       }
-      
+
+      // Se "Todos Grupos" estiver selecionado, não filtramos por grupo (usa padrão da API)
+      // Caso contrário, adicionamos os grupos selecionados (IDs) separados por vírgula
+      if (gruposSelecionados.length > 0 && !gruposSelecionados.includes("todos")) {
+        // Removemos as strings "inativos" do valor para enviar só o número
+        const gruposIds = gruposSelecionados.map(g => g.replace("-inativos", "")).join(",");
+        url.searchParams.append("grupo_id", gruposIds);
+      }
+
       try {
         const resposta = await fetch(url.toString());
         if (!resposta.ok) {
@@ -232,9 +293,13 @@
       let totalPaginas = 1;
       todosProdutos = [];
 
+      // Busca os grupos selecionados nas opções avançadas
+      const checkboxes = document.querySelectorAll('details#opcoes-avancadas input[name="grupo"]:checked');
+      const gruposSelecionados = Array.from(checkboxes).map(cb => cb.value);
+
       try {
         do {
-          const dados = await buscarProdutos(nomeBusca, pagina);
+          const dados = await buscarProdutos(nomeBusca, pagina, gruposSelecionados);
           if (dados.code !== 200) {
             throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
           }
