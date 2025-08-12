@@ -1,43 +1,213 @@
-export default async function handler(req, res) {
-  // Configura CORS para permitir requisições do seu frontend
-  res.setHeader('Access-Control-Allow-Origin', '*'); // para todos os domínios; para maior segurança, especifique seu domínio
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, access-token, secret-access-token');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  const { pagina = 1, loja_id, nome } = req.query;
-
-  const url = new URL('https://api.beteltecnologia.com/produtos');
-  url.searchParams.append('pagina', pagina);
-  if (loja_id) {
-    url.searchParams.append('loja_id', loja_id);
-  }
-  if (nome) {
-    url.searchParams.append('nome', nome); // só se a API suportar esse filtro
-  }
-
-  try {
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'access-token': process.env.ACCESS_TOKEN,
-        'secret-access-token': process.env.SECRET_TOKEN,
-      },
-    });
-
-    if (!response.ok) {
-      const erro = await response.json();
-      return res.status(response.status).json(erro);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Produtos da Loja Jeta com Busca via API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f7f9fc;
+      color: #333;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #004a99;
+      font-size: 1.8rem;
+    }
+    
+    #container-busca {
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+    }
+    
+    #campo-busca {
+      flex-grow: 1;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid #004a99;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    
+    #campo-busca:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+    
+    #btn-buscar {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #004a99;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    #btn-buscar:hover {
+      background-color: #0066cc;
     }
 
-    const data = await response.json();
-    res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar produtos' });
-  }
-}
+    .table-wrapper {
+        max-width: 90%;
+        margin: 0 auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        table-layout: auto;
+    }
+    
+    th,
+    td {
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        word-wrap: break-word;
+        font-size: 14px;
+    }
+    
+    th {
+        background-color: #004a99;
+        color: white;
+        user-select: none;
+    }
+    
+    tbody tr:nth-child(odd) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #e0eaf5;
+    }
+    
+    @media (max-width: 600px) {
+        #container-busca {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0 15px;
+        }
+
+        #btn-buscar {
+            width: 100%;
+            margin-top: 10px;
+        }
+    }
+  </style>
+</head>
+<body>
+  <h1>Produtos da Loja Jeta</h1>
+
+  <div id="container-busca">
+    <input
+      type="text"
+      id="campo-busca"
+      placeholder="Digite o nome do produto..."
+      aria-label="Campo de busca de produtos"
+    />
+    <button id="btn-buscar" type="button">Buscar</button>
+  </div>
+
+  <div class="table-wrapper">
+    <table id="tabela-produtos" aria-label="Tabela de produtos">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Estoque</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align:center;">Nenhum produto encontrado. Por favor, faça uma busca.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const lojaIdJeta = "361408";
+
+    async function buscarProdutos(nomeBusca = "", pagina = 1) {
+      const url = new URL("https://caixa-three.vercel.app/api/produtos");
+      url.searchParams.append("loja_id", lojaIdJeta);
+      url.searchParams.append("pagina", pagina);
+      if (nomeBusca.trim() !== "") {
+        url.searchParams.append("nome", nomeBusca.trim());
+      }
+
+      const resposta = await fetch(url.toString());
+      if (!resposta.ok) {
+        throw new Error("Erro na requisição: " + resposta.statusText);
+      }
+      return await resposta.json();
+    }
+
+    async function carregarProdutos(nomeBusca = "") {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
+
+      let pagina = 1;
+      let totalPaginas = 1;
+      let todosProdutos = [];
+
+      try {
+        do {
+          const dados = await buscarProdutos(nomeBusca, pagina);
+          if (dados.code !== 200) {
+            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
+          }
+
+          todosProdutos = todosProdutos.concat(dados.data);
+          totalPaginas = dados.meta.total_paginas;
+          pagina++;
+        } while (pagina <= totalPaginas);
+
+        if (todosProdutos.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+          return;
+        }
+
+        tbody.innerHTML = "";
+        todosProdutos.forEach(produto => {
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+            <td>${produto.nome}</td>
+            <td>${produto.estoque}</td>
+          `;
+          tbody.appendChild(linha);
+        });
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById("btn-buscar").addEventListener("click", () => {
+      const nomeBusca = document.getElementById("campo-busca").value;
+      carregarProdutos(nomeBusca);
+    });
+
+    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        document.getElementById("btn-buscar").click();
+      }
+    });
+  </script>
+</body>
+</html>
