@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Produtos da Loja Jeta com Busca</title>
+  <title>Produtos da Loja Jeta com Busca via API</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -102,7 +102,7 @@
     <input
       type="text"
       id="campo-busca"
-      placeholder="Digite o nome do produto..."
+      placeholder="Digite o nome do produto (deixe vazio para todos)..."
       aria-label="Campo de busca de produtos"
     />
     <button id="btn-buscar" type="button">Buscar</button>
@@ -121,68 +121,291 @@
   </table>
 
   <script>
-    let produtos = [];
-    const lojaIdJeta = "361408"; // Substitua pelo ID correto da loja Jeta
+    const lojaIdJeta = "<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Produtos da Loja Jeta com Busca via API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f7f9fc;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #004a99;
+    }
+    #container-busca {
+      max-width: 400px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      gap: 10px;
+    }
+    #campo-busca {
+      flex: 1;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid #004a99;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    #campo-busca:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.5);
+    }
+    #btn-buscar {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #004a99;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #btn-buscar:hover {
+      background-color: #0066cc;
+    }
+    table {
+      width: 90%;
+      max-width: 900px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #004a99;
+      color: white;
+      user-select: none;
+    }
+    tr:hover {
+      background-color: #f1f8ff;
+    }
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      th {
+        position: sticky;
+        top: 0;
+      }
+      tr {
+        margin-bottom: 15px;
+      }
+      td {
+        padding-left: 50%;
+        position: relative;
+      }
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Produtos da Loja Jeta</h1>
 
-    async function carregarProdutos() {
+  <div id="container-busca">
+    <input
+      type="text"
+      id="campo-busca"
+      placeholder="Digite o nome do produto (deixe vazio para todos)..."
+      aria-label="Campo de busca de produtos"
+    />
+    <button id="btn-buscar" type="button">Buscar</button>
+  </div>
+
+  <table id="tabela-produtos" aria-label="Tabela de produtos">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Estoque</th>
+        <th>Preço de Venda</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const lojaIdJeta = "12345"; // Substitua pelo ID correto da loja Jeta
+
+    async function buscarProdutos(nomeBusca = "", pagina = 1) {
+      // Monta URL da API no backend Vercel
+      // Inclui loja_id e pagina
+      // Para buscar por nome, passamos o parâmetro 'nome' (supondo que API aceite)
+      const url = new URL("https://caixa-three.vercel.app/api/produtos");
+      url.searchParams.append("loja_id", lojaIdJeta);
+      url.searchParams.append("pagina", pagina);
+      if (nomeBusca.trim() !== "") {
+        url.searchParams.append("nome", nomeBusca.trim());
+      }
+
+      const resposta = await fetch(url.toString());
+      if (!resposta.ok) {
+        throw new Error("Erro na requisição: " + resposta.statusText);
+      }
+      return await resposta.json();
+    }
+
+    async function carregarProdutos(nomeBusca = "") {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
+
+      let pagina = 1;
+      let totalPaginas = 1;
+      let todosProdutos = [];
+
       try {
-        const resposta = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${lojaIdJeta}`);
-        if (!resposta.ok) {
-          console.error("Erro ao buscar produtos:", resposta.statusText);
+        do {
+          const dados = await buscarProdutos(nomeBusca, pagina);
+          if (dados.code !== 200) {
+            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
+          }
+
+          todosProdutos = todosProdutos.concat(dados.data);
+          totalPaginas = dados.meta.total_paginas;
+          pagina++;
+        } while (pagina <= totalPaginas);
+
+        if (todosProdutos.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
           return;
         }
-        const dados = await resposta.json();
-        produtos = dados.data || [];
-        mostrarProdutos(produtos);
+
+        tbody.innerHTML = "";
+        todosProdutos.forEach(produto => {
+          const precoVenda = produto.valores && produto.valores.length > 0
+            ? produto.valores[0].valor_venda
+            : "N/A";
+
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+            <td data-label="ID">${produto.id}</td>
+            <td data-label="Nome">${produto.nome}</td>
+            <td data-label="Estoque">${produto.estoque}</td>
+            <td data-label="Preço de Venda">R$ ${precoVenda}</td>
+          `;
+          tbody.appendChild(linha);
+        });
       } catch (error) {
-        console.error("Erro ao carregar produtos:", error);
+        tbody.innerHTML = `<tr><td colspan='4' style='text-align:center; color:red;'>${error.message}</td></tr>`;
       }
     }
 
-    function mostrarProdutos(lista) {
-      const tbody = document.querySelector("#tabela-produtos tbody");
-      tbody.innerHTML = "";
+    document.getElementById("btn-buscar").addEventListener("click", () => {
+      const nomeBusca = document.getElementById("campo-busca").value;
+      carregarProdutos(nomeBusca);
+    });
 
-      if (lista.length === 0) {
-        const linhaVazia = document.createElement("tr");
-        linhaVazia.innerHTML = `<td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto encontrado.</td>`;
-        tbody.appendChild(linhaVazia);
-        return;
-      }
-
-      lista.forEach(produto => {
-        const precoVenda = produto.valores && produto.valores.length > 0
-          ? produto.valores[0].valor_venda
-          : "N/A";
-
-        const linha = document.createElement("tr");
-        linha.innerHTML = `
-          <td data-label="ID">${produto.id}</td>
-          <td data-label="Nome">${produto.nome}</td>
-          <td data-label="Estoque">${produto.estoque}</td>
-          <td data-label="Preço de Venda">R$ ${precoVenda}</td>
-        `;
-        tbody.appendChild(linha);
-      });
-    }
-
-    function filtrarProdutos() {
-      const textoBusca = document.getElementById("campo-busca").value.toLowerCase();
-      const filtrados = produtos.filter(produto =>
-        produto.nome.toLowerCase().includes(textoBusca)
-      );
-      mostrarProdutos(filtrados);
-    }
-
-    document.getElementById("btn-buscar").addEventListener("click", filtrarProdutos);
-
-    // Opcional: filtrar também ao digitar e apertar Enter
+    // Busca ao pressionar Enter
     document.getElementById("campo-busca").addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
-        filtrarProdutos();
+        e.preventDefault();
+        document.getElementById("btn-buscar").click();
       }
     });
 
+    // Carrega todos os produtos inicialmente
+    carregarProdutos();
+  </script>
+</body>
+</html>
+"; // Substitua pelo ID correto da loja Jeta
+
+    async function buscarProdutos(nomeBusca = "", pagina = 1) {
+      // Monta URL da API no backend Vercel
+      // Inclui loja_id e pagina
+      // Para buscar por nome, passamos o parâmetro 'nome' (supondo que API aceite)
+      const url = new URL("https://caixa-three.vercel.app/api/produtos");
+      url.searchParams.append("loja_id", lojaIdJeta);
+      url.searchParams.append("pagina", pagina);
+      if (nomeBusca.trim() !== "") {
+        url.searchParams.append("nome", nomeBusca.trim());
+      }
+
+      const resposta = await fetch(url.toString());
+      if (!resposta.ok) {
+        throw new Error("Erro na requisição: " + resposta.statusText);
+      }
+      return await resposta.json();
+    }
+
+    async function carregarProdutos(nomeBusca = "") {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
+
+      let pagina = 1;
+      let totalPaginas = 1;
+      let todosProdutos = [];
+
+      try {
+        do {
+          const dados = await buscarProdutos(nomeBusca, pagina);
+          if (dados.code !== 200) {
+            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
+          }
+
+          todosProdutos = todosProdutos.concat(dados.data);
+          totalPaginas = dados.meta.total_paginas;
+          pagina++;
+        } while (pagina <= totalPaginas);
+
+        if (todosProdutos.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+          return;
+        }
+
+        tbody.innerHTML = "";
+        todosProdutos.forEach(produto => {
+          const precoVenda = produto.valores && produto.valores.length > 0
+            ? produto.valores[0].valor_venda
+            : "N/A";
+
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+            <td data-label="ID">${produto.id}</td>
+            <td data-label="Nome">${produto.nome}</td>
+            <td data-label="Estoque">${produto.estoque}</td>
+            <td data-label="Preço de Venda">R$ ${precoVenda}</td>
+          `;
+          tbody.appendChild(linha);
+        });
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan='4' style='text-align:center; color:red;'>${error.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById("btn-buscar").addEventListener("click", () => {
+      const nomeBusca = document.getElementById("campo-busca").value;
+      carregarProdutos(nomeBusca);
+    });
+
+    // Busca ao pressionar Enter
+    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        document.getElementById("btn-buscar").click();
+      }
+    });
+
+    // Carrega todos os produtos inicialmente
     carregarProdutos();
   </script>
 </body>
