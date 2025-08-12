@@ -132,11 +132,7 @@
           <th>Estoque</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td colspan="2" style="text-align:center;">Nenhum produto encontrado. Por favor, faça uma busca.</td>
-        </tr>
-      </tbody>
+      <tbody></tbody>
     </table>
   </div>
 
@@ -208,6 +204,9 @@
         document.getElementById("btn-buscar").click();
       }
     });
+
+    // NÃO carregar produtos automaticamente na abertura da página
+    // carregarProdutos();
   </script>
 </body>
 </html>
