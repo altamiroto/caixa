@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Lista de Produtos</title>
+  <title>Lista Completa de Produtos</title>
 </head>
 <body>
   <h1>Produtos</h1>
@@ -19,34 +19,46 @@
   </table>
 
   <script>
-    async function carregarProdutos() {
+    async function carregarTodasPaginas() {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      tbody.innerHTML = "";
+      let paginaAtual = 1;
+      let totalPaginas = 1;
+
       try {
-        const resposta = await fetch("https://caixa-three.vercel.app/api/produtos");
-        if (!resposta.ok) {
-          console.error("Erro ao buscar produtos:", resposta.statusText);
-          return;
+        while (paginaAtual <= totalPaginas) {
+          const resposta = await fetch(`https://caixa-three.vercel.app/api/produtos?pagina=${paginaAtual}`);
+          if (!resposta.ok) {
+            console.error("Erro ao buscar produtos na página", paginaAtual);
+            break;
+          }
+
+          const dados = await resposta.json();
+
+          dados.data.forEach(produto => {
+            const precoVenda = produto.valores && produto.valores.length > 0
+              ? produto.valores[0].valor_venda
+              : 'N/A';
+
+            const linha = document.createElement("tr");
+            linha.innerHTML = `
+              <td>${produto.id}</td>
+              <td>${produto.nome}</td>
+              <td>${produto.estoque}</td>
+              <td>R$ ${precoVenda}</td>
+            `;
+            tbody.appendChild(linha);
+          });
+
+          totalPaginas = dados.meta.total_paginas;
+          paginaAtual++;
         }
-        const dados = await resposta.json();
-
-        const tbody = document.querySelector("#tabela-produtos tbody");
-        tbody.innerHTML = ""; // limpa conteúdo antes
-
-        dados.data.forEach(produto => {
-          const linha = document.createElement("tr");
-          linha.innerHTML = `
-            <td>${produto.id}</td>
-            <td>${produto.nome}</td>
-            <td>${produto.estoque}</td>
-            <td>${produto.valor_venda}</td>
-          `;
-          tbody.appendChild(linha);
-        });
       } catch (error) {
         console.error("Erro ao carregar produtos:", error);
       }
     }
 
-    carregarProdutos();
+    carregarTodasPaginas();
   </script>
 </body>
 </html>
