@@ -64,14 +64,14 @@
         margin: 0 auto;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
-        overflow: hidden; /* Garante que a borda arredondada seja visível */
+        overflow: hidden;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
         background: white;
-        table-layout: auto; /* Permite que as colunas se ajustem ao conteúdo */
+        table-layout: auto;
     }
     
     th,
@@ -79,8 +79,8 @@
         padding: 8px 10px;
         text-align: left;
         border-bottom: 1px solid #ddd;
-        word-wrap: break-word; /* A chave para quebrar as palavras */
-        font-size: 14px; /* Diminui um pouco a fonte para melhor ajuste */
+        word-wrap: break-word;
+        font-size: 14px;
     }
     
     th {
@@ -89,8 +89,14 @@
         user-select: none;
     }
     
+    /* Cor de fundo para linhas ímpares */
+    tbody tr:nth-child(odd) {
+        background-color: #f2f2f2;
+    }
+
+    /* Remove o efeito hover para não competir com a cor alternada */
     tr:hover {
-        background-color: #f1f8ff;
+        background-color: #e0eaf5;
     }
     
     /* Ajustes para telas pequenas */
