@@ -1,12 +1,11 @@
-// arquivo: api/produtos.js
 export default async function handler(req, res) {
   try {
     const response = await fetch("https://api.beteltecnologia.com/produtos", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "access-token": process.env.ACCESS_TOKEN,
-        "secret-access-token": process.env.SECRET_TOKEN,
+        "access-token": "70b21a45cc992f08ece8f384072e0fba9b4bd034",
+        "secret-access-token": "b833ae75916e14c6359c8da95dfbb0f8961a0479",
       },
     });
 
