@@ -5,9 +5,7 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// As variáveis são lidas de forma segura do ambiente do Vercel
 const API_URL = process.env.API_URL;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const SECRET_ACCESS_TOKEN = process.env.SECRET_ACCESS_TOKEN;
@@ -38,11 +36,9 @@ app.get('/api/produtos', async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        console.error('Falha ao buscar produtos:', error);
+        console.handler('Falha ao buscar produtos:', error);
         res.status(500).json({ error: 'Falha ao buscar produtos', details: error.message });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+module.exports = app; // ESSA É A LINHA CRÍTICA!
