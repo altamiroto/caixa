@@ -1,15 +1,25 @@
 {
-  "version": 2,
   "builds": [
     {
-      "src": "server.js",
+      "src": "gestaoclick/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "gestaoclick/produtos.html",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "gestaoclick"
+      }
     }
   ],
   "routes": [
     {
+      "src": "/api/produtos",
+      "dest": "/gestaoclick/server.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/server.js"
+      "dest": "/gestaoclick/produtos.html"
     }
   ]
 }
