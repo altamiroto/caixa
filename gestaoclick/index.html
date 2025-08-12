@@ -60,7 +60,7 @@
     }
 
     .table-wrapper {
-        max-width: 90%;
+        max-width: 700px; /* Largura máxima da tabela em telas grandes */
         margin: 0 auto;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
@@ -71,7 +71,7 @@
         width: 100%;
         border-collapse: collapse;
         background: white;
-        table-layout: auto;
+        table-layout: fixed; /* A chave para fixar a largura das colunas */
     }
     
     th,
@@ -79,9 +79,13 @@
         padding: 8px 10px;
         text-align: left;
         border-bottom: 1px solid #ddd;
-        word-wrap: break-word;
+        word-break: break-word; /* Força a quebra de linha de palavras grandes */
         font-size: 14px;
     }
+    
+    /* Largura das colunas em telas maiores */
+    th:nth-child(1), td:nth-child(1) { width: 75%; }
+    th:nth-child(2), td:nth-child(2) { width: 25%; }
     
     th {
         background-color: #004a99;
@@ -108,6 +112,18 @@
             width: 100%;
             margin-top: 10px;
         }
+        
+        .table-wrapper {
+            max-width: 90%;
+        }
+
+        table {
+          table-layout: auto; /* Volta para o layout automático em telas pequenas */
+        }
+        
+        /* Remove a largura fixa das colunas no mobile */
+        th:nth-child(1), td:nth-child(1) { width: auto; }
+        th:nth-child(2), td:nth-child(2) { width: auto; }
     }
   </style>
 </head>
