@@ -20,15 +20,17 @@
     }
     
     #container-busca {
-      max-width: 400px;
+      max-width: 600px;
       margin: 0 auto 20px auto;
       display: flex;
       gap: 10px;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
     }
     
     #campo-busca {
-      flex: 1 1 200px;
+      flex-grow: 1;
       padding: 10px 15px;
       font-size: 16px;
       border: 2px solid #004a99;
@@ -51,23 +53,26 @@
       border-radius: 6px;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      flex: 0 0 auto;
     }
     
     #btn-buscar:hover {
       background-color: #0066cc;
     }
     
-    table {
-      width: 90%;
-      max-width: 900px;
+    /* Wrapper para a tabela se adaptar */
+    .table-wrapper {
+      overflow-x: auto;
+      max-width: 90%;
       margin: 0 auto;
-      border-collapse: collapse;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      background: white;
       border-radius: 8px;
-      overflow: hidden;
-      table-layout: fixed;
+    }
+
+    table {
+      width: 100%;
+      min-width: 600px; /* Garante que a tabela tenha uma largura mínima para ser scrollável */
+      border-collapse: collapse;
+      background: white;
     }
     
     th,
@@ -88,65 +93,16 @@
       background-color: #f1f8ff;
     }
     
-    /* Responsividade para telas pequenas */
+    /* Ajustes para telas pequenas */
     @media (max-width: 600px) {
       #container-busca {
-        max-width: 100%;
-        padding: 0 10px;
         flex-direction: column;
-        gap: 8px;
+        align-items: stretch;
       }
-      
+
       #btn-buscar {
         width: 100%;
-        padding: 12px 0;
-        font-size: 18px;
-      }
-      
-      table,
-      thead,
-      tbody,
-      th,
-      td,
-      tr {
-        display: block;
-        width: 100%;
-      }
-      
-      thead {
-        display: none;
-      }
-      
-      tr {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-        background: white;
-      }
-      
-      td {
-        padding: 10px 15px;
-        text-align: right;
-        position: relative;
-        padding-left: 50%;
-        border: none;
-        border-bottom: 1px solid #eee;
-        word-wrap: break-word;
-      }
-      
-      td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 15px;
-        top: 10px;
-        font-weight: bold;
-        text-align: left;
-        white-space: nowrap;
-      }
-      
-      td:last-child {
-        border-bottom: 0;
+        margin-top: 10px;
       }
     }
   </style>
@@ -158,23 +114,25 @@
     <input
       type="text"
       id="campo-busca"
-      placeholder="Digite o nome do produto (deixe vazio para todos)..."
+      placeholder="Digite o nome do produto..."
       aria-label="Campo de busca de produtos"
     />
     <button id="btn-buscar" type="button">Buscar</button>
   </div>
 
-  <table id="tabela-produtos" aria-label="Tabela de produtos">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Estoque</th>
-        <th>Preço de Venda</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-wrapper">
+    <table id="tabela-produtos" aria-label="Tabela de produtos">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Estoque</th>
+          <th>Preço de Venda</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
     const lojaIdJeta = "361408";
@@ -227,10 +185,10 @@
 
           const linha = document.createElement("tr");
           linha.innerHTML = `
-            <td data-label="ID">${produto.id}</td>
-            <td data-label="Nome">${produto.nome}</td>
-            <td data-label="Estoque">${produto.estoque}</td>
-            <td data-label="Preço de Venda">R$ ${precoVenda}</td>
+            <td>${produto.id}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.estoque}</td>
+            <td>R$ ${precoVenda}</td>
           `;
           tbody.appendChild(linha);
         });
