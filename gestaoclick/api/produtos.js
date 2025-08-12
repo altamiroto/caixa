@@ -1,6 +1,14 @@
 export default async function handler(req, res) {
+  const { pagina = 1, loja_id } = req.query;
+
+  const url = new URL("https://api.beteltecnologia.com/produtos");
+  url.searchParams.append("pagina", pagina);
+  if (loja_id) {
+    url.searchParams.append("loja_id", loja_id);
+  }
+
   try {
-    const response = await fetch("https://api.beteltecnologia.com/produtos", {
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
