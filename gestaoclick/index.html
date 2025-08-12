@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Produtos da Loja Jeta com Busca via API</title>
   <style>
     body {
@@ -11,12 +11,14 @@
       background: #f7f9fc;
       color: #333;
     }
+    
     h1 {
       text-align: center;
       margin-bottom: 30px;
       color: #004a99;
       font-size: 1.8rem;
     }
+    
     #container-busca {
       max-width: 400px;
       margin: 0 auto 20px auto;
@@ -24,6 +26,7 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    
     #campo-busca {
       flex: 1 1 200px;
       padding: 10px 15px;
@@ -33,10 +36,12 @@
       outline: none;
       transition: border-color 0.3s ease;
     }
+    
     #campo-busca:focus {
       border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0,123,255,0.5);
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     }
+    
     #btn-buscar {
       padding: 10px 20px;
       font-size: 16px;
@@ -48,35 +53,41 @@
       transition: background-color 0.3s ease;
       flex: 0 0 auto;
     }
+    
     #btn-buscar:hover {
       background-color: #0066cc;
     }
+    
     table {
       width: 90%;
       max-width: 900px;
       margin: 0 auto;
       border-collapse: collapse;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       background: white;
       border-radius: 8px;
       overflow: hidden;
       table-layout: fixed;
-      word-wrap: break-word;
     }
-    th, td {
+    
+    th,
+    td {
       padding: 12px 15px;
       text-align: left;
       border-bottom: 1px solid #ddd;
-      word-break: break-word;
+      word-wrap: break-word;
     }
+    
     th {
       background-color: #004a99;
       color: white;
       user-select: none;
     }
+    
     tr:hover {
       background-color: #f1f8ff;
     }
+    
     /* Responsividade para telas pequenas */
     @media (max-width: 600px) {
       #container-busca {
@@ -85,20 +96,27 @@
         flex-direction: column;
         gap: 8px;
       }
+      
       #btn-buscar {
         width: 100%;
         padding: 12px 0;
         font-size: 18px;
       }
-      table, thead, tbody, th, td, tr {
+      
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
         display: block;
         width: 100%;
       }
-      thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
+      
+      thead {
+        display: none;
       }
+      
       tr {
         margin-bottom: 15px;
         border: 1px solid #ddd;
@@ -106,6 +124,7 @@
         padding: 10px;
         background: white;
       }
+      
       td {
         padding: 10px 15px;
         text-align: right;
@@ -113,8 +132,9 @@
         padding-left: 50%;
         border: none;
         border-bottom: 1px solid #eee;
-        white-space: normal;
+        word-wrap: break-word;
       }
+      
       td::before {
         content: attr(data-label);
         position: absolute;
@@ -124,6 +144,7 @@
         text-align: left;
         white-space: nowrap;
       }
+      
       td:last-child {
         border-bottom: 0;
       }
