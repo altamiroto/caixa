@@ -132,7 +132,11 @@
           <th>Estoque</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align:center;">Por favor, faça uma busca para ver os produtos.</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
@@ -146,12 +150,17 @@
       if (nomeBusca.trim() !== "") {
         url.searchParams.append("nome", nomeBusca.trim());
       }
-
-      const resposta = await fetch(url.toString());
-      if (!resposta.ok) {
-        throw new Error("Erro na requisição: " + resposta.statusText);
+      
+      try {
+        const resposta = await fetch(url.toString());
+        if (!resposta.ok) {
+          throw new Error("Erro na requisição: " + resposta.statusText);
+        }
+        return await resposta.json();
+      } catch (error) {
+        console.error("Erro na busca de produtos:", error);
+        throw new Error("Não foi possível conectar-se ao servidor ou a busca falhou.");
       }
-      return await resposta.json();
     }
 
     async function carregarProdutos(nomeBusca = "") {
@@ -204,8 +213,6 @@
         document.getElementById("btn-buscar").click();
       }
     });
-
-    carregarProdutos();
   </script>
 </body>
 </html>
