@@ -21,7 +21,7 @@
     
     #container-busca {
       max-width: 600px;
-      margin: 0 auto 20px auto; /* Centraliza o contêiner de busca */
+      margin: 0 auto 20px auto;
       display: flex;
       gap: 10px;
       align-items: center;
@@ -60,70 +60,96 @@
     }
 
     .table-wrapper {
-        max-width: 700px; /* Largura máxima fixa para a tabela */
-        width: 90%; /* Ajusta-se em telas menores */
-        margin: 0 auto; /* Centraliza o contêiner da tabela */
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
+      max-width: 700px;
+      width: 90%;
+      margin: 0 auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
     }
 
     table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        table-layout: fixed;
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      table-layout: fixed;
     }
     
     th,
     td {
-        padding: 8px 10px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-        word-break: break-word;
-        font-size: 14px;
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #004a99;
+      color: white;
+      user-select: none;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    th:hover {
+      background-color: #0066cc;
+    }
+
+    th.ordenado-asc::after {
+      content: '▲';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    th.ordenado-desc::after {
+      content: '▼';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
     }
     
     th:nth-child(1), td:nth-child(1) { width: 75%; }
     th:nth-child(2), td:nth-child(2) { width: 25%; }
     
-    th {
-        background-color: #004a99;
-        color: white;
-        user-select: none;
-    }
-    
     tbody tr:nth-child(odd) {
-        background-color: #f2f2f2;
+      background-color: #f2f2f2;
     }
 
     tr:hover {
-        background-color: #e0eaf5;
+      background-color: #e0eaf5;
     }
     
     @media (max-width: 600px) {
-        #container-busca {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 0 15px;
-        }
+      #container-busca {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0 15px;
+      }
 
-        #btn-buscar {
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .table-wrapper {
-            max-width: 100%;
-            width: 95%; /* Ajusta para um percentual maior no celular */
-        }
-        
-        table {
-          table-layout: auto;
-        }
-        
-        th:nth-child(1), td:nth-child(1) { width: auto; }
-        th:nth-child(2), td:nth-child(2) { width: auto; }
+      #btn-buscar {
+        width: 100%;
+        margin-top: 10px;
+      }
+      
+      .table-wrapper {
+        max-width: 100%;
+        width: 95%;
+      }
+      
+      table {
+        table-layout: auto;
+      }
+      
+      th:nth-child(1), td:nth-child(1) { width: auto; }
+      th:nth-child(2), td:nth-child(2) { width: auto; }
+
+      th::after {
+        content: none !important;
+      }
     }
   </style>
 </head>
@@ -144,8 +170,8 @@
     <table id="tabela-produtos" aria-label="Tabela de produtos">
       <thead>
         <tr>
-          <th>Nome</th>
-          <th>Estoque</th>
+          <th data-coluna="nome" data-ordem="asc">Nome</th>
+          <th data-coluna="estoque" data-ordem="desc" class="ordenado-desc">Estoque</th>
         </tr>
       </thead>
       <tbody>
@@ -158,6 +184,7 @@
 
   <script>
     const lojaIdJeta = "361408";
+    let todosProdutos = [];
 
     async function buscarProdutos(nomeBusca = "", pagina = 1) {
       const url = new URL("https://caixa-three.vercel.app/api/produtos");
@@ -179,13 +206,31 @@
       }
     }
 
+    function renderizarTabela(produtos) {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      if (!produtos || produtos.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+        return;
+      }
+      
+      tbody.innerHTML = "";
+      produtos.forEach(produto => {
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${produto.nome}</td>
+          <td>${produto.estoque}</td>
+        `;
+        tbody.appendChild(linha);
+      });
+    }
+
     async function carregarProdutos(nomeBusca = "") {
       const tbody = document.querySelector("#tabela-produtos tbody");
       tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
 
       let pagina = 1;
       let totalPaginas = 1;
-      let todosProdutos = [];
+      todosProdutos = [];
 
       try {
         do {
@@ -199,25 +244,38 @@
           pagina++;
         } while (pagina <= totalPaginas);
 
-        if (todosProdutos.length === 0) {
-          tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
-          return;
-        }
+        // Ordena os produtos por estoque (decrescente) após o carregamento
+        todosProdutos.sort((a, b) => b.estoque - a.estoque);
 
-        tbody.innerHTML = "";
-        todosProdutos.forEach(produto => {
-          const linha = document.createElement("tr");
-          linha.innerHTML = `
-            <td>${produto.nome}</td>
-            <td>${produto.estoque}</td>
-          `;
-          tbody.appendChild(linha);
-        });
+        renderizarTabela(todosProdutos);
       } catch (error) {
         tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
       }
     }
 
+    function ordenarTabela(coluna, ordem) {
+      if (todosProdutos.length === 0) return;
+
+      const produtosOrdenados = [...todosProdutos].sort((a, b) => {
+        let valorA = a[coluna];
+        let valorB = b[coluna];
+
+        if (typeof valorA === 'string') {
+          valorA = valorA.toLowerCase();
+          valorB = valorB.toLowerCase();
+        } else {
+          valorA = Number(valorA);
+          valorB = Number(valorB);
+        }
+
+        if (valorA < valorB) return ordem === 'asc' ? -1 : 1;
+        if (valorA > valorB) return ordem === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      renderizarTabela(produtosOrdenados);
+    }
+    
     document.getElementById("btn-buscar").addEventListener("click", () => {
       const nomeBusca = document.getElementById("campo-busca").value;
       carregarProdutos(nomeBusca);
@@ -228,6 +286,24 @@
         e.preventDefault();
         document.getElementById("btn-buscar").click();
       }
+    });
+
+    document.querySelectorAll('#tabela-produtos thead th').forEach(header => {
+      header.addEventListener('click', () => {
+        const coluna = header.dataset.coluna;
+        let ordem = header.dataset.ordem;
+
+        document.querySelectorAll('#tabela-produtos thead th').forEach(th => {
+          th.classList.remove('ordenado-asc', 'ordenado-desc');
+        });
+
+        ordem = ordem === 'asc' ? 'desc' : 'asc';
+        header.dataset.ordem = ordem;
+
+        header.classList.add(`ordenado-${ordem}`);
+        
+        ordenarTabela(coluna, ordem);
+      });
     });
   </script>
 </body>
