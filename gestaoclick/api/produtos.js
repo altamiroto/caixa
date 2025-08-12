@@ -22,6 +22,29 @@ export default async function handler(req, res) {
     });
   }
 
+const lojaIdJeta = "361408";
+
+export async function buscarProdutos(nomeBusca = "", pagina = 1, gruposSelecionados = []) {
+  const url = new URL("https://caixa-three.vercel.app/api/produtos");
+  url.searchParams.append("loja_id", lojaIdJeta);
+  url.searchParams.append("pagina", pagina);
+  if (nomeBusca.trim() !== "") {
+    url.searchParams.append("nome", nomeBusca.trim());
+  }
+
+  if (gruposSelecionados.length > 0 && !gruposSelecionados.includes("todos")) {
+    const gruposIds = gruposSelecionados.map(g => g.replace("-inativos", "")).join(",");
+    url.searchParams.append("grupo_id", gruposIds);
+  }
+
+  const resposta = await fetch(url.toString());
+  if (!resposta.ok) {
+    throw new Error("Erro na requisição: " + resposta.statusText);
+  }
+  return await resposta.json();
+}
+
+  
   const { loja_id, pagina = "1", nome = "" } = req.query;
 
   const urlApi = new URL("https://api.beteltecnologia.com/produtos");
