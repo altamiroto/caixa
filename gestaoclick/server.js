@@ -7,14 +7,14 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Variáveis de ambiente lidas da Vercel
+// As variáveis são lidas de forma segura do ambiente do Vercel
 const API_URL = process.env.API_URL;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const SECRET_ACCESS_TOKEN = process.env.SECRET_ACCESS_TOKEN;
 
 app.use(cors());
 
-// Rota para servir o arquivo HTML
+// Rota para servir a página HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'produtos.html'));
 });
