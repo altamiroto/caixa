@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   // Configura CORS para permitir requisições do seu frontend
-  res.setHeader('Access-Control-Allow-Origin', '*'); // para todos os domínios; para mais segurança, especifique seu domínio
+  res.setHeader('Access-Control-Allow-Origin', '*'); // para todos os domínios; para maior segurança, especifique seu domínio
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, access-token, secret-access-token');
 
@@ -9,12 +9,15 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { pagina = 1, loja_id } = req.query;
+  const { pagina = 1, loja_id, nome } = req.query;
 
   const url = new URL('https://api.beteltecnologia.com/produtos');
   url.searchParams.append('pagina', pagina);
   if (loja_id) {
     url.searchParams.append('loja_id', loja_id);
+  }
+  if (nome) {
+    url.searchParams.append('nome', nome); // só se a API suportar esse filtro
   }
 
   try {
