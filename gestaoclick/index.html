@@ -1,6 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta charset="UTF-8" />
+  <title>Lista de Produtos</title>
+</head>
+<body>
+  <h1>Produtos</h1>
+  <table border="1" id="tabela-produtos">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Estoque</th>
+        <th>Preço de Venda</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function carregarProdutos() {
+      try {
+        const resposta = await fetch("https://caixa-three.vercel.app/api/produtos");
+        if (!resposta.ok) {
+          console.error("Erro ao buscar produtos:", resposta.statusText);
+          return;
+        }
+        const dados = await resposta.json();
+
+        const tbody = document.querySelector("#tabela-produtos tbody");
+        tbody.innerHTML = ""; // limpa conteúdo antes
+
+        dados.data.forEach(produto => {
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+            <td>${produto.id}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.estoque}</td>
+            <td>${produto.valor_venda}</td>
+          `;
+          tbody.appendChild(linha);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+      }
+    }
+
+    carregarProdutos();
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
   <meta charset="UTF-8">
   <title>Lista de Produtos</title>
 </head>
