@@ -22,9 +22,10 @@
       margin: 0 auto 20px auto;
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
     #campo-busca {
-      flex: 1;
+      flex: 1 1 200px;
       padding: 10px 15px;
       font-size: 16px;
       border: 2px solid #004a99;
@@ -45,6 +46,7 @@
       border-radius: 6px;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      flex: 0 0 auto;
     }
     #btn-buscar:hover {
       background-color: #0066cc;
@@ -58,11 +60,14 @@
       background: white;
       border-radius: 8px;
       overflow: hidden;
+      table-layout: fixed;
+      word-wrap: break-word;
     }
     th, td {
       padding: 12px 15px;
       text-align: left;
       border-bottom: 1px solid #ddd;
+      word-break: break-word;
     }
     th {
       background-color: #004a99;
@@ -108,6 +113,7 @@
         padding-left: 50%;
         border: none;
         border-bottom: 1px solid #eee;
+        white-space: normal;
       }
       td::before {
         content: attr(data-label);
@@ -224,7 +230,6 @@
       }
     });
 
-    // Carrega todos os produtos inicialmente
     carregarProdutos();
   </script>
 </body>
