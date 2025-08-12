@@ -2,27 +2,113 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Produtos da Loja Jeta com Filtro</title>
+  <title>Produtos da Loja Jeta com Busca</title>
   <style>
-    #filtro {
-      margin-bottom: 10px;
-      padding: 5px;
-      width: 300px;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f7f9fc;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #004a99;
+    }
+    #container-busca {
+      max-width: 400px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      gap: 10px;
+    }
+    #campo-busca {
+      flex: 1;
+      padding: 10px 15px;
       font-size: 16px;
+      border: 2px solid #004a99;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    #campo-busca:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.5);
+    }
+    #btn-buscar {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #004a99;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #btn-buscar:hover {
+      background-color: #0066cc;
+    }
+    table {
+      width: 90%;
+      max-width: 900px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #004a99;
+      color: white;
+      user-select: none;
+    }
+    tr:hover {
+      background-color: #f1f8ff;
+    }
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      th {
+        position: sticky;
+        top: 0;
+      }
+      tr {
+        margin-bottom: 15px;
+      }
+      td {
+        padding-left: 50%;
+        position: relative;
+      }
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        font-weight: bold;
+        white-space: nowrap;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Produtos da Loja Jeta</h1>
 
-  <input
-    type="text"
-    id="filtro"
-    placeholder="Buscar por nome do produto..."
-    oninput="filtrarTabela()"
-  />
+  <div id="container-busca">
+    <input
+      type="text"
+      id="campo-busca"
+      placeholder="Digite o nome do produto..."
+      aria-label="Campo de busca de produtos"
+    />
+    <button id="btn-buscar" type="button">Buscar</button>
+  </div>
 
-  <table border="1" id="tabela-produtos">
+  <table id="tabela-produtos" aria-label="Tabela de produtos">
     <thead>
       <tr>
         <th>ID</th>
@@ -36,10 +122,9 @@
 
   <script>
     let produtos = [];
+    const lojaIdJeta = "12345"; // Substitua pelo ID correto da loja Jeta
 
-    async function carregarProdutosJeta() {
-      const lojaIdJeta = "12345"; // Substitua pelo ID correto da loja Jeta
-
+    async function carregarProdutos() {
       try {
         const resposta = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${lojaIdJeta}`);
         if (!resposta.ok) {
@@ -48,7 +133,6 @@
         }
         const dados = await resposta.json();
         produtos = dados.data || [];
-
         mostrarProdutos(produtos);
       } catch (error) {
         console.error("Erro ao carregar produtos:", error);
@@ -59,6 +143,13 @@
       const tbody = document.querySelector("#tabela-produtos tbody");
       tbody.innerHTML = "";
 
+      if (lista.length === 0) {
+        const linhaVazia = document.createElement("tr");
+        linhaVazia.innerHTML = `<td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto encontrado.</td>`;
+        tbody.appendChild(linhaVazia);
+        return;
+      }
+
       lista.forEach(produto => {
         const precoVenda = produto.valores && produto.valores.length > 0
           ? produto.valores[0].valor_venda
@@ -66,24 +157,33 @@
 
         const linha = document.createElement("tr");
         linha.innerHTML = `
-          <td>${produto.id}</td>
-          <td>${produto.nome}</td>
-          <td>${produto.estoque}</td>
-          <td>R$ ${precoVenda}</td>
+          <td data-label="ID">${produto.id}</td>
+          <td data-label="Nome">${produto.nome}</td>
+          <td data-label="Estoque">${produto.estoque}</td>
+          <td data-label="Preço de Venda">R$ ${precoVenda}</td>
         `;
         tbody.appendChild(linha);
       });
     }
 
-    function filtrarTabela() {
-      const filtro = document.getElementById("filtro").value.toLowerCase();
-      const filtrados = produtos.filter(p =>
-        p.nome.toLowerCase().includes(filtro)
+    function filtrarProdutos() {
+      const textoBusca = document.getElementById("campo-busca").value.toLowerCase();
+      const filtrados = produtos.filter(produto =>
+        produto.nome.toLowerCase().includes(textoBusca)
       );
       mostrarProdutos(filtrados);
     }
 
-    carregarProdutosJeta();
+    document.getElementById("btn-buscar").addEventListener("click", filtrarProdutos);
+
+    // Opcional: filtrar também ao digitar e apertar Enter
+    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        filtrarProdutos();
+      }
+    });
+
+    carregarProdutos();
   </script>
 </body>
 </html>
