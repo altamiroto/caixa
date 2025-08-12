@@ -89,17 +89,14 @@
         user-select: none;
     }
     
-    /* Cor de fundo para linhas ímpares */
     tbody tr:nth-child(odd) {
         background-color: #f2f2f2;
     }
 
-    /* Remove o efeito hover para não competir com a cor alternada */
     tr:hover {
         background-color: #e0eaf5;
     }
     
-    /* Ajustes para telas pequenas */
     @media (max-width: 600px) {
         #container-busca {
             flex-direction: column;
@@ -131,10 +128,8 @@
     <table id="tabela-produtos" aria-label="Tabela de produtos">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Nome</th>
           <th>Estoque</th>
-          <th>Preço de Venda</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -161,7 +156,7 @@
 
     async function carregarProdutos(nomeBusca = "") {
       const tbody = document.querySelector("#tabela-produtos tbody");
-      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
 
       let pagina = 1;
       let totalPaginas = 1;
@@ -180,27 +175,21 @@
         } while (pagina <= totalPaginas);
 
         if (todosProdutos.length === 0) {
-          tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+          tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
           return;
         }
 
         tbody.innerHTML = "";
         todosProdutos.forEach(produto => {
-          const precoVenda = produto.valores && produto.valores.length > 0
-            ? produto.valores[0].valor_venda
-            : "N/A";
-
           const linha = document.createElement("tr");
           linha.innerHTML = `
-            <td>${produto.id}</td>
             <td>${produto.nome}</td>
             <td>${produto.estoque}</td>
-            <td>R$ ${precoVenda}</td>
           `;
           tbody.appendChild(linha);
         });
       } catch (error) {
-        tbody.innerHTML = `<tr><td colspan='4' style='text-align:center; color:red;'>${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
       }
     }
 
