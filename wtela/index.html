@@ -20,6 +20,11 @@
             margin-bottom: 20px;
             text-align: center;
         }
+        .control-group {
+            display: inline-block;
+            margin: 0 10px;
+            text-align: left;
+        }
         .container {
             display: flex;
             gap: 20px;
@@ -40,7 +45,7 @@
             color: #333;
             margin-bottom: 5px;
         }
-        input[type="text"] {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 8px;
             margin-bottom: 10px;
@@ -48,6 +53,11 @@
             border-radius: 4px;
             font-size: 14px;
             box-sizing: border-box;
+            display: block; /* Para que ocupem 100% do .control-group */
+        }
+        input[type="number"] {
+            width: 50px; /* Ajuste para campos de número */
+            display: inline-block;
         }
         textarea {
             width: 100%;
@@ -58,6 +68,8 @@
             box-sizing: border-box;
             font-size: 14px;
             resize: vertical;
+            white-space: pre; /* Preserva a formatação de espaço/quebra de linha */
+            overflow: auto;
         }
         label {
             display: block;
@@ -70,6 +82,9 @@
             border-radius: 4px;
             border: 1px solid #ccc;
         }
+        .highlight {
+            background-color: yellow; /* Destaque para a linha encontrada */
+        }
     </style>
 </head>
 <body>
@@ -80,26 +95,51 @@
     </div>
 
     <div class="controls">
-        <label for="telaSelector">Escolha o número de telas:</label>
-        <select id="telaSelector" onchange="updateLayout()">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-        </select>
+        <div class="control-group">
+            <label for="telaSelector">Telas:</label>
+            <select id="telaSelector" onchange="updateLayout()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+            </select>
+        </div>
+        
+        <div class="control-group" style="width: 250px;">
+            <label for="searchInput">Buscar produto (e filtrar):</label>
+            <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
+        </div>
+        
+        <div class="control-group">
+            <label for="contextLines">Linhas de contexto (antes/depois):</label>
+            <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
+        </div>
     </div>
 
     <div id="container-listas" class="container">
-        </div>
+    </div>
 
     <script>
         const container = document.getElementById('container-listas');
         const select = document.getElementById('telaSelector');
-        
+        const searchInput = document.getElementById('searchInput');
+        const contextLinesInput = document.getElementById('contextLines');
+
+        function setupListeners() {
+            // Adiciona o listener 'input' para todas as textareas existentes
+            const textareas = container.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                // Remove o listener anterior para evitar duplicações, se houver
+                textarea.removeEventListener('input', applyFilter);
+                // Adiciona o novo listener
+                textarea.addEventListener('input', applyFilter);
+            });
+        }
+
         function updateLayout() {
             const numTelas = parseInt(select.value);
             const currentNumTelas = container.children.length;
@@ -116,6 +156,7 @@
 
                     const textarea = document.createElement('textarea');
                     textarea.id = `fornecedor${i}`;
+                    textarea.dataset.originalContent = ""; // Para guardar o conteúdo original
                     textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...`;
                     
                     wrapper.appendChild(input);
@@ -128,10 +169,98 @@
                     container.removeChild(container.lastChild);
                 }
             }
+            // Garante que o listener seja adicionado às textareas, novas ou existentes
+            setupListeners();
+            // Aplica o filtro após a mudança de layout
+            applyFilter();
         }
 
+        function applyFilter() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0); // Garante que seja no mínimo 0
+
+            const textareas = container.querySelectorAll('textarea');
+
+            textareas.forEach(textarea => {
+                const isFiltered = textarea.dataset.isFiltered === 'true';
+
+                // Se não está filtrado e o conteúdo original ainda não foi salvo, salva
+                if (!isFiltered && !textarea.dataset.originalContent) {
+                    textarea.dataset.originalContent = textarea.value;
+                }
+
+                const originalContent = textarea.dataset.originalContent;
+                const lines = originalContent.split('\n');
+
+                if (searchTerm.length === 0) {
+                    // Sem termo de busca, restaura o conteúdo original
+                    textarea.value = originalContent;
+                    textarea.dataset.isFiltered = 'false';
+                    return;
+                }
+
+                let filteredLines = [];
+                let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
+
+                lines.forEach((line, index) => {
+                    // Se a linha contém o termo de busca (case-insensitive)
+                    if (line.toLowerCase().includes(searchTerm)) {
+                        // Adiciona as linhas de contexto antes
+                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
+                            if (!lineAdded[i]) {
+                                filteredLines.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                        
+                        // Adiciona a linha encontrada (destacada - usaremos a classe para isso)
+                        const highlightedLine = `<span class="highlight">${line}</span>`;
+                        filteredLines.push(line); // Não podemos usar HTML dentro do textarea, apenas a linha original.
+                        lineAdded[index] = true;
+
+                        // Adiciona as linhas de contexto depois
+                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
+                            if (!lineAdded[i]) {
+                                filteredLines.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                    }
+                });
+
+                // Junta as linhas filtradas e atualiza o textarea
+                textarea.value = filteredLines.join('\n');
+                textarea.dataset.isFiltered = 'true';
+            });
+        }
+
+        // --- Inicialização ---
+
+        // Configura o valor inicial de originalContent e adiciona o listener para o conteúdo padrão
+        function initializeContent() {
+            const initialTextareas = container.querySelectorAll('textarea');
+            initialTextareas.forEach(textarea => {
+                // Salva o conteúdo inicial (vazio, mas prepara o campo)
+                textarea.dataset.originalContent = textarea.value; 
+            });
+        }
+        
         // Gera as telas iniciais (4, conforme o valor padrão)
         updateLayout();
+        initializeContent();
+
+        // Adiciona um listener global ao container para garantir que qualquer mudança no textarea atualize o originalContent
+        container.addEventListener('input', (event) => {
+            if (event.target.tagName === 'TEXTAREA') {
+                // Quando o usuário digita, o valor do textarea é o novo "originalContent" se não estiver filtrado
+                if (event.target.dataset.isFiltered !== 'true') {
+                    event.target.dataset.originalContent = event.target.value;
+                }
+                // Aplica o filtro após a digitação
+                applyFilter();
+            }
+        });
+        
     </script>
 
 </body>
