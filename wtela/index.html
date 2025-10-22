@@ -145,6 +145,16 @@
         </div>
     </div>
 
+
+
+    <div id="container-listas" class="container">
+    </div>
+	
+<div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
+    <label for="tagInput" style="display:inline-block; margin-right: 10px;">🏷️ **Tag (Título) para o Histórico:**</label>
+    <input type="text" id="tagInput" placeholder="Ex: Lista do dia 22/10/2025" style="width: calc(100% - 10px); display: block;">
+</div>
+
 <div style="margin-bottom: 15px; text-align:center;">
     <button onclick="salvarDados()">💾 Salvar Dados</button>
     <button onclick="carregarHistorico()">📜 Consultar histórico</button>
@@ -152,10 +162,6 @@
         <option value="">Selecione um histórico...</option>
     </select>
 </div>
-
-    <div id="container-listas" class="container">
-    </div>
-
     <script>
         const container = document.getElementById('container-listas');
         const select = document.getElementById('telaSelector');
@@ -327,8 +333,16 @@
 async function salvarDados() {
     const textareas = container.querySelectorAll('textarea');
     const inputs = container.querySelectorAll('input[type=text]');
+	
+	// NOVO: Obtém o valor do campo de Tag
+    const tagInput = document.getElementById('tagInput');
+	
     // Monta URLSearchParams (application/x-www-form-urlencoded) — evita preflight
     const params = new URLSearchParams();
+	
+	// NOVO: Adiciona o valor da tag nos parâmetros
+    params.append('tag', tagInput.value || '');
+	
     for (let i = 0; i < 8; i++) {
         params.append(`name${i+1}`, inputs[i]?.value || '');
         params.append(`text${i+1}`, textareas[i]?.value || '');
@@ -366,9 +380,15 @@ async function carregarHistorico() {
         data.forEach((item, index) => {
             const opt = document.createElement("option");
             const dataLocal = new Date(item.date).toLocaleString("pt-BR");
+			
+			// MODIFICADO: Usa a nova 'tag' (título) no texto da opção
+            const tagText = item.tag ? ` (${item.tag})` : '';
+			
             opt.value = index;
-            opt.textContent = `${index + 1} - ${dataLocal}`;
+// Combina a data e a nova tag
+            opt.textContent = `${index + 1} - ${dataLocal}${tagText}`; 
             select.appendChild(opt);
+			
         });
 
         select.style.display = "inline-block";
@@ -384,10 +404,14 @@ function aplicarHistorico() {
     if (isNaN(index)) return;
 
     const data = JSON.parse(select.dataset.registros);
+	const tagInput = document.getElementById("tagInput"); // NOVO: Obtém o campo da tag
     const registro = data[index];
 
     const textareas = container.querySelectorAll('textarea');
     const inputs = container.querySelectorAll('input[type=text]');
+	
+	// NOVO: Preenche o campo da Tag
+    if (tagInput) tagInput.value = registro['tag'] || '';
 
     for (let i = 0; i < 8; i++) {
         if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
