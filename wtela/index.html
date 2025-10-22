@@ -386,21 +386,32 @@ async function carregarHistorico() {
             return;
         }
 
-        // Pega o último registro salvo
-        const ultimo = data[data.length - 1];
+        // Exibe uma lista para o usuário escolher uma linha (pode adaptar)
+        const opcoes = data.map((d, i) => `${i + 1} - ${d.date}`).join("\n");
+        const escolha = prompt("Escolha o número do registro:\n" + opcoes);
+        const index = parseInt(escolha) - 1;
+
+        if (isNaN(index) || index < 0 || index >= data.length) {
+            alert("Opção inválida.");
+            return;
+        }
+
+        const registro = data[index];
         const textareas = container.querySelectorAll('textarea');
         const inputs = container.querySelectorAll('input[type=text]');
 
+        // Evita erro caso não existam 8 campos
         for (let i = 0; i < 8; i++) {
-            inputs[i].value = ultimo[`name${i+1}`] || '';
-            textareas[i].value = ultimo[`text${i+1}`] || '';
+            if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
+            if (textareas[i]) textareas[i].value = registro[`text${i+1}`] || '';
         }
 
-        alert("✅ Histórico carregado com sucesso!");
+        alert("✅ Registro carregado com sucesso!");
     } catch (err) {
         alert("❌ Erro ao carregar histórico: " + err);
     }
 }
+
 </script>
 
 </body>
