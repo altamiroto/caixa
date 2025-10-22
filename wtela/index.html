@@ -167,22 +167,7 @@
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
         const contextLinesInput = document.getElementById('contextLines');
-		
-		// NOVO CÓDIGO A SER ADICIONADO
-/**
- * Remove acentos e caracteres não-alfanuméricos/espaço (como emojis e pontuações) 
- * para uma busca mais robusta.
- * @param {string} str - A string de entrada.
- * @returns {string} A string limpa para comparação.
- */
-function cleanStringForSearch(str) {
-    // 1. Remove acentos (diacríticos): transforma 'é' em 'e'.
-    str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    // 2. Remove caracteres que NÃO são letras, números ou espaços (inclui emojis e pontuação).
-    // O 'g' garante substituição global.
-    return str.replace(/[^a-zA-Z0-9\s]/g, ''); 
-}
-// FIM DO NOVO CÓDIGO
+
 
         function setupListeners() {
             // Adiciona o listener 'input' para todas as textareas existentes
@@ -244,90 +229,79 @@ function cleanStringForSearch(str) {
             applyFilter();
         }
 
-// CÓDIGO MODIFICADO (para ignorar emojis/caracteres especiais na busca)
-// CÓDIGO CORRIGIDO E FINAL PARA applyFilter()
-function applyFilter() {
-    // 1. Limpa e padroniza o termo de busca
-    const rawSearchTerm = searchInput.value.trim();
-    const cleanedSearchTerm = cleanStringForSearch(rawSearchTerm).toLowerCase();
-    
-    // 2. Lógica para Busca Vazia (ou termo que só contenha caracteres especiais/emojis)
-    if (rawSearchTerm.length === 0 || cleanedSearchTerm.length === 0) {
-        const textareas = container.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
-            const resultDiv = document.getElementById(resultDivId);
-            resultDiv.style.display = 'none';
-            resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-        });
-        return;
-    }
+        function applyFilter() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0); // Garante que seja no mínimo 0
 
-    // 3. Lê linhas de contexto
-    const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
+            const textareas = container.querySelectorAll('textarea');
 
-    const textareas = container.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                // Encontra o DIV de resultado correspondente
+                const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
+                const resultDiv = document.getElementById(resultDivId);
 
-    textareas.forEach(textarea => {
-        const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
-        const resultDiv = document.getElementById(resultDivId);
-
-        // CORREÇÃO: Define e obtém o conteúdo original para esta textarea
-        let originalContent = textarea.dataset.originalContent || textarea.value;
-        if (!textarea.dataset.originalContent) {
-            textarea.dataset.originalContent = originalContent;
-        }
-        
-        const lines = originalContent.split('\n');
-        
-        // Há termo de busca: Exibe o div de resultado
-        resultDiv.style.display = 'block';
-
-        let filteredLinesWithHighlight = [];
-        let lineAdded = new Array(lines.length).fill(false);
-
-        lines.forEach((line, index) => {
-            // Limpa e padroniza a LINHA para a comparação
-            const cleanedLineLower = cleanStringForSearch(line).toLowerCase();
-            
-            // A comparação usa os textos limpos (ignora emojis/acentos)
-            if (cleanedLineLower.includes(cleanedSearchTerm)) {
-                // Adiciona as linhas de contexto antes
-                for (let i = Math.max(0, index - contextLines); i < index; i++) {
-                    if (!lineAdded[i]) {
-                        filteredLinesWithHighlight.push(lines[i]);
-                        lineAdded[i] = true;
-                    }
-                }
+                // O conteúdo original é sempre o valor do textarea salvo no dataset
+                let originalContent = textarea.dataset.originalContent || textarea.value;
                 
-                // Adiciona a linha encontrada COM DESTAQUE HTML
-                // Escapa a regex para garantir que caracteres como + ou * no termo de busca não quebrem
-                const escapedSearchTerm = rawSearchTerm.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
-                
-                // Usa a linha ORIGINAL para o destaque (mantém emojis na tela)
-                const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
-
-                filteredLinesWithHighlight.push(highlightedLine);
-                lineAdded[index] = true;
-
-                // Adiciona as linhas de contexto depois
-                for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
-                    if (!lineAdded[i]) {
-                        filteredLinesWithHighlight.push(lines[i]);
-                        lineAdded[i] = true;
-                    }
+                // Em caso de primeira execução ou se o usuário colou algo e não ativou o input, atualiza o originalContent
+                if (!textarea.dataset.originalContent) {
+                    textarea.dataset.originalContent = originalContent;
                 }
-            }
-        });
 
-        if (filteredLinesWithHighlight.length === 0) {
-            resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
-        } else {
-            resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
-        }
-    });
-}
+                const lines = originalContent.split('\n');
+
+                if (searchTerm.length === 0) {
+                    // Sem termo de busca: Oculta o div de resultado e limpa
+                    resultDiv.style.display = 'none';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+                    // O textarea original permanece intocado
+                    return;
+                }
+
+                // Há termo de busca: Exibe o div de resultado
+                resultDiv.style.display = 'block';
+
+                let filteredLinesWithHighlight = [];
+                let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
+
+                lines.forEach((line, index) => {
+                    const lineLower = line.toLowerCase();
+                    // Se a linha contém o termo de busca (case-insensitive)
+                    if (lineLower.includes(searchTerm)) {
+                        // Adiciona as linhas de contexto antes
+                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                        
+                        // Adiciona a linha encontrada COM DESTAQUE HTML
+                        // Substitui o termo de busca (mantendo o case original da linha)
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
+
+                        filteredLinesWithHighlight.push(highlightedLine);
+                        lineAdded[index] = true;
+
+                        // Adiciona as linhas de contexto depois
+                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                    }
+                });
+
+                if (filteredLinesWithHighlight.length === 0) {
+                    resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
+                } else {
+                    // Junta as linhas filtradas e atualiza o DIV de resultado
+                    // Usamos <br> no lugar de \n para que o HTML interprete a quebra de linha corretamente.
+                    resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
+                }
+            });
         }
 
         // --- Inicialização ---
