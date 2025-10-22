@@ -265,9 +265,17 @@
                 let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
 
                 lines.forEach((line, index) => {
-                    const lineLower = line.toLowerCase();
-                    // Se a linha contém o termo de busca (case-insensitive)
-                    if (lineLower.includes(searchTerm)) {
+const normalizeText = str => str
+    .normalize('NFKD')                // Decompõe acentos e formas compatíveis
+    .replace(/[\u0300-\u036f]/g, '')  // Remove marcas de acento
+    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '') // Remove emojis
+    .replace(/[\uFE00-\uFE0F]/g, '')  // Remove modificadores de variação
+    .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase()); // Mantém letras normais
+
+const lineNormalized = normalizeText(line);
+const searchNormalized = normalizeText(searchTerm);
+
+if (lineNormalized.includes(searchNormalized)) {
                         // Adiciona as linhas de contexto antes
                         for (let i = Math.max(0, index - contextLines); i < index; i++) {
                             if (!lineAdded[i]) {
