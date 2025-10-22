@@ -167,6 +167,22 @@
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
         const contextLinesInput = document.getElementById('contextLines');
+		
+		// NOVO CÓDIGO A SER ADICIONADO
+/**
+ * Remove acentos e caracteres não-alfanuméricos/espaço (como emojis e pontuações) 
+ * para uma busca mais robusta.
+ * @param {string} str - A string de entrada.
+ * @returns {string} A string limpa para comparação.
+ */
+function cleanStringForSearch(str) {
+    // 1. Remove acentos (diacríticos): transforma 'é' em 'e'.
+    str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // 2. Remove caracteres que NÃO são letras, números ou espaços (inclui emojis e pontuação).
+    // O 'g' garante substituição global.
+    return str.replace(/[^a-zA-Z0-9\s]/g, ''); 
+}
+// FIM DO NOVO CÓDIGO
 
         function setupListeners() {
             // Adiciona o listener 'input' para todas as textareas existentes
@@ -228,45 +244,54 @@
             applyFilter();
         }
 
-        function applyFilter() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0); // Garante que seja no mínimo 0
+// CÓDIGO MODIFICADO (para ignorar emojis/caracteres especiais na busca)
+function applyFilter() {
+    // 1. Limpa e padroniza o termo de busca para a comparação
+    const rawSearchTerm = searchInput.value.trim();
+    if (rawSearchTerm.length === 0) {
+        // ... (MANTENHA O CÓDIGO ORIGINAL PARA QUANDO A BUSCA É VAZIA)
+    }
 
-            const textareas = container.querySelectorAll('textarea');
+    // O termo de busca limpo e em minúsculas
+    const cleanedSearchTerm = cleanStringForSearch(rawSearchTerm).toLowerCase();
+    
+    // Se, após a limpeza, o termo for vazio (ex: só emojis foram digitados), interrompe
+    if (cleanedSearchTerm.length === 0) {
+        // MANTÉM O COMPORTAMENTO DE BUSCA VAZIA (Oculta o div e retorna)
+        const textareas = container.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
+            const resultDiv = document.getElementById(resultDivId);
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+        });
+        return;
+    }
 
-            textareas.forEach(textarea => {
-                // Encontra o DIV de resultado correspondente
-                const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
-                const resultDiv = document.getElementById(resultDivId);
 
-                // O conteúdo original é sempre o valor do textarea salvo no dataset
-                let originalContent = textarea.dataset.originalContent || textarea.value;
-                
-                // Em caso de primeira execução ou se o usuário colou algo e não ativou o input, atualiza o originalContent
-                if (!textarea.dataset.originalContent) {
-                    textarea.dataset.originalContent = originalContent;
-                }
+    const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
 
-                const lines = originalContent.split('\n');
+    const textareas = container.querySelectorAll('textarea');
 
-                if (searchTerm.length === 0) {
-                    // Sem termo de busca: Oculta o div de resultado e limpa
-                    resultDiv.style.display = 'none';
-                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-                    // O textarea original permanece intocado
-                    return;
-                }
+    textareas.forEach(textarea => {
+        // ... (código intermediário)
+        
+        const lines = originalContent.split('\n');
+        
+        // Há termo de busca: Exibe o div de resultado
+        const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
+        const resultDiv = document.getElementById(resultDivId);
+        resultDiv.style.display = 'block';
 
-                // Há termo de busca: Exibe o div de resultado
-                resultDiv.style.display = 'block';
+        let filteredLinesWithHighlight = [];
+        let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
 
-                let filteredLinesWithHighlight = [];
-                let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
-
-                lines.forEach((line, index) => {
-                    const lineLower = line.toLowerCase();
-                    // Se a linha contém o termo de busca (case-insensitive)
-                    if (lineLower.includes(searchTerm)) {
+        lines.forEach((line, index) => {
+            // 2. Limpa e padroniza a LINHA para a comparação.
+            const cleanedLineLower = cleanStringForSearch(line).toLowerCase();
+            
+            // Agora a comparação usa os textos limpos (ignorando emojis, pontuação e acentos)
+            if (cleanedLineLower.includes(cleanedSearchTerm)) {
                         // Adiciona as linhas de contexto antes
                         for (let i = Math.max(0, index - contextLines); i < index; i++) {
                             if (!lineAdded[i]) {
