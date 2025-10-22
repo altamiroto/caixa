@@ -320,17 +320,6 @@
         });
         
     </script>
-<div class="controls" style="margin-top: 20px;">
-    <button onclick="salvarDados()">💾 Salvar Dados</button>
-    <button onclick="consultarHistorico()">📜 Consultar Histórico</button>
-</div>
-
-<div id="historico" style="margin-top: 20px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:none;">
-    <h3>Histórico de Salvamentos</h3>
-    <select id="historicoSelect" onchange="carregarHistorico()">
-        <option value="">Selecione um registro...</option>
-    </select>
-</div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
@@ -350,10 +339,16 @@ async function salvar() {
             method: "POST",
             body: JSON.stringify(payload),
             headers: { "Content-Type": "application/json" },
+            mode: "cors" // importante se estiver rodando fora do Google
         });
 
         if (!res.ok) throw new Error("Erro HTTP: " + res.status);
-        alert("✅ Dados salvos com sucesso!");
+        const result = await res.json();
+        if (result.status === "success") {
+            alert("✅ Dados salvos com sucesso!");
+        } else {
+            throw new Error(result.message || "Erro desconhecido");
+        }
     } catch (err) {
         alert("❌ Erro ao salvar: " + err);
     }
