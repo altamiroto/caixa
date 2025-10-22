@@ -375,23 +375,32 @@ async function salvarDados() {
         }
     }
 
-    function carregarHistorico() {
-        const idx = document.getElementById('historicoSelect').value;
-        if (idx === '') return;
-        const item = window.historicoData[idx];
+async function carregarHistorico() {
+    try {
+        const res = await fetch(SCRIPT_URL);
+        if (!res.ok) throw new Error("Resposta inválida: " + res.status);
+        const data = await res.json();
 
+        if (!Array.isArray(data) || data.length === 0) {
+            alert("Nenhum registro encontrado.");
+            return;
+        }
+
+        // Pega o último registro salvo
+        const ultimo = data[data.length - 1];
         const textareas = container.querySelectorAll('textarea');
         const inputs = container.querySelectorAll('input[type=text]');
 
         for (let i = 0; i < 8; i++) {
-            inputs[i].value = item[`name${i+1}`] || '';
-            textareas[i].value = item[`text${i+1}`] || '';
-            textareas[i].dataset.originalContent = textareas[i].value;
+            inputs[i].value = ultimo[`name${i+1}`] || '';
+            textareas[i].value = ultimo[`text${i+1}`] || '';
         }
 
-        applyFilter();
-        alert('🔄 Dados restaurados da planilha!');
+        alert("✅ Histórico carregado com sucesso!");
+    } catch (err) {
+        alert("❌ Erro ao carregar histórico: " + err);
     }
+}
 </script>
 
 </body>
