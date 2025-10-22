@@ -146,7 +146,7 @@
     </div>
 
 <div style="margin-bottom: 15px; text-align:center;">
-    <button onclick="salvar()">💾 Salvar</button>
+    <button onclick="salvarDados()">💾 Salvar Dados</button>
     <button onclick="carregarHistorico()">📜 Consultar histórico</button>
     <select id="historicoSelect" style="padding:6px; display:none;" onchange="aplicarHistorico()">
         <option value="">Selecione um histórico...</option>
@@ -324,33 +324,29 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
 
-async function salvar() {
+async function salvarDados() {
+    const textareas = container.querySelectorAll('textarea');
+    const inputs = container.querySelectorAll('input[type=text]');
+    // Monta URLSearchParams (application/x-www-form-urlencoded) — evita preflight
+    const params = new URLSearchParams();
+    for (let i = 0; i < 8; i++) {
+        params.append(`name${i+1}`, inputs[i]?.value || '');
+        params.append(`text${i+1}`, textareas[i]?.value || '');
+    }
+
     try {
-        const textareas = container.querySelectorAll('textarea');
-        const inputs = container.querySelectorAll('input[type=text]');
-        const payload = { date: new Date().toISOString() };
-
-        for (let i = 0; i < 8; i++) {
-            payload[`name${i+1}`] = inputs[i] ? inputs[i].value : '';
-            payload[`text${i+1}`] = textareas[i] ? textareas[i].value : '';
-        }
-
         const res = await fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify(payload),
-            headers: { "Content-Type": "application/json" },
-            mode: "cors" // importante se estiver rodando fora do Google
+            method: 'POST',
+            body: params // sem headers personalizados
         });
-
-        if (!res.ok) throw new Error("Erro HTTP: " + res.status);
-        const result = await res.json();
-        if (result.status === "success") {
-            alert("✅ Dados salvos com sucesso!");
+        const json = await res.json();
+        if (json.status === 'success') {
+            alert('✅ Dados salvos com sucesso!');
         } else {
-            throw new Error(result.message || "Erro desconhecido");
+            alert('❌ Erro do servidor: ' + JSON.stringify(json));
         }
     } catch (err) {
-        alert("❌ Erro ao salvar: " + err);
+        alert('❌ Erro ao salvar: ' + err);
     }
 }
 
