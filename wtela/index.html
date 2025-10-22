@@ -40,6 +40,9 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             flex: 0 0 300px;
             box-sizing: border-box;
+            /* Container para o textarea e o div de resultado */
+            display: flex;
+            flex-direction: column; 
         }
         h1 {
             color: #333;
@@ -53,24 +56,45 @@
             border-radius: 4px;
             font-size: 14px;
             box-sizing: border-box;
-            display: block; /* Para que ocupem 100% do .control-group */
+            display: block; 
         }
         input[type="number"] {
-            width: 50px; /* Ajuste para campos de número */
+            width: 50px; 
             display: inline-block;
         }
+
+        /* ESTILO PARA O TEXTAREA ORIGINAL (APENAS ENTRADA) */
         textarea {
             width: 100%;
-            height: 500px;
+            height: 250px; /* Reduzida para dar espaço ao div de resultado */
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 14px;
-            resize: vertical;
-            white-space: pre; /* Preserva a formatação de espaço/quebra de linha */
+            resize: both; /* ✅ Alterado para 'both' */
+            white-space: pre; 
             overflow: auto;
+            margin-bottom: 15px; /* Espaço entre o textarea e o div de resultado */
         }
+
+        /* ESTILO PARA A NOVA ÁREA DE RESULTADO FILTRADO */
+        .filtered-output {
+            width: 100%;
+            height: 250px; /* Mesma altura do textarea para alinhamento visual */
+            padding: 10px;
+            border: 1px solid #007bff; /* Borda diferente para o resultado */
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #eaf3ff; /* Fundo levemente azul para destaque */
+            overflow: auto; /* Permite rolagem no resultado */
+            white-space: pre-wrap; /* Preserva quebras de linha e envolve o texto */
+            display: none; /* Inicia oculto, só aparece quando há busca */
+            text-align: left;
+            flex-grow: 1; /* Ocupa o espaço restante */
+        }
+        
         label {
             display: block;
             margin-bottom: 8px;
@@ -84,6 +108,7 @@
         }
         .highlight {
             background-color: yellow; /* Destaque para a linha encontrada */
+            font-weight: bold;
         }
     </style>
 </head>
@@ -110,7 +135,7 @@
         </div>
         
         <div class="control-group" style="width: 250px;">
-            <label for="searchInput">Buscar produto (e filtrar):</label>
+            <label for="searchInput">Buscar produto:</label>
             <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
         </div>
         
@@ -133,11 +158,18 @@
             // Adiciona o listener 'input' para todas as textareas existentes
             const textareas = container.querySelectorAll('textarea');
             textareas.forEach(textarea => {
-                // Remove o listener anterior para evitar duplicações, se houver
-                textarea.removeEventListener('input', applyFilter);
-                // Adiciona o novo listener
-                textarea.addEventListener('input', applyFilter);
+                // Ao digitar no textarea, apenas salvamos o conteúdo original
+                textarea.removeEventListener('input', saveOriginalContent);
+                textarea.addEventListener('input', saveOriginalContent);
             });
+        }
+
+        // Função para salvar o conteúdo do textarea como original (não estamos mais usando 'isFiltered')
+        function saveOriginalContent(event) {
+            const textarea = event.target;
+            textarea.dataset.originalContent = textarea.value;
+            // E chama o filtro para atualizar o DIV de resultado
+            applyFilter();
         }
 
         function updateLayout() {
@@ -159,8 +191,15 @@
                     textarea.dataset.originalContent = ""; // Para guardar o conteúdo original
                     textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...`;
                     
+                    // NOVO ELEMENTO: O div para mostrar o resultado filtrado
+                    const resultDiv = document.createElement('div');
+                    resultDiv.id = `resultado${i}`;
+                    resultDiv.className = 'filtered-output';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+
                     wrapper.appendChild(input);
                     wrapper.appendChild(textarea);
+                    wrapper.appendChild(resultDiv); // Adiciona o novo div
                     container.appendChild(wrapper);
                 }
             } else if (numTelas < currentNumTelas) {
@@ -182,66 +221,81 @@
             const textareas = container.querySelectorAll('textarea');
 
             textareas.forEach(textarea => {
-                const isFiltered = textarea.dataset.isFiltered === 'true';
+                // Encontra o DIV de resultado correspondente
+                const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
+                const resultDiv = document.getElementById(resultDivId);
 
-                // Se não está filtrado e o conteúdo original ainda não foi salvo, salva
-                if (!isFiltered && !textarea.dataset.originalContent) {
-                    textarea.dataset.originalContent = textarea.value;
+                // O conteúdo original é sempre o valor do textarea salvo no dataset
+                let originalContent = textarea.dataset.originalContent || textarea.value;
+                
+                // Em caso de primeira execução ou se o usuário colou algo e não ativou o input, atualiza o originalContent
+                if (!textarea.dataset.originalContent) {
+                    textarea.dataset.originalContent = originalContent;
                 }
 
-                const originalContent = textarea.dataset.originalContent;
                 const lines = originalContent.split('\n');
 
                 if (searchTerm.length === 0) {
-                    // Sem termo de busca, restaura o conteúdo original
-                    textarea.value = originalContent;
-                    textarea.dataset.isFiltered = 'false';
+                    // Sem termo de busca: Oculta o div de resultado e limpa
+                    resultDiv.style.display = 'none';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+                    // O textarea original permanece intocado
                     return;
                 }
 
-                let filteredLines = [];
+                // Há termo de busca: Exibe o div de resultado
+                resultDiv.style.display = 'block';
+
+                let filteredLinesWithHighlight = [];
                 let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
 
                 lines.forEach((line, index) => {
+                    const lineLower = line.toLowerCase();
                     // Se a linha contém o termo de busca (case-insensitive)
-                    if (line.toLowerCase().includes(searchTerm)) {
+                    if (lineLower.includes(searchTerm)) {
                         // Adiciona as linhas de contexto antes
                         for (let i = Math.max(0, index - contextLines); i < index; i++) {
                             if (!lineAdded[i]) {
-                                filteredLines.push(lines[i]);
+                                filteredLinesWithHighlight.push(lines[i]);
                                 lineAdded[i] = true;
                             }
                         }
                         
-                        // Adiciona a linha encontrada (destacada - usaremos a classe para isso)
-                        const highlightedLine = `<span class="highlight">${line}</span>`;
-                        filteredLines.push(line); // Não podemos usar HTML dentro do textarea, apenas a linha original.
+                        // Adiciona a linha encontrada COM DESTAQUE HTML
+                        // Substitui o termo de busca (mantendo o case original da linha)
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
+
+                        filteredLinesWithHighlight.push(highlightedLine);
                         lineAdded[index] = true;
 
                         // Adiciona as linhas de contexto depois
                         for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
                             if (!lineAdded[i]) {
-                                filteredLines.push(lines[i]);
+                                filteredLinesWithHighlight.push(lines[i]);
                                 lineAdded[i] = true;
                             }
                         }
                     }
                 });
 
-                // Junta as linhas filtradas e atualiza o textarea
-                textarea.value = filteredLines.join('\n');
-                textarea.dataset.isFiltered = 'true';
+                if (filteredLinesWithHighlight.length === 0) {
+                    resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
+                } else {
+                    // Junta as linhas filtradas e atualiza o DIV de resultado
+                    // Usamos <br> no lugar de \n para que o HTML interprete a quebra de linha corretamente.
+                    resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
+                }
             });
         }
 
         // --- Inicialização ---
 
-        // Configura o valor inicial de originalContent e adiciona o listener para o conteúdo padrão
         function initializeContent() {
             const initialTextareas = container.querySelectorAll('textarea');
             initialTextareas.forEach(textarea => {
                 // Salva o conteúdo inicial (vazio, mas prepara o campo)
-                textarea.dataset.originalContent = textarea.value; 
+                textarea.dataset.originalContent = textarea.value;
             });
         }
         
@@ -249,19 +303,93 @@
         updateLayout();
         initializeContent();
 
-        // Adiciona um listener global ao container para garantir que qualquer mudança no textarea atualize o originalContent
-        container.addEventListener('input', (event) => {
+        // Garante que o applyFilter seja chamado quando o usuário cola no textarea
+        container.addEventListener('change', (event) => {
             if (event.target.tagName === 'TEXTAREA') {
-                // Quando o usuário digita, o valor do textarea é o novo "originalContent" se não estiver filtrado
-                if (event.target.dataset.isFiltered !== 'true') {
-                    event.target.dataset.originalContent = event.target.value;
-                }
-                // Aplica o filtro após a digitação
+                event.target.dataset.originalContent = event.target.value;
                 applyFilter();
             }
         });
         
     </script>
+<div class="controls" style="margin-top: 20px;">
+    <button onclick="salvarDados()">💾 Salvar Dados</button>
+    <button onclick="consultarHistorico()">📜 Consultar Histórico</button>
+</div>
+
+<div id="historico" style="margin-top: 20px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:none;">
+    <h3>Histórico de Salvamentos</h3>
+    <select id="historicoSelect" onchange="carregarHistorico()">
+        <option value="">Selecione um registro...</option>
+    </select>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
+
+    async function salvarDados() {
+        const textareas = container.querySelectorAll('textarea');
+        const inputs = container.querySelectorAll('input[type=text]');
+        const data = {};
+
+        for (let i = 0; i < 8; i++) {
+            data[`name${i+1}`] = inputs[i]?.value || '';
+            data[`text${i+1}`] = textareas[i]?.value || '';
+        }
+
+        try {
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const json = await res.json();
+            if (json.status === 'success') alert('✅ Dados salvos com sucesso!');
+        } catch (err) {
+            alert('❌ Erro ao salvar: ' + err);
+        }
+    }
+
+    async function consultarHistorico() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const historico = await res.json();
+
+            const select = document.getElementById('historicoSelect');
+            select.innerHTML = '<option value="">Selecione um registro...</option>';
+
+            historico.reverse().forEach((item, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `${item.date} - ${item.name1 || '(sem nome)'}`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('historico').style.display = 'block';
+            window.historicoData = historico; // salva para reuso
+        } catch (err) {
+            alert('Erro ao carregar histórico: ' + err);
+        }
+    }
+
+    function carregarHistorico() {
+        const idx = document.getElementById('historicoSelect').value;
+        if (idx === '') return;
+        const item = window.historicoData[idx];
+
+        const textareas = container.querySelectorAll('textarea');
+        const inputs = container.querySelectorAll('input[type=text]');
+
+        for (let i = 0; i < 8; i++) {
+            inputs[i].value = item[`name${i+1}`] || '';
+            textareas[i].value = item[`text${i+1}`] || '';
+            textareas[i].dataset.originalContent = textareas[i].value;
+        }
+
+        applyFilter();
+        alert('🔄 Dados restaurados da planilha!');
+    }
+</script>
 
 </body>
 </html>
