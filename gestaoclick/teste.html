@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Produtos da Loja com Busca via API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f7f9fc;
+      color: #333;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #004a99;
+      font-size: 1.8rem;
+    }
+    
+    #container-busca, #container-filtro {
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+    }
+    
+    #campo-busca, #campo-filtro {
+      flex-grow: 1;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid #004a99;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    
+    #campo-busca:focus, #campo-filtro:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+    
+    #btn-buscar {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #004a99;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    #btn-buscar:hover {
+      background-color: #0066cc;
+    }
+
+    .table-wrapper {
+      max-width: 700px;
+      width: 90%;
+      margin: 0 auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      table-layout: fixed;
+    }
+    
+    th,
+    td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #004a99;
+      color: white;
+      user-select: none;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    th:hover {
+      background-color: #0066cc;
+    }
+
+    th.ordenado-asc::after {
+      content: '▲';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    th.ordenado-desc::after {
+      content: '▼';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    th:nth-child(1), td:nth-child(1) { width: 75%; }
+    th:nth-child(2), td:nth-child(2) { width: 25%; }
+    
+    tbody tr:nth-child(odd) {
+      background-color: #f2f2f2;
+    }
+
+    tr:hover {
+      background-color: #e0eaf5;
+    }
+    
+    @media (max-width: 600px) {
+      #container-busca, #container-filtro {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0 15px;
+      }
+
+      #btn-buscar {
+        width: 100%;
+        margin-top: 10px;
+      }
+      
+      .table-wrapper {
+        max-width: 100%;
+        width: 95%;
+      }
+      
+      table {
+        table-layout: auto;
+      }
+      
+      th:nth-child(1), td:nth-child(1) { width: auto; }
+      th:nth-child(2), td:nth-child(2) { width: auto; }
+
+      th::after {
+        content: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Produtos da Loja</h1>
+
+  <div id="container-busca">
+    <input
+      type="text"
+      id="campo-busca"
+      placeholder="Digite o nome do produto para buscar na API..."
+      aria-label="Campo de busca de produtos na API"
+    />
+    <button id="btn-buscar" type="button">Buscar</button>
+  </div>
+  
+  <div id="container-filtro" style="display: none;">
+    <input
+      type="text"
+      id="campo-filtro"
+      placeholder="Filtrar resultados na lista..."
+      aria-label="Campo de filtro de produtos na lista"
+    />
+  </div>
+
+  <div class="table-wrapper">
+    <table id="tabela-produtos" aria-label="Tabela de produtos">
+      <thead>
+        <tr>
+          <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
+          <th data-coluna="estoque" data-ordem="asc">Estoque</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align:center;">Por favor, faça uma busca para ver os produtos.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const lojaIdJeta = "361408";
+    let todosProdutos = []; // Lista completa de produtos carregados da API
+    let produtosFiltrados = []; // Lista atualmente exibida na tabela
+
+    async function buscarProdutos(nomeBusca = "", pagina = 1) {
+      // Nota: A URL deve apontar para o seu Vercel, não para o Netlify/calculadoracaixa
+      // Mantenho a URL original para compatibilidade com a estrutura de arquivos.
+      const url = new URL("https://caixa-three.vercel.app/api/produtos"); 
+      url.searchParams.append("loja_id", lojaIdJeta);
+      url.searchParams.append("pagina", pagina);
+      if (nomeBusca.trim() !== "") {
+        url.searchParams.append("nome", nomeBusca.trim());
+      }
+      
+      try {
+        const resposta = await fetch(url.toString());
+        if (!resposta.ok) {
+          // Tenta pegar a mensagem de erro detalhada do proxy Vercel
+          const erroResposta = await resposta.json().catch(() => ({})); 
+          const mensagemErro = erroResposta.data?.mensagem || resposta.statusText || "Erro desconhecido";
+          throw new Error(`Erro na requisição [Status ${resposta.status}]: ${mensagemErro}`);
+        }
+        return await resposta.json();
+      } catch (error) {
+        console.error("Erro na busca de produtos:", error);
+        throw new Error("Não foi possível conectar-se ao servidor ou a busca falhou.");
+      }
+    }
+
+    function renderizarTabela(produtos) {
+      produtosFiltrados = produtos; // Atualiza a lista exibida para a renderização
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      if (!produtos || produtos.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+        return;
+      }
+      
+      tbody.innerHTML = "";
+      produtos.forEach(produto => {
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${produto.nome}</td>
+          <td>${produto.estoque}</td>
+        `;
+        tbody.appendChild(linha);
+      });
+    }
+
+    async function carregarProdutos(nomeBusca = "") {
+      const tbody = document.querySelector("#tabela-produtos tbody");
+      const filtroContainer = document.getElementById('container-filtro');
+      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
+      filtroContainer.style.display = 'none'; // Oculta o filtro durante o carregamento
+
+      let pagina = 1;
+      let totalPaginas = 1;
+      todosProdutos = [];
+
+      try {
+        do {
+          const dados = await buscarProdutos(nomeBusca, pagina);
+          if (dados.code !== 200) {
+            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
+          }
+
+          // Filtra itens duplicados e sem nome/estoque (melhor prática)
+          const novosProdutos = dados.data.filter(p => p.nome && p.estoque !== null);
+          todosProdutos = todosProdutos.concat(novosProdutos);
+          
+          totalPaginas = dados.meta.total_paginas;
+          pagina++;
+        } while (pagina <= totalPaginas);
+
+        // Ordena os produtos por nome (crescente) após o carregamento
+        todosProdutos.sort((a, b) => {
+          const nomeA = a.nome.toLowerCase();
+          const nomeB = b.nome.toLowerCase();
+          if (nomeA < nomeB) return -1;
+          if (nomeA > nomeB) return 1;
+          return 0;
+        });
+
+        renderizarTabela(todosProdutos);
+        filtroContainer.style.display = 'flex'; // Exibe o filtro após o sucesso
+
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
+        filtroContainer.style.display = 'none'; // Mantém o filtro oculto em caso de erro
+      }
+    }
+    
+    // NOVO: Função para filtrar a lista na memória
+    function filtrarTabela() {
+        const termoFiltro = document.getElementById('campo-filtro').value.toLowerCase().trim();
+        
+        if (termoFiltro === "") {
+            renderizarTabela(todosProdutos); // Se vazio, mostra todos
+            return;
+        }
+
+        const produtosFiltradosLocal = todosProdutos.filter(produto => {
+            // Verifica se o nome do produto contém o termo de filtro
+            return produto.nome.toLowerCase().includes(termoFiltro);
+        });
+
+        renderizarTabela(produtosFiltradosLocal);
+    }
+    
+    function ordenarTabela(coluna, ordem) {
+      if (produtosFiltrados.length === 0) return; // Usa produtosFiltrados
+
+      const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
+        let valorA = a[coluna];
+        let valorB = b[coluna];
+
+        if (typeof valorA === 'string') {
+          valorA = valorA.toLowerCase();
+          valorB = valorB.toLowerCase();
+        } else {
+          valorA = Number(valorA);
+          valorB = Number(valorB);
+        }
+
+        if (valorA < valorB) return ordem === 'asc' ? -1 : 1;
+        if (valorA > valorB) return ordem === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      renderizarTabela(produtosOrdenados);
+    }
+    
+    document.getElementById("btn-buscar").addEventListener("click", () => {
+      const nomeBusca = document.getElementById("campo-busca").value;
+      document.getElementById('campo-filtro').value = ''; // Limpa o filtro ao fazer nova busca na API
+      carregarProdutos(nomeBusca);
+    });
+
+    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        document.getElementById("btn-buscar").click();
+      }
+    });
+    
+    // NOVO: Listener para o campo de filtro
+    document.getElementById("campo-filtro").addEventListener("input", filtrarTabela);
+
+    document.querySelectorAll('#tabela-produtos thead th').forEach(header => {
+      header.addEventListener('click', () => {
+        const coluna = header.dataset.coluna;
+        let ordem = header.dataset.ordem;
+
+        document.querySelectorAll('#tabela-produtos thead th').forEach(th => {
+          th.classList.remove('ordenado-asc', 'ordenado-desc');
+        });
+
+        ordem = ordem === 'asc' ? 'desc' : 'asc';
+        header.dataset.ordem = ordem;
+
+        header.classList.add(`ordenado-${ordem}`);
+        
+        // A ordenação agora usa a lista atualmente filtrada (produtosFiltrados)
+        ordenarTabela(coluna, ordem);
+      });
+    });
+  </script>
+</body>
+</html>
