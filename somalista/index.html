@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calculadora de Acréscimos de Lista (v9 - FINAL)</title>
     <style>
+        /* preserva estilo original, adiciona responsividade sem alterar cores/eixos visuais */
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -100,6 +102,7 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            flex-wrap: nowrap; /* padrão desktop */
         }
         .range-item label {
             font-weight: normal;
@@ -146,6 +149,85 @@
             font-weight: bold;
             color: #28a745;
         }
+
+        /* --- Responsividade --- */
+        @media (max-width: 900px) {
+            .container { padding: 24px; }
+            h1 { font-size: 1.4rem; }
+        }
+
+        @media (max-width: 700px) {
+            body { margin: 12px; }
+            .container { padding: 18px; border-radius: 6px; }
+            h1 { font-size: 1.15rem; margin-bottom: 18px; }
+
+            /* empilha rótulo e campo nos grupos de controle */
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .control-group label {
+                min-width: 0;
+                display: block;
+            }
+            .control-group input[type="number"] {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            /* faixa: permitir quebra e organizar em duas colunas quando possível */
+            .range-item {
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            .range-item > label {
+                width: 100%;
+                margin-bottom: 6px;
+            }
+            /* coloca inputs lado a lado quando couber, senão empilha */
+            .range-item input[type="number"] {
+                flex: 1 1 48%;
+                width: 48%;
+                max-width: none;
+                min-width: 120px;
+            }
+            .range-item button {
+                flex: 0 0 auto;
+                margin-left: 0;
+                margin-top: 8px;
+            }
+
+            /* botões de controle das faixas empilham para melhor toque */
+            .range-control-buttons {
+                flex-direction: column;
+            }
+            #addRangeBtn { width: 100%; }
+
+            /* botão principal processar ocupa largura total para toque mais fácil */
+            .container > button {
+                width: 100%;
+            }
+
+            /* output com altura menor em telas pequenas */
+            #listaProcessadaOutput { min-height: 180px; }
+
+            /* tabela de resumo: garante leitura em telas estreitas */
+            .resumo-tabela th, .resumo-tabela td {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .range-item input[type="number"] {
+                flex-basis: 100%;
+                width: 100%;
+                min-width: 0;
+            }
+            .range-item > label { font-size: 14px; }
+            textarea, #listaProcessadaOutput { font-size: 13px; }
+            button { padding: 10px; font-size: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -166,10 +248,12 @@
 
         <div class="control-group">
             <label>Tipo de Acréscimo:</label>
-            <input type="radio" id="tipoFixo" name="tipoAcrescimo" value="fixo" checked>
-            <label for="tipoFixo">Fixo</label>
-            <input type="radio" id="tipoFaixa" name="tipoAcrescimo" value="faixa">
-            <label for="tipoFaixa">Por Faixa de Valor</label>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <input type="radio" id="tipoFixo" name="tipoAcrescimo" value="fixo" checked>
+                <label for="tipoFixo" style="font-weight:normal;min-width:auto;">Fixo</label>
+                <input type="radio" id="tipoFaixa" name="tipoAcrescimo" value="faixa">
+                <label for="tipoFaixa" style="font-weight:normal;min-width:auto;">Por Faixa de Valor</label>
+            </div>
         </div>
     </div>
 
@@ -188,7 +272,7 @@
         <h3>5. Resultado da Lista Processada (Clique para Copiar)</h3>
         <textarea id="listaProcessadaOutput" readonly placeholder="A lista com os valores somados aparecerá aqui. Clique neste campo para copiar."></textarea>
         <div id="copyMessage" class="mensagem-sucesso" style="display:none;">Conteúdo copiado para a área de transferência!</div>
-        
+
         <div id="resumoFinal"></div>
     </div>
 </div>
@@ -201,7 +285,7 @@
         rangeItem.innerHTML = `
             <label>Acima de R$</label>
             <input type="number" class="faixaMin" value="${min}" min="0" onchange="ordenarFaixas()">
-            <label>Adicionar R$</label>
+            <label style="display:none;">Adicionar R$</label>
             <input type="number" class="faixaAcrescimo" value="${acrescimo}" min="0">
             <button type="button" onclick="this.parentElement.remove(); ordenarFaixas();">Remover</button>
         `;
@@ -222,7 +306,7 @@
             rangeItem.innerHTML = `
                 <label>Acima de R$</label>
                 <input type="number" class="faixaMin" value="${data.min}" min="0" onchange="ordenarFaixas()">
-                <label>Adicionar R$</label>
+                <label style="display:none;">Adicionar R$</label>
                 <input type="number" class="faixaAcrescimo" value="${data.acrescimo}" min="0">
                 <button type="button" onclick="this.parentElement.remove(); ordenarFaixas();">Remover</button>
             `;
@@ -248,7 +332,6 @@
         });
     });
 
-    // Regex corrigido: captura números com ou sem separador de milhares corretamente
     const regexProdutoValor = /((?:\d{1,3}(?:[.,]\d{3})*|\d+)(?:[.,]\d{1,2})?)\s*$/;
 
     function processarLista() {
@@ -272,13 +355,13 @@
         }
 
         const linhas = listaBruta.split('\n');
-        
+
         linhas.forEach(linhaOriginal => {
             let linha = linhaOriginal.trim();
             const match = linha.match(regexProdutoValor);
-            
+
             if (match) {
-                const valorTextoAntigo = match[1]; 
+                const valorTextoAntigo = match[1];
                 let valorOriginal = parseFloat(valorTextoAntigo.replace(/\./g, '').replace(',', '.'));
 
                 if (!isNaN(valorOriginal)) {
@@ -286,7 +369,6 @@
                     if (tipoAcrescimo === 'fixo') {
                         acrescimoAplicado = acrescimoFixo;
                     } else if (tipoAcrescimo === 'faixa') {
-                        // Soma todas as faixas aplicáveis (cumulativo)
                         for (const faixa of faixas) {
                             if (valorOriginal >= faixa.min) {
                                 acrescimoAplicado += faixa.acrescimo;
@@ -296,14 +378,14 @@
 
                     const valorSomado = valorOriginal + acrescimoAplicado;
                     let novoValorTexto = valorSomado.toFixed(2).replace('.', ',');
-                    
+
                     const originalHasDecimalSeparator = valorTextoAntigo.includes('.') || valorTextoAntigo.includes(',');
                     if (!originalHasDecimalSeparator) {
                          novoValorTexto = novoValorTexto.replace(',00', '');
                     } else if (valorTextoAntigo.includes('.')) {
                         novoValorTexto = valorSomado.toFixed(2).replace('.', '.');
                     }
-                    
+
                     const escapedValorAntigo = valorTextoAntigo.replace(/[\.\,\+\*\?\^\$\(\)\[\]\{\}\|\\]/g, "\\$&");
                     const replaceRegex = new RegExp(escapedValorAntigo + '\\s*$', 'g');
                     const novaLinha = linhaOriginal.replace(replaceRegex, novoValorTexto);
@@ -321,7 +403,7 @@
 
         const resultadoTexto = listaProcessada.join('\n');
         outputTextarea.value = resultadoTexto;
-        outputTextarea.select(); 
+        outputTextarea.select();
 
         const totalFinal = totalOriginal + totalAcrescimo;
         resumoDiv.innerHTML = `
