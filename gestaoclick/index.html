@@ -19,7 +19,7 @@
       font-size: 1.8rem;
     }
     
-    #container-busca {
+    #container-busca, #container-filtro {
       max-width: 600px;
       margin: 0 auto 20px auto;
       display: flex;
@@ -29,7 +29,7 @@
       padding: 0 10px;
     }
     
-    #campo-busca {
+    #campo-busca, #campo-filtro {
       flex-grow: 1;
       padding: 10px 15px;
       font-size: 16px;
@@ -39,7 +39,7 @@
       transition: border-color 0.3s ease;
     }
     
-    #campo-busca:focus {
+    #campo-busca:focus, #campo-filtro:focus {
       border-color: #007bff;
       box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     }
@@ -124,7 +124,7 @@
     }
     
     @media (max-width: 600px) {
-      #container-busca {
+      #container-busca, #container-filtro {
         flex-direction: column;
         align-items: stretch;
         padding: 0 15px;
@@ -160,10 +160,19 @@
     <input
       type="text"
       id="campo-busca"
-      placeholder="Digite o nome do produto..."
-      aria-label="Campo de busca de produtos"
+      placeholder="Digite o nome do produto para buscar na API..."
+      aria-label="Campo de busca de produtos na API"
     />
     <button id="btn-buscar" type="button">Buscar</button>
+  </div>
+  
+  <div id="container-filtro" style="display: none;">
+    <input
+      type="text"
+      id="campo-filtro"
+      placeholder="Filtrar resultados na lista..."
+      aria-label="Campo de filtro de produtos na lista"
+    />
   </div>
 
   <div class="table-wrapper">
@@ -184,10 +193,13 @@
 
   <script>
     const lojaIdJeta = "361408";
-    let todosProdutos = [];
+    let todosProdutos = []; // Lista completa de produtos carregados da API
+    let produtosFiltrados = []; // Lista atualmente exibida na tabela
 
     async function buscarProdutos(nomeBusca = "", pagina = 1) {
-      const url = new URL("https://caixa-three.vercel.app/api/produtos");
+      // Nota: A URL deve apontar para o seu Vercel, não para o Netlify/calculadoracaixa
+      // Mantenho a URL original para compatibilidade com a estrutura de arquivos.
+      const url = new URL("https://caixa-three.vercel.app/api/produtos"); 
       url.searchParams.append("loja_id", lojaIdJeta);
       url.searchParams.append("pagina", pagina);
       if (nomeBusca.trim() !== "") {
@@ -197,7 +209,10 @@
       try {
         const resposta = await fetch(url.toString());
         if (!resposta.ok) {
-          throw new Error("Erro na requisição: " + resposta.statusText);
+          // Tenta pegar a mensagem de erro detalhada do proxy Vercel
+          const erroResposta = await resposta.json().catch(() => ({})); 
+          const mensagemErro = erroResposta.data?.mensagem || resposta.statusText || "Erro desconhecido";
+          throw new Error(`Erro na requisição [Status ${resposta.status}]: ${mensagemErro}`);
         }
         return await resposta.json();
       } catch (error) {
@@ -207,6 +222,7 @@
     }
 
     function renderizarTabela(produtos) {
+      produtosFiltrados = produtos; // Atualiza a lista exibida para a renderização
       const tbody = document.querySelector("#tabela-produtos tbody");
       if (!produtos || produtos.length === 0) {
         tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
@@ -226,7 +242,9 @@
 
     async function carregarProdutos(nomeBusca = "") {
       const tbody = document.querySelector("#tabela-produtos tbody");
+      const filtroContainer = document.getElementById('container-filtro');
       tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
+      filtroContainer.style.display = 'none'; // Oculta o filtro durante o carregamento
 
       let pagina = 1;
       let totalPaginas = 1;
@@ -239,7 +257,10 @@
             throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
           }
 
-          todosProdutos = todosProdutos.concat(dados.data);
+          // Filtra itens duplicados e sem nome/estoque (melhor prática)
+          const novosProdutos = dados.data.filter(p => p.nome && p.estoque !== null);
+          todosProdutos = todosProdutos.concat(novosProdutos);
+          
           totalPaginas = dados.meta.total_paginas;
           pagina++;
         } while (pagina <= totalPaginas);
@@ -254,15 +275,35 @@
         });
 
         renderizarTabela(todosProdutos);
+        filtroContainer.style.display = 'flex'; // Exibe o filtro após o sucesso
+
       } catch (error) {
         tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
+        filtroContainer.style.display = 'none'; // Mantém o filtro oculto em caso de erro
       }
     }
+    
+    // NOVO: Função para filtrar a lista na memória
+    function filtrarTabela() {
+        const termoFiltro = document.getElementById('campo-filtro').value.toLowerCase().trim();
+        
+        if (termoFiltro === "") {
+            renderizarTabela(todosProdutos); // Se vazio, mostra todos
+            return;
+        }
 
+        const produtosFiltradosLocal = todosProdutos.filter(produto => {
+            // Verifica se o nome do produto contém o termo de filtro
+            return produto.nome.toLowerCase().includes(termoFiltro);
+        });
+
+        renderizarTabela(produtosFiltradosLocal);
+    }
+    
     function ordenarTabela(coluna, ordem) {
-      if (todosProdutos.length === 0) return;
+      if (produtosFiltrados.length === 0) return; // Usa produtosFiltrados
 
-      const produtosOrdenados = [...todosProdutos].sort((a, b) => {
+      const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
         let valorA = a[coluna];
         let valorB = b[coluna];
 
@@ -284,6 +325,7 @@
     
     document.getElementById("btn-buscar").addEventListener("click", () => {
       const nomeBusca = document.getElementById("campo-busca").value;
+      document.getElementById('campo-filtro').value = ''; // Limpa o filtro ao fazer nova busca na API
       carregarProdutos(nomeBusca);
     });
 
@@ -293,6 +335,9 @@
         document.getElementById("btn-buscar").click();
       }
     });
+    
+    // NOVO: Listener para o campo de filtro
+    document.getElementById("campo-filtro").addEventListener("input", filtrarTabela);
 
     document.querySelectorAll('#tabela-produtos thead th').forEach(header => {
       header.addEventListener('click', () => {
@@ -308,6 +353,7 @@
 
         header.classList.add(`ordenado-${ordem}`);
         
+        // A ordenação agora usa a lista atualmente filtrada (produtosFiltrados)
         ordenarTabela(coluna, ordem);
       });
     });
