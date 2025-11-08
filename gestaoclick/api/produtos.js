@@ -18,16 +18,9 @@ export default async function handler(req, res) {
     });
   }
 
-  // Recebe a rota desejada via query 'rota', ex: grupos_produtos
-  const { rota, ...params } = req.query;
-
-  if (!rota) {
-    return res.status(400).json({
-      code: 400,
-      status: 'error',
-      data: { mensagem: 'Parâmetro "rota" é obrigatório.' }
-    });
-  }
+  // CORREÇÃO: Define a rota fixamente como 'produtos'
+  const rota = 'produtos'; 
+  const { ...params } = req.query; // Captura todos os outros parâmetros (loja_id, pagina, etc.)
 
   const urlApi = new URL(`https://api.beteltecnologia.com/${rota}`);
 
