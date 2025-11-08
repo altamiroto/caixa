@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Acréscimos de Lista (v9 - FINAL)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .controls, .range-control {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .control-group label {
+            min-width: 150px;
+            font-weight: bold;
+        }
+        .control-group input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex-grow: 1;
+            max-width: 200px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #resultado {
+            margin-top: 30px;
+            padding-top: 10px;
+        }
+        #resultado h3 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        #listaProcessadaOutput {
+            width: 100%;
+            min-height: 250px;
+            padding: 15px;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #e6f0ff;
+            white-space: pre-wrap;
+        }
+        .range-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .range-item label {
+            font-weight: normal;
+        }
+        .range-item input[type="number"] {
+            max-width: 100px;
+        }
+        .range-item button {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 14px;
+            margin-top: 0;
+        }
+        #addRangeBtn {
+            background-color: #17a2b8;
+        }
+        .range-control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .mensagem-sucesso {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .resumo-tabela {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .resumo-tabela th, .resumo-tabela td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .resumo-tabela th {
+            background-color: #f2f2f2;
+        }
+        .resumo-tabela td:last-child {
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💰 Calculadora de Acréscimos em Lista de Produtos</h1>
+
+    <p>1. Cole a lista de produtos (no formato do WhatsApp) na caixa de texto abaixo:</p>
+    <textarea id="listaInput" placeholder="Cole sua lista de produtos aqui..."></textarea>
+
+    <div class="controls">
+        <h2>2. Opções de Acréscimo</h2>
+
+        <div class="control-group">
+            <label for="acrescimoFixo">Acréscimo Fixo (R$):</label>
+            <input type="number" id="acrescimoFixo" value="0" min="0">
+        </div>
+
+        <div class="control-group">
+            <label>Tipo de Acréscimo:</label>
+            <input type="radio" id="tipoFixo" name="tipoAcrescimo" value="fixo" checked>
+            <label for="tipoFixo">Fixo</label>
+            <input type="radio" id="tipoFaixa" name="tipoAcrescimo" value="faixa">
+            <label for="tipoFaixa">Por Faixa de Valor</label>
+        </div>
+    </div>
+
+    <div class="range-control" id="faixaValoresControl" style="display: none;">
+        <h3>3. Definir Faixas de Acréscimo (Ex: Acima de 1000)</h3>
+        <div id="faixasContainer"></div>
+        <div class="range-control-buttons">
+            <button id="addRangeBtn" type="button">Adicionar Faixa</button>
+        </div>
+        <p style="margin-top: 15px; font-size: 0.9em;">*As regras de acréscimo serão aplicadas cumulativamente, somando todas as faixas aplicáveis.</p>
+    </div>
+
+    <button onclick="processarLista()">4. Processar Lista e Somar Valores</button>
+
+    <div id="resultado">
+        <h3>5. Resultado da Lista Processada (Clique para Copiar)</h3>
+        <textarea id="listaProcessadaOutput" readonly placeholder="A lista com os valores somados aparecerá aqui. Clique neste campo para copiar."></textarea>
+        <div id="copyMessage" class="mensagem-sucesso" style="display:none;">Conteúdo copiado para a área de transferência!</div>
+        
+        <div id="resumoFinal"></div>
+    </div>
+</div>
+
+<script>
+    function addRange(min = 0, acrescimo = 0) {
+        const container = document.getElementById('faixasContainer');
+        const rangeItem = document.createElement('div');
+        rangeItem.className = 'range-item';
+        rangeItem.innerHTML = `
+            <label>Acima de R$</label>
+            <input type="number" class="faixaMin" value="${min}" min="0" onchange="ordenarFaixas()">
+            <label>Adicionar R$</label>
+            <input type="number" class="faixaAcrescimo" value="${acrescimo}" min="0">
+            <button type="button" onclick="this.parentElement.remove(); ordenarFaixas();">Remover</button>
+        `;
+        container.appendChild(rangeItem);
+    }
+
+    function ordenarFaixas() {
+        const container = document.getElementById('faixasContainer');
+        const faixasData = Array.from(container.children).map(item => ({
+            min: parseFloat(item.querySelector('.faixaMin').value) || 0,
+            acrescimo: parseFloat(item.querySelector('.faixaAcrescimo').value) || 0,
+        }));
+        faixasData.sort((a, b) => a.min - b.min);
+        container.innerHTML = '';
+        faixasData.forEach(data => {
+            const rangeItem = document.createElement('div');
+            rangeItem.className = 'range-item';
+            rangeItem.innerHTML = `
+                <label>Acima de R$</label>
+                <input type="number" class="faixaMin" value="${data.min}" min="0" onchange="ordenarFaixas()">
+                <label>Adicionar R$</label>
+                <input type="number" class="faixaAcrescimo" value="${data.acrescimo}" min="0">
+                <button type="button" onclick="this.parentElement.remove(); ordenarFaixas();">Remover</button>
+            `;
+            container.appendChild(rangeItem);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('addRangeBtn').addEventListener('click', () => addRange());
+        addRange();
+        ordenarFaixas();
+        document.querySelectorAll('input[name="tipoAcrescimo"]').forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                document.getElementById('faixaValoresControl').style.display = (event.target.value === 'faixa') ? 'block' : 'none';
+            });
+        });
+        document.getElementById('listaProcessadaOutput').addEventListener('click', function() {
+            this.select();
+            document.execCommand('copy');
+            const copyMessage = document.getElementById('copyMessage');
+            copyMessage.style.display = 'block';
+            setTimeout(() => { copyMessage.style.display = 'none'; }, 2000);
+        });
+    });
+
+    // Regex corrigido: captura números com ou sem separador de milhares corretamente
+    const regexProdutoValor = /((?:\d{1,3}(?:[.,]\d{3})*|\d+)(?:[.,]\d{1,2})?)\s*$/;
+
+    function processarLista() {
+        const listaBruta = document.getElementById('listaInput').value;
+        const tipoAcrescimo = document.querySelector('input[name="tipoAcrescimo"]:checked').value;
+        const acrescimoFixo = parseFloat(document.getElementById('acrescimoFixo').value) || 0;
+        const outputTextarea = document.getElementById('listaProcessadaOutput');
+        const resumoDiv = document.getElementById('resumoFinal');
+
+        let listaProcessada = [];
+        let totalOriginal = 0;
+        let totalAcrescimo = 0;
+
+        let faixas = [];
+        if (tipoAcrescimo === 'faixa') {
+            const faixasElements = Array.from(document.getElementById('faixasContainer').children);
+            faixas = faixasElements.map(item => ({
+                min: parseFloat(item.querySelector('.faixaMin').value) || 0,
+                acrescimo: parseFloat(item.querySelector('.faixaAcrescimo').value) || 0
+            })).sort((a, b) => b.min - a.min);
+        }
+
+        const linhas = listaBruta.split('\n');
+        
+        linhas.forEach(linhaOriginal => {
+            let linha = linhaOriginal.trim();
+            const match = linha.match(regexProdutoValor);
+            
+            if (match) {
+                const valorTextoAntigo = match[1]; 
+                let valorOriginal = parseFloat(valorTextoAntigo.replace(/\./g, '').replace(',', '.'));
+
+                if (!isNaN(valorOriginal)) {
+                    let acrescimoAplicado = 0;
+                    if (tipoAcrescimo === 'fixo') {
+                        acrescimoAplicado = acrescimoFixo;
+                    } else if (tipoAcrescimo === 'faixa') {
+                        // Soma todas as faixas aplicáveis (cumulativo)
+                        for (const faixa of faixas) {
+                            if (valorOriginal >= faixa.min) {
+                                acrescimoAplicado += faixa.acrescimo;
+                            }
+                        }
+                    }
+
+                    const valorSomado = valorOriginal + acrescimoAplicado;
+                    let novoValorTexto = valorSomado.toFixed(2).replace('.', ',');
+                    
+                    const originalHasDecimalSeparator = valorTextoAntigo.includes('.') || valorTextoAntigo.includes(',');
+                    if (!originalHasDecimalSeparator) {
+                         novoValorTexto = novoValorTexto.replace(',00', '');
+                    } else if (valorTextoAntigo.includes('.')) {
+                        novoValorTexto = valorSomado.toFixed(2).replace('.', '.');
+                    }
+                    
+                    const escapedValorAntigo = valorTextoAntigo.replace(/[\.\,\+\*\?\^\$\(\)\[\]\{\}\|\\]/g, "\\$&");
+                    const replaceRegex = new RegExp(escapedValorAntigo + '\\s*$', 'g');
+                    const novaLinha = linhaOriginal.replace(replaceRegex, novoValorTexto);
+
+                    listaProcessada.push(novaLinha);
+                    totalOriginal += valorOriginal;
+                    totalAcrescimo += acrescimoAplicado;
+                } else {
+                    listaProcessada.push(linhaOriginal);
+                }
+            } else {
+                listaProcessada.push(linhaOriginal);
+            }
+        });
+
+        const resultadoTexto = listaProcessada.join('\n');
+        outputTextarea.value = resultadoTexto;
+        outputTextarea.select(); 
+
+        const totalFinal = totalOriginal + totalAcrescimo;
+        resumoDiv.innerHTML = `
+            <table class="resumo-tabela">
+                <thead>
+                    <tr>
+                        <th colspan="2">Resumo da Soma</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Original:</td>
+                        <td>R$ ${totalOriginal.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Acréscimo Aplicado:</td>
+                        <td>R$ ${totalAcrescimo.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                    <tr>
+                        <td>**Total Final Somado:**</td>
+                        <td>**R$ ${totalFinal.toFixed(2).replace('.', ',')}**</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    }
+</script>
+
+</body>
+</html>
