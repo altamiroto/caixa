@@ -142,11 +142,24 @@
         }
         .parcelas-checkboxes .checkbox-item {
             display: flex;
+            align-items: flex-start;
+            flex-direction: column; 
+            width: 100%; 
+        }
+        .parcelas-checkboxes .checkbox-item .parcela-input-group {
+            display: flex;
             align-items: center;
-            width: calc(33.33% - 15px);
+            width: 100%;
         }
         .parcelas-checkboxes .checkbox-item input[type="checkbox"] {
             width: auto;
+            margin-right: 5px;
+        }
+        .parcelas-checkboxes .checkbox-item input[type="number"] {
+            width: 80px; 
+            padding: 5px;
+            font-size: 14px;
+            margin-left: 10px;
             margin-right: 5px;
         }
         .option-group hr {
@@ -212,6 +225,15 @@
         .product-button:hover {
             opacity: 0.9;
         }
+        /* Novo estilo para esconder o campo de porcentagem quando não marcado */
+        .percent-input-container {
+            display: none;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .percent-input-container.show {
+            display: flex;
+        }
     </style>
 </head>
 <body>
@@ -220,10 +242,10 @@
         <h1>Calculadora de Parcelas</h1>
 
         <p style="text-align: center;">
-  <a href="https://calculadoracaixa.netlify.app/listas/">Processamento Lista de Produtos</a>
-  |
-  <a href="https://calculadoracaixa.netlify.app/gestaoclick/">Estoque Produtos</a>
-</p>
+            <a href="https://calculadoracaixa.netlify.app/listas/">Processamento Lista de Produtos</a>
+            |
+            <a href="https://calculadoracaixa.netlify.app/gestaoclick/">Estoque Produtos</a>
+        </p>
 
         <div class="product-list-toggle">
             <input type="checkbox" id="toggleProductList">
@@ -267,13 +289,26 @@
                 <h4>Personalizar texto de saída</h4>
                 
                 <div class="checkbox-item">
-                    <input type="checkbox" id="hideDinheiroPix">
-                    <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
+                    <div class="parcela-input-group">
+                        <input type="checkbox" id="hideDinheiroPix">
+                        <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
+                        <div class="percent-input-container" id="porcentagemPixContainer">
+                            <input type="number" id="porcentagemPix" placeholder="%" step="0.01" value="0">
+                            <span>%</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="checkbox-item">
-                    <input type="checkbox" id="showDebito">
-                    <label for="showDebito">Mostrar "Débito"</label>
+                    <div class="parcela-input-group">
+                        <input type="checkbox" id="showDebito">
+                        <label for="showDebito">Mostrar "Débito"</label>
+                        <div class="percent-input-container" id="porcentagemDebitoContainer">
+                            <input type="number" id="porcentagemDebito" placeholder="%" step="0.01" value="2.5">
+                            <span>%</span>
+                        </div>
+                    </div>
                 </div>
+                
                 <div class="checkbox-item">
                     <input type="checkbox" id="hideEntradaText">
                     <label for="hideEntradaText">Não mostrar "Entrada"</label>
@@ -288,7 +323,7 @@
                 </div>
                 <hr>
                 <div class="input-group">
-                    <label for="produtoPrefix">Prefixo do produto (Sugestões 📱  🍏   🍎   📺    💻  ✳️  📦  🔌 ⬛  ):</label>
+                    <label for="produtoPrefix">Prefixo do produto (Sugestões 📱  🍏   🍎   📺    💻  ✳️  📦  🔌 ⬛  ):</label>
                     <input type="text" id="produtoPrefix" placeholder="Ex: 📦" value="➡️ ">
                 </div>
                 <div class="input-group">
@@ -296,7 +331,7 @@
                     <input type="text" id="textoAdicionalLinha" placeholder="Ex: 'sem juros no cartão'">
                 </div>
                 <hr>
-                <h4>Selecionar parcelas</h4>
+                <h4>Selecionar parcelas e personalizar %</h4>
                 <div class="parcelas-checkboxes" id="parcelasAvancadas">
                 </div>
                 <div class="select-all-buttons">
@@ -347,6 +382,12 @@
         const selectAllButton = document.getElementById('selectAll');
         const deselectAllButton = document.getElementById('deselectAll');
         const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
+        
+        // Elementos para personalização de porcentagem
+        const porcentagemPixInput = document.getElementById('porcentagemPix');
+        const porcentagemDebitoInput = document.getElementById('porcentagemDebito');
+        const porcentagemPixContainer = document.getElementById('porcentagemPixContainer');
+        const porcentagemDebitoContainer = document.getElementById('porcentagemDebitoContainer');
 
         const toggleProductList = document.getElementById('toggleProductList');
         const productListSection = document.getElementById('productListSection');
@@ -355,26 +396,28 @@
         const productListLoading = document.getElementById('productListLoading');
         const productListResult = document.getElementById('productListResult');
 
-        const taxasDeJuros = {
-            'debito': 0.025,
-            1: 0.045,
-            2: 0.06,
-            3: 0.07,
-            4: 0.075,
-            5: 0.08,
-            6: 0.09,
-            7: 0.095,
-            8: 0.10,
-            9: 0.105,
-            10: 0.115,
-            11: 0.12,
-            12: 0.125,
-            13: 0.135,
-            14: 0.145,
-            15: 0.15,
-            16: 0.155,
-            17: 0.16,
-            18: 0.17
+        // Taxas padrão transferidas para um objeto simples de referência inicial
+        const taxasDeJurosPadrao = {
+            'pix': 0, // 0%
+            'debito': 0.025, // 2.5%
+            1: 0.045, // 4.5%
+            2: 0.06,  // 6.0%
+            3: 0.07,  // 7.0%
+            4: 0.075, // 7.5%
+            5: 0.08,  // 8.0%
+            6: 0.09,  // 9.0%
+            7: 0.095, // 9.5%
+            8: 0.10,  // 10.0%
+            9: 0.105, // 10.5%
+            10: 0.115, // 11.5%
+            11: 0.12, // 12.0%
+            12: 0.125, // 12.5%
+            13: 0.135, // 13.5%
+            14: 0.145, // 14.5%
+            15: 0.15, // 15.0%
+            16: 0.155, // 15.5%
+            17: 0.16, // 16.0%
+            18: 0.17  // 17.0%
         };
 
         const parcelasPadrao = [3, 6, 10, 12];
@@ -386,19 +429,70 @@
             for (let i = 1; i <= 18; i++) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
+                
+                const parcelaGroup = document.createElement('div');
+                parcelaGroup.className = 'parcela-input-group';
+
                 const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.id = `parcela${i}x`;
                 input.value = i;
                 input.checked = parcelasPadrao.includes(i);
-                input.addEventListener('change', calcularParcelas);
+                input.addEventListener('change', () => {
+                    togglePorcentagemInput(i, input.checked);
+                    calcularParcelas();
+                });
+                
                 const label = document.createElement('label');
                 label.htmlFor = `parcela${i}x`;
                 label.textContent = `${i}x`;
-                div.appendChild(input);
-                div.appendChild(label);
+                
+                parcelaGroup.appendChild(input);
+                parcelaGroup.appendChild(label);
+                
+                const percentContainer = document.createElement('div');
+                percentContainer.className = 'percent-input-container';
+                percentContainer.id = `porcentagem${i}xContainer`;
+                if (input.checked) {
+                    percentContainer.classList.add('show');
+                }
+
+                const percentInput = document.createElement('input');
+                percentInput.type = 'number';
+                percentInput.id = `porcentagem${i}x`;
+                percentInput.placeholder = '%';
+                percentInput.step = '0.01';
+                // Define o valor padrão da taxa de juros (convertido de decimal para porcentagem)
+                percentInput.value = (taxasDeJurosPadrao[i] * 100).toFixed(2); 
+                percentInput.addEventListener('input', calcularParcelas);
+
+                const percentSign = document.createElement('span');
+                percentSign.textContent = '%';
+                
+                percentContainer.appendChild(percentInput);
+                percentContainer.appendChild(percentSign);
+                
+                parcelaGroup.appendChild(percentContainer);
+                div.appendChild(parcelaGroup);
                 parcelasAvancadasDiv.appendChild(div);
             }
+        }
+
+        function togglePorcentagemInput(parcelas, isChecked) {
+            const container = document.getElementById(`porcentagem${parcelas}xContainer`);
+            if (container) {
+                container.classList.toggle('show', isChecked && toggleAdvancedOptions.checked);
+            }
+        }
+        
+        function toggleDebitoPixPorcentagemInputs() {
+            // Pix/Dinheiro
+            const isPixHidden = hideDinheiroPixCheckbox.checked;
+            porcentagemPixContainer.classList.toggle('show', !isPixHidden && toggleAdvancedOptions.checked);
+
+            // Débito
+            const isDebitoShown = showDebitoCheckbox.checked;
+            porcentagemDebitoContainer.classList.toggle('show', isDebitoShown && toggleAdvancedOptions.checked);
         }
 
         gerarCheckboxesAvancadas();
@@ -407,8 +501,19 @@
         parcelaEspecificaInput.addEventListener('input', calcularParcelas);
         lucroAdicionalInput.addEventListener('input', calcularParcelas);
         valorEntradaInput.addEventListener('input', calcularParcelas);
-        hideDinheiroPixCheckbox.addEventListener('change', calcularParcelas);
-        showDebitoCheckbox.addEventListener('change', calcularParcelas);
+        
+        // Event listeners para as novas caixas de personalização
+        hideDinheiroPixCheckbox.addEventListener('change', () => {
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
+        });
+        showDebitoCheckbox.addEventListener('change', () => {
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
+        });
+        porcentagemPixInput.addEventListener('input', calcularParcelas);
+        porcentagemDebitoInput.addEventListener('input', calcularParcelas);
+        
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
         showTotalValueCheckbox.addEventListener('change', calcularParcelas);
         boldProductNameCheckbox.addEventListener('change', calcularParcelas);
@@ -417,20 +522,43 @@
         textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
         textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
         
+        // Event listeners para os novos inputs de porcentagem das parcelas
+        for (let i = 1; i <= 18; i++) {
+            const percentInput = document.getElementById(`porcentagem${i}x`);
+            if (percentInput) {
+                percentInput.addEventListener('input', calcularParcelas);
+            }
+        }
+
         toggleAdvancedOptions.addEventListener('change', () => {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
+            toggleDebitoPixPorcentagemInputs();
+            
+            // Reajusta a visibilidade dos inputs de porcentagem das parcelas
+            const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                const parcelas = parseInt(cb.value);
+                togglePorcentagemInput(parcelas, cb.checked);
+            });
+            
             calcularParcelas();
         });
 
         selectAllButton.addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = true);
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                togglePorcentagemInput(parseInt(cb.value), true);
+            });
             calcularParcelas();
         });
 
         deselectAllButton.addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = false);
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                togglePorcentagemInput(parseInt(cb.value), false);
+            });
             calcularParcelas();
         });
         
@@ -545,6 +673,26 @@
             productListResult.innerHTML = `<div class="error-message">${message}</div>`;
         }
 
+        function getTaxa(parcelas) {
+            if (toggleAdvancedOptions.checked) {
+                if (parcelas === 'pix') {
+                    const perc = parseFloat(porcentagemPixInput.value);
+                    return isNaN(perc) ? taxasDeJurosPadrao['pix'] : perc / 100;
+                }
+                if (parcelas === 'debito') {
+                    const perc = parseFloat(porcentagemDebitoInput.value);
+                    return isNaN(perc) ? taxasDeJurosPadrao['debito'] : perc / 100;
+                }
+                
+                const percentInput = document.getElementById(`porcentagem${parcelas}x`);
+                if (percentInput) {
+                    const perc = parseFloat(percentInput.value);
+                    return isNaN(perc) ? (taxasDeJurosPadrao[parcelas] || 0) : perc / 100;
+                }
+            }
+            return taxasDeJurosPadrao[parcelas] || 0;
+        }
+
         function calcularParcelas() {
             const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
             const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
@@ -633,7 +781,8 @@
                     parcelasSelecionadas.push(...parcelasPadrao);
                 }
             }
-            return parcelasSelecionadas;
+            // Garante que as parcelas estejam em ordem crescente
+            return parcelasSelecionadas.sort((a, b) => a - b);
         }
 
         function calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValue, nomeProduto, isSpecificParcel, parcelasToCalculate) {
@@ -649,35 +798,60 @@
 
             if (valorLiquido > valorEntrada) {
                 if (!isSpecificParcel && !hideDinheiroPixCheckbox.checked) {
-                    resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                    // Pix/Dinheiro usa a taxa personalizada ou padrão (0%)
+                    const jurosPix = getTaxa('pix');
+                    const valorAPagarPix = valorLiquido / (1 - jurosPix);
+                    const valorFormatadoPix = valorAPagarPix.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    
+                    let linhaPix = `Dinheiro/Pix: R$ ${valorFormatadoPix}`;
+                    // REMOVIDO: Linha que adicionava a informação da taxa
+                    resultadoProduto.push(linhaPix);
                 }
+                
                 if (!isSpecificParcel && showDebitoCheckbox.checked && valorEntrada === 0) {
-                    const jurosDebito = taxasDeJuros['debito'];
+                    // Débito usa a taxa personalizada ou padrão (2.5%)
+                    const jurosDebito = getTaxa('debito');
                     const valorAPagarDebito = valorLiquido / (1 - jurosDebito);
                     const valorFormatadoDebito = valorAPagarDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    resultadoProduto.push(`Débito: R$ ${valorFormatadoDebito}`);
+                    
+                    let linhaDebito = `Débito: R$ ${valorFormatadoDebito}`;
+                    // REMOVIDO: Linha que adicionava a informação da taxa
+                    resultadoProduto.push(linhaDebito);
                 }
                 
                 for (const parcelas of parcelasToCalculate) {
-                    if (taxasDeJuros.hasOwnProperty(parcelas)) {
-                        const juros = taxasDeJuros[parcelas];
+                    const juros = getTaxa(parcelas);
+                    if (juros !== undefined) {
                         const valorAPagar = valorAParcelarBruto / (1 - juros);
                         const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
                         const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
+                        
                         if (showTotalValue) {
                             const valorTotalComEntrada = valorEntrada + valorAPagar;
                             const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             linhaParcela += ` (R$ ${totalFormatado})`;
                         }
+                        
                         if (textoAdicionalLinha) {
                             linhaParcela += ` ${textoAdicionalLinha}`;
                         }
+                        
+                        // REMOVIDO: Linha que adicionava a informação da taxa
+                        
                         resultadoProduto.push(linhaParcela);
                     }
                 }
             } else if (valorLiquido === valorEntrada) {
-                resultadoProduto.push(`Dinheiro/Pix: R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                 // Pix/Dinheiro usa a taxa personalizada ou padrão (0%) mesmo que a entrada cubra o total.
+                 const jurosPix = getTaxa('pix');
+                 const valorAPagarPix = valorLiquido / (1 - jurosPix);
+                 const valorFormatadoPix = valorAPagarPix.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                 
+                 let linhaPix = `Dinheiro/Pix: R$ ${valorFormatadoPix}`;
+                 // REMOVIDO: Linha que adicionava a informação da taxa
+                 resultadoProduto.push(linhaPix);
+
             } else if (valorLiquido < valorEntrada) {
                 resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
             }
@@ -710,6 +884,19 @@
                 }, 1500);
             }
         }
+        
+        // Inicializa a visibilidade dos campos de porcentagem se as opções avançadas estiverem ativas ao carregar
+        if (toggleAdvancedOptions.checked) {
+            toggleDebitoPixPorcentagemInputs();
+            const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                const parcelas = parseInt(cb.value);
+                togglePorcentagemInput(parcelas, cb.checked);
+            });
+        }
+        
+        // Chamada inicial para preencher o campo de resultado se houver valor base
+        calcularParcelas();
     </script>
 </body>
 </html>
