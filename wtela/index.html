@@ -286,8 +286,20 @@ if (lineNormalized.includes(searchNormalized)) {
                         
                         // Adiciona a linha encontrada COM DESTAQUE HTML
                         // Substitui o termo de busca (mantendo o case original da linha)
-                        const regex = new RegExp(`(${searchTerm})`, 'gi');
-                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
+
+						const regex = new RegExp(`(${searchNormalized})`, 'gi');
+						
+						// gera versão normalizada da linha para localizar os índices
+						const lineNormalizedForReplace = normalizeText(line);
+						
+						// substituição preservando acentos e forma original
+						let highlightedLine = line;
+						let match;
+						while ((match = regex.exec(lineNormalizedForReplace)) !== null) {
+						    const originalText = line.substring(match.index, match.index + match[0].length);
+						    highlightedLine = highlightedLine.replace(originalText, `<span class="highlight">${originalText}</span>`);
+						}
+
 
                         filteredLinesWithHighlight.push(highlightedLine);
                         lineAdded[index] = true;
@@ -433,3 +445,4 @@ function aplicarHistorico() {
 
 </body>
 </html>
+
