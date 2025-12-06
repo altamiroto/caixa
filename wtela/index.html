@@ -229,64 +229,78 @@
             applyFilter();
         }
 
-function applyFilter() {
-            // ... código não modificado ...
+        function applyFilter() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0); // Garante que seja no mínimo 0
 
-            const lines = originalContent.split('\n');
+            const textareas = container.querySelectorAll('textarea');
 
-            if (searchTerm.length === 0) {
-                // ... código não modificado ...
-                return;
-            }
+            textareas.forEach(textarea => {
+                // Encontra o DIV de resultado correspondente
+                const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
+                const resultDiv = document.getElementById(resultDivId);
 
-            // Há termo de busca: Exibe o div de resultado
-            resultDiv.style.display = 'block';
+                // O conteúdo original é sempre o valor do textarea salvo no dataset
+                let originalContent = textarea.dataset.originalContent || textarea.value;
+                
+                // Em caso de primeira execução ou se o usuário colou algo e não ativou o input, atualiza o originalContent
+                if (!textarea.dataset.originalContent) {
+                    textarea.dataset.originalContent = originalContent;
+                }
 
-            let filteredLinesWithHighlight = [];
-            let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
+                const lines = originalContent.split('\n');
 
-            lines.forEach((line, index) => {
+                if (searchTerm.length === 0) {
+                    // Sem termo de busca: Oculta o div de resultado e limpa
+                    resultDiv.style.display = 'none';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+                    // O textarea original permanece intocado
+                    return;
+                }
+
+                // Há termo de busca: Exibe o div de resultado
+                resultDiv.style.display = 'block';
+
+                let filteredLinesWithHighlight = [];
+                let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
+
+                lines.forEach((line, index) => {
 const normalizeText = str => str
-    .normalize('NFKD')                // Decompõe acentos e formas compatíveis
-    .replace(/[\u0300-\u036f]/g, '')  // Remove marcas de acento
-    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '') // Remove emojis
-    .replace(/[\uFE00-\uFE0F]/g, '')  // Remove modificadores de variação
-    .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase()); // Mantém letras normais
+    .normalize('NFKD')                // Decompõe acentos e formas compatíveis
+    .replace(/[\u0300-\u036f]/g, '')  // Remove marcas de acento
+    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '') // Remove emojis
+    .replace(/[\uFE00-\uFE0F]/g, '')  // Remove modificadores de variação
+    .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase()); // Mantém letras normais
 
 const lineNormalized = normalizeText(line);
 const searchNormalized = normalizeText(searchTerm);
 
 if (lineNormalized.includes(searchNormalized)) {
-                        // Adiciona as linhas de contexto antes
-                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
-                            // ✅ MODIFICADO: Só adiciona se ainda não foi adicionada (como contexto de outra linha anterior)
-                            if (!lineAdded[i]) {
-                                filteredLinesWithHighlight.push(lines[i]);
-                                lineAdded[i] = true; // Marca como adicionada
-                            }
-                        }
-                        
-                        // Adiciona a linha encontrada COM DESTAQUE HTML
-                        // ✅ MODIFICADO: Só adiciona a linha principal se ainda não foi adicionada (como contexto de outra)
-                        if (!lineAdded[index]) { 
-                            // Substitui o termo de busca (mantendo o case original da linha)
-                            const regex = new RegExp(`(${searchTerm})`, 'gi');
-                            const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
+                        // Adiciona as linhas de contexto antes
+                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                        
+                        // Adiciona a linha encontrada COM DESTAQUE HTML
+                        // Substitui o termo de busca (mantendo o case original da linha)
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
 
-                            filteredLinesWithHighlight.push(highlightedLine);
-                            lineAdded[index] = true; // Marca como adicionada
-                        }
+                        filteredLinesWithHighlight.push(highlightedLine);
+                        lineAdded[index] = true;
 
-                        // Adiciona as linhas de contexto depois
-                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
-                            // ✅ MODIFICADO: Só adiciona se ainda não foi adicionada (como linha principal ou contexto anterior)
-                            if (!lineAdded[i]) { 
-                                filteredLinesWithHighlight.push(lines[i]);
-                                lineAdded[i] = true; // Marca como adicionada
-                            }
-                        }
-                    }
-                });
+                        // Adiciona as linhas de contexto depois
+                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                    }
+                });
 
                 if (filteredLinesWithHighlight.length === 0) {
                     resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
@@ -419,4 +433,3 @@ function aplicarHistorico() {
 
 </body>
 </html>
-
