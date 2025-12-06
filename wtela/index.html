@@ -264,76 +264,43 @@
                 let filteredLinesWithHighlight = [];
                 let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
 
-/* CÓDIGO CORRIGIDO PARA EVITAR DUPLICAÇÕES */
+                lines.forEach((line, index) => {
+const normalizeText = str => str
+    .normalize('NFKD')                // Decompõe acentos e formas compatíveis
+    .replace(/[\u0300-\u036f]/g, '')  // Remove marcas de acento
+    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '') // Remove emojis
+    .replace(/[\uFE00-\uFE0F]/g, '')  // Remove modificadores de variação
+    .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase()); // Mantém letras normais
 
-                // Array para marcar quais índices de linha devem ser incluídos (match ou contexto)
-                let linesToInclude = new Array(lines.length).fill(false);
+const lineNormalized = normalizeText(line);
+const searchNormalized = normalizeText(searchTerm);
 
-                // Função de normalização (mantida como está, está correta)
-                const normalizeText = str => str
-                    .normalize('NFKD')                
-                    .replace(/[\u0300-\u036f]/g, '')  
-                    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '') 
-                    .replace(/[\uFE00-\uFE0F]/g, '')  
-                    .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase()); 
+if (lineNormalized.includes(searchNormalized)) {
+                        // Adiciona as linhas de contexto antes
+                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                        
+                        // Adiciona a linha encontrada COM DESTAQUE HTML
+                        // Substitui o termo de busca (mantendo o case original da linha)
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
 
-                const searchNormalized = normalizeText(searchTerm);
+                        filteredLinesWithHighlight.push(highlightedLine);
+                        lineAdded[index] = true;
 
-                // 1. Primeira Passagem: Marca todas as linhas que precisam ser exibidas (match + contexto)
-                lines.forEach((line, index) => {
-                    const lineNormalized = normalizeText(line);
-
-                    if (lineNormalized.includes(searchNormalized)) {
-                        // A linha atual deve ser incluída (é um match)
-                        linesToInclude[index] = true;
-
-                        // Marca as linhas de contexto ANTES (se já não estiverem marcadas)
-                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
-                            linesToInclude[i] = true;
-                        }
-
-                        // Marca as linhas de contexto DEPOIS (se já não estiverem marcadas)
-                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
-                            linesToInclude[i] = true;
-                        }
-                    }
-                });
-
-                // 2. Segunda Passagem: Constrói a saída usando as marcas e aplicando destaque
-                let filteredLinesWithHighlight = [];
-                let lastLineWasIncluded = false; // Para adicionar separador quando necessário
-
-                lines.forEach((line, index) => {
-                    if (linesToInclude[index]) {
-                        const lineNormalized = normalizeText(line);
-
-                        if (lineNormalized.includes(searchNormalized)) {
-                            // É uma linha de match, aplica o destaque
-                            const regex = new RegExp(`(${searchNormalized})`, 'gi');
-                            let highlightedLine = line;
-                            let match;
-                            // gera versão normalizada da linha para localizar os índices
-                            const lineNormalizedForReplace = normalizeText(line); 
-
-                            while ((match = regex.exec(lineNormalizedForReplace)) !== null) {
-                                const originalText = line.substring(match.index, match.index + match[0].length);
-                                // A substituição é feita com a string de destaque, garantindo que o acento original seja mantido
-                                highlightedLine = highlightedLine.replace(originalText, `<span class="highlight">${originalText}</span>`);
-                            }
-                            filteredLinesWithHighlight.push(highlightedLine);
-                        } else {
-                            // É uma linha de contexto, adiciona sem destaque
-                            filteredLinesWithHighlight.push(line);
-                        }
-                        lastLineWasIncluded = true;
-                    } else {
-                        // Linha não incluída: Adiciona um separador visual
-                        if (lastLineWasIncluded) {
-                            filteredLinesWithHighlight.push('<hr style="margin: 5px 0; border-top: 1px dashed #aaa;">');
-                            lastLineWasIncluded = false;
-                        }
-                    }
-                });
+                        // Adiciona as linhas de contexto depois
+                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                    }
+                });
 
                 if (filteredLinesWithHighlight.length === 0) {
                     resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
@@ -466,5 +433,3 @@ function aplicarHistorico() {
 
 </body>
 </html>
-
-
