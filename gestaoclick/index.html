@@ -39,11 +39,6 @@
       transition: border-color 0.3s ease;
     }
     
-    #campo-busca:focus, #campo-filtro:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-    
     #btn-buscar {
       padding: 10px 20px;
       font-size: 16px;
@@ -52,16 +47,11 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    
-    #btn-buscar:hover {
-      background-color: #0066cc;
     }
 
     .table-wrapper {
-      max-width: 700px;
-      width: 90%;
+      max-width: 800px;
+      width: 95%;
       margin: 0 auto;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
@@ -72,120 +62,77 @@
       width: 100%;
       border-collapse: collapse;
       background: white;
-      table-layout: fixed;
+      table-layout: fixed; /* Força o controle das larguras */
     }
     
-    th,
-    td {
-      padding: 8px 10px;
+    th, td {
+      padding: 10px;
       text-align: left;
       border-bottom: 1px solid #ddd;
-      word-break: break-word;
       font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     th {
       background-color: #004a99;
       color: white;
-      user-select: none;
       cursor: pointer;
       position: relative;
     }
+
+    /* Ajuste de largura das colunas */
+    th:nth-child(1), td:nth-child(1) { width: 50%; } /* Nome */
+    th:nth-child(2), td:nth-child(2) { width: 15%; text-align: center; } /* Estoque */
+    th:nth-child(3), td:nth-child(3) { width: 35%; text-align: center; } /* Última Movimentação */
+
+    th.ordenado-asc::after { content: ' ▲'; font-size: 10px; }
+    th.ordenado-desc::after { content: ' ▼'; font-size: 10px; }
     
-    th:hover {
-      background-color: #0066cc;
+    tbody tr:nth-child(odd) { background-color: #f2f2f2; }
+    tr:hover { background-color: #e0eaf5; }
+
+    .sem-registro {
+      color: #999;
+      font-style: italic;
+      font-size: 12px;
     }
 
-    th.ordenado-asc::after {
-      content: '▲';
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    th.ordenado-desc::after {
-      content: '▼';
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-    
-    th:nth-child(1), td:nth-child(1) { width: 75%; }
-    th:nth-child(2), td:nth-child(2) { width: 25%; }
-    
-    tbody tr:nth-child(odd) {
-      background-color: #f2f2f2;
-    }
-
-    tr:hover {
-      background-color: #e0eaf5;
-    }
-    
     @media (max-width: 600px) {
-      #container-busca, #container-filtro {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0 15px;
-      }
-
-      #btn-buscar {
-        width: 100%;
-        margin-top: 10px;
-      }
-      
-      .table-wrapper {
-        max-width: 100%;
-        width: 95%;
-      }
-      
-      table {
-        table-layout: auto;
-      }
-      
-      th:nth-child(1), td:nth-child(1) { width: auto; }
-      th:nth-child(2), td:nth-child(2) { width: auto; }
-
-      th::after {
-        content: none !important;
-      }
+      #container-busca, #container-filtro { flex-direction: column; }
+      th, td { white-space: normal; }
+      th:nth-child(1), td:nth-child(1) { width: 40%; }
+      th:nth-child(2), td:nth-child(2) { width: 20%; }
+      th:nth-child(3), td:nth-child(3) { width: 40%; }
     }
   </style>
 </head>
 <body>
+
   <h1>Produtos da Loja</h1>
 
   <div id="container-busca">
-    <input
-      type="text"
-      id="campo-busca"
-      placeholder="Digite o nome do produto para buscar na API..."
-      aria-label="Campo de busca de produtos na API"
-    />
-    <button id="btn-buscar" type="button">Buscar</button>
+    <input type="text" id="campo-busca" placeholder="Buscar produto..." />
+    <button id="btn-buscar">Buscar</button>
   </div>
   
   <div id="container-filtro" style="display: none;">
-    <input
-      type="text"
-      id="campo-filtro"
-      placeholder="Filtrar resultados na lista..."
-      aria-label="Campo de filtro de produtos na lista"
-    />
+    <input type="text" id="campo-filtro" placeholder="Filtrar nesta lista..." />
   </div>
 
   <div class="table-wrapper">
-    <table id="tabela-produtos" aria-label="Tabela de produtos">
+    <table id="tabela-produtos">
       <thead>
         <tr>
           <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
           <th data-coluna="estoque" data-ordem="asc">Estoque</th>
+          <th data-coluna="modificado_em" data-ordem="asc">Última Movimentação</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td colspan="2" style="text-align:center;">Por favor, faça uma busca para ver os produtos.</td>
+          <td colspan="3" style="text-align:center; padding: 20px;">Faça uma busca para ver os produtos.</td>
         </tr>
       </tbody>
     </table>
@@ -193,48 +140,51 @@
 
   <script>
     const lojaIdJeta = "361408";
-    let todosProdutos = []; // Lista completa de produtos carregados da API
-    let produtosFiltrados = []; // Lista atualmente exibida na tabela
+    let todosProdutos = [];
+    let produtosFiltrados = [];
 
-    async function buscarProdutos(nomeBusca = "", pagina = 1) {
-      // Nota: A URL deve apontar para o seu Vercel, não para o Netlify/calculadoracaixa
-      // Mantenho a URL original para compatibilidade com a estrutura de arquivos.
-      const url = new URL("https://caixa-three.vercel.app/api/produtos"); 
-      url.searchParams.append("loja_id", lojaIdJeta);
-      url.searchParams.append("pagina", pagina);
-      if (nomeBusca.trim() !== "") {
-        url.searchParams.append("nome", nomeBusca.trim());
+    function formatarData(dataString) {
+      if (!dataString || dataString === "null" || dataString === "") {
+        return '<span class="sem-registro">Sem registro</span>';
       }
-      
       try {
-        const resposta = await fetch(url.toString());
-        if (!resposta.ok) {
-          // Tenta pegar a mensagem de erro detalhada do proxy Vercel
-          const erroResposta = await resposta.json().catch(() => ({})); 
-          const mensagemErro = erroResposta.data?.mensagem || resposta.statusText || "Erro desconhecido";
-          throw new Error(`Erro na requisição [Status ${resposta.status}]: ${mensagemErro}`);
-        }
-        return await resposta.json();
-      } catch (error) {
-        console.error("Erro na busca de produtos:", error);
-        throw new Error("Não foi possível conectar-se ao servidor ou a busca falhou.");
+        const partes = dataString.split(' ');
+        const dataPartes = partes[0].split('-');
+        if (dataPartes.length !== 3) return dataString;
+        const dataBR = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
+        const horaBR = partes[1] ? partes[1].substring(0, 5) : "";
+        return horaBR ? `${dataBR} ${horaBR}` : dataBR;
+      } catch (e) {
+        return dataString;
       }
     }
 
+    async function buscarProdutos(nomeBusca = "", pagina = 1) {
+      const url = new URL("https://caixa-three.vercel.app/api/produtos"); 
+      url.searchParams.append("loja_id", lojaIdJeta);
+      url.searchParams.append("pagina", pagina);
+      if (nomeBusca.trim() !== "") url.searchParams.append("nome", nomeBusca.trim());
+      
+      const resposta = await fetch(url.toString());
+      return await resposta.json();
+    }
+
     function renderizarTabela(produtos) {
-      produtosFiltrados = produtos; // Atualiza a lista exibida para a renderização
+      produtosFiltrados = produtos;
       const tbody = document.querySelector("#tabela-produtos tbody");
       if (!produtos || produtos.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Nenhum produto encontrado.</td></tr>";
         return;
       }
       
       tbody.innerHTML = "";
       produtos.forEach(produto => {
         const linha = document.createElement("tr");
+        const dataMov = produto.modificado_em || produto.cadastrado_em || "";
         linha.innerHTML = `
           <td>${produto.nome}</td>
-          <td>${produto.estoque}</td>
+          <td style="text-align: center;">${produto.estoque}</td>
+          <td style="text-align: center;">${formatarData(dataMov)}</td>
         `;
         tbody.appendChild(linha);
       });
@@ -243,8 +193,8 @@
     async function carregarProdutos(nomeBusca = "") {
       const tbody = document.querySelector("#tabela-produtos tbody");
       const filtroContainer = document.getElementById('container-filtro');
-      tbody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Carregando...</td></tr>";
-      filtroContainer.style.display = 'none'; // Oculta o filtro durante o carregamento
+      tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Carregando...</td></tr>";
+      filtroContainer.style.display = 'none';
 
       let pagina = 1;
       let totalPaginas = 1;
@@ -253,107 +203,51 @@
       try {
         do {
           const dados = await buscarProdutos(nomeBusca, pagina);
-          if (dados.code !== 200) {
-            throw new Error(dados.data?.mensagem || "Erro ao buscar produtos");
-          }
-
-          // Filtra itens duplicados e sem nome/estoque (melhor prática)
-          const novosProdutos = dados.data.filter(p => p.nome && p.estoque !== null);
-          todosProdutos = todosProdutos.concat(novosProdutos);
-          
+          if (dados.code !== 200) throw new Error("Erro na API");
+          const novos = dados.data.filter(p => p.nome);
+          todosProdutos = todosProdutos.concat(novos);
           totalPaginas = dados.meta.total_paginas;
           pagina++;
         } while (pagina <= totalPaginas);
 
-        // Ordena os produtos por nome (crescente) após o carregamento
-        todosProdutos.sort((a, b) => {
-          const nomeA = a.nome.toLowerCase();
-          const nomeB = b.nome.toLowerCase();
-          if (nomeA < nomeB) return -1;
-          if (nomeA > nomeB) return 1;
-          return 0;
-        });
-
+        todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
-        filtroContainer.style.display = 'flex'; // Exibe o filtro após o sucesso
-
+        filtroContainer.style.display = 'flex';
       } catch (error) {
-        tbody.innerHTML = `<tr><td colspan='2' style='text-align:center; color:red;'>${error.message}</td></tr>`;
-        filtroContainer.style.display = 'none'; // Mantém o filtro oculto em caso de erro
+        tbody.innerHTML = `<tr><td colspan='3' style='text-align:center; color:red;'>${error.message}</td></tr>`;
       }
     }
-    
-    // NOVO: Função para filtrar a lista na memória
+
     function filtrarTabela() {
-        const termoFiltro = document.getElementById('campo-filtro').value.toLowerCase().trim();
-        
-        if (termoFiltro === "") {
-            renderizarTabela(todosProdutos); // Se vazio, mostra todos
-            return;
-        }
-
-        const produtosFiltradosLocal = todosProdutos.filter(produto => {
-            // Verifica se o nome do produto contém o termo de filtro
-            return produto.nome.toLowerCase().includes(termoFiltro);
-        });
-
-        renderizarTabela(produtosFiltradosLocal);
+        const termo = document.getElementById('campo-filtro').value.toLowerCase().trim();
+        const filtrados = todosProdutos.filter(p => p.nome.toLowerCase().includes(termo));
+        renderizarTabela(filtrados);
     }
-    
+
     function ordenarTabela(coluna, ordem) {
-      if (produtosFiltrados.length === 0) return; // Usa produtosFiltrados
-
-      const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
-        let valorA = a[coluna];
-        let valorB = b[coluna];
-
-        if (typeof valorA === 'string') {
-          valorA = valorA.toLowerCase();
-          valorB = valorB.toLowerCase();
-        } else {
-          valorA = Number(valorA);
-          valorB = Number(valorB);
+      if (produtosFiltrados.length === 0) return;
+      const ordenados = [...produtosFiltrados].sort((a, b) => {
+        let vA = a[coluna] || '';
+        let vB = b[coluna] || '';
+        if (coluna === 'estoque') {
+          return ordem === 'asc' ? Number(vA) - Number(vB) : Number(vB) - Number(vA);
         }
-
-        if (valorA < valorB) return ordem === 'asc' ? -1 : 1;
-        if (valorA > valorB) return ordem === 'asc' ? 1 : -1;
-        return 0;
+        return ordem === 'asc' ? vA.toString().localeCompare(vB.toString()) : vB.toString().localeCompare(vA.toString());
       });
-
-      renderizarTabela(produtosOrdenados);
+      renderizarTabela(ordenados);
     }
     
-    document.getElementById("btn-buscar").addEventListener("click", () => {
-      const nomeBusca = document.getElementById("campo-busca").value;
-      document.getElementById('campo-filtro').value = ''; // Limpa o filtro ao fazer nova busca na API
-      carregarProdutos(nomeBusca);
-    });
-
-    document.getElementById("campo-busca").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        document.getElementById("btn-buscar").click();
-      }
-    });
-    
-    // NOVO: Listener para o campo de filtro
+    document.getElementById("btn-buscar").addEventListener("click", () => carregarProdutos(document.getElementById("campo-busca").value));
+    document.getElementById("campo-busca").addEventListener("keypress", (e) => { if (e.key === "Enter") document.getElementById("btn-buscar").click(); });
     document.getElementById("campo-filtro").addEventListener("input", filtrarTabela);
 
     document.querySelectorAll('#tabela-produtos thead th').forEach(header => {
       header.addEventListener('click', () => {
         const coluna = header.dataset.coluna;
-        let ordem = header.dataset.ordem;
-
-        document.querySelectorAll('#tabela-produtos thead th').forEach(th => {
-          th.classList.remove('ordenado-asc', 'ordenado-desc');
-        });
-
-        ordem = ordem === 'asc' ? 'desc' : 'asc';
+        let ordem = header.dataset.ordem === 'asc' ? 'desc' : 'asc';
+        document.querySelectorAll('#tabela-produtos thead th').forEach(th => th.className = '');
         header.dataset.ordem = ordem;
-
         header.classList.add(`ordenado-${ordem}`);
-        
-        // A ordenação agora usa a lista atualmente filtrada (produtosFiltrados)
         ordenarTabela(coluna, ordem);
       });
     });
