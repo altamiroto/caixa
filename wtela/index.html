@@ -40,7 +40,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             flex: 0 0 300px;
             box-sizing: border-box;
-            /* Container para o textarea e o div de resultado */
             display: flex;
             flex-direction: column; 
         }
@@ -62,54 +61,71 @@
             width: 50px; 
             display: inline-block;
         }
-
-        /* ESTILO PARA O TEXTAREA ORIGINAL (APENAS ENTRADA) */
         textarea {
             width: 100%;
-            height: 250px; /* Reduzida para dar espaço ao div de resultado */
+            height: 250px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 14px;
-            resize: both; /* ✅ Alterado para 'both' */
+            resize: both;
             white-space: pre; 
             overflow: auto;
-            margin-bottom: 15px; /* Espaço entre o textarea e o div de resultado */
+            margin-bottom: 15px;
         }
-
-        /* ESTILO PARA A NOVA ÁREA DE RESULTADO FILTRADO */
         .filtered-output {
             width: 100%;
-            height: 250px; /* Mesma altura do textarea para alinhamento visual */
+            height: 250px;
             padding: 10px;
-            border: 1px solid #007bff; /* Borda diferente para o resultado */
+            border: 1px solid #007bff;
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 14px;
-            background-color: #eaf3ff; /* Fundo levemente azul para destaque */
-            overflow: auto; /* Permite rolagem no resultado */
-            white-space: pre-wrap; /* Preserva quebras de linha e envolve o texto */
-            display: none; /* Inicia oculto, só aparece quando há busca */
+            background-color: #eaf3ff;
+            overflow: auto;
+            white-space: pre-wrap;
+            display: none;
             text-align: left;
-            flex-grow: 1; /* Ocupa o espaço restante */
+            flex-grow: 1;
         }
-        
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
             color: #555;
         }
-        #telaSelector {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
         .highlight {
-            background-color: yellow; /* Destaque para a linha encontrada */
+            background-color: yellow;
             font-weight: bold;
         }
+        /* Estilos para a seção IA */
+        .advanced-ai {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+        }
+        #aiResponse {
+            background: #f9f9f9;
+            padding: 10px;
+            border-left: 4px solid #673ab7;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .btn-ai {
+            background-color: #673ab7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-ai:hover { background-color: #512da8; }
+        .loading { font-style: italic; color: #888; }
     </style>
 </head>
 <body>
@@ -140,50 +156,60 @@
         </div>
         
         <div class="control-group">
-            <label for="contextLines">Linhas de contexto (antes/depois):</label>
+            <label for="contextLines">Linhas de contexto:</label>
             <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
         </div>
     </div>
 
-
-
-    <div id="container-listas" class="container">
+    <div class="advanced-ai">
+        <details>
+            <summary><strong>⚙️ Opções Avançadas (Análise com IA Groq)</strong></summary>
+            <div style="margin-top: 15px;">
+                <label>Produtos para comparar (IA):</label>
+                <input type="text" id="aiProductSearch" placeholder="Ex: Arroz, Feijão, Óleo">
+                
+                <label>Prompt Personalizado:</label>
+                <textarea id="aiPrompt" style="height: 80px;">Analise as listas dos fornecedores abaixo e diga qual deles tem o menor preço para cada um destes produtos: [PRODUTOS]. Se não encontrar o produto em nenhuma lista, informe que não existe.</textarea>
+                
+                <button class="btn-ai" onclick="consultarIA()">🤖 Analisar Preços com IA</button>
+                <div id="aiResponse" style="display:none;"></div>
+            </div>
+        </details>
     </div>
-	
-<div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
-    <label for="tagInput" style="display:inline-block; margin-right: 10px;">🏷️ **Tag (Título) para o Histórico:**</label>
-    <input type="text" id="tagInput" placeholder="Ex: Lista do dia 22/10/2025" style="width: calc(100% - 10px); display: block;">
-</div>
 
-<div style="margin-bottom: 15px; text-align:center;">
-    <button onclick="salvarDados()">💾 Salvar Dados</button>
-    <button onclick="carregarHistorico()">📜 Consultar histórico</button>
-    <select id="historicoSelect" style="padding:6px; display:none;" onchange="aplicarHistorico()">
-        <option value="">Selecione um histórico...</option>
-    </select>
-</div>
+    <div id="container-listas" class="container"></div>
+	
+    <div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
+        <label for="tagInput" style="display:inline-block; margin-right: 10px;">🏷️ **Tag (Título) para o Histórico:**</label>
+        <input type="text" id="tagInput" placeholder="Ex: Lista do dia 22/10/2025" style="width: calc(100% - 10px); display: block;">
+    </div>
+
+    <div style="margin-bottom: 15px; text-align:center;">
+        <button onclick="salvarDados()">💾 Salvar Dados</button>
+        <button onclick="carregarHistorico()">📜 Consultar histórico</button>
+        <select id="historicoSelect" style="padding:6px; display:none;" onchange="aplicarHistorico()">
+            <option value="">Selecione um histórico...</option>
+        </select>
+    </div>
+
     <script>
         const container = document.getElementById('container-listas');
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
         const contextLinesInput = document.getElementById('contextLines');
-
+        const GROQ_API_KEY = "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";
 
         function setupListeners() {
-            // Adiciona o listener 'input' para todas as textareas existentes
             const textareas = container.querySelectorAll('textarea');
             textareas.forEach(textarea => {
-                // Ao digitar no textarea, apenas salvamos o conteúdo original
                 textarea.removeEventListener('input', saveOriginalContent);
                 textarea.addEventListener('input', saveOriginalContent);
             });
         }
 
-        // Função para salvar o conteúdo do textarea como original (não estamos mais usando 'isFiltered')
         function saveOriginalContent(event) {
             const textarea = event.target;
             textarea.dataset.originalContent = textarea.value;
-            // E chama o filtro para atualizar o DIV de resultado
             applyFilter();
         }
 
@@ -192,21 +218,20 @@
             const currentNumTelas = container.children.length;
 
             if (numTelas > currentNumTelas) {
-                // Adiciona novas telas
                 for (let i = currentNumTelas + 1; i <= numTelas; i++) {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'text-area-wrapper';
 
                     const input = document.createElement('input');
                     input.type = 'text';
+                    input.className = 'provider-name';
                     input.value = `Fornecedor ${i}`;
 
                     const textarea = document.createElement('textarea');
                     textarea.id = `fornecedor${i}`;
-                    textarea.dataset.originalContent = ""; // Para guardar o conteúdo original
+                    textarea.dataset.originalContent = "";
                     textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...`;
                     
-                    // NOVO ELEMENTO: O div para mostrar o resultado filtrado
                     const resultDiv = document.createElement('div');
                     resultDiv.id = `resultado${i}`;
                     resultDiv.className = 'filtered-output';
@@ -214,36 +239,28 @@
 
                     wrapper.appendChild(input);
                     wrapper.appendChild(textarea);
-                    wrapper.appendChild(resultDiv); // Adiciona o novo div
+                    wrapper.appendChild(resultDiv);
                     container.appendChild(wrapper);
                 }
             } else if (numTelas < currentNumTelas) {
-                // Remove telas extras
                 while (container.children.length > numTelas) {
                     container.removeChild(container.lastChild);
                 }
             }
-            // Garante que o listener seja adicionado às textareas, novas ou existentes
             setupListeners();
-            // Aplica o filtro após a mudança de layout
             applyFilter();
         }
 
         function applyFilter() {
             const searchTerm = searchInput.value.toLowerCase().trim();
-            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0); // Garante que seja no mínimo 0
-
+            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
             const textareas = container.querySelectorAll('textarea');
 
             textareas.forEach(textarea => {
-                // Encontra o DIV de resultado correspondente
                 const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
                 const resultDiv = document.getElementById(resultDivId);
-
-                // O conteúdo original é sempre o valor do textarea salvo no dataset
                 let originalContent = textarea.dataset.originalContent || textarea.value;
                 
-                // Em caso de primeira execução ou se o usuário colou algo e não ativou o input, atualiza o originalContent
                 if (!textarea.dataset.originalContent) {
                     textarea.dataset.originalContent = originalContent;
                 }
@@ -251,185 +268,143 @@
                 const lines = originalContent.split('\n');
 
                 if (searchTerm.length === 0) {
-                    // Sem termo de busca: Oculta o div de resultado e limpa
                     resultDiv.style.display = 'none';
-                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-                    // O textarea original permanece intocado
                     return;
                 }
 
-                // Há termo de busca: Exibe o div de resultado
                 resultDiv.style.display = 'block';
-
                 let filteredLinesWithHighlight = [];
-                let lineAdded = new Array(lines.length).fill(false); // Para evitar linhas duplicadas de contexto
+                let lineAdded = new Array(lines.length).fill(false);
 
                 lines.forEach((line, index) => {
-const normalizeText = str => str
-    .normalize('NFKD')                // Decompõe acentos e formas compatíveis
-    .replace(/[\u0300-\u036f]/g, '')  // Remove marcas de acento
-    .replace(/[\u{1F300}-\u{1FAD6}]/gu, '') // Remove emojis
-    .replace(/[\uFE00-\uFE0F]/g, '')  // Remove modificadores de variação
-    .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase()); // Mantém letras normais
+                    const normalizeText = str => str.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                    const lineNormalized = normalizeText(line);
+                    const searchNormalized = normalizeText(searchTerm);
 
-const lineNormalized = normalizeText(line);
-const searchNormalized = normalizeText(searchTerm);
-
-if (lineNormalized.includes(searchNormalized)) {
-                        // Adiciona as linhas de contexto antes
+                    if (lineNormalized.includes(searchNormalized)) {
                         for (let i = Math.max(0, index - contextLines); i < index; i++) {
-                            if (!lineAdded[i]) {
-                                filteredLinesWithHighlight.push(lines[i]);
-                                lineAdded[i] = true;
-                            }
+                            if (!lineAdded[i]) { filteredLinesWithHighlight.push(lines[i]); lineAdded[i] = true; }
                         }
-                        
-                        // Adiciona a linha encontrada COM DESTAQUE HTML
-                        // Substitui o termo de busca (mantendo o case original da linha)
                         const regex = new RegExp(`(${searchTerm})`, 'gi');
                         const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
-
                         filteredLinesWithHighlight.push(highlightedLine);
                         lineAdded[index] = true;
-
-                        // Adiciona as linhas de contexto depois
                         for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
-                            if (!lineAdded[i]) {
-                                filteredLinesWithHighlight.push(lines[i]);
-                                lineAdded[i] = true;
-                            }
+                            if (!lineAdded[i]) { filteredLinesWithHighlight.push(lines[i]); lineAdded[i] = true; }
                         }
                     }
                 });
 
                 if (filteredLinesWithHighlight.length === 0) {
-                    resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
+                    resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado.</span>`;
                 } else {
-                    // Junta as linhas filtradas e atualiza o DIV de resultado
-                    // Usamos <br> no lugar de \n para que o HTML interprete a quebra de linha corretamente.
                     resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
                 }
             });
         }
 
-        // --- Inicialização ---
+        async function consultarIA() {
+            const btn = document.querySelector('.btn-ai');
+            const responseDiv = document.getElementById('aiResponse');
+            const produtos = document.getElementById('aiProductSearch').value;
+            let promptBase = document.getElementById('aiPrompt').value;
 
-        function initializeContent() {
-            const initialTextareas = container.querySelectorAll('textarea');
-            initialTextareas.forEach(textarea => {
-                // Salva o conteúdo inicial (vazio, mas prepara o campo)
-                textarea.dataset.originalContent = textarea.value;
+            if (!produtos) return alert("Digite os produtos para a IA buscar.");
+
+            btn.disabled = true;
+            responseDiv.style.display = "block";
+            responseDiv.innerHTML = "<span class='loading'>Consultando Groq IA... Aguarde.</span>";
+
+            // Coletar dados de todos os textareas ativos
+            let dadosFornecedores = "";
+            const wrappers = container.querySelectorAll('.text-area-wrapper');
+            wrappers.forEach(w => {
+                const nome = w.querySelector('input').value;
+                const texto = w.querySelector('textarea').value;
+                if (texto.trim()) {
+                    dadosFornecedores += `\nFORNECEDOR: ${nome}\nLISTA:\n${texto}\n---`;
+                }
             });
-        }
-        
-        // Gera as telas iniciais (4, conforme o valor padrão)
-        updateLayout();
-        initializeContent();
 
-        // Garante que o applyFilter seja chamado quando o usuário cola no textarea
-        container.addEventListener('change', (event) => {
-            if (event.target.tagName === 'TEXTAREA') {
-                event.target.dataset.originalContent = event.target.value;
-                applyFilter();
+            const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nDados:\n" + dadosFornecedores;
+
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${GROQ_API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama3-8b-8192",
+                        messages: [{ role: "user", content: promptFinal }]
+                    })
+                });
+
+                const data = await response.json();
+                responseDiv.innerText = data.choices[0].message.content;
+            } catch (err) {
+                responseDiv.innerText = "Erro ao consultar IA: " + err;
+            } finally {
+                btn.disabled = false;
             }
-        });
-        
+        }
+
+        updateLayout();
     </script>
 
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
-
-async function salvarDados() {
-    const textareas = container.querySelectorAll('textarea');
-    const inputs = container.querySelectorAll('input[type=text]');
-	
-	// NOVO: Obtém o valor do campo de Tag
-    const tagInput = document.getElementById('tagInput');
-	
-    // Monta URLSearchParams (application/x-www-form-urlencoded) — evita preflight
-    const params = new URLSearchParams();
-	
-	// NOVO: Adiciona o valor da tag nos parâmetros
-    params.append('tag', tagInput.value || '');
-	
-    for (let i = 0; i < 8; i++) {
-        params.append(`name${i+1}`, inputs[i]?.value || '');
-        params.append(`text${i+1}`, textareas[i]?.value || '');
-    }
-
-    try {
-        const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: params // sem headers personalizados
-        });
-        const json = await res.json();
-        if (json.status === 'success') {
-            alert('✅ Dados salvos com sucesso!');
-        } else {
-            alert('❌ Erro do servidor: ' + JSON.stringify(json));
-        }
-    } catch (err) {
-        alert('❌ Erro ao salvar: ' + err);
-    }
-}
-
-async function carregarHistorico() {
-    try {
-        const res = await fetch(SCRIPT_URL);
-        if (!res.ok) throw new Error("Erro HTTP: " + res.status);
-        const data = await res.json();
-
-        if (!Array.isArray(data) || data.length === 0) {
-            alert("Nenhum registro encontrado.");
-            return;
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
+        async function salvarDados() {
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('.provider-name');
+            const tagInput = document.getElementById('tagInput');
+            const params = new URLSearchParams();
+            params.append('tag', tagInput.value || '');
+            for (let i = 0; i < 8; i++) {
+                params.append(`name${i+1}`, inputs[i]?.value || '');
+                params.append(`text${i+1}`, textareas[i]?.value || '');
+            }
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
+                const json = await res.json();
+                if (json.status === 'success') alert('✅ Dados salvos!');
+            } catch (err) { alert('❌ Erro: ' + err); }
         }
 
-        const select = document.getElementById("historicoSelect");
-        select.innerHTML = '<option value="">Selecione um histórico...</option>';
-        data.forEach((item, index) => {
-            const opt = document.createElement("option");
-            const dataLocal = new Date(item.date).toLocaleString("pt-BR");
-			
-			// MODIFICADO: Usa a nova 'tag' (título) no texto da opção
-            const tagText = item.tag ? ` (${item.tag})` : '';
-			
-            opt.value = index;
-// Combina a data e a nova tag
-            opt.textContent = `${index + 1} - ${dataLocal}${tagText}`; 
-            select.appendChild(opt);
-			
-        });
+        async function carregarHistorico() {
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                const selectH = document.getElementById("historicoSelect");
+                selectH.innerHTML = '<option value="">Selecione um histórico...</option>';
+                data.forEach((item, index) => {
+                    const opt = document.createElement("option");
+                    opt.value = index;
+                    opt.textContent = `${index + 1} - ${new Date(item.date).toLocaleString()} (${item.tag || ''})`;
+                    selectH.appendChild(opt);
+                });
+                selectH.style.display = "inline-block";
+                selectH.dataset.registros = JSON.stringify(data);
+            } catch (err) { alert("❌ Erro ao carregar."); }
+        }
 
-        select.style.display = "inline-block";
-        select.dataset.registros = JSON.stringify(data);
-    } catch (err) {
-        alert("❌ Erro ao carregar histórico: " + err);
-    }
-}
-
-function aplicarHistorico() {
-    const select = document.getElementById("historicoSelect");
-    const index = parseInt(select.value);
-    if (isNaN(index)) return;
-
-    const data = JSON.parse(select.dataset.registros);
-	const tagInput = document.getElementById("tagInput"); // NOVO: Obtém o campo da tag
-    const registro = data[index];
-
-    const textareas = container.querySelectorAll('textarea');
-    const inputs = container.querySelectorAll('input[type=text]');
-	
-	// NOVO: Preenche o campo da Tag
-    if (tagInput) tagInput.value = registro['tag'] || '';
-
-    for (let i = 0; i < 8; i++) {
-        if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
-        if (textareas[i]) textareas[i].value = registro[`text${i+1}`] || '';
-    }
-
-    alert("✅ Registro carregado na tela!");
-}
-</script>
-
+        function aplicarHistorico() {
+            const selectH = document.getElementById("historicoSelect");
+            const data = JSON.parse(selectH.dataset.registros);
+            const registro = data[parseInt(selectH.value)];
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('.provider-name');
+            if (document.getElementById("tagInput")) document.getElementById("tagInput").value = registro.tag || '';
+            for (let i = 0; i < 8; i++) {
+                if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
+                if (textareas[i]) {
+                    textareas[i].value = registro[`text${i+1}`] || '';
+                    textareas[i].dataset.originalContent = textareas[i].value;
+                }
+            }
+            applyFilter();
+        }
+    </script>
 </body>
 </html>
