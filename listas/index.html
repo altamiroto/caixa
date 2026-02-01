@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Lista de Produtos</title>
+    <title>Gerador de Lista de Produtos - v2.0</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -117,7 +117,6 @@
         .image-search-link:hover {
             color: #2e7d32;
         }
-        /* MENSAGEM FIXA */
         .copy-message {
             background-color: #d4edda;
             color: #155724;
@@ -150,14 +149,13 @@
             align-items: center;
             gap: 10px;
         }
-        /* Novos estilos para o link personalizado */
         .share-link-container {
             margin-top: 20px;
             padding: 15px;
             background-color: #e9ecef;
             border-radius: 5px;
             border: 1px solid #ced4da;
-            display: none; /* Oculta por padrão */
+            display: none;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
@@ -184,20 +182,71 @@
         #copyLinkButton:hover {
             background-color: #5a6268;
         }
+        /* Nova seção de configurações */
+        .config-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .config-section h3 {
+            margin-top: 0;
+            color: #495057;
+            font-size: 16px;
+        }
+        .config-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .config-option input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        .config-option label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .info-badge {
+            display: inline-block;
+            background-color: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
     </style>
-	
-	
-	
-	<script src="https://unpkg.com/js-sha256@0.9.0/src/sha256.js"></script>
-	
-	
-	
+    
+    <script src="https://unpkg.com/js-sha256@0.9.0/src/sha256.js"></script>
 </head>
 <body>
 
     <div class="container">
-        <h1>Processador de Lista de Produtos</h1>
+        <h1>Processador de Lista de Produtos <span class="info-badge">v2.0</span></h1>
         <span id="copyMessage" class="copy-message">Copiado!</span>
+
+        <!-- Nova seção de configuração -->
+        <div class="config-section">
+            <h3>⚙️ Configurações de Separação de Produtos</h3>
+            <div class="config-option">
+                <input type="checkbox" id="useEmojis" checked>
+                <label for="useEmojis">Separar por emojis (📺, 💻, 🍎, etc.)</label>
+            </div>
+            <div class="config-option">
+                <input type="checkbox" id="useEmptyLines" checked>
+                <label for="useEmptyLines">Separar por linha vazia (quebra dupla)</label>
+            </div>
+            <div class="config-option">
+                <input type="checkbox" id="useSingleLines">
+                <label for="useSingleLines">Separar por linha simples (cada linha = 1 produto)</label>
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background-color: #fff3cd; border-radius: 3px; font-size: 13px;">
+                💡 <strong>Dica:</strong> A opção "linha simples" desativa as outras automaticamente.
+            </div>
+        </div>
 
         <div class="input-group">
             <label for="productList">Cole sua lista de produtos aqui:</label>
@@ -226,8 +275,104 @@
     </div>
 
     <script>
+        // Gerenciamento de checkboxes mutuamente exclusivos
+        document.addEventListener('DOMContentLoaded', function() {
+            const useEmojis = document.getElementById('useEmojis');
+            const useEmptyLines = document.getElementById('useEmptyLines');
+            const useSingleLines = document.getElementById('useSingleLines');
 
-        // MODIFICAÇÃO: A função agora aceita um parâmetro opcional
+            useSingleLines.addEventListener('change', function() {
+                if (this.checked) {
+                    useEmojis.checked = false;
+                    useEmptyLines.checked = false;
+                    useEmojis.disabled = true;
+                    useEmptyLines.disabled = true;
+                } else {
+                    useEmojis.disabled = false;
+                    useEmptyLines.disabled = false;
+                }
+            });
+        });
+
+        // Função de parsing atualizada com suporte a múltiplos separadores
+        function parseProducts(text) {
+            const useEmojis = document.getElementById('useEmojis').checked;
+            const useEmptyLines = document.getElementById('useEmptyLines').checked;
+            const useSingleLines = document.getElementById('useSingleLines').checked;
+            
+            // Modo de linha simples: cada linha não vazia é um produto
+            if (useSingleLines) {
+                return text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+            }
+
+            const lines = text.split('\n');
+            const products = [];
+            let currentProductLines = [];
+            let isProductBlock = false;
+            let emptyLineCount = 0;
+
+            lines.forEach((line, index) => {
+                const trimmedLine = line.trim();
+                
+                // Verifica se a linha começa com emoji (se essa opção está ativa)
+                const isProductStart = useEmojis && (
+                    trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌|📲)/) || 
+                    trimmedLine.match(/^([>⚜️]|\*`)/)
+                );
+
+                // Verifica se encontrou linha vazia (se essa opção está ativa)
+                const isEmptyLine = trimmedLine === '';
+
+                // Lógica de separação por emoji
+                if (isProductStart && !trimmedLine.includes('DISPONÍVEIS')) {
+                    if (currentProductLines.length > 0) {
+                        products.push(currentProductLines.join('\n'));
+                    }
+                    currentProductLines = [line];
+                    isProductBlock = true;
+                    emptyLineCount = 0;
+                }
+                // Lógica de separação por linha vazia
+                else if (useEmptyLines && isEmptyLine) {
+                    emptyLineCount++;
+                    // Se encontrou linha vazia e já tem conteúdo acumulado
+                    if (currentProductLines.length > 0 && emptyLineCount >= 1) {
+                        products.push(currentProductLines.join('\n'));
+                        currentProductLines = [];
+                        isProductBlock = false;
+                        emptyLineCount = 0;
+                    }
+                }
+                // Acumula linhas do produto atual
+                else if (trimmedLine) {
+                    if (!isProductBlock && !useEmojis) {
+                        // Se não está usando emojis, toda linha não vazia inicia um novo produto
+                        isProductBlock = true;
+                    }
+                    if (isProductBlock || useEmptyLines) {
+                        currentProductLines.push(line);
+                        emptyLineCount = 0;
+                    }
+                }
+                // Linha vazia durante um bloco (separação antiga)
+                else if (isProductBlock && !useEmptyLines) {
+                    products.push(currentProductLines.join('\n'));
+                    currentProductLines = [];
+                    isProductBlock = false;
+                }
+            });
+
+            // Adiciona o último produto se houver
+            if (currentProductLines.length > 0) {
+                products.push(currentProductLines.join('\n'));
+            }
+
+            // Remove produtos vazios ou muito curtos
+            return products.filter(p => p.trim().length > 3);
+        }
+
         function processList(listText = null) {
             const listTextarea = document.getElementById('productList');
             const errorMessageDiv = document.getElementById('errorMessage');
@@ -235,17 +380,14 @@
             const listContainer = document.querySelector('.product-list-container');
             const copyButton = document.getElementById('copyButton');
             const selectAllCheckbox = document.getElementById('selectAll');
-            // NOVO ELEMENTO: Referência ao container do link
             const shareLinkContainer = document.getElementById('shareLinkContainer');
 
-            // Lógica para decidir qual texto usar
             const sourceText = listText || listTextarea.value;
 
             errorMessageDiv.style.display = 'none';
             processedListDiv.innerHTML = '';
             listContainer.style.display = 'none';
             copyButton.style.display = 'none';
-            // Garante que o link esteja oculto se a lista estiver vazia
             shareLinkContainer.classList.remove('show'); 
 
             if (!sourceText.trim()) {
@@ -257,7 +399,7 @@
             const products = parseProducts(sourceText);
 
             if (products.length === 0) {
-                errorMessageDiv.textContent = 'Não foi possível encontrar produtos na lista. Verifique o formato.';
+                errorMessageDiv.textContent = 'Não foi possível encontrar produtos na lista. Verifique as configurações de separação.';
                 errorMessageDiv.style.display = 'block';
                 return;
             }
@@ -266,7 +408,6 @@
             listContainer.style.display = 'block';
             copyButton.style.display = 'block';
 
-            // NOVO: Exibe o container do link e o gera após o processamento
             shareLinkContainer.classList.add('show');
             generateShareableLink(sourceText);
 
@@ -276,40 +417,6 @@
                     checkbox.checked = selectAllCheckbox.checked;
                 });
             };
-        }
-
-        function parseProducts(text) {
-            const lines = text.split('\n');
-            const products = [];
-            let currentProductLines = [];
-            let isProductBlock = false;
-
-            lines.forEach(line => {
-                const trimmedLine = line.trim();
-
-                const isProductStart = trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌|📲)/) || trimmedLine.match(/^([>⚜️]|\*`)/);
-
-                if (isProductStart && !trimmedLine.includes('DISPONÍVEIS')) {
-                    if (currentProductLines.length > 0) {
-                        products.push(currentProductLines.join('\n'));
-                    }
-                    currentProductLines = [line];
-                    isProductBlock = true;
-                } else if (isProductBlock) {
-                    if (trimmedLine) {
-                        currentProductLines.push(line);
-                    } else {
-                        products.push(currentProductLines.join('\n'));
-                        currentProductLines = [];
-                        isProductBlock = false;
-                    }
-                }
-            });
-
-            if (currentProductLines.length > 0) {
-                products.push(currentProductLines.join('\n'));
-            }
-            return products;
         }
 
         function displayProducts(products) {
@@ -402,8 +509,6 @@
             }, 2000);
         }
 
-        // NOVAS FUNÇÕES
-        // Função para gerar o link com a lista codificada na URL
         function generateShareableLink(listText) {
             const compressedList = btoa(unescape(encodeURIComponent(listText)));
             const encodedList = encodeURIComponent(compressedList);
@@ -411,7 +516,6 @@
             document.getElementById('shareableLink').value = shareableLink;
         }
 
-        // Função para copiar o link para a área de transferência
         function copyShareableLink() {
             const shareableLinkInput = document.getElementById('shareableLink');
             shareableLinkInput.select();
@@ -419,7 +523,6 @@
             showCopyMessage();
         }
 
-        // NOVO: Lógica para verificar a URL ao carregar a página
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const listFromUrl = urlParams.get('list');
@@ -430,7 +533,7 @@
                     const originalList = decodeURIComponent(escape(atob(decodedList)));
                     
                     document.getElementById('productList').value = originalList;
-                    processList(originalList); // Processa a lista automaticamente
+                    processList(originalList);
                 } catch (e) {
                     console.error('Falha ao decodificar a lista da URL:', e);
                 }
