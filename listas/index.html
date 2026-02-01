@@ -301,11 +301,14 @@
                     <label style="font-size: 14px; color: #666;">Prompt de Processamento:</label>
                     <textarea id="aiPrompt" 
                               style="width: 100%; height: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; margin-top: 5px; font-family: monospace;">Processe essa lista de produtos e retorne na estrutura:
-PRODUTO / Preço Dinheiro (se tiver) / Preço Cartão (se tiver)
+PRODUTO 
+R$ XX,XX (Dinheiro/PIX) (se tiver)
+R$ XX,XX (Cartão) (se tiver)
 
 Regras importantes:
-- Se não houver preço de dinheiro, não coloque esse campo
+- Se não houver preço de dinheiro, não coloque esse campo 
 - Se não houver preço de cartão, não coloque esse campo
+- Colocar os valores no formato R$ XX,XX, com o ponto separando a casa de milhares, tanto no dinheiro, quanto no cartão
 - Mantenha os emojis originais se houver
 - Separe cada produto por uma linha vazia
 - Não adicione explicações, apenas retorne os produtos formatados</textarea>
