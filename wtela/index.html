@@ -1,101 +1,54 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Listas de Fornecedores - Gemini Direct</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .controls { margin-bottom: 20px; text-align: center; }
-        .control-group { display: inline-block; margin: 0 10px; text-align: left; }
-        .container { display: flex; gap: 20px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 10px; }
-        .text-area-wrapper { background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex: 0 0 300px; box-sizing: border-box; display: flex; flex-direction: column; }
-        textarea { width: 100%; height: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: both; white-space: pre; overflow: auto; margin-bottom: 15px; }
-        .filtered-output { width: 100%; height: 250px; padding: 10px; border: 1px solid #007bff; border-radius: 4px; box-sizing: border-box; font-size: 14px; background-color: #eaf3ff; overflow: auto; white-space: pre-wrap; display: none; }
-        .highlight { background-color: yellow; font-weight: bold; }
-        .advanced-ai { background: #fff; padding: 15px; border-radius: 8px; max-width: 900px; margin: 20px auto; border: 1px solid #ddd; }
-        #aiResponse { background: #f9f9f9; padding: 15px; border-left: 4px solid #1a73e8; margin-top: 15px; white-space: pre-wrap; font-size: 14px; }
-        .btn-ai { background-color: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-<body>
+<script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-<div class="header">
-    <h1>Comparador de Fornecedores</h1>
-</div>
+    const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
 
-<div class="advanced-ai">
-    <label>Produtos:</label>
-    <input type="text" id="aiProductSearch">
-    <textarea id="aiPrompt">Analise as listas e diga o melhor preço para: [PRODUTOS]</textarea>
-    <button class="btn-ai" id="btnIA" onclick="consultarIA()">Analisar</button>
-    <div id="aiResponse" style="display:none;"></div>
-</div>
+    window.consultarIA = async function() {
+        const btn = document.getElementById('btnIA');
+        const responseDiv = document.getElementById('aiResponse');
+        const produtos = document.getElementById('aiProductSearch').value;
+        let promptBase = document.getElementById('aiPrompt').value;
 
-<div id="container-listas" class="container"></div>
+        if (!produtos) return alert("Digite os produtos.");
 
-<script>
-const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
-const container = document.getElementById('container-listas');
+        btn.disabled = true;
+        btn.innerText = "⌛ Analisando...";
+        responseDiv.style.display = "block";
+        responseDiv.innerHTML = "<em>Conectando ao Gemini...</em>";
 
-/* 
-   CORREÇÃO DEFINITIVA:
-   - Endpoint v1 (NÃO v1beta)
-   - Modelo suportado: gemini-1.5-flash-latest
-*/
-async function consultarIA() {
-    const respDiv = document.getElementById('aiResponse');
-    const produtos = document.getElementById('aiProductSearch').value;
-    const promptBase = document.getElementById('aiPrompt').value;
+        try {
+            const genAI = new GoogleGenerativeAI(API_KEY);
 
-    let dados = "";
-    document.querySelectorAll('.text-area-wrapper textarea').forEach((t,i)=>{
-        if(t.value.trim()) dados += `FORNECEDOR ${i+1}\n${t.value}\n---\n`;
-    });
+            // ✅ ÚNICA CORREÇÃO REAL
+            const model = genAI.getGenerativeModel({
+                model: "gemini-1.5-flash-latest"
+            });
 
-    const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\n" + dados;
+            let dados = "";
+            document.querySelectorAll('.text-area-wrapper').forEach(w => {
+                const nome = w.querySelector('.provider-title').value;
+                const texto = w.querySelector('textarea').value;
+                if (texto.trim()) dados += `\nFORNECEDOR: ${nome}\n${texto}\n---\n`;
+            });
 
-    try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{
-                        role: "user",
-                        parts: [{ text: promptFinal }]
-                    }]
-                })
-            }
-        );
+            if (!dados) throw new Error("Cole alguma lista nos campos abaixo antes de analisar.");
 
-        const json = await response.json();
+            const promptFinal =
+                promptBase.replace("[PRODUTOS]", produtos) +
+                "\n\nLISTAS:\n" +
+                dados;
 
-        if (!json.candidates) {
-            throw new Error(JSON.stringify(json));
+            const result = await model.generateContent(promptFinal);
+            const response = await result.response;
+
+            responseDiv.innerText = response.text();
+
+        } catch (err) {
+            responseDiv.innerHTML =
+                `<span style="color:red">Erro na API Gemini: ${err.message}</span>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Analisar com Gemini";
         }
-
-        respDiv.style.display = "block";
-        respDiv.innerText = json.candidates[0].content.parts[0].text;
-
-    } catch (e) {
-        respDiv.style.display = "block";
-        respDiv.innerText = "Erro: " + e.message;
     }
-}
-
-function updateLayout() {
-    for (let i = 1; i <= 4; i++) {
-        const div = document.createElement("div");
-        div.className = "text-area-wrapper";
-        div.innerHTML = `<textarea placeholder="Fornecedor ${i}"></textarea>`;
-        container.appendChild(div);
-    }
-}
-updateLayout();
 </script>
-
-</body>
-</html>
