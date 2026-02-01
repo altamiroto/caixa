@@ -3,132 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Listas de Fornecedores - Gemini Pro</title>
+    <title>Comparador de Listas de Fornecedores - Gemini Fixed</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .controls {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .control-group {
-            display: inline-block;
-            margin: 0 10px;
-            text-align: left;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            justify-content: flex-start;
-            padding-bottom: 10px;
-        }
-        .text-area-wrapper {
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex: 0 0 300px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column; 
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-            display: block; 
-        }
-        input[type="number"] {
-            width: 50px; 
-            display: inline-block;
-        }
-        textarea {
-            width: 100%;
-            height: 250px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-            resize: both;
-            white-space: pre; 
-            overflow: auto;
-            margin-bottom: 15px;
-        }
-        .filtered-output {
-            width: 100%;
-            height: 250px;
-            padding: 10px;
-            border: 1px solid #007bff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-            background-color: #eaf3ff;
-            overflow: auto;
-            white-space: pre-wrap;
-            display: none;
-            text-align: left;
-            flex-grow: 1;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-        .highlight {
-            background-color: yellow;
-            font-weight: bold;
-        }
-
-        /* SEÇÃO IA */
-        .advanced-ai {
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            max-width: 900px;
-            margin: 20px auto;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        #aiResponse {
-            background: #f9f9f9;
-            padding: 15px;
-            border-left: 4px solid #1a73e8;
-            margin-top: 15px;
-            white-space: pre-wrap;
-            font-size: 14px;
-            border-radius: 4px;
-            line-height: 1.5;
-        }
-        .btn-ai {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .controls { margin-bottom: 20px; text-align: center; }
+        .control-group { display: inline-block; margin: 0 10px; text-align: left; }
+        .container { display: flex; gap: 20px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 10px; }
+        .text-area-wrapper { background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex: 0 0 300px; box-sizing: border-box; display: flex; flex-direction: column; }
+        h1 { color: #333; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; display: block; }
+        input[type="number"] { width: 50px; display: inline-block; }
+        textarea { width: 100%; height: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: both; white-space: pre; overflow: auto; margin-bottom: 15px; }
+        .filtered-output { width: 100%; height: 250px; padding: 10px; border: 1px solid #007bff; border-radius: 4px; box-sizing: border-box; font-size: 14px; background-color: #eaf3ff; overflow: auto; white-space: pre-wrap; display: none; text-align: left; flex-grow: 1; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        .highlight { background-color: yellow; font-weight: bold; }
+        .advanced-ai { background: #fff; padding: 15px; border-radius: 8px; max-width: 900px; margin: 20px auto; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #aiResponse { background: #f9f9f9; padding: 15px; border-left: 4px solid #1a73e8; margin-top: 15px; white-space: pre-wrap; font-size: 14px; border-radius: 4px; line-height: 1.5; }
+        .btn-ai { background-color: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-ai:hover { background-color: #1557b0; }
         .btn-ai:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
@@ -136,30 +28,23 @@
 <body>
 
     <div class="header">
-        <h1>Comparador de Listas de Fornecedores</h1>
-        <p>Edite os nomes e cole as mensagens de WhatsApp para comparar.</p>
+        <h1>Comparador de Fornecedores</h1>
+        <p>Busca local instantânea e análise de grande volume com Gemini AI.</p>
     </div>
 
     <div class="controls">
         <div class="control-group">
             <label for="telaSelector">Telas:</label>
             <select id="telaSelector" onchange="updateLayout()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4" selected>4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option>
             </select>
         </div>
-        
         <div class="control-group" style="width: 250px;">
             <label for="searchInput">Buscar produto (Filtro local):</label>
             <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
         </div>
-        
         <div class="control-group">
             <label for="contextLines">Linhas de contexto:</label>
             <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
@@ -168,15 +53,13 @@
 
     <div class="advanced-ai">
         <details>
-            <summary style="cursor:pointer; font-weight:bold; color:#1a73e8;">✨ Opções Avançadas (Análise com Gemini - Grande Volume)</summary>
+            <summary style="cursor:pointer; font-weight:bold; color:#1a73e8;">✨ Opções Avançadas (Gemini 1.5 Flash)</summary>
             <div style="margin-top: 15px;">
                 <label>Produtos para comparar via IA:</label>
-                <input type="text" id="aiProductSearch" placeholder="Ex: Batata, Cebola, Sabonete">
-                
+                <input type="text" id="aiProductSearch" placeholder="Ex: Arroz, Feijão, Sabonete">
                 <label>Prompt Personalizado:</label>
-                <textarea id="aiPrompt" style="height: 80px;">Analise as listas dos fornecedores abaixo. Para cada um dos produtos listados em [PRODUTOS], identifique qual fornecedor tem o menor preço. Se houver diferença de peso/unidade, tente normalizar a comparação. Se não encontrar o produto, apenas diga 'Não encontrado'.</textarea>
-                
-                <button class="btn-ai" id="btnIA" onclick="consultarIA()">🤖 Analisar Preços com Gemini</button>
+                <textarea id="aiPrompt" style="height: 80px;">Compare os preços dos produtos [PRODUTOS] entre os fornecedores abaixo. Indique qual tem o menor preço para cada item. Se houver pesos diferentes, tente converter para comparar o custo-benefício.</textarea>
+                <button class="btn-ai" id="btnIA" onclick="consultarIA()">Analisar com Gemini</button>
                 <div id="aiResponse" style="display:none;"></div>
             </div>
         </details>
@@ -184,31 +67,20 @@
 
     <div id="container-listas" class="container"></div>
 	
-    <div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
-        <label for="tagInput" style="display:inline-block; margin-right: 10px;">🏷️ **Tag (Título) para o Histórico:**</label>
-        <input type="text" id="tagInput" placeholder="Ex: Lista do dia 22/10/2025" style="width: calc(100% - 10px); display: block;">
+    <div style="margin: 15px auto; width: 80%; max-width: 500px;">
+        <label for="tagInput">🏷️ Tag para Histórico:</label>
+        <input type="text" id="tagInput" placeholder="Ex: Lista Outubro">
     </div>
 
-    <div style="margin-bottom: 15px; text-align:center;">
-        <button onclick="salvarDados()">💾 Salvar Dados</button>
-        <button onclick="carregarHistorico()">📜 Consultar histórico</button>
-        <select id="historicoSelect" style="padding:6px; display:none;" onchange="aplicarHistorico()">
-            <option value="">Selecione um histórico...</option>
-        </select>
+    <div style="text-align:center; margin-bottom: 20px;">
+        <button onclick="salvarDados()">💾 Salvar</button>
+        <button onclick="carregarHistorico()">📜 Histórico</button>
+        <select id="historicoSelect" style="display:none;" onchange="aplicarHistorico()"></select>
     </div>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
 
     <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai";
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // SUA CHAVE API GEMINI
         const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
 
         window.consultarIA = async function() {
@@ -217,46 +89,37 @@
             const produtos = document.getElementById('aiProductSearch').value;
             let promptBase = document.getElementById('aiPrompt').value;
 
-            if (!produtos) return alert("Por favor, digite os produtos que deseja comparar.");
+            if (!produtos) return alert("Digite os produtos.");
 
             btn.disabled = true;
-            btn.innerText = "⌛ Analisando Grande Volume...";
+            btn.innerText = "⌛ Analisando...";
             responseDiv.style.display = "block";
-            responseDiv.innerHTML = "<em>O Gemini está processando suas listas. Por favor, aguarde...</em>";
+            responseDiv.innerHTML = "<em>Conectando ao Gemini...</em>";
 
             try {
                 const genAI = new GoogleGenerativeAI(API_KEY);
+                // Alterado para garantir compatibilidade
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-                let dadosFornecedores = "";
-                const wrappers = document.querySelectorAll('.text-area-wrapper');
-                wrappers.forEach(w => {
+                let dados = "";
+                document.querySelectorAll('.text-area-wrapper').forEach(w => {
                     const nome = w.querySelector('.provider-title').value;
                     const texto = w.querySelector('textarea').value;
-                    if (texto.trim()) {
-                        dadosFornecedores += `\nFORNECEDOR: ${nome}\nLISTA:\n${texto}\n---\n`;
-                    }
+                    if (texto.trim()) dados += `\nFORNECEDOR: ${nome}\n${texto}\n---\n`;
                 });
 
-                if (!dadosFornecedores) {
-                    alert("As listas estão vazias.");
-                    btn.disabled = false;
-                    btn.innerText = "🤖 Analisar Preços com Gemini";
-                    return;
-                }
+                if (!dados) throw new Error("Cole alguma lista nos campos abaixo antes de analisar.");
 
-                const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nABAIXO ESTÃO AS LISTAS PARA ANÁLISE:\n" + dadosFornecedores;
+                const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nLISTAS:\n" + dados;
 
                 const result = await model.generateContent(promptFinal);
                 const response = await result.response;
-                const text = response.text();
-
-                responseDiv.innerText = text;
+                responseDiv.innerText = response.text();
             } catch (err) {
                 responseDiv.innerHTML = `<span style="color:red">Erro na API Gemini: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.innerText = "🤖 Analisar Preços com Gemini";
+                btn.innerText = "Analisar com Gemini";
             }
         }
     </script>
@@ -265,74 +128,61 @@
         const container = document.getElementById('container-listas');
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
-        const contextLinesInput = document.getElementById('contextLines');
-
-        function setupListeners() {
-            container.querySelectorAll('textarea').forEach(textarea => {
-                textarea.oninput = (e) => { e.target.dataset.originalContent = e.target.value; applyFilter(); };
-            });
-        }
 
         function updateLayout() {
             const numTelas = parseInt(select.value);
-            const currentNumTelas = container.children.length;
-            if (numTelas > currentNumTelas) {
-                for (let i = currentNumTelas + 1; i <= numTelas; i++) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'text-area-wrapper';
-                    wrapper.innerHTML = `
+            const current = container.children.length;
+            if (numTelas > current) {
+                for (let i = current + 1; i <= numTelas; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'text-area-wrapper';
+                    div.innerHTML = `
                         <input type="text" class="provider-title" value="Fornecedor ${i}">
-                        <textarea id="fornecedor${i}" placeholder="Cole a lista do fornecedor ${i} aqui..."></textarea>
+                        <textarea id="fornecedor${i}" placeholder="Lista aqui..." oninput="applyFilter()"></textarea>
                         <div id="resultado${i}" class="filtered-output"></div>
                     `;
-                    container.appendChild(wrapper);
+                    container.appendChild(div);
                 }
             } else {
                 while (container.children.length > numTelas) container.removeChild(container.lastChild);
             }
-            setupListeners();
             applyFilter();
         }
 
         function applyFilter() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
-            container.querySelectorAll('textarea').forEach(textarea => {
-                const resDiv = document.getElementById(`resultado${textarea.id.replace('fornecedor', '')}`);
-                if (!searchTerm) { resDiv.style.display = 'none'; return; }
-                resDiv.style.display = 'block';
-                const lines = textarea.value.split('\n');
+            const term = searchInput.value.toLowerCase().trim();
+            const context = parseInt(document.getElementById('contextLines').value) || 0;
+            document.querySelectorAll('textarea').forEach(tx => {
+                const res = document.getElementById(`resultado${tx.id.replace('fornecedor', '')}`);
+                if (!term) { res.style.display = 'none'; return; }
+                res.style.display = 'block';
+                const lines = tx.value.split('\n');
                 let matches = [];
-                lines.forEach((line, idx) => {
-                    const lineNorm = line.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                    const searchNorm = searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                    if (lineNorm.includes(searchNorm)) {
-                        for (let i = Math.max(0, idx - contextLines); i < idx; i++) matches.push(lines[i]);
-                        matches.push(`<span class="highlight">${line}</span>`);
-                        for (let i = idx + 1; i <= Math.min(lines.length - 1, idx + contextLines); i++) matches.push(lines[i]);
+                lines.forEach((l, i) => {
+                    if (l.toLowerCase().includes(term)) {
+                        for (let k = Math.max(0, i-context); k < i; k++) matches.push(lines[k]);
+                        matches.push(`<span class="highlight">${l}</span>`);
+                        for (let k = i+1; k <= Math.min(lines.length-1, i+context); k++) matches.push(lines[k]);
                     }
                 });
-                resDiv.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Não localizado</span>';
+                res.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Vazio</span>';
             });
         }
 
-        // HISTÓRICO (GOOGLE SHEETS)
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
-
         async function salvarDados() {
             const params = new URLSearchParams();
             params.append('tag', document.getElementById('tagInput').value || '');
-            const textareas = container.querySelectorAll('textarea');
-            const inputs = container.querySelectorAll('.provider-title');
+            const txs = container.querySelectorAll('textarea');
+            const ips = container.querySelectorAll('.provider-title');
             for (let i = 0; i < 8; i++) {
-                params.append(`name${i+1}`, inputs[i]?.value || '');
-                params.append(`text${i+1}`, textareas[i]?.value || '');
+                params.append(`name${i+1}`, ips[i]?.value || '');
+                params.append(`text${i+1}`, txs[i]?.value || '');
             }
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-                const json = await res.json();
-                if (json.status === 'success') alert('✅ Dados salvos!');
-            } catch (err) { alert('Erro: ' + err); }
+                if ((await res.json()).status === 'success') alert('Salvo!');
+            } catch (e) { alert('Erro ao salvar'); }
         }
 
         async function carregarHistorico() {
@@ -344,24 +194,23 @@
                 data.forEach((item, i) => {
                     const opt = document.createElement("option");
                     opt.value = i;
-                    opt.textContent = `${i + 1} - ${new Date(item.date).toLocaleString()} (${item.tag || ''})`;
+                    opt.textContent = `${new Date(item.date).toLocaleString()} (${item.tag || ''})`;
                     sel.appendChild(opt);
                 });
                 sel.style.display = "inline-block";
                 sel.dataset.registros = JSON.stringify(data);
-            } catch (err) { alert("Erro ao carregar"); }
+            } catch (e) { alert("Erro ao carregar"); }
         }
 
         function aplicarHistorico() {
             const sel = document.getElementById("historicoSelect");
-            const data = JSON.parse(sel.dataset.registros);
-            const reg = data[parseInt(sel.value)];
+            const reg = JSON.parse(sel.dataset.registros)[parseInt(sel.value)];
             document.getElementById("tagInput").value = reg.tag || '';
-            const textareas = container.querySelectorAll('textarea');
-            const inputs = container.querySelectorAll('.provider-title');
+            const txs = container.querySelectorAll('textarea');
+            const ips = container.querySelectorAll('.provider-title');
             for (let i = 0; i < 8; i++) {
-                if (inputs[i]) inputs[i].value = reg[`name${i+1}`] || '';
-                if (textareas[i]) textareas[i].value = reg[`text${i+1}`] || '';
+                if (ips[i]) ips[i].value = reg[`name${i+1}`] || '';
+                if (txs[i]) txs[i].value = reg[`text${i+1}`] || '';
             }
             applyFilter();
         }
