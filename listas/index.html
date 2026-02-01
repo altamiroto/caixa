@@ -64,7 +64,6 @@
         }
         #aiProcessButton {
             background-color: #6f42c1;
-            margin-top: 5px;
         }
         #aiProcessButton:hover {
             background-color: #5a32a3;
@@ -205,7 +204,6 @@
             border: 1px solid #dee2e6;
         }
         .config-section h3 {
-            margin-top: 0;
             color: #495057;
             font-size: 16px;
         }
@@ -231,55 +229,6 @@
             border-radius: 3px;
             font-size: 12px;
             margin-left: 5px;
-        }
-        /* Seção de IA */
-        .ai-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 5px;
-            color: white;
-        }
-        .ai-section h3 {
-            margin-top: 0;
-            font-size: 16px;
-        }
-        .ai-input-group {
-            margin-top: 10px;
-        }
-        .ai-input-group input {
-            width: 100%;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.3);
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            font-size: 14px;
-        }
-        .ai-input-group input::placeholder {
-            color: rgba(255,255,255,0.7);
-        }
-        .ai-info {
-            margin-top: 10px;
-            padding: 8px;
-            background-color: rgba(255,255,255,0.2);
-            border-radius: 3px;
-            font-size: 12px;
-        }
-        .ai-provider-select {
-            margin-top: 10px;
-        }
-        .ai-provider-select select {
-            width: 100%;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.3);
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            font-size: 14px;
-        }
-        .ai-provider-select option {
-            color: #333;
         }
         .loading-indicator {
             display: none;
@@ -315,51 +264,15 @@
         <h1>Processador de Lista de Produtos <span class="info-badge">v3.0 IA</span></h1>
         <span id="copyMessage" class="copy-message">Copiado!</span>
 
-        <!-- Seção de IA -->
-        <div class="ai-section">
-            <h3>🤖 Processamento com IA (Opcional)</h3>
-            
-            <div class="ai-provider-select">
-                <label for="aiProvider">Provedor de IA:</label>
-                <select id="aiProvider">
-                    <option value="groq">Groq (Recomendado - Mais Rápido)</option>
-                    <option value="gemini">Google Gemini</option>
-                </select>
-            </div>
-
-            <div class="ai-input-group">
-                <label for="aiApiKey">API Key:</label>
-                <input type="password" id="aiApiKey" placeholder="Cole sua API key aqui (salva no navegador)">
-            </div>
-            
-            <div class="ai-info">
-                💡 <strong>Como obter:</strong><br>
-                <span id="apiKeyInfo">
-                • Groq: <a href="https://console.groq.com" target="_blank" style="color: white;">console.groq.com</a> (Gratuito - 30 req/min)<br>
-                • Gemini: <a href="https://makersuite.google.com/app/apikey" target="_blank" style="color: white;">Google AI Studio</a> (Gratuito - 15 req/min)
-                </span><br>
-                <small>A IA formata automaticamente: PRODUTO / Preço Dinheiro / Preço Cartão</small>
-            </div>
-
-            <button id="aiProcessButton" onclick="processWithAI()">🚀 Processar com IA</button>
-        </div>
-
-        <!-- Seção de configuração -->
-        <div class="config-section">
-            <h3>⚙️ Configurações de Separação de Produtos</h3>
-            <div class="config-option">
-                <input type="checkbox" id="useSingleLines">
-                <label for="useSingleLines">Separar por linha simples (cada linha = 1 produto)</label>
-            </div>
-            <div style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-radius: 3px; font-size: 13px;">
-                💡 <strong>Padrão:</strong> Separação por emojis (📺, 💻, 🍎) e quebras de linha vazias<br>
-                <strong>Ativado:</strong> Cada linha não vazia é um produto individual
-            </div>
-        </div>
-
         <div class="input-group">
             <label for="productList">Cole sua lista de produtos aqui:</label>
             <textarea id="productList" placeholder="Cole sua lista completa aqui, incluindo todos os cabeçalhos."></textarea>
+        </div>
+
+        <!-- Botões lado a lado -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <button id="processButton" onclick="processList()">📋 Processar Lista</button>
+            <button id="aiProcessButton" onclick="processWithAI()">🤖 Processar com IA</button>
         </div>
 
         <div class="loading-indicator" id="loadingIndicator">
@@ -367,14 +280,57 @@
             <div>Processando com IA... Isso pode levar alguns segundos.</div>
         </div>
 
+        <!-- Opções Avançadas (minimizadas) -->
+        <div class="config-section" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAdvanced()">
+                <h3 style="margin: 0;">⚙️ Opções Avançadas</h3>
+                <span id="toggleIcon" style="font-size: 20px;">▼</span>
+            </div>
+            
+            <div id="advancedOptions" style="display: none; margin-top: 15px;">
+                <!-- API Key -->
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 14px; color: #666;">API Key Groq:</label>
+                    <input type="password" id="aiApiKey" 
+                           value="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"
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-top: 5px;">
+                </div>
+
+                <!-- Prompt Padrão -->
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 14px; color: #666;">Prompt de Processamento:</label>
+                    <textarea id="aiPrompt" 
+                              style="width: 100%; height: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; margin-top: 5px; font-family: monospace;">Processe essa lista de produtos e retorne na estrutura:
+PRODUTO / Preço Dinheiro (se tiver) / Preço Cartão (se tiver)
+
+Regras importantes:
+- Se não houver preço de dinheiro, não coloque esse campo
+- Se não houver preço de cartão, não coloque esse campo
+- Mantenha os emojis originais se houver
+- Separe cada produto por uma linha vazia
+- Não adicione explicações, apenas retorne os produtos formatados</textarea>
+                </div>
+
+                <!-- Separação de Produtos -->
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 14px; color: #666; display: block; margin-bottom: 8px;">Modo de Separação:</label>
+                    <div class="config-option">
+                        <input type="checkbox" id="useSingleLines">
+                        <label for="useSingleLines">Separar por linha simples (cada linha = 1 produto)</label>
+                    </div>
+                    <div style="margin-top: 8px; padding: 8px; background-color: #f0f0f0; border-radius: 3px; font-size: 12px; color: #666;">
+                        💡 <strong>Padrão:</strong> Emojis (📺, 💻, 🍎) e quebras vazias | <strong>Ativado:</strong> Cada linha = 1 produto
+                    </div>
+                </div>
+            </div>
+        </div>
+        <span id="errorMessage" class="error-message" style="display: none;"></span>
+
         <div class="share-link-container" id="shareLinkContainer">
             <strong>Link para Compartilhar:</strong>
             <input type="text" id="shareableLink" readonly>
             <button id="copyLinkButton" onclick="copyShareableLink()">Copiar</button>
         </div>
-
-        <button id="processButton" onclick="processList()">Processar Lista</button>
-        <span id="errorMessage" class="error-message" style="display: none;"></span>
 
         <div class="product-list-container" style="display: none;">
             <div class="select-all-container">
@@ -389,18 +345,33 @@
     </div>
 
     <script>
-        // Salvar/Carregar API Key do localStorage
+        // Função para abrir/fechar opções avançadas
+        function toggleAdvanced() {
+            const options = document.getElementById('advancedOptions');
+            const icon = document.getElementById('toggleIcon');
+            
+            if (options.style.display === 'none') {
+                options.style.display = 'block';
+                icon.textContent = '▲';
+            } else {
+                options.style.display = 'none';
+                icon.textContent = '▼';
+            }
+        }
+
+        // Salvar/Carregar configurações do localStorage
         const API_KEY_STORAGE = 'productProcessor_apiKey';
-        const PROVIDER_STORAGE = 'productProcessor_provider';
+        const PROMPT_STORAGE = 'productProcessor_prompt';
 
         window.addEventListener('DOMContentLoaded', function() {
             const savedKey = localStorage.getItem(API_KEY_STORAGE);
-            const savedProvider = localStorage.getItem(PROVIDER_STORAGE);
+            const savedPrompt = localStorage.getItem(PROMPT_STORAGE);
+            
             if (savedKey) {
                 document.getElementById('aiApiKey').value = savedKey;
             }
-            if (savedProvider) {
-                document.getElementById('aiProvider').value = savedProvider;
+            if (savedPrompt) {
+                document.getElementById('aiPrompt').value = savedPrompt;
             }
         });
 
@@ -408,14 +379,14 @@
             localStorage.setItem(API_KEY_STORAGE, this.value);
         });
 
-        document.getElementById('aiProvider').addEventListener('change', function() {
-            localStorage.setItem(PROVIDER_STORAGE, this.value);
+        document.getElementById('aiPrompt').addEventListener('change', function() {
+            localStorage.setItem(PROMPT_STORAGE, this.value);
         });
 
         // Função para processar com IA
         async function processWithAI() {
             const apiKey = document.getElementById('aiApiKey').value.trim();
-            const provider = document.getElementById('aiProvider').value;
+            const customPrompt = document.getElementById('aiPrompt').value.trim();
             const listText = document.getElementById('productList').value.trim();
             const errorMessageDiv = document.getElementById('errorMessage');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -424,7 +395,7 @@
             errorMessageDiv.style.display = 'none';
 
             if (!apiKey) {
-                errorMessageDiv.textContent = 'Por favor, insira sua API Key antes de processar com IA.';
+                errorMessageDiv.textContent = 'Por favor, insira sua API Key nas opções avançadas.';
                 errorMessageDiv.style.display = 'block';
                 return;
             }
@@ -439,13 +410,8 @@
             aiButton.disabled = true;
 
             try {
-                let result;
-                if (provider === 'groq') {
-                    result = await processWithGroq(apiKey, listText);
-                } else if (provider === 'gemini') {
-                    result = await processWithGemini(apiKey, listText);
-                }
-
+                const result = await processWithGroq(apiKey, listText, customPrompt);
+                
                 // Substitui o conteúdo da textarea com o resultado da IA
                 document.getElementById('productList').value = result;
                 
@@ -463,7 +429,7 @@
             }
         }
 
-        async function processWithGroq(apiKey, text) {
+        async function processWithGroq(apiKey, text, customPrompt) {
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -479,15 +445,7 @@
                         },
                         {
                             role: 'user',
-                            content: `Processe essa lista de produtos e retorne na estrutura:
-PRODUTO / Preço Dinheiro (se tiver) / Preço Cartão (se tiver)
-
-Regras importantes:
-- Se não houver preço de dinheiro, não coloque esse campo
-- Se não houver preço de cartão, não coloque esse campo
-- Mantenha os emojis originais se houver
-- Separe cada produto por uma linha vazia
-- Não adicione explicações, apenas retorne os produtos formatados
+                            content: `${customPrompt}
 
 Lista para processar:
 ${text}`
@@ -505,45 +463,6 @@ ${text}`
 
             const data = await response.json();
             return data.choices[0].message.content.trim();
-        }
-
-        async function processWithGemini(apiKey, text) {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: `Processe essa lista de produtos e retorne na estrutura:
-PRODUTO / Preço Dinheiro (se tiver) / Preço Cartão (se tiver)
-
-Regras importantes:
-- Se não houver preço de dinheiro, não coloque esse campo
-- Se não houver preço de cartão, não coloque esse field
-- Mantenha os emojis originais se houver
-- Separe cada produto por uma linha vazia
-- Não adicione explicações, apenas retorne os produtos formatados
-
-Lista para processar:
-${text}`
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 2000
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || 'Erro ao chamar API Gemini');
-            }
-
-            const data = await response.json();
-            return data.candidates[0].content.parts[0].text.trim();
         }
 
         // Função de parsing simplificada
