@@ -232,19 +232,12 @@
         <div class="config-section">
             <h3>⚙️ Configurações de Separação de Produtos</h3>
             <div class="config-option">
-                <input type="checkbox" id="useEmojis" checked>
-                <label for="useEmojis">Separar por emojis (📺, 💻, 🍎, etc.)</label>
-            </div>
-            <div class="config-option">
-                <input type="checkbox" id="useEmptyLines" checked>
-                <label for="useEmptyLines">Separar por linha vazia (quebra dupla)</label>
-            </div>
-            <div class="config-option">
                 <input type="checkbox" id="useSingleLines">
                 <label for="useSingleLines">Separar por linha simples (cada linha = 1 produto)</label>
             </div>
-            <div style="margin-top: 10px; padding: 8px; background-color: #fff3cd; border-radius: 3px; font-size: 13px;">
-                💡 <strong>Dica:</strong> A opção "linha simples" desativa as outras automaticamente.
+            <div style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-radius: 3px; font-size: 13px;">
+                💡 <strong>Padrão:</strong> Separação por emojis (📺, 💻, 🍎) e quebras de linha vazias<br>
+                <strong>Ativado:</strong> Cada linha não vazia é um produto individual
             </div>
         </div>
 
@@ -275,29 +268,8 @@
     </div>
 
     <script>
-        // Gerenciamento de checkboxes mutuamente exclusivos
-        document.addEventListener('DOMContentLoaded', function() {
-            const useEmojis = document.getElementById('useEmojis');
-            const useEmptyLines = document.getElementById('useEmptyLines');
-            const useSingleLines = document.getElementById('useSingleLines');
-
-            useSingleLines.addEventListener('change', function() {
-                if (this.checked) {
-                    useEmojis.checked = false;
-                    useEmptyLines.checked = false;
-                    useEmojis.disabled = true;
-                    useEmptyLines.disabled = true;
-                } else {
-                    useEmojis.disabled = false;
-                    useEmptyLines.disabled = false;
-                }
-            });
-        });
-
-        // Função de parsing atualizada com suporte a múltiplos separadores
+        // Função de parsing simplificada
         function parseProducts(text) {
-            const useEmojis = document.getElementById('useEmojis').checked;
-            const useEmptyLines = document.getElementById('useEmptyLines').checked;
             const useSingleLines = document.getElementById('useSingleLines').checked;
             
             // Modo de linha simples: cada linha não vazia é um produto
@@ -307,6 +279,7 @@
                     .filter(line => line.length > 0);
             }
 
+            // Modo padrão: por emojis e quebras de linha vazias
             const lines = text.split('\n');
             const products = [];
             let currentProductLines = [];
@@ -316,13 +289,11 @@
             lines.forEach((line, index) => {
                 const trimmedLine = line.trim();
                 
-                // Verifica se a linha começa com emoji (se essa opção está ativa)
-                const isProductStart = useEmojis && (
-                    trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌|📲)/) || 
-                    trimmedLine.match(/^([>⚜️]|\*`)/)
-                );
+                // Verifica se a linha começa com emoji
+                const isProductStart = trimmedLine.match(/^(📺|💻|🍎|🍏|❄️|🤖|🎧|📱|🔈|🕹️|⌚|💆‍♂️|🌷|🔌|📲)/) || 
+                    trimmedLine.match(/^([>⚜️]|\*`)/);
 
-                // Verifica se encontrou linha vazia (se essa opção está ativa)
+                // Verifica se encontrou linha vazia
                 const isEmptyLine = trimmedLine === '';
 
                 // Lógica de separação por emoji
@@ -335,7 +306,7 @@
                     emptyLineCount = 0;
                 }
                 // Lógica de separação por linha vazia
-                else if (useEmptyLines && isEmptyLine) {
+                else if (isEmptyLine) {
                     emptyLineCount++;
                     // Se encontrou linha vazia e já tem conteúdo acumulado
                     if (currentProductLines.length > 0 && emptyLineCount >= 1) {
@@ -347,20 +318,15 @@
                 }
                 // Acumula linhas do produto atual
                 else if (trimmedLine) {
-                    if (!isProductBlock && !useEmojis) {
-                        // Se não está usando emojis, toda linha não vazia inicia um novo produto
-                        isProductBlock = true;
-                    }
-                    if (isProductBlock || useEmptyLines) {
+                    if (isProductBlock) {
                         currentProductLines.push(line);
                         emptyLineCount = 0;
+                    } else {
+                        // Inicia novo bloco se não estiver em um
+                        currentProductLines.push(line);
+                        isProductBlock = true;
+                        emptyLineCount = 0;
                     }
-                }
-                // Linha vazia durante um bloco (separação antiga)
-                else if (isProductBlock && !useEmptyLines) {
-                    products.push(currentProductLines.join('\n'));
-                    currentProductLines = [];
-                    isProductBlock = false;
                 }
             });
 
