@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Listas de Fornecedores - Gemini Fixed</title>
+    <title>Comparador de Listas de Fornecedores - Gemini Direct</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
         .header { text-align: center; margin-bottom: 20px; }
@@ -29,7 +29,7 @@
 
     <div class="header">
         <h1>Comparador de Fornecedores</h1>
-        <p>Busca local instantânea e análise de grande volume com Gemini AI.</p>
+        <p>Busca instantânea e inteligência Gemini para grandes volumes.</p>
     </div>
 
     <div class="controls">
@@ -46,20 +46,20 @@
             <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
         </div>
         <div class="control-group">
-            <label for="contextLines">Linhas de contexto:</label>
+            <label for="contextLines">Contexto:</label>
             <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
         </div>
     </div>
 
     <div class="advanced-ai">
         <details>
-            <summary style="cursor:pointer; font-weight:bold; color:#1a73e8;">✨ Opções Avançadas (Gemini 1.5 Flash)</summary>
+            <summary style="cursor:pointer; font-weight:bold; color:#1a73e8;">✨ Opções Avançadas (Análise de Alto Volume - Gemini)</summary>
             <div style="margin-top: 15px;">
                 <label>Produtos para comparar via IA:</label>
-                <input type="text" id="aiProductSearch" placeholder="Ex: Arroz, Feijão, Sabonete">
+                <input type="text" id="aiProductSearch" placeholder="Ex: Arroz, Feijão, Óleo">
                 <label>Prompt Personalizado:</label>
-                <textarea id="aiPrompt" style="height: 80px;">Compare os preços dos produtos [PRODUTOS] entre os fornecedores abaixo. Indique qual tem o menor preço para cada item. Se houver pesos diferentes, tente converter para comparar o custo-benefício.</textarea>
-                <button class="btn-ai" id="btnIA" onclick="consultarIA()">Analisar com Gemini</button>
+                <textarea id="aiPrompt" style="height: 80px;">Analise as listas dos fornecedores e me diga qual tem o melhor preço para cada um destes produtos: [PRODUTOS]. Se não encontrar algum, avise. Compare o custo-benefício se os pesos forem diferentes.</textarea>
+                <button class="btn-ai" id="btnIA" onclick="consultarIA()">🤖 Analisar Preços agora</button>
                 <div id="aiResponse" style="display:none;"></div>
             </div>
         </details>
@@ -67,70 +67,73 @@
 
     <div id="container-listas" class="container"></div>
 	
-    <div style="margin: 15px auto; width: 80%; max-width: 500px;">
+    <div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
         <label for="tagInput">🏷️ Tag para Histórico:</label>
-        <input type="text" id="tagInput" placeholder="Ex: Lista Outubro">
+        <input type="text" id="tagInput" placeholder="Ex: Lista Semanal">
     </div>
 
-    <div style="text-align:center; margin-bottom: 20px;">
+    <div style="margin-bottom: 15px; text-align:center;">
         <button onclick="salvarDados()">💾 Salvar</button>
         <button onclick="carregarHistorico()">📜 Histórico</button>
         <select id="historicoSelect" style="display:none;" onchange="aplicarHistorico()"></select>
     </div>
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
+    <script>
         const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
+        const container = document.getElementById('container-listas');
 
-        window.consultarIA = async function() {
+        // FUNÇÃO IA - VIA FETCH DIRETO (SEM ERRO 404)
+        async function consultarIA() {
             const btn = document.getElementById('btnIA');
-            const responseDiv = document.getElementById('aiResponse');
+            const respDiv = document.getElementById('aiResponse');
             const produtos = document.getElementById('aiProductSearch').value;
-            let promptBase = document.getElementById('aiPrompt').value;
+            const promptBase = document.getElementById('aiPrompt').value;
 
             if (!produtos) return alert("Digite os produtos.");
 
             btn.disabled = true;
             btn.innerText = "⌛ Analisando...";
-            responseDiv.style.display = "block";
-            responseDiv.innerHTML = "<em>Conectando ao Gemini...</em>";
+            respDiv.style.display = "block";
+            respDiv.innerHTML = "<em>Conectando diretamente ao Gemini Flash...</em>";
+
+            let dadosFornecedores = "";
+            document.querySelectorAll('.text-area-wrapper').forEach(w => {
+                const nome = w.querySelector('.provider-title').value;
+                const texto = w.querySelector('textarea').value;
+                if (texto.trim()) dadosFornecedores += `\nFORNECEDOR: ${nome}\n${texto}\n---\n`;
+            });
+
+            const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nLISTAS:\n" + dadosFornecedores;
 
             try {
-                const genAI = new GoogleGenerativeAI(API_KEY);
-                // Alterado para garantir compatibilidade
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-                let dados = "";
-                document.querySelectorAll('.text-area-wrapper').forEach(w => {
-                    const nome = w.querySelector('.provider-title').value;
-                    const texto = w.querySelector('textarea').value;
-                    if (texto.trim()) dados += `\nFORNECEDOR: ${nome}\n${texto}\n---\n`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptFinal }] }]
+                    })
                 });
 
-                if (!dados) throw new Error("Cole alguma lista nos campos abaixo antes de analisar.");
+                const data = await response.json();
 
-                const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nLISTAS:\n" + dados;
-
-                const result = await model.generateContent(promptFinal);
-                const response = await result.response;
-                responseDiv.innerText = response.text();
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    respDiv.innerText = data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error(data.error ? data.error.message : "Resposta inválida da API.");
+                }
             } catch (err) {
-                responseDiv.innerHTML = `<span style="color:red">Erro na API Gemini: ${err.message}</span>`;
+                respDiv.innerHTML = `<span style="color:red">Erro: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Analisar com Gemini";
+                btn.innerText = "🤖 Analisar Preços agora";
             }
         }
-    </script>
 
-    <script>
-        const container = document.getElementById('container-listas');
-        const select = document.getElementById('telaSelector');
-        const searchInput = document.getElementById('searchInput');
-
+        // --- SISTEMA DE LAYOUT E FILTRO (IGUAL AO SEU) ---
         function updateLayout() {
-            const numTelas = parseInt(select.value);
+            const numTelas = parseInt(document.getElementById('telaSelector').value);
             const current = container.children.length;
             if (numTelas > current) {
                 for (let i = current + 1; i <= numTelas; i++) {
@@ -138,7 +141,7 @@
                     div.className = 'text-area-wrapper';
                     div.innerHTML = `
                         <input type="text" class="provider-title" value="Fornecedor ${i}">
-                        <textarea id="fornecedor${i}" placeholder="Lista aqui..." oninput="applyFilter()"></textarea>
+                        <textarea id="fornecedor${i}" placeholder="Lista do fornecedor aqui..." oninput="applyFilter()"></textarea>
                         <div id="resultado${i}" class="filtered-output"></div>
                     `;
                     container.appendChild(div);
@@ -150,8 +153,8 @@
         }
 
         function applyFilter() {
-            const term = searchInput.value.toLowerCase().trim();
-            const context = parseInt(document.getElementById('contextLines').value) || 0;
+            const term = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ctxLen = parseInt(document.getElementById('contextLines').value) || 0;
             document.querySelectorAll('textarea').forEach(tx => {
                 const res = document.getElementById(`resultado${tx.id.replace('fornecedor', '')}`);
                 if (!term) { res.style.display = 'none'; return; }
@@ -160,16 +163,18 @@
                 let matches = [];
                 lines.forEach((l, i) => {
                     if (l.toLowerCase().includes(term)) {
-                        for (let k = Math.max(0, i-context); k < i; k++) matches.push(lines[k]);
+                        for (let k = Math.max(0, i-ctxLen); k < i; k++) matches.push(lines[k]);
                         matches.push(`<span class="highlight">${l}</span>`);
-                        for (let k = i+1; k <= Math.min(lines.length-1, i+context); k++) matches.push(lines[k]);
+                        for (let k = i+1; k <= Math.min(lines.length-1, i+ctxLen); k++) matches.push(lines[k]);
                     }
                 });
-                res.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Vazio</span>';
+                res.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Não encontrado</span>';
             });
         }
 
+        // --- HISTÓRICO (GOOGLE SHEETS) ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
+
         async function salvarDados() {
             const params = new URLSearchParams();
             params.append('tag', document.getElementById('tagInput').value || '');
@@ -181,7 +186,8 @@
             }
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-                if ((await res.json()).status === 'success') alert('Salvo!');
+                const json = await res.json();
+                if (json.status === 'success') alert('✅ Dados salvos!');
             } catch (e) { alert('Erro ao salvar'); }
         }
 
@@ -190,16 +196,16 @@
                 const res = await fetch(SCRIPT_URL);
                 const data = await res.json();
                 const sel = document.getElementById("historicoSelect");
-                sel.innerHTML = '<option value="">Selecione...</option>';
-                data.forEach((item, i) => {
+                sel.innerHTML = '<option value="">Selecione um histórico...</option>';
+                data.forEach((it, i) => {
                     const opt = document.createElement("option");
                     opt.value = i;
-                    opt.textContent = `${new Date(item.date).toLocaleString()} (${item.tag || ''})`;
+                    opt.textContent = `${new Date(it.date).toLocaleString()} (${it.tag || ''})`;
                     sel.appendChild(opt);
                 });
                 sel.style.display = "inline-block";
                 sel.dataset.registros = JSON.stringify(data);
-            } catch (e) { alert("Erro ao carregar"); }
+            } catch (e) { alert("Erro ao carregar histórico"); }
         }
 
         function aplicarHistorico() {
