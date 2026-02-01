@@ -60,6 +60,10 @@
             width: 100%;
             height: 100px;
             background-color: #e9e9e9;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
         .copy-actions {
             display: flex;
@@ -225,7 +229,13 @@
         .product-button:hover {
             opacity: 0.9;
         }
-        /* Novo estilo para esconder o campo de porcentagem quando não marcado */
+        .button-group-row {
+            display: flex;
+            gap: 10px;
+        }
+        .ai-button {
+            background-color: #8e44ad;
+        }
         .percent-input-container {
             display: none;
             align-items: center;
@@ -257,7 +267,10 @@
                 <label for="productList">Cole a lista de produtos:</label>
                 <textarea id="productList" placeholder="Ex:&#10;Arroz 5kg R$ 25,50&#10;Feijão R$ 8,00&#10;Açúcar 1kg R$ 6,50"></textarea>
             </div>
-            <button class="product-button" onclick="processList()">Processar Lista</button>
+            <div class="button-group-row">
+                <button class="product-button" onclick="processList()">Processar Lista</button>
+                <button class="product-button ai-button" onclick="processWithAI()">Processar com IA ✨</button>
+            </div>
             <div id="productListLoading" style="text-align: center; display: none;">Processando...</div>
             <div id="productListResult"></div>
         </div>
@@ -286,6 +299,25 @@
 
         <div id="advancedOptions">
             <div class="option-group">
+                <h4>Prompt da IA (Groq)</h4>
+                <div class="input-group">
+                    <textarea id="aiPrompt" style="height: 120px;">Você é um assistente que extrai produtos e preços de textos bagunçados. 
+Sua saída deve ser APENAS uma lista no formato: Nome do Produto R$ Valor.
+Exemplo: 
+iPhone 13 R$ 3.500,00
+Capa silicone R$ 50,00
+Não escreva introduções nem conclusões.</textarea>
+                </div>
+                <hr>
+                <h4>Arredondamento de valores</h4>
+                <div class="input-group">
+                    <label for="fatorArredondamento">Fator de arredondamento (padrão: 1):</label>
+                    <input type="number" id="fatorArredondamento" placeholder="Ex: 0.5, 0.2, 1" step="0.01" value="1" min="0.01">
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        Exemplo: 1 = arredonda para inteiro (5,51 → 6), 0,5 = arredonda para 0,50 (5,51 → 5,50 ou 6,00), 0,2 = múltiplos de 0,20 (5,51 → 5,60)
+                    </small>
+                </div>
+                <hr>
                 <h4>Personalizar texto de saída</h4>
                 
                 <div class="checkbox-item">
@@ -323,7 +355,7 @@
                 </div>
                 <hr>
                 <div class="input-group">
-                    <label for="produtoPrefix">Prefixo do produto (Sugestões 📱  🍏   🍎   📺    💻  ✳️  📦  🔌 ⬛  ):</label>
+                    <label for="produtoPrefix">Prefixo do produto (Sugestões 📱  🍏   🍎   📺    💻   ✳️  📦  🔌 ⬛  ):</label>
                     <input type="text" id="produtoPrefix" placeholder="Ex: 📦" value="➡️ ">
                 </div>
                 <div class="input-group">
@@ -382,6 +414,7 @@
         const selectAllButton = document.getElementById('selectAll');
         const deselectAllButton = document.getElementById('deselectAll');
         const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
+        const fatorArredondamentoInput = document.getElementById('fatorArredondamento');
         
         // Elementos para personalização de porcentagem
         const porcentagemPixInput = document.getElementById('porcentagemPix');
@@ -392,32 +425,14 @@
         const toggleProductList = document.getElementById('toggleProductList');
         const productListSection = document.getElementById('productListSection');
         const productListTextarea = document.getElementById('productList');
-        const productListButton = document.querySelector('.product-button');
         const productListLoading = document.getElementById('productListLoading');
         const productListResult = document.getElementById('productListResult');
+        const aiPromptTextarea = document.getElementById('aiPrompt');
 
-        // Taxas padrão transferidas para um objeto simples de referência inicial
+        const GROQ_API_KEY = "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";
+
         const taxasDeJurosPadrao = {
-            'pix': 0, // 0%
-            'debito': 0.025, // 2.5%
-            1: 0.045, // 4.5%
-            2: 0.06,  // 6.0%
-            3: 0.07,  // 7.0%
-            4: 0.075, // 7.5%
-            5: 0.08,  // 8.0%
-            6: 0.09,  // 9.0%
-            7: 0.095, // 9.5%
-            8: 0.10,  // 10.0%
-            9: 0.105, // 10.5%
-            10: 0.115, // 11.5%
-            11: 0.12, // 12.0%
-            12: 0.125, // 12.5%
-            13: 0.135, // 13.5%
-            14: 0.145, // 14.5%
-            15: 0.15, // 15.0%
-            16: 0.155, // 15.5%
-            17: 0.16, // 16.0%
-            18: 0.17  // 17.0%
+            'pix': 0, 1: 0.045, 2: 0.06, 3: 0.07, 4: 0.075, 5: 0.08, 6: 0.09, 7: 0.095, 8: 0.10, 9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125, 13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025
         };
 
         const parcelasPadrao = [3, 6, 10, 12];
@@ -429,10 +444,8 @@
             for (let i = 1; i <= 18; i++) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-                
                 const parcelaGroup = document.createElement('div');
                 parcelaGroup.className = 'parcela-input-group';
-
                 const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.id = `parcela${i}x`;
@@ -442,57 +455,83 @@
                     togglePorcentagemInput(i, input.checked);
                     calcularParcelas();
                 });
-                
                 const label = document.createElement('label');
                 label.htmlFor = `parcela${i}x`;
                 label.textContent = `${i}x`;
-                
                 parcelaGroup.appendChild(input);
                 parcelaGroup.appendChild(label);
-                
                 const percentContainer = document.createElement('div');
                 percentContainer.className = 'percent-input-container';
                 percentContainer.id = `porcentagem${i}xContainer`;
-                if (input.checked) {
-                    percentContainer.classList.add('show');
-                }
-
+                if (input.checked) percentContainer.classList.add('show');
                 const percentInput = document.createElement('input');
                 percentInput.type = 'number';
                 percentInput.id = `porcentagem${i}x`;
-                percentInput.placeholder = '%';
-                percentInput.step = '0.01';
-                // Define o valor padrão da taxa de juros (convertido de decimal para porcentagem)
                 percentInput.value = (taxasDeJurosPadrao[i] * 100).toFixed(2); 
                 percentInput.addEventListener('input', calcularParcelas);
-
-                const percentSign = document.createElement('span');
-                percentSign.textContent = '%';
-                
                 percentContainer.appendChild(percentInput);
-                percentContainer.appendChild(percentSign);
-                
+                percentContainer.appendChild(document.createTextNode('%'));
                 parcelaGroup.appendChild(percentContainer);
                 div.appendChild(parcelaGroup);
                 parcelasAvancadasDiv.appendChild(div);
             }
         }
 
-        function togglePorcentagemInput(parcelas, isChecked) {
-            const container = document.getElementById(`porcentagem${parcelas}xContainer`);
-            if (container) {
-                container.classList.toggle('show', isChecked && toggleAdvancedOptions.checked);
+        async function processWithAI() {
+            const rawText = productListTextarea.value;
+            if (!rawText) {
+                displayErrorList('Por favor, cole o texto bagunçado para a IA processar.');
+                return;
+            }
+
+            productListLoading.style.display = 'block';
+            productListResult.innerHTML = '';
+
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${GROQ_API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            { role: "system", content: aiPromptTextarea.value },
+                            { role: "user", content: rawText }
+                        ],
+                        temperature: 0.1
+                    })
+                });
+
+                const data = await response.json();
+                if (data.choices && data.choices[0]) {
+                    const aiResult = data.choices[0].message.content;
+                    productListTextarea.value = aiResult; // Atualiza o campo com o texto formatado
+                    processList(); // Chama o processamento normal da lista
+                } else {
+                    throw new Error("Resposta da IA inválida");
+                }
+            } catch (error) {
+                displayErrorList(`Erro na IA: ${error.message}`);
+            } finally {
+                productListLoading.style.display = 'none';
             }
         }
-        
-        function toggleDebitoPixPorcentagemInputs() {
-            // Pix/Dinheiro
-            const isPixHidden = hideDinheiroPixCheckbox.checked;
-            porcentagemPixContainer.classList.toggle('show', !isPixHidden && toggleAdvancedOptions.checked);
 
-            // Débito
-            const isDebitoShown = showDebitoCheckbox.checked;
-            porcentagemDebitoContainer.classList.toggle('show', isDebitoShown && toggleAdvancedOptions.checked);
+        function togglePorcentagemInput(parcelas, isChecked) {
+            const container = document.getElementById(`porcentagem${parcelas}xContainer`);
+            if (container) container.classList.toggle('show', isChecked && toggleAdvancedOptions.checked);
+        }
+
+        function toggleDebitoPixPorcentagemInputs() {
+            porcentagemPixContainer.classList.toggle('show', !hideDinheiroPixCheckbox.checked && toggleAdvancedOptions.checked);
+            porcentagemDebitoContainer.classList.toggle('show', showDebitoCheckbox.checked && toggleAdvancedOptions.checked);
+        }
+
+        function arredondarParaMultiplo(valor, fator) {
+            if (fator <= 0) fator = 1;
+            return Math.ceil(valor / fator) * fator;
         }
 
         gerarCheckboxesAvancadas();
@@ -501,19 +540,12 @@
         parcelaEspecificaInput.addEventListener('input', calcularParcelas);
         lucroAdicionalInput.addEventListener('input', calcularParcelas);
         valorEntradaInput.addEventListener('input', calcularParcelas);
+        fatorArredondamentoInput.addEventListener('input', calcularParcelas);
         
-        // Event listeners para as novas caixas de personalização
-        hideDinheiroPixCheckbox.addEventListener('change', () => {
-            toggleDebitoPixPorcentagemInputs();
-            calcularParcelas();
-        });
-        showDebitoCheckbox.addEventListener('change', () => {
-            toggleDebitoPixPorcentagemInputs();
-            calcularParcelas();
-        });
+        hideDinheiroPixCheckbox.addEventListener('change', () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
+        showDebitoCheckbox.addEventListener('change', () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
         porcentagemPixInput.addEventListener('input', calcularParcelas);
         porcentagemDebitoInput.addEventListener('input', calcularParcelas);
-        
         hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
         showTotalValueCheckbox.addEventListener('change', calcularParcelas);
         boldProductNameCheckbox.addEventListener('change', calcularParcelas);
@@ -522,380 +554,178 @@
         textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
         textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
         
-        // Event listeners para os novos inputs de porcentagem das parcelas
-        for (let i = 1; i <= 18; i++) {
-            const percentInput = document.getElementById(`porcentagem${i}x`);
-            if (percentInput) {
-                percentInput.addEventListener('input', calcularParcelas);
-            }
-        }
-
         toggleAdvancedOptions.addEventListener('change', () => {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
             toggleDebitoPixPorcentagemInputs();
-            
-            // Reajusta a visibilidade dos inputs de porcentagem das parcelas
-            const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                const parcelas = parseInt(cb.value);
-                togglePorcentagemInput(parcelas, cb.checked);
-            });
-            
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => togglePorcentagemInput(parseInt(cb.value), cb.checked));
             calcularParcelas();
         });
 
         selectAllButton.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                cb.checked = true;
-                togglePorcentagemInput(parseInt(cb.value), true);
-            });
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); });
             calcularParcelas();
         });
 
         deselectAllButton.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                cb.checked = false;
-                togglePorcentagemInput(parseInt(cb.value), false);
-            });
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); });
             calcularParcelas();
         });
         
         toggleProductList.addEventListener('change', () => {
             productListSection.classList.toggle('show', toggleProductList.checked);
             valorBaseInput.disabled = toggleProductList.checked;
-
-            if (!toggleProductList.checked) {
-                products = [];
-                selectedProducts = [];
-                productListResult.innerHTML = '';
-                valorBaseInput.disabled = false;
-            }
-
+            if (!toggleProductList.checked) { products = []; selectedProducts = []; productListResult.innerHTML = ''; }
             calcularParcelas();
         });
 
         function processList() {
-            const productList = productListTextarea.value;
-            if (!productList) {
-                displayErrorList('Por favor, cole a lista de produtos para processar.');
-                return;
-            }
-            
+            const list = productListTextarea.value;
+            if (!list) { displayErrorList('Por favor, cole a lista de produtos.'); return; }
             productListLoading.style.display = 'block';
             productListResult.innerHTML = '';
-
             try {
-                products = parseProducts(productList);
+                products = parseProducts(list);
                 displayTable(products);
                 selectedProducts = [];
                 handleProductSelection();
             } catch (error) {
-                displayErrorList(`Erro ao processar a lista: ${error.message}`);
+                displayErrorList(`Erro: ${error.message}`);
             } finally {
                 productListLoading.style.display = 'none';
             }
         }
 
         function parseProducts(text) {
-            const cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u00A9|\u00AE|[\u2000-\u3300]|\uD83C[\uDDE0-\uDDFF]|\uD83D[\uDE00-\uDE4F]|\uD83E[\uDD00-\uDDFF]/g, '');
+            const cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u00A9|\u00AE|[\u2000-\u3300]/g, '');
             const lines = cleanText.split('\n');
-            const products = [];
+            const prods = [];
             const priceRegex = /(?:R\$\s*|[-])?\s*([\d\.]+,?\d{2}|\d+)\s*$/;
-
             lines.forEach(line => {
-                const trimmedLine = line.trim();
-                if (trimmedLine.length === 0 || trimmedLine.match(/^[📌📢Ⓜ️✳️❇☑️📺]/)) {
-                    return;
-                }
-                const match = trimmedLine.match(priceRegex);
+                const trimmed = line.trim();
+                if (trimmed.length === 0 || trimmed.match(/^[📌📢Ⓜ️✳️❇☑️📺]/)) return;
+                const match = trimmed.match(priceRegex);
                 if (match) {
-                    const priceString = match[1];
-                    const price = parseFloat(priceString.replace(/\./g, '').replace(',', '.'));
-                    const productNameWithSeparators = trimmedLine.substring(0, match.index).trim();
-                    const productName = productNameWithSeparators.replace(/`|\*|\-/g, '').trim();
-                    if (productName && !isNaN(price)) {
-                        products.push({
-                            produto: productName,
-                            preco: price
-                        });
-                    }
+                    const price = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
+                    const name = trimmed.substring(0, match.index).replace(/`|\*|\-/g, '').trim();
+                    if (name && !isNaN(price)) prods.push({ produto: name, preco: price });
                 }
             });
-
-            if (products.length === 0) {
-                throw new Error('Nenhum produto foi encontrado. Verifique se o formato da lista está correto.');
-            }
-            return products;
+            if (prods.length === 0) throw new Error('Nenhum produto encontrado.');
+            return prods;
         }
 
-        function displayTable(products) {
-            let tableHTML = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th><th>Imagem</th></tr></thead><tbody>';
-            products.forEach((product, index) => {
-                const precoFormatado = `R$ ${parseFloat(product.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                const encodedProductName = encodeURIComponent(product.produto);
-                const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${encodedProductName}`;
-                
-                tableHTML += `<tr>
-                    <td><input type="checkbox" class="product-checkbox" value="${index}"></td>
-                    <td>${product.produto}</td>
-                    <td>${precoFormatado}</td>
-                    <td><a href="${googleImagesUrl}" target="_blank">Ver Imagens</a></td>
-                </tr>`;
+        function displayTable(prods) {
+            let html = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th><th>Imagem</th></tr></thead><tbody>';
+            prods.forEach((p, i) => {
+                const price = `R$ ${p.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                html += `<tr><td><input type="checkbox" class="product-checkbox" value="${i}"></td><td>${p.produto}</td><td>${price}</td><td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">Ver</a></td></tr>`;
             });
-            tableHTML += '</tbody></table>';
-            productListResult.innerHTML = tableHTML;
-            
+            html += '</tbody></table>';
+            productListResult.innerHTML = html;
             document.getElementById('selectAllProducts').addEventListener('change', (e) => {
-                const checkboxes = document.querySelectorAll('.product-checkbox');
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = e.target.checked);
                 handleProductSelection();
             });
-
-            const checkboxes = document.querySelectorAll('.product-checkbox');
-            checkboxes.forEach(cb => cb.addEventListener('change', handleProductSelection));
+            document.querySelectorAll('.product-checkbox').forEach(cb => cb.addEventListener('change', handleProductSelection));
         }
 
         function handleProductSelection() {
             selectedProducts = [];
-            const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
-            selectedCheckboxes.forEach(cb => {
-                const product = products[parseInt(cb.value)];
-                if (product) {
-                    selectedProducts.push(product);
-                }
+            document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
+                const p = products[parseInt(cb.value)];
+                if (p) selectedProducts.push(p);
             });
             calcularParcelas();
         }
 
-        function displayErrorList(message) {
-            productListResult.innerHTML = `<div class="error-message">${message}</div>`;
-        }
+        function displayErrorList(msg) { productListResult.innerHTML = `<div class="error-message">${msg}</div>`; }
 
         function getTaxa(parcelas) {
             if (toggleAdvancedOptions.checked) {
-                if (parcelas === 'pix') {
-                    const perc = parseFloat(porcentagemPixInput.value);
-                    return isNaN(perc) ? taxasDeJurosPadrao['pix'] : perc / 100;
-                }
-                if (parcelas === 'debito') {
-                    const perc = parseFloat(porcentagemDebitoInput.value);
-                    return isNaN(perc) ? taxasDeJurosPadrao['debito'] : perc / 100;
-                }
-                
-                const percentInput = document.getElementById(`porcentagem${parcelas}x`);
-                if (percentInput) {
-                    const perc = parseFloat(percentInput.value);
-                    return isNaN(perc) ? (taxasDeJurosPadrao[parcelas] || 0) : perc / 100;
-                }
+                if (parcelas === 'pix') return (parseFloat(porcentagemPixInput.value) || 0) / 100;
+                if (parcelas === 'debito') return (parseFloat(porcentagemDebitoInput.value) || 0) / 100;
+                const input = document.getElementById(`porcentagem${parcelas}x`);
+                return input ? (parseFloat(input.value) || 0) / 100 : (taxasDeJurosPadrao[parcelas] || 0);
             }
             return taxasDeJurosPadrao[parcelas] || 0;
         }
 
         function calcularParcelas() {
-            const lucroAdicional = parseFloat(lucroAdicionalInput.value) || 0;
-            const valorEntrada = parseFloat(valorEntradaInput.value) || 0;
-            const textoAdicionalLinha = textoAdicionalLinhaInput.value;
-            const textoFinalMensagem = textoFinalMensagemTextarea.value;
-            const produtoPrefix = produtoPrefixInput.value;
-            const boldProductName = boldProductNameCheckbox.checked;
-            
-            let resultado = [];
-            
-            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
-            const isSpecificParcel = !isNaN(parcelaEspecifica) && parcelaEspecifica > 0;
-            const parcelasToCalculate = isSpecificParcel ? [parcelaEspecifica] : getParcelasSelecionadas();
+            const lucro = parseFloat(lucroAdicionalInput.value) || 0;
+            const entrada = parseFloat(valorEntradaInput.value) || 0;
+            const res = [];
+            const parcelasToCalc = getParcelasSelecionadas();
 
             if (selectedProducts.length > 0) {
-                selectedProducts.forEach((product, index) => {
-                    const valorLiquido = product.preco + lucroAdicional;
-                    let nomeProduto = product.produto;
-                    
-                    if (boldProductName) {
-                        nomeProduto = `*${nomeProduto}*`;
-                    }
-                    if (produtoPrefix) {
-                        nomeProduto = `${produtoPrefix} ${nomeProduto}`;
-                    }
-                    
-                    const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
-                    if (produtoResultado) {
-                        resultado.push(produtoResultado);
-                    }
-                    if (selectedProducts.length > 1 && index < selectedProducts.length - 1) {
-                        resultado.push('\n----------------------------------------');
-                    }
+                selectedProducts.forEach((p, i) => {
+                    let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
+                    if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
+                    const r = calcularParcelasParaUmProduto(p.preco + lucro, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, false, parcelasToCalc);
+                    if (r) res.push(r);
+                    if (i < selectedProducts.length - 1) res.push('\n----------------------------------------');
                 });
             } else {
-                const valorBase = parseFloat(valorBaseInput.value);
-                if (isNaN(valorBase) || valorBase <= 0) {
-                    resultadoTextarea.value = '';
-                    return;
-                }
-                const valorLiquido = valorBase + lucroAdicional;
-                const nomeProduto = textoCabecalhoMensagemTextarea.value;
-                const produtoResultado = calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValueCheckbox.checked, nomeProduto, isSpecificParcel, parcelasToCalculate);
-                if (produtoResultado) {
-                    resultado.push(produtoResultado);
-                }
-            }
-            
-            let resultadoFinal = [...resultado];
-            const cabecalhoMensagemGlobal = textoCabecalhoMensagemTextarea.value;
-
-            if (cabecalhoMensagemGlobal && selectedProducts.length === 0) {
-                resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
-            } else if (cabecalhoMensagemGlobal && selectedProducts.length > 0) {
-                resultadoFinal = [`${cabecalhoMensagemGlobal}\n`, ...resultado];
-            } else {
-                resultadoFinal = [...resultado];
-            }
-
-            if (textoFinalMensagem) {
-                if (resultadoFinal.length > 0) {
-                    resultadoFinal.push(`\n${textoFinalMensagem}`);
-                } else {
-                    resultadoFinal.push(textoFinalMensagem);
+                const base = parseFloat(valorBaseInput.value);
+                if (!isNaN(base) && base > 0) {
+                    const r = calcularParcelasParaUmProduto(base + lucro, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, "", false, parcelasToCalc);
+                    if (r) res.push(r);
                 }
             }
 
-            resultadoTextarea.value = resultadoFinal.join('\n');
+            let final = res;
+            if (textoCabecalhoMensagemTextarea.value) final = [`${textoCabecalhoMensagemTextarea.value}\n`, ...res];
+            if (textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
+            resultadoTextarea.value = final.join('\n');
         }
 
         function getParcelasSelecionadas() {
-            let parcelaEspecifica = parseInt(parcelaEspecificaInput.value);
-            let parcelasSelecionadas = [];
-
-            if (!isNaN(parcelaEspecifica) && parcelaEspecifica > 0) {
-                parcelasSelecionadas.push(parcelaEspecifica);
-            } else {
-                if (toggleAdvancedOptions.checked) {
-                    const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-                    checkboxes.forEach(cb => {
-                        if (cb.checked) {
-                            parcelasSelecionadas.push(parseInt(cb.value));
-                        }
-                    });
-                } else {
-                    parcelasSelecionadas.push(...parcelasPadrao);
-                }
+            const spec = parseInt(parcelaEspecificaInput.value);
+            if (!isNaN(spec) && spec > 0) return [spec];
+            if (toggleAdvancedOptions.checked) {
+                const sel = [];
+                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => sel.push(parseInt(cb.value)));
+                return sel.sort((a,b) => a-b);
             }
-            // Garante que as parcelas estejam em ordem crescente
-            return parcelasSelecionadas.sort((a, b) => a - b);
+            return [...parcelasPadrao];
         }
 
-        function calcularParcelasParaUmProduto(valorLiquido, valorEntrada, textoAdicionalLinha, showTotalValue, nomeProduto, isSpecificParcel, parcelasToCalculate) {
-            let resultadoProduto = [];
-            
-            if (nomeProduto && nomeProduto.trim().length > 0) {
-                resultadoProduto.push(`\n${nomeProduto}\n`);
-            }
-            
-            const showEntradaText = !hideEntradaTextCheckbox.checked && valorEntrada > 0;
-            const textoEntrada = showEntradaText ? `Entrada de R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + ` : '';
-            const valorAParcelarBruto = valorLiquido - valorEntrada;
+        function calcularParcelasParaUmProduto(valLiq, ent, txtAdd, showTot, nome, isSpec, parcs) {
+            let res = [];
+            let fator = parseFloat(fatorArredondamentoInput.value) || 1;
+            if (nome) res.push(`\n${nome}\n`);
+            const showEnt = !hideEntradaTextCheckbox.checked && ent > 0;
+            const txtEnt = showEnt ? `Entrada de R$ ${ent.toLocaleString('pt-BR', {minimumFractionDigits:2})} + ` : '';
+            const aParc = valLiq - ent;
 
-            if (valorLiquido > valorEntrada) {
-                if (!isSpecificParcel && !hideDinheiroPixCheckbox.checked) {
-                    // Pix/Dinheiro usa a taxa personalizada ou padrão (0%)
-                    const jurosPix = getTaxa('pix');
-                    const valorAPagarPix = valorLiquido / (1 - jurosPix);
-                    const valorFormatadoPix = valorAPagarPix.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    
-                    let linhaPix = `Dinheiro/Pix: R$ ${valorFormatadoPix}`;
-                    // REMOVIDO: Linha que adicionava a informação da taxa
-                    resultadoProduto.push(linhaPix);
+            if (valLiq >= ent) {
+                if (!isSpec && !hideDinheiroPixCheckbox.checked) {
+                    const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('pix')), fator);
+                    res.push(`Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
                 }
-                
-                if (!isSpecificParcel && showDebitoCheckbox.checked && valorEntrada === 0) {
-                    // Débito usa a taxa personalizada ou padrão (2.5%)
-                    const jurosDebito = getTaxa('debito');
-                    const valorAPagarDebito = valorLiquido / (1 - jurosDebito);
-                    const valorFormatadoDebito = valorAPagarDebito.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    
-                    let linhaDebito = `Débito: R$ ${valorFormatadoDebito}`;
-                    // REMOVIDO: Linha que adicionava a informação da taxa
-                    resultadoProduto.push(linhaDebito);
+                if (!isSpec && showDebitoCheckbox.checked && ent === 0) {
+                    const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('debito')), fator);
+                    res.push(`Débito: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
                 }
-                
-                for (const parcelas of parcelasToCalculate) {
-                    const juros = getTaxa(parcelas);
-                    if (juros !== undefined) {
-                        const valorAPagar = valorAParcelarBruto / (1 - juros);
-                        const valorParcela = Math.ceil((valorAPagar / parcelas) * 100) / 100;
-                        const valorFormatado = valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        let linhaParcela = `${textoEntrada}${parcelas}x de R$ ${valorFormatado}`;
-                        
-                        if (showTotalValue) {
-                            const valorTotalComEntrada = valorEntrada + valorAPagar;
-                            const totalFormatado = valorTotalComEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            linhaParcela += ` (R$ ${totalFormatado})`;
-                        }
-                        
-                        if (textoAdicionalLinha) {
-                            linhaParcela += ` ${textoAdicionalLinha}`;
-                        }
-                        
-                        // REMOVIDO: Linha que adicionava a informação da taxa
-                        
-                        resultadoProduto.push(linhaParcela);
-                    }
-                }
-            } else if (valorLiquido === valorEntrada) {
-                 // Pix/Dinheiro usa a taxa personalizada ou padrão (0%) mesmo que a entrada cubra o total.
-                 const jurosPix = getTaxa('pix');
-                 const valorAPagarPix = valorLiquido / (1 - jurosPix);
-                 const valorFormatadoPix = valorAPagarPix.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                 
-                 let linhaPix = `Dinheiro/Pix: R$ ${valorFormatadoPix}`;
-                 // REMOVIDO: Linha que adicionava a informação da taxa
-                 resultadoProduto.push(linhaPix);
-
-            } else if (valorLiquido < valorEntrada) {
-                resultadoProduto = [`O valor da entrada não pode ser maior que o valor total.`];
+                parcs.forEach(p => {
+                    const vParc = arredondarParaMultiplo((aParc / (1 - getTaxa(p))) / p, fator);
+                    let linha = `${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                    if (showTot) linha += ` (R$ ${(ent + (vParc * p)).toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
+                    if (txtAdd) linha += ` ${txtAdd}`;
+                    res.push(linha);
+                });
             }
-            return resultadoProduto.join('\n');
+            return res.join('\n');
         }
 
         function copiarTexto() {
-            const textoParaCopiar = resultadoTextarea.value;
-            if (!textoParaCopiar || textoParaCopiar.includes('O valor da entrada não pode ser maior que o valor total.') || textoParaCopiar.includes('Erro: A parcela')) {
-                return;
-            }
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(textoParaCopiar)
-                    .then(() => {
-                        mensagemCopiado.classList.add('show');
-                        setTimeout(() => {
-                            mensagemCopiado.classList.remove('show');
-                        }, 1500);
-                    })
-                    .catch(err => {
-                        console.error('Erro ao copiar texto: ', err);
-                        alert('Não foi possível copiar o texto para a área de transferência.');
-                    });
-            } else {
-                resultadoTextarea.select();
-                document.execCommand('copy');
+            const txt = resultadoTextarea.value;
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(() => {
                 mensagemCopiado.classList.add('show');
-                setTimeout(() => {
-                    mensagemCopiado.classList.remove('show');
-                }, 1500);
-            }
-        }
-        
-        // Inicializa a visibilidade dos campos de porcentagem se as opções avançadas estiverem ativas ao carregar
-        if (toggleAdvancedOptions.checked) {
-            toggleDebitoPixPorcentagemInputs();
-            const checkboxes = document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                const parcelas = parseInt(cb.value);
-                togglePorcentagemInput(parcelas, cb.checked);
+                setTimeout(() => mensagemCopiado.classList.remove('show'), 1500);
             });
         }
         
-        // Chamada inicial para preencher o campo de resultado se houver valor base
         calcularParcelas();
     </script>
 </body>
