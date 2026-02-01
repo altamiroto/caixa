@@ -3,27 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Listas de Fornecedores</title>
+    <title>Comparador de Listas de Fornecedores - Gemini Pro</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .controls { margin-bottom: 20px; text-align: center; }
-        .control-group { display: inline-block; margin: 0 10px; text-align: left; }
-        .container { display: flex; gap: 20px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 10px; }
-        .text-area-wrapper { background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex: 0 0 300px; box-sizing: border-box; display: flex; flex-direction: column; }
-        h1 { color: #333; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; display: block; }
-        input[type="number"] { width: 50px; display: inline-block; }
-        textarea { width: 100%; height: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: both; white-space: pre; overflow: auto; margin-bottom: 15px; }
-        .filtered-output { width: 100%; height: 250px; padding: 10px; border: 1px solid #007bff; border-radius: 4px; box-sizing: border-box; font-size: 14px; background-color: #eaf3ff; overflow: auto; white-space: pre-wrap; display: none; text-align: left; flex-grow: 1; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        .highlight { background-color: yellow; font-weight: bold; }
-        
-        /* ESTILOS IA */
-        .advanced-ai { background: #fff; padding: 15px; border-radius: 8px; max-width: 900px; margin: 20px auto; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        #aiResponse { background: #f9f9f9; padding: 15px; border-left: 4px solid #673ab7; margin-top: 15px; white-space: pre-wrap; font-size: 14px; border-radius: 4px; line-height: 1.5; min-height: 40px; }
-        .btn-ai { background-color: #673ab7; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-ai:hover { background-color: #512da8; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .control-group {
+            display: inline-block;
+            margin: 0 10px;
+            text-align: left;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 10px;
+        }
+        .text-area-wrapper {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 0 0 300px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column; 
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            display: block; 
+        }
+        input[type="number"] {
+            width: 50px; 
+            display: inline-block;
+        }
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            resize: both;
+            white-space: pre; 
+            overflow: auto;
+            margin-bottom: 15px;
+        }
+        .filtered-output {
+            width: 100%;
+            height: 250px;
+            padding: 10px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #eaf3ff;
+            overflow: auto;
+            white-space: pre-wrap;
+            display: none;
+            text-align: left;
+            flex-grow: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        /* SEÇÃO IA */
+        .advanced-ai {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 900px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        #aiResponse {
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #1a73e8;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        .btn-ai {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-ai:hover { background-color: #1557b0; }
         .btn-ai:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
@@ -38,15 +144,22 @@
         <div class="control-group">
             <label for="telaSelector">Telas:</label>
             <select id="telaSelector" onchange="updateLayout()">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
-                <option value="7">7</option><option value="8">8</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
             </select>
         </div>
+        
         <div class="control-group" style="width: 250px;">
-            <label for="searchInput">Buscar produto:</label>
+            <label for="searchInput">Buscar produto (Filtro local):</label>
             <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
         </div>
+        
         <div class="control-group">
             <label for="contextLines">Linhas de contexto:</label>
             <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
@@ -55,13 +168,15 @@
 
     <div class="advanced-ai">
         <details>
-            <summary style="cursor:pointer; font-weight:bold; color:#673ab7;">🤖 Pesquisa Inteligente com IA (Groq)</summary>
+            <summary style="cursor:pointer; font-weight:bold; color:#1a73e8;">✨ Opções Avançadas (Análise com Gemini - Grande Volume)</summary>
             <div style="margin-top: 15px;">
-                <label>Produtos para comparar (IA):</label>
-                <input type="text" id="aiProductSearch" placeholder="Ex: Arroz, Feijão, Óleo">
+                <label>Produtos para comparar via IA:</label>
+                <input type="text" id="aiProductSearch" placeholder="Ex: Batata, Cebola, Sabonete">
+                
                 <label>Prompt Personalizado:</label>
-                <textarea id="aiPrompt" style="height: 80px;">Analise as listas abaixo e diga qual fornecedor tem o melhor preço para cada um destes produtos: [PRODUTOS]. Se não encontrar, avise.</textarea>
-                <button class="btn-ai" id="btnIA" onclick="consultarIA()">Consultar IA agora</button>
+                <textarea id="aiPrompt" style="height: 80px;">Analise as listas dos fornecedores abaixo. Para cada um dos produtos listados em [PRODUTOS], identifique qual fornecedor tem o menor preço. Se houver diferença de peso/unidade, tente normalizar a comparação. Se não encontrar o produto, apenas diga 'Não encontrado'.</textarea>
+                
+                <button class="btn-ai" id="btnIA" onclick="consultarIA()">🤖 Analisar Preços com Gemini</button>
                 <div id="aiResponse" style="display:none;"></div>
             </div>
         </details>
@@ -82,14 +197,75 @@
         </select>
     </div>
 
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // SUA CHAVE API GEMINI
+        const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
+
+        window.consultarIA = async function() {
+            const btn = document.getElementById('btnIA');
+            const responseDiv = document.getElementById('aiResponse');
+            const produtos = document.getElementById('aiProductSearch').value;
+            let promptBase = document.getElementById('aiPrompt').value;
+
+            if (!produtos) return alert("Por favor, digite os produtos que deseja comparar.");
+
+            btn.disabled = true;
+            btn.innerText = "⌛ Analisando Grande Volume...";
+            responseDiv.style.display = "block";
+            responseDiv.innerHTML = "<em>O Gemini está processando suas listas. Por favor, aguarde...</em>";
+
+            try {
+                const genAI = new GoogleGenerativeAI(API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                let dadosFornecedores = "";
+                const wrappers = document.querySelectorAll('.text-area-wrapper');
+                wrappers.forEach(w => {
+                    const nome = w.querySelector('.provider-title').value;
+                    const texto = w.querySelector('textarea').value;
+                    if (texto.trim()) {
+                        dadosFornecedores += `\nFORNECEDOR: ${nome}\nLISTA:\n${texto}\n---\n`;
+                    }
+                });
+
+                if (!dadosFornecedores) {
+                    alert("As listas estão vazias.");
+                    btn.disabled = false;
+                    btn.innerText = "🤖 Analisar Preços com Gemini";
+                    return;
+                }
+
+                const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nABAIXO ESTÃO AS LISTAS PARA ANÁLISE:\n" + dadosFornecedores;
+
+                const result = await model.generateContent(promptFinal);
+                const response = await result.response;
+                const text = response.text();
+
+                responseDiv.innerText = text;
+            } catch (err) {
+                responseDiv.innerHTML = `<span style="color:red">Erro na API Gemini: ${err.message}</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🤖 Analisar Preços com Gemini";
+            }
+        }
+    </script>
+
     <script>
         const container = document.getElementById('container-listas');
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
         const contextLinesInput = document.getElementById('contextLines');
-        
-        // CHAVE DE API
-        const GROQ_API_KEY = "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";
 
         function setupListeners() {
             container.querySelectorAll('textarea').forEach(textarea => {
@@ -123,77 +299,26 @@
             const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
             container.querySelectorAll('textarea').forEach(textarea => {
                 const resDiv = document.getElementById(`resultado${textarea.id.replace('fornecedor', '')}`);
-                const content = textarea.value;
                 if (!searchTerm) { resDiv.style.display = 'none'; return; }
                 resDiv.style.display = 'block';
-                const lines = content.split('\n');
+                const lines = textarea.value.split('\n');
                 let matches = [];
                 lines.forEach((line, idx) => {
-                    if (line.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").includes(searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, ""))) {
+                    const lineNorm = line.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                    const searchNorm = searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                    if (lineNorm.includes(searchNorm)) {
                         for (let i = Math.max(0, idx - contextLines); i < idx; i++) matches.push(lines[i]);
                         matches.push(`<span class="highlight">${line}</span>`);
                         for (let i = idx + 1; i <= Math.min(lines.length - 1, idx + contextLines); i++) matches.push(lines[i]);
                     }
                 });
-                resDiv.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Não encontrado</span>';
+                resDiv.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Não localizado</span>';
             });
         }
 
-        async function consultarIA() {
-            const btn = document.getElementById('btnIA');
-            const respDiv = document.getElementById('aiResponse');
-            const produtos = document.getElementById('aiProductSearch').value;
-            if (!produtos) return alert("Digite os produtos.");
-
-            btn.disabled = true;
-            btn.innerText = "⌛ Analisando...";
-            respDiv.style.display = "block";
-            respDiv.innerHTML = "<em>Conectando à Groq...</em>";
-
-            let dados = "";
-            document.querySelectorAll('.text-area-wrapper').forEach(w => {
-                const nome = w.querySelector('.provider-title').value;
-                const texto = w.querySelector('textarea').value;
-                if (texto.trim()) dados += `\nFORNECEDOR: ${nome}\n${texto}\n---`;
-            });
-
-            const promptFinal = document.getElementById('aiPrompt').value.replace("[PRODUTOS]", produtos) + "\n\nLISTAS:\n" + dados;
-
-            try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [{ role: "user", content: promptFinal }],
-                        temperature: 0.1
-                    })
-                });
-
-                const result = await response.json();
-
-                // VERIFICAÇÃO DE ERRO MELHORADA
-                if (!response.ok) {
-                    throw new Error(result.error ? result.error.message : "Erro desconhecido na API");
-                }
-
-                if (result.choices && result.choices[0] && result.choices[0].message) {
-                    respDiv.innerText = result.choices[0].message.content;
-                } else {
-                    throw new Error("A API respondeu, mas o formato está vazio.");
-                }
-
-            } catch (err) {
-                respDiv.innerHTML = `<span style="color:red">**Erro ao consultar IA:** ${err.message}</span>`;
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Consultar IA agora";
-            }
-        }
-
-        // SCRIPTS DE HISTÓRICO (MANTIDOS)
+        // HISTÓRICO (GOOGLE SHEETS)
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
+
         async function salvarDados() {
             const params = new URLSearchParams();
             params.append('tag', document.getElementById('tagInput').value || '');
@@ -206,7 +331,7 @@
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
                 const json = await res.json();
-                if (json.status === 'success') alert('✅ Salvo!');
+                if (json.status === 'success') alert('✅ Dados salvos!');
             } catch (err) { alert('Erro: ' + err); }
         }
 
