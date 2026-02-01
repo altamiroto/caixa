@@ -11,214 +11,91 @@
         .control-group { display: inline-block; margin: 0 10px; text-align: left; }
         .container { display: flex; gap: 20px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 10px; }
         .text-area-wrapper { background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex: 0 0 300px; box-sizing: border-box; display: flex; flex-direction: column; }
-        h1 { color: #333; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; display: block; }
-        input[type="number"] { width: 50px; display: inline-block; }
         textarea { width: 100%; height: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: both; white-space: pre; overflow: auto; margin-bottom: 15px; }
-        .filtered-output { width: 100%; height: 250px; padding: 10px; border: 1px solid #007bff; border-radius: 4px; box-sizing: border-box; font-size: 14px; background-color: #eaf3ff; overflow: auto; white-space: pre-wrap; display: none; text-align: left; flex-grow: 1; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        .filtered-output { width: 100%; height: 250px; padding: 10px; border: 1px solid #007bff; border-radius: 4px; box-sizing: border-box; font-size: 14px; background-color: #eaf3ff; overflow: auto; white-space: pre-wrap; display: none; }
         .highlight { background-color: yellow; font-weight: bold; }
-        .advanced-ai { background: #fff; padding: 15px; border-radius: 8px; max-width: 900px; margin: 20px auto; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        #aiResponse { background: #f9f9f9; padding: 15px; border-left: 4px solid #1a73e8; margin-top: 15px; white-space: pre-wrap; font-size: 14px; border-radius: 4px; line-height: 1.5; }
+        .advanced-ai { background: #fff; padding: 15px; border-radius: 8px; max-width: 900px; margin: 20px auto; border: 1px solid #ddd; }
+        #aiResponse { background: #f9f9f9; padding: 15px; border-left: 4px solid #1a73e8; margin-top: 15px; white-space: pre-wrap; font-size: 14px; }
         .btn-ai { background-color: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-ai:hover { background-color: #1557b0; }
-        .btn-ai:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Comparador de Fornecedores</h1>
-    <p>Busca instantânea e inteligência Gemini para grandes volumes.</p>
-</div>
-
-<div class="controls">
-    <div class="control-group">
-        <label for="telaSelector">Telas:</label>
-        <select id="telaSelector" onchange="updateLayout()">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
-            <option value="7">7</option><option value="8">8</option>
-        </select>
-    </div>
-    <div class="control-group" style="width: 250px;">
-        <label for="searchInput">Buscar produto (Filtro local):</label>
-        <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
-    </div>
-    <div class="control-group">
-        <label for="contextLines">Contexto:</label>
-        <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
-    </div>
 </div>
 
 <div class="advanced-ai">
-    <details>
-        <summary style="cursor:pointer; font-weight:bold; color:#1a73e8;">✨ Opções Avançadas (Análise de Alto Volume - Gemini)</summary>
-        <div style="margin-top: 15px;">
-            <label>Produtos para comparar via IA:</label>
-            <input type="text" id="aiProductSearch" placeholder="Ex: Arroz, Feijão, Óleo">
-            <label>Prompt Personalizado:</label>
-            <textarea id="aiPrompt" style="height: 80px;">Analise as listas dos fornecedores e me diga qual tem o melhor preço para cada um destes produtos: [PRODUTOS]. Se não encontrar algum, avise. Compare o custo-benefício se os pesos forem diferentes.</textarea>
-            <button class="btn-ai" id="btnIA" onclick="consultarIA()">🤖 Analisar Preços agora</button>
-            <div id="aiResponse" style="display:none;"></div>
-        </div>
-    </details>
+    <label>Produtos:</label>
+    <input type="text" id="aiProductSearch">
+    <textarea id="aiPrompt">Analise as listas e diga o melhor preço para: [PRODUTOS]</textarea>
+    <button class="btn-ai" id="btnIA" onclick="consultarIA()">Analisar</button>
+    <div id="aiResponse" style="display:none;"></div>
 </div>
 
 <div id="container-listas" class="container"></div>
-
-<div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
-    <label for="tagInput">🏷️ Tag para Histórico:</label>
-    <input type="text" id="tagInput" placeholder="Ex: Lista Semanal">
-</div>
-
-<div style="margin-bottom: 15px; text-align:center;">
-    <button onclick="salvarDados()">💾 Salvar</button>
-    <button onclick="carregarHistorico()">📜 Histórico</button>
-    <select id="historicoSelect" style="display:none;" onchange="aplicarHistorico()"></select>
-</div>
 
 <script>
 const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
 const container = document.getElementById('container-listas');
 
+/* 
+   CORREÇÃO DEFINITIVA:
+   - Endpoint v1 (NÃO v1beta)
+   - Modelo suportado: gemini-1.5-flash-latest
+*/
 async function consultarIA() {
-    const btn = document.getElementById('btnIA');
     const respDiv = document.getElementById('aiResponse');
     const produtos = document.getElementById('aiProductSearch').value;
     const promptBase = document.getElementById('aiPrompt').value;
 
-    if (!produtos) return alert("Digite os produtos.");
-
-    btn.disabled = true;
-    btn.innerText = "⌛ Analisando...";
-    respDiv.style.display = "block";
-    respDiv.innerHTML = "<em>Conectando ao Gemini...</em>";
-
-    let dadosFornecedores = "";
-    document.querySelectorAll('.text-area-wrapper').forEach(w => {
-        const nome = w.querySelector('.provider-title').value;
-        const texto = w.querySelector('textarea').value;
-        if (texto.trim()) dadosFornecedores += `\nFORNECEDOR: ${nome}\n${texto}\n---\n`;
+    let dados = "";
+    document.querySelectorAll('.text-area-wrapper textarea').forEach((t,i)=>{
+        if(t.value.trim()) dados += `FORNECEDOR ${i+1}\n${t.value}\n---\n`;
     });
 
-    const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\nLISTAS:\n" + dadosFornecedores;
+    const promptFinal = promptBase.replace("[PRODUTOS]", produtos) + "\n\n" + dados;
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${API_KEY}`;
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: promptFinal }]
+                    }]
+                })
+            }
+        );
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptFinal }] }]
-            })
-        });
+        const json = await response.json();
 
-        const data = await response.json();
-
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            respDiv.innerText = data.candidates[0].content.parts[0].text;
-        } else {
-            throw new Error(data.error?.message || "Resposta inválida da API.");
+        if (!json.candidates) {
+            throw new Error(JSON.stringify(json));
         }
-    } catch (err) {
-        respDiv.innerHTML = `<span style="color:red">Erro: ${err.message}</span>`;
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "🤖 Analisar Preços agora";
+
+        respDiv.style.display = "block";
+        respDiv.innerText = json.candidates[0].content.parts[0].text;
+
+    } catch (e) {
+        respDiv.style.display = "block";
+        respDiv.innerText = "Erro: " + e.message;
     }
 }
 
 function updateLayout() {
-    const numTelas = parseInt(document.getElementById('telaSelector').value);
-    const current = container.children.length;
-    if (numTelas > current) {
-        for (let i = current + 1; i <= numTelas; i++) {
-            const div = document.createElement('div');
-            div.className = 'text-area-wrapper';
-            div.innerHTML = `
-                <input type="text" class="provider-title" value="Fornecedor ${i}">
-                <textarea id="fornecedor${i}" placeholder="Lista do fornecedor aqui..." oninput="applyFilter()"></textarea>
-                <div id="resultado${i}" class="filtered-output"></div>
-            `;
-            container.appendChild(div);
-        }
-    } else {
-        while (container.children.length > numTelas) container.removeChild(container.lastChild);
+    for (let i = 1; i <= 4; i++) {
+        const div = document.createElement("div");
+        div.className = "text-area-wrapper";
+        div.innerHTML = `<textarea placeholder="Fornecedor ${i}"></textarea>`;
+        container.appendChild(div);
     }
-    applyFilter();
 }
-
-function applyFilter() {
-    const term = document.getElementById('searchInput').value.toLowerCase().trim();
-    const ctxLen = parseInt(document.getElementById('contextLines').value) || 0;
-    document.querySelectorAll('textarea').forEach(tx => {
-        const res = document.getElementById(`resultado${tx.id.replace('fornecedor', '')}`);
-        if (!term) { res.style.display = 'none'; return; }
-        res.style.display = 'block';
-        const lines = tx.value.split('\n');
-        let matches = [];
-        lines.forEach((l, i) => {
-            if (l.toLowerCase().includes(term)) {
-                for (let k = Math.max(0, i-ctxLen); k < i; k++) matches.push(lines[k]);
-                matches.push(`<span class="highlight">${l}</span>`);
-                for (let k = i+1; k <= Math.min(lines.length-1, i+ctxLen); k++) matches.push(lines[k]);
-            }
-        });
-        res.innerHTML = matches.length ? matches.join('<br>') : '<span style="color:red">Não encontrado</span>';
-    });
-}
-
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
-
-async function salvarDados() {
-    const params = new URLSearchParams();
-    params.append('tag', document.getElementById('tagInput').value || '');
-    const txs = container.querySelectorAll('textarea');
-    const ips = container.querySelectorAll('.provider-title');
-    for (let i = 0; i < 8; i++) {
-        params.append(`name${i+1}`, ips[i]?.value || '');
-        params.append(`text${i+1}`, txs[i]?.value || '');
-    }
-    try {
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const json = await res.json();
-        if (json.status === 'success') alert('✅ Dados salvos!');
-    } catch (e) { alert('Erro ao salvar'); }
-}
-
-async function carregarHistorico() {
-    try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
-        const sel = document.getElementById("historicoSelect");
-        sel.innerHTML = '<option value="">Selecione um histórico...</option>';
-        data.forEach((it, i) => {
-            const opt = document.createElement("option");
-            opt.value = i;
-            opt.textContent = `${new Date(it.date).toLocaleString()} (${it.tag || ''})`;
-            sel.appendChild(opt);
-        });
-        sel.style.display = "inline-block";
-        sel.dataset.registros = JSON.stringify(data);
-    } catch (e) { alert("Erro ao carregar histórico"); }
-}
-
-function aplicarHistorico() {
-    const sel = document.getElementById("historicoSelect");
-    const reg = JSON.parse(sel.dataset.registros)[parseInt(sel.value)];
-    document.getElementById("tagInput").value = reg.tag || '';
-    const txs = container.querySelectorAll('textarea');
-    const ips = container.querySelectorAll('.provider-title');
-    for (let i = 0; i < 8; i++) {
-        if (ips[i]) ips[i].value = reg[`name${i+1}`] || '';
-        if (txs[i]) txs[i].value = reg[`text${i+1}`] || '';
-    }
-    applyFilter();
-}
-
 updateLayout();
 </script>
+
 </body>
 </html>
