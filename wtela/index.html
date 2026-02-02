@@ -1,54 +1,659 @@
-<script type="module">
-    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
-    const API_KEY = "AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM";
-
-    window.consultarIA = async function() {
-        const btn = document.getElementById('btnIA');
-        const responseDiv = document.getElementById('aiResponse');
-        const produtos = document.getElementById('aiProductSearch').value;
-        let promptBase = document.getElementById('aiPrompt').value;
-
-        if (!produtos) return alert("Digite os produtos.");
-
-        btn.disabled = true;
-        btn.innerText = "⌛ Analisando...";
-        responseDiv.style.display = "block";
-        responseDiv.innerHTML = "<em>Conectando ao Gemini...</em>";
-
-        try {
-            const genAI = new GoogleGenerativeAI(API_KEY);
-
-            // ✅ ÚNICA CORREÇÃO REAL
-            const model = genAI.getGenerativeModel({
-                model: "gemini-1.5-flash-latest"
-            });
-
-            let dados = "";
-            document.querySelectorAll('.text-area-wrapper').forEach(w => {
-                const nome = w.querySelector('.provider-title').value;
-                const texto = w.querySelector('textarea').value;
-                if (texto.trim()) dados += `\nFORNECEDOR: ${nome}\n${texto}\n---\n`;
-            });
-
-            if (!dados) throw new Error("Cole alguma lista nos campos abaixo antes de analisar.");
-
-            const promptFinal =
-                promptBase.replace("[PRODUTOS]", produtos) +
-                "\n\nLISTAS:\n" +
-                dados;
-
-            const result = await model.generateContent(promptFinal);
-            const response = await result.response;
-
-            responseDiv.innerText = response.text();
-
-        } catch (err) {
-            responseDiv.innerHTML =
-                `<span style="color:red">Erro na API Gemini: ${err.message}</span>`;
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Analisar com Gemini";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Listas de Fornecedores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
         }
-    }
-</script>
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .control-group {
+            display: inline-block;
+            margin: 0 10px;
+            text-align: left;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 10px;
+        }
+        .text-area-wrapper {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 0 0 300px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column; 
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            display: block; 
+        }
+        input[type="number"] {
+            width: 50px; 
+            display: inline-block;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            resize: both;
+            white-space: pre; 
+            overflow: auto;
+            margin-bottom: 15px;
+        }
+
+        .filtered-output {
+            width: 100%;
+            height: 250px;
+            padding: 10px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #eaf3ff;
+            overflow: auto;
+            white-space: pre-wrap;
+            display: none;
+            text-align: left;
+            flex-grow: 1;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        #telaSelector {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        /* Estilos para Opções Avançadas */
+        .advanced-section {
+            margin: 20px auto;
+            max-width: 900px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .advanced-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        
+        .advanced-header:hover {
+            background-color: #45a049;
+        }
+        
+        .advanced-content {
+            padding: 20px;
+            display: none;
+        }
+        
+        .advanced-content.active {
+            display: block;
+        }
+        
+        .toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .ai-controls {
+            margin-bottom: 15px;
+        }
+        
+        .ai-prompt-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .ai-result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .ai-result.show {
+            display: block;
+        }
+        
+        .ai-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .ai-button:hover {
+            background-color: #45a049;
+        }
+        
+        .ai-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .loading.show {
+            display: inline;
+        }
+
+        .product-search-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Comparador de Listas de Fornecedores</h1>
+        <p>Edite os nomes e cole as mensagens de WhatsApp para comparar.</p>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="telaSelector">Telas:</label>
+            <select id="telaSelector" onchange="updateLayout()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+            </select>
+        </div>
+        
+        <div class="control-group" style="width: 250px;">
+            <label for="searchInput">Buscar produto:</label>
+            <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
+        </div>
+        
+        <div class="control-group">
+            <label for="contextLines">Linhas de contexto (antes/depois):</label>
+            <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
+        </div>
+    </div>
+
+    <div id="container-listas" class="container">
+    </div>
+	
+    <div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
+        <label for="tagInput" style="display:inline-block; margin-right: 10px;">🏷️ **Tag (Título) para o Histórico:**</label>
+        <input type="text" id="tagInput" placeholder="Ex: Lista do dia 22/10/2025" style="width: calc(100% - 10px); display: block;">
+    </div>
+
+    <div style="margin-bottom: 15px; text-align:center;">
+        <button onclick="salvarDados()">💾 Salvar Dados</button>
+        <button onclick="carregarHistorico()">📜 Consultar histórico</button>
+        <select id="historicoSelect" style="padding:6px; display:none;" onchange="aplicarHistorico()">
+            <option value="">Selecione um histórico...</option>
+        </select>
+    </div>
+
+    <!-- Seção de Opções Avançadas -->
+    <div class="advanced-section">
+        <div class="advanced-header" onclick="toggleAdvanced()">
+            <span>🤖 Opções Avançadas - Análise com IA (Gemini)</span>
+            <span class="toggle-icon" id="toggleIcon">▼</span>
+        </div>
+        <div class="advanced-content" id="advancedContent">
+            <div class="ai-controls">
+                <label for="productSearchAI">🔍 Produto(s) para buscar (separados por vírgula):</label>
+                <input type="text" id="productSearchAI" class="product-search-input" 
+                       placeholder="Ex: Arroz, Feijão, Óleo de soja">
+                
+                <label for="aiPrompt">✏️ Prompt personalizado para IA:</label>
+                <textarea id="aiPrompt" class="ai-prompt-area">Você é um assistente especializado em análise de preços de produtos. 
+
+Analise as listas de fornecedores fornecidas e identifique os MELHORES PREÇOS para os seguintes produtos: {PRODUTOS}
+
+Para cada produto solicitado:
+1. Identifique TODAS as ocorrências do produto em TODAS as listas de fornecedores
+2. Compare os preços encontrados
+3. Indique qual fornecedor oferece o MENOR PREÇO
+4. Mostre o preço mais barato encontrado
+5. Se houver variações de marca ou embalagem, especifique
+
+FORMATO DA RESPOSTA:
+Para cada produto, forneça:
+- Nome do Produto
+- Menor Preço: R$ X,XX
+- Fornecedor: [Nome do Fornecedor]
+- Detalhes: [marca, quantidade, embalagem, etc]
+
+Se um produto tiver múltiplas opções (marcas/tamanhos diferentes), liste as 3 melhores opções.
+
+Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
+                
+                <div style="margin-top: 15px;">
+                    <button class="ai-button" onclick="analyzeWithAI()" id="analyzeBtn">
+                        🚀 Analisar com IA
+                    </button>
+                    <button class="ai-button" onclick="resetPrompt()" style="background-color: #ff9800;">
+                        🔄 Restaurar Prompt Padrão
+                    </button>
+                    <span class="loading" id="loadingIndicator">⏳ Analisando...</span>
+                </div>
+            </div>
+            
+            <div class="ai-result" id="aiResult">
+                <!-- Resultado da análise aparece aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('container-listas');
+        const select = document.getElementById('telaSelector');
+        const searchInput = document.getElementById('searchInput');
+        const contextLinesInput = document.getElementById('contextLines');
+        const GEMINI_API_KEY = 'AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM';
+        const DEFAULT_PROMPT = document.getElementById('aiPrompt').value;
+
+        function toggleAdvanced() {
+            const content = document.getElementById('advancedContent');
+            const icon = document.getElementById('toggleIcon');
+            content.classList.toggle('active');
+            icon.classList.toggle('rotated');
+        }
+
+        function resetPrompt() {
+            document.getElementById('aiPrompt').value = DEFAULT_PROMPT;
+        }
+
+        async function analyzeWithAI() {
+            const productInput = document.getElementById('productSearchAI').value.trim();
+            const promptTemplate = document.getElementById('aiPrompt').value;
+            const resultDiv = document.getElementById('aiResult');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+
+            if (!productInput) {
+                alert('⚠️ Por favor, digite ao menos um produto para buscar.');
+                return;
+            }
+
+            // Coletar todas as listas de fornecedores
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('input[type=text]');
+            
+            let supplierData = '';
+            for (let i = 0; i < textareas.length; i++) {
+                const supplierName = inputs[i]?.value || `Fornecedor ${i + 1}`;
+                const supplierList = textareas[i]?.value || '';
+                
+                if (supplierList.trim()) {
+                    supplierData += `\n\n=== ${supplierName} ===\n${supplierList}`;
+                }
+            }
+
+            if (!supplierData.trim()) {
+                alert('⚠️ Nenhuma lista de fornecedor encontrada. Cole as listas antes de analisar.');
+                return;
+            }
+
+            // Preparar o prompt final
+            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) + 
+                               '\n\nLISTAS DE FORNECEDORES:' + supplierData;
+
+            // Mostrar loading
+            loadingIndicator.classList.add('show');
+            analyzeBtn.disabled = true;
+            resultDiv.classList.remove('show');
+
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: finalPrompt
+                                }]
+                            }],
+                            generationConfig: {
+                                temperature: 0.4,
+                                maxOutputTokens: 8192,
+                            }
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erro da API: ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                    const resultText = data.candidates[0].content.parts[0].text;
+                    resultDiv.textContent = resultText;
+                    resultDiv.classList.add('show');
+                } else {
+                    throw new Error('Resposta inesperada da API');
+                }
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}\n\nVerifique sua chave de API e conexão com a internet.`;
+                resultDiv.classList.add('show');
+                console.error('Erro completo:', error);
+            } finally {
+                loadingIndicator.classList.remove('show');
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function setupListeners() {
+            const textareas = container.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.removeEventListener('input', saveOriginalContent);
+                textarea.addEventListener('input', saveOriginalContent);
+            });
+        }
+
+        function saveOriginalContent(event) {
+            const textarea = event.target;
+            textarea.dataset.originalContent = textarea.value;
+            applyFilter();
+        }
+
+        function updateLayout() {
+            const numTelas = parseInt(select.value);
+            const currentNumTelas = container.children.length;
+
+            if (numTelas > currentNumTelas) {
+                for (let i = currentNumTelas + 1; i <= numTelas; i++) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'text-area-wrapper';
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = `Fornecedor ${i}`;
+
+                    const textarea = document.createElement('textarea');
+                    textarea.id = `fornecedor${i}`;
+                    textarea.dataset.originalContent = "";
+                    textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...`;
+                    
+                    const resultDiv = document.createElement('div');
+                    resultDiv.id = `resultado${i}`;
+                    resultDiv.className = 'filtered-output';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(textarea);
+                    wrapper.appendChild(resultDiv);
+                    container.appendChild(wrapper);
+                }
+            } else if (numTelas < currentNumTelas) {
+                while (container.children.length > numTelas) {
+                    container.removeChild(container.lastChild);
+                }
+            }
+            setupListeners();
+            applyFilter();
+        }
+
+        function applyFilter() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
+
+            const textareas = container.querySelectorAll('textarea');
+
+            textareas.forEach(textarea => {
+                const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
+                const resultDiv = document.getElementById(resultDivId);
+
+                let originalContent = textarea.dataset.originalContent || textarea.value;
+                
+                if (!textarea.dataset.originalContent) {
+                    textarea.dataset.originalContent = originalContent;
+                }
+
+                const lines = originalContent.split('\n');
+
+                if (searchTerm.length === 0) {
+                    resultDiv.style.display = 'none';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+                    return;
+                }
+
+                resultDiv.style.display = 'block';
+
+                let filteredLinesWithHighlight = [];
+                let lineAdded = new Array(lines.length).fill(false);
+
+                lines.forEach((line, index) => {
+                    const normalizeText = str => str
+                        .normalize('NFKD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[\u{1F300}-\u{1FAD6}]/gu, '')
+                        .replace(/[\uFE00-\uFE0F]/g, '')
+                        .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase());
+
+                    const lineNormalized = normalizeText(line);
+                    const searchNormalized = normalizeText(searchTerm);
+
+                    if (lineNormalized.includes(searchNormalized)) {
+                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                        
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
+
+                        filteredLinesWithHighlight.push(highlightedLine);
+                        lineAdded[index] = true;
+
+                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
+                            if (!lineAdded[i]) {
+                                filteredLinesWithHighlight.push(lines[i]);
+                                lineAdded[i] = true;
+                            }
+                        }
+                    }
+                });
+
+                if (filteredLinesWithHighlight.length === 0) {
+                    resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
+                } else {
+                    resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
+                }
+            });
+        }
+
+        function initializeContent() {
+            const initialTextareas = container.querySelectorAll('textarea');
+            initialTextareas.forEach(textarea => {
+                textarea.dataset.originalContent = textarea.value;
+            });
+        }
+        
+        updateLayout();
+        initializeContent();
+
+        container.addEventListener('change', (event) => {
+            if (event.target.tagName === 'TEXTAREA') {
+                event.target.dataset.originalContent = event.target.value;
+                applyFilter();
+            }
+        });
+        
+    </script>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
+
+        async function salvarDados() {
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('input[type=text]');
+            const tagInput = document.getElementById('tagInput');
+            
+            const params = new URLSearchParams();
+            params.append('tag', tagInput.value || '');
+            
+            for (let i = 0; i < 8; i++) {
+                params.append(`name${i+1}`, inputs[i]?.value || '');
+                params.append(`text${i+1}`, textareas[i]?.value || '');
+            }
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: params
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    alert('✅ Dados salvos com sucesso!');
+                } else {
+                    alert('❌ Erro do servidor: ' + JSON.stringify(json));
+                }
+            } catch (err) {
+                alert('❌ Erro ao salvar: ' + err);
+            }
+        }
+
+        async function carregarHistorico() {
+            try {
+                const res = await fetch(SCRIPT_URL);
+                if (!res.ok) throw new Error("Erro HTTP: " + res.status);
+                const data = await res.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    alert("Nenhum registro encontrado.");
+                    return;
+                }
+
+                const select = document.getElementById("historicoSelect");
+                select.innerHTML = '<option value="">Selecione um histórico...</option>';
+                data.forEach((item, index) => {
+                    const opt = document.createElement("option");
+                    const dataLocal = new Date(item.date).toLocaleString("pt-BR");
+                    const tagText = item.tag ? ` (${item.tag})` : '';
+                    opt.value = index;
+                    opt.textContent = `${index + 1} - ${dataLocal}${tagText}`;
+                    select.appendChild(opt);
+                });
+
+                select.style.display = "inline-block";
+                select.dataset.registros = JSON.stringify(data);
+            } catch (err) {
+                alert("❌ Erro ao carregar histórico: " + err);
+            }
+        }
+
+        function aplicarHistorico() {
+            const select = document.getElementById("historicoSelect");
+            const index = parseInt(select.value);
+            if (isNaN(index)) return;
+
+            const data = JSON.parse(select.dataset.registros);
+            const tagInput = document.getElementById("tagInput");
+            const registro = data[index];
+
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('input[type=text]');
+            
+            if (tagInput) tagInput.value = registro['tag'] || '';
+
+            for (let i = 0; i < 8; i++) {
+                if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
+                if (textareas[i]) textareas[i].value = registro[`text${i+1}`] || '';
+            }
+
+            alert("✅ Registro carregado na tela!");
+        }
+    </script>
+
+</body>
+</html>
