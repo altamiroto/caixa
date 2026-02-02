@@ -221,6 +221,23 @@
             border-radius: 4px;
             font-size: 14px;
         }
+
+        .api-info {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .api-info a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        .api-info a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -275,11 +292,18 @@
     <!-- Seção de Opções Avançadas -->
     <div class="advanced-section">
         <div class="advanced-header" onclick="toggleAdvanced()">
-            <span>🤖 Opções Avançadas - Análise com IA (Gemini)</span>
+            <span>🤖 Opções Avançadas - Análise com IA Google Gemini (GRATUITO)</span>
             <span class="toggle-icon" id="toggleIcon">▼</span>
         </div>
         <div class="advanced-content" id="advancedContent">
+            <div class="api-info">
+                <strong>ℹ️ Análise com IA Google Gemini:</strong><br>
+                Modelo: Gemini 2.5 Flash (1 milhão de tokens!) - O mais avançado disponível!<br>
+                Lançado em Junho 2025 - Alta qualidade e totalmente gratuito.
+            </div>
+
             <div class="ai-controls">
+
                 <label for="productSearchAI">🔍 Produto(s) para buscar (separados por vírgula):</label>
                 <input type="text" id="productSearchAI" class="product-search-input" 
                        placeholder="Ex: Arroz, Feijão, Óleo de soja">
@@ -295,6 +319,7 @@ Para cada produto solicitado:
 3. Indique qual fornecedor oferece o MENOR PREÇO
 4. Mostre o preço mais barato encontrado
 5. Se houver variações de marca ou embalagem, especifique
+6. Mostrar outras opções que atendem parcialmente a busca
 
 FORMATO DA RESPOSTA:
 Para cada produto, forneça:
@@ -308,6 +333,9 @@ Se um produto tiver múltiplas opções (marcas/tamanhos diferentes), liste as 3
 Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 
                 <div style="margin-top: 15px;">
+                    <button class="ai-button" onclick="listModels()" id="listModelsBtn" style="background-color: #2196F3;">
+                        🔍 Listar Modelos Disponíveis
+                    </button>
                     <button class="ai-button" onclick="analyzeWithAI()" id="analyzeBtn">
                         🚀 Analisar com IA
                     </button>
@@ -329,8 +357,8 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
         const contextLinesInput = document.getElementById('contextLines');
-        const GEMINI_API_KEY = 'AIzaSyA1y0FgRI5Va8CAWwlnqvvlUb3Pcn6_FdM';
         const DEFAULT_PROMPT = document.getElementById('aiPrompt').value;
+        const GEMINI_API_KEY = 'AIzaSyD4f3JBkgqTmyX4hZNe0Bh0YQ6Pe3zoSJk';
 
         function toggleAdvanced() {
             const content = document.getElementById('advancedContent');
@@ -341,6 +369,58 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
         function resetPrompt() {
             document.getElementById('aiPrompt').value = DEFAULT_PROMPT;
+        }
+
+        async function listModels() {
+            const resultDiv = document.getElementById('aiResult');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const listModelsBtn = document.getElementById('listModelsBtn');
+
+            loadingIndicator.classList.add('show');
+            listModelsBtn.disabled = true;
+            resultDiv.classList.remove('show');
+
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erro: ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                let modelsList = "📋 MODELOS DISPONÍVEIS NA SUA API:\n\n";
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach(model => {
+                        modelsList += `✅ ${model.name}\n`;
+                        if (model.displayName) modelsList += `   Nome: ${model.displayName}\n`;
+                        if (model.description) modelsList += `   Descrição: ${model.description}\n`;
+                        modelsList += "\n";
+                    });
+                } else {
+                    modelsList = "⚠️ Nenhum modelo encontrado ou erro na API.";
+                }
+
+                resultDiv.textContent = modelsList;
+                resultDiv.classList.add('show');
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Erro ao listar modelos:\n\n${error.message}\n\nSua chave API pode estar inválida ou sem permissões.`;
+                resultDiv.classList.add('show');
+                console.error('Erro completo:', error);
+            } finally {
+                loadingIndicator.classList.remove('show');
+                listModelsBtn.disabled = false;
+            }
         }
 
         async function analyzeWithAI() {
@@ -385,7 +465,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
             try {
                 const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
                     {
                         method: 'POST',
                         headers: {
@@ -404,12 +484,12 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                         })
                     }
                 );
-
+                
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(`Erro da API: ${errorData.error?.message || response.statusText}`);
                 }
-
+                
                 const data = await response.json();
                 
                 if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
@@ -421,7 +501,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 }
 
             } catch (error) {
-                resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}\n\nVerifique sua chave de API e conexão com a internet.`;
+                resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}\n\nVerifique sua conexão com a internet.`;
                 resultDiv.classList.add('show');
                 console.error('Erro completo:', error);
             } finally {
@@ -559,6 +639,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             });
         }
         
+        // Inicialização
         updateLayout();
         initializeContent();
 
