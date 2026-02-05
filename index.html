@@ -478,48 +478,61 @@ Capa silicone R$ 50,00
             }
         }
 
-		async function processWithAI() {
-			const rawText = productListTextarea.value;
-			if (!rawText) {
-				displayErrorList('Por favor, cole o texto bagunçado para a IA processar.');
-				return;
+					async function processWithAI() {
+			    const rawText = productListTextarea.value;
+			    if (!rawText) {
+			        displayErrorList('Por favor, cole o texto bagunçado para a IA processar.');
+			        return;
+			    }
+			
+			    productListLoading.style.display = 'block';
+			    productListResult.innerHTML = '';
+			
+			    try {
+			        console.log('Enviando requisição para /api/groq...');
+			        
+			        const response = await fetch("/api/groq", {
+			            method: "POST",
+			            headers: {
+			                "Content-Type": "application/json"
+			            },
+			            body: JSON.stringify({
+			                systemPrompt: aiPromptTextarea.value,
+			                messages: rawText
+			            })
+			        });
+			
+			        console.log('Status da resposta:', response.status);
+			        
+			        // Tenta pegar o JSON
+			        let data;
+			        try {
+			            data = await response.json();
+			        } catch (jsonError) {
+			            console.error('Erro ao fazer parse do JSON:', jsonError);
+			            throw new Error('Resposta inválida do servidor. Verifique os logs no Vercel.');
+			        }
+			
+			        console.log('Dados recebidos:', data);
+			        
+			        if (!response.ok) {
+			            throw new Error(data.error || data.message || "Erro na requisição");
+			        }
+			        
+			        if (data.choices && data.choices[0]) {
+			            const aiResult = data.choices[0].message.content;
+			            productListTextarea.value = aiResult;
+			            processList();
+			        } else {
+			            throw new Error("Resposta da IA não contém choices");
+			        }
+			    } catch (error) {
+			        console.error('Erro completo:', error);
+			        displayErrorList(`Erro na IA: ${error.message}`);
+			    } finally {
+			        productListLoading.style.display = 'none';
+			    }
 			}
-
-			productListLoading.style.display = 'block';
-			productListResult.innerHTML = '';
-
-			try {
-				// MUDANÇA: Agora chama sua própria API route
-				const response = await fetch("/api/groq", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({
-						systemPrompt: aiPromptTextarea.value,
-						messages: rawText
-					})
-				});
-
-				const data = await response.json();
-				
-				if (!response.ok) {
-					throw new Error(data.error || "Resposta da IA inválida");
-				}
-				
-				if (data.choices && data.choices[0]) {
-					const aiResult = data.choices[0].message.content;
-					productListTextarea.value = aiResult;
-					processList();
-				} else {
-					throw new Error("Resposta da IA inválida");
-				}
-			} catch (error) {
-				displayErrorList(`Erro na IA: ${error.message}`);
-			} finally {
-				productListLoading.style.display = 'none';
-			}
-		}
 
         function togglePorcentagemInput(parcelas, isChecked) {
             const container = document.getElementById(`porcentagem${parcelas}xContainer`);
