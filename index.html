@@ -479,7 +479,7 @@ Capa silicone R$ 50,00
             }
         }
 
-					async function processWithAI() {
+								async function processWithAI() {
 			    const rawText = productListTextarea.value;
 			    if (!rawText) {
 			        displayErrorList('Por favor, cole o texto bagunçado para a IA processar.');
@@ -490,9 +490,10 @@ Capa silicone R$ 50,00
 			    productListResult.innerHTML = '';
 			
 			    try {
-			        console.log('Enviando requisição para /api/groq...');
+			        console.log('Enviando requisição para a API...');
 			        
-			        const response = await fetch(`${API_BASE_URL}/api/groq`,
+			        // MUDANÇA: Use a URL completa do Vercel
+			        const response = await fetch("https://caixa-kal3.vercel.app/api/groq", {
 			            method: "POST",
 			            headers: {
 			                "Content-Type": "application/json"
@@ -505,13 +506,12 @@ Capa silicone R$ 50,00
 			
 			        console.log('Status da resposta:', response.status);
 			        
-			        // Tenta pegar o JSON
 			        let data;
 			        try {
 			            data = await response.json();
 			        } catch (jsonError) {
 			            console.error('Erro ao fazer parse do JSON:', jsonError);
-			            throw new Error('Resposta inválida do servidor. Verifique os logs no Vercel.');
+			            throw new Error('Resposta inválida do servidor.');
 			        }
 			
 			        console.log('Dados recebidos:', data);
