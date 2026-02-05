@@ -430,6 +430,7 @@ Capa silicone R$ 50,00
         const productListLoading = document.getElementById('productListLoading');
         const productListResult = document.getElementById('productListResult');
         const aiPromptTextarea = document.getElementById('aiPrompt');
+		const API_BASE_URL = "https://caixa-kal3.vercel.app";
 
 
         const taxasDeJurosPadrao = {
@@ -491,7 +492,7 @@ Capa silicone R$ 50,00
 			    try {
 			        console.log('Enviando requisição para /api/groq...');
 			        
-			        const response = await fetch("/api/groq", {
+			        const response = await fetch(`${API_BASE_URL}/api/groq`,
 			            method: "POST",
 			            headers: {
 			                "Content-Type": "application/json"
