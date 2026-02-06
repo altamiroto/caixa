@@ -3,746 +3,683 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Parcelas</title>
+    <title>Calculadora de Parcelas Pro</title>
     <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --accent-color: #FF9800;
+            --danger-color: #f44336;
+            --success-color: #4CAF50;
+            --bg-primary: #f4f4f9;
+            --bg-secondary: #fff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #ddd;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-hover: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --border-color: #444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #e0e0e0 100%);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
             padding: 20px;
-            box-sizing: border-box;
+            transition: all 0.3s ease;
         }
+
         .container {
             width: 100%;
-            max-width: 600px;
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 700px;
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
         }
-        h1 {
+
+        .header {
             text-align: center;
-            color: #4CAF50;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            position: relative;
         }
+
+        h1 {
+            background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--border-color);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .quick-links {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .quick-links a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            margin: 0 10px;
+            transition: color 0.3s;
+        }
+
+        .section-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .input-group {
             margin-bottom: 20px;
+            position: relative;
         }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input::placeholder {
-            color: #999;
-        }
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"], input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            -moz-appearance: textfield;
-            resize: vertical;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            background-color: #e9e9e9;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .copy-actions {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .copy-button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-        }
-        .copy-button:hover {
-            opacity: 0.9;
-        }
-        .copy-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            width: 100%;
-            text-align: center;
-        }
-        .copy-message.show {
-            opacity: 1;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        /* Estilos para as opções avançadas */
-        .advanced-options-toggle, .product-list-toggle {
+        input[type="number"], input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"], input[type="text"] {
+            padding-left: 40px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .toggle-section {
             display: flex;
             align-items: center;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            cursor: pointer;
         }
-        .advanced-options-toggle label, .product-list-toggle label {
-            margin-bottom: 0;
-            font-weight: normal;
-        }
-        .advanced-options-toggle input, .product-list-toggle input {
-            width: auto;
-            margin-right: 10px;
-        }
-        #advancedOptions, #productListSection {
+
+        .collapsible-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.5s ease-out;
+            transition: max-height 0.4s ease-out;
         }
-        #advancedOptions.show, #productListSection.show {
+
+        .collapsible-content.show {
             max-height: 5000px;
-            transition: max-height 0.5s ease-in;
         }
-        .option-group {
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            display: flex;
-            flex-direction: column;
+
+        .parcelas-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
         }
-        .option-group h4 {
-            margin: 0 0 10px 0;
-        }
-        .parcelas-checkboxes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .parcelas-checkboxes .checkbox-item {
-            display: flex;
-            align-items: flex-start;
-            flex-direction: column; 
-            width: 100%; 
-        }
-        .parcelas-checkboxes .checkbox-item .parcela-input-group {
+
+        .parcela-input-group {
             display: flex;
             align-items: center;
-            width: 100%;
-        }
-        .parcelas-checkboxes .checkbox-item input[type="checkbox"] {
-            width: auto;
-            margin-right: 5px;
-        }
-        .parcelas-checkboxes .checkbox-item input[type="number"] {
-            width: 80px; 
-            padding: 5px;
-            font-size: 14px;
-            margin-left: 10px;
-            margin-right: 5px;
-        }
-        .option-group hr {
-            border: 0;
-            height: 1px;
-            background: #ddd;
-            margin: 5px 0;
-        }
-        .select-all-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .select-all-buttons button {
-            flex: 1;
+            gap: 8px;
             padding: 8px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            cursor: pointer;
-            box-sizing: border-box;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
-        .select-all-buttons button:hover {
-            background-color: #eee;
-        }
-        .error-message {
-            color: #d9534f;
-            background-color: #f2dede;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        /* Estilos para a tabela de produtos */
-        #productListResult table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            margin-top: 15px;
-        }
-        #productListResult th, #productListResult td {
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-        #productListResult th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        #productListResult th:first-child, #productListResult td:first-child {
-            width: 20px;
-            text-align: center;
-        }
-        .product-button {
-            width: 100%;
-            padding: 10px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .product-button:hover {
-            opacity: 0.9;
-        }
-        .button-group-row {
-            display: flex;
-            gap: 10px;
-        }
-        .ai-button {
-            background-color: #8e44ad;
-        }
+
         .percent-input-container {
             display: none;
             align-items: center;
-            margin-top: 5px;
+            gap: 2px;
         }
-        .percent-input-container.show {
+
+        .percent-input-container.show { display: flex; }
+
+        .percent-input-container input {
+            width: 60px;
+            padding: 4px;
+            font-size: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
             display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-secondary { background: var(--secondary-color); color: white; }
+        .btn-accent { background: var(--accent-color); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-primary); }
+
+        .copy-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .copy-message.show { display: block; }
+
+        #productListResult table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        #productListResult th, #productListResult td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: center;
+        }
+
+        .save-banner {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            .parcelas-checkboxes { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>Calculadora de Parcelas</h1>
-
-        <p style="text-align: center;">
-            <a href="https://calculadoracaixa.netlify.app/listas/">Processamento Lista de Produtos</a>
-            |
-            <a href="https://calculadoracaixa.netlify.app/gestaoclick/">Estoque Produtos</a>
-        </p>
-
-        <div class="product-list-toggle">
-            <input type="checkbox" id="toggleProductList">
-            <label for="toggleProductList">Usar lista de produtos</label>
+        <div class="header">
+            <h1>💰 Calculadora de Parcelas Pro</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
         </div>
 
-        <div id="productListSection">
+        <div class="quick-links">
+            <a href="https://calculadoracaixa.netlify.app/listas/" target="_blank">📋 Listas</a> |
+            <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
+        </div>
+
+        <div class="toggle-section save-banner">
+            <input type="checkbox" id="saveLocalStorage">
+            <label for="saveLocalStorage">💾 Salvar configurações automaticamente neste navegador</label>
+        </div>
+
+        <div class="toggle-section">
+            <input type="checkbox" id="toggleProductList" onchange="toggleProductListSection()">
+            <label for="toggleProductList">📦 Usar lista de produtos</label>
+        </div>
+
+        <div id="productListSection" class="collapsible-content">
+            <div class="section-card">
+                <textarea id="productList" placeholder="Ex: iPhone 13 R$ 3.500,00"></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-secondary" onclick="processList()">📊 Processar</button>
+                    <button class="btn btn-accent" onclick="processWithAI()">✨ IA (Groq)</button>
+                </div>
+                <div id="productListLoading" style="display:none; text-align:center; padding:10px;">Processando...</div>
+                <div id="productListResult"></div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">💵 Valores Principais</div>
             <div class="input-group">
-                <label for="productList">Cole a lista de produtos:</label>
-                <textarea id="productList" placeholder="Ex:&#10;Arroz 5kg R$ 25,50&#10;Feijão R$ 8,00&#10;Açúcar 1kg R$ 6,50"></textarea>
-            </div>
-            <div class="button-group-row">
-                <button class="product-button" onclick="processList()">Processar Lista</button>
-                <button class="product-button ai-button" onclick="processWithAI()">Processar com IA ✨</button>
-            </div>
-            <div id="productListLoading" style="text-align: center; display: none;">Processando...</div>
-            <div id="productListResult"></div>
-        </div>
-        
-        <div class="input-group">
-            <label for="valorBase">Valor Base (R$):</label>
-            <input type="number" id="valorBase" placeholder="Ex: 500.00" step="0.01">
-        </div>
-        <div class="input-group">
-            <label for="parcelaEspecifica">Parcela Específica (opcional):</label>
-            <input type="number" id="parcelaEspecifica" placeholder="Ex: 8" step="1">
-        </div>
-        <div class="input-group">
-            <label for="lucroAdicional">Lucro Adicional (opcional, R$):</label>
-            <input type="number" id="lucroAdicional" placeholder="Ex: 50.00" step="0.01">
-        </div>
-        <div class="input-group">
-            <label for="valorEntrada">Valor da Entrada (opcional, R$):</label>
-            <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01">
-        </div>
-
-        <div class="advanced-options-toggle">
-            <input type="checkbox" id="toggleAdvancedOptions">
-            <label for="toggleAdvancedOptions">Opções Avançadas</label>
-        </div>
-
-        <div id="advancedOptions">
-            <div class="option-group">
-                <h4>Prompt da IA (Groq)</h4>
-                <div class="input-group">
-                    <textarea id="aiPrompt" style="height: 120px;">Você é um assistente que extrai produtos e preços de textos bagunçados. 
-Sua saída deve ser APENAS uma lista no formato: Nome do Produto R$ Valor.
-Exemplo: 
-iPhone 13 R$ 3.500,00
-Capa silicone R$ 50,00
-
-- Caso tenha informações adicionais do produto colocar entre parênteses, após o nome do produto, no formato (informação 1/informação 2, etc)
--Não escreva introduções nem conclusões.</textarea>
+                <label>Valor Base (R$):</label>
+                <div class="input-with-icon"><span class="input-icon">💲</span>
+                    <input type="number" id="valorBase" step="0.01">
                 </div>
-                <hr>
-                <h4>Arredondamento de valores</h4>
-                <div class="input-group">
-                    <label for="fatorArredondamento">Fator de arredondamento (padrão: 1):</label>
-                    <input type="number" id="fatorArredondamento" placeholder="Ex: 0.5, 0.2, 1" step="0.01" value="1" min="0.01">
-                    <small style="color: #666; margin-top: 5px; display: block;">
-                        Exemplo: 1 = arredonda para inteiro (5,51 → 6), 0,5 = arredonda para 0,50 (5,51 → 5,50 ou 6,00), 0,2 = múltiplos de 0,20 (5,51 → 5,60)
-                    </small>
+            </div>
+            <div class="input-group">
+                <label>Parcela Específica (Opcional):</label>
+                <div class="input-with-icon"><span class="input-icon">🔢</span>
+                    <input type="number" id="parcelaEspecifica" min="1" max="18">
                 </div>
-                <hr>
-                <h4>Personalizar texto de saída</h4>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">🎁 Acréscimos e Descontos</div>
+            <div class="input-group">
+                <label>Acréscimo/Lucro (R$):</label>
+                <input type="number" id="lucroAdicional" step="0.01">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="input-group">
+                    <label>Desconto (%)</label>
+                    <input type="number" id="descontoPercentual">
+                </div>
+                <div class="input-group">
+                    <label>Desconto (R$)</label>
+                    <input type="number" id="descontoFixo">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Desconto EXTRA Pix (%)</label>
+                <input type="number" id="descontoPixExtra">
+            </div>
+            <div class="input-group">
+                <label>Valor da Entrada (R$):</label>
+                <input type="number" id="valorEntrada" step="0.01">
+            </div>
+            <div id="discountSummary" style="display:none; background:#fff3cd; padding:10px; border-radius:10px; font-size:14px;">
+                <p id="discountDetails"></p>
+            </div>
+        </div>
+
+        <div class="toggle-section">
+            <input type="checkbox" id="toggleAdvancedOptions" onchange="toggleAdvancedSection()">
+            <label for="toggleAdvancedOptions">⚙️ Opções Avançadas (Taxas e Mensagens)</label>
+        </div>
+
+        <div id="advancedOptions" class="collapsible-content">
+            <div class="section-card">
+                <label>Prompt da IA:</label>
+                <textarea id="aiPrompt">Você é um assistente que extrai produtos e preços. Saída: Nome R$ Valor.</textarea>
                 
-                <div class="checkbox-item">
-                    <div class="parcela-input-group">
-                        <input type="checkbox" id="hideDinheiroPix">
-                        <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
-                        <div class="percent-input-container" id="porcentagemPixContainer">
-                            <input type="number" id="porcentagemPix" placeholder="%" step="0.01" value="0">
-                            <span>%</span>
-                        </div>
+                <label style="margin-top:15px">Fator Arredondamento (ex: 1 ou 0.5):</label>
+                <input type="number" id="fatorArredondamento" value="1" step="0.1">
+
+                <div style="margin-top:15px">
+                    <div class="parcela-input-group"><input type="checkbox" id="hideDinheiroPix"><label>Ocultar Pix</label>
+                        <div class="percent-input-container" id="porcentagemPixContainer"><input type="number" id="porcentagemPix" value="0">%</div>
                     </div>
-                </div>
-                <div class="checkbox-item">
-                    <div class="parcela-input-group">
-                        <input type="checkbox" id="showDebito">
-                        <label for="showDebito">Mostrar "Débito"</label>
-                        <div class="percent-input-container" id="porcentagemDebitoContainer">
-                            <input type="number" id="porcentagemDebito" placeholder="%" step="0.01" value="2.5">
-                            <span>%</span>
-                        </div>
+                    <div class="parcela-input-group"><input type="checkbox" id="showDebito"><label>Mostrar Débito</label>
+                        <div class="percent-input-container" id="porcentagemDebitoContainer"><input type="number" id="porcentagemDebito" value="2.5">%</div>
                     </div>
+                    <div class="parcela-input-group"><input type="checkbox" id="showComparison"><label>Mostrar Economia</label></div>
+                    <div class="parcela-input-group"><input type="checkbox" id="hideEntradaText"><label>Ocultar texto "Entrada"</label></div>
+                    <div class="parcela-input-group"><input type="checkbox" id="showTotalValue"><label>Mostrar Valor Total</label></div>
+                    <div class="parcela-input-group"><input type="checkbox" id="boldProductName" checked><label>Negrito no Nome</label></div>
                 </div>
+
+                <label style="margin-top:15px">Prefixo:</label>
+                <input type="text" id="produtoPrefix" value="➡️ ">
                 
-                <div class="checkbox-item">
-                    <input type="checkbox" id="hideEntradaText">
-                    <label for="hideEntradaText">Não mostrar "Entrada"</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="showTotalValue">
-                    <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
-                </div>
-                <div class="checkbox-item" >
-                    <input type="checkbox" id="boldProductName" checked>
-                    <label for="boldProductName">Nome do produto em negrito (*texto*)</label>
-                </div>
-                <hr>
-                <div class="input-group">
-                    <label for="produtoPrefix">Prefixo do produto (Sugestões 📱  🍏   🍎   📺    💻   ✳️  📦  🔌 ⬛  ):</label>
-                    <input type="text" id="produtoPrefix" placeholder="Ex: 📦" value="➡️ ">
-                </div>
-                <div class="input-group">
-                    <label for="textoAdicionalLinha">Texto adicional por linha (opcional):</label>
-                    <input type="text" id="textoAdicionalLinha" placeholder="Ex: 'sem juros no cartão'">
-                </div>
-                <hr>
-                <h4>Selecionar parcelas e personalizar %</h4>
-                <div class="parcelas-checkboxes" id="parcelasAvancadas">
-                </div>
-                <div class="select-all-buttons">
-                    <button type="button" id="selectAll">Marcar Todas</button>
-                    <button type="button" id="deselectAll">Desmarcar Todas</button>
-                </div>
+                <label>Cabeçalho:</label>
+                <textarea id="textoCabecalhoMensagem"></textarea>
                 
-                <div class="input-group" style="margin-top: 10px;">
-                    <label for="textoCabecalhoMensagem">Mensagem de cabeçalho (opcional):</label>
-                    <textarea id="textoCabecalhoMensagem" placeholder="Ex: 'Olá, segue as opções de pagamento:'"></textarea>
-                </div>
-                <div class="input-group" style="margin-top: 10px;">
-                    <label for="textoFinalMensagem">Texto final da mensagem (opcional):</label>
-                    <textarea id="textoFinalMensagem" placeholder="Ex: 'Entre em contato para mais informações!'"></textarea>
-                </div>
+                <label>Texto adicional por linha:</label>
+                <input type="text" id="textoAdicionalLinha">
+
+                <label>Rodapé:</label>
+                <textarea id="textoFinalMensagem"></textarea>
+
+                <h4 style="margin-top:20px">Configurar Taxas e Parcelas:</h4>
+                <div class="parcelas-checkboxes" id="parcelasAvancadas"></div>
             </div>
         </div>
 
-        <div class="input-group">
-            <label for="resultado">Resultado:</label>
-            <textarea id="resultado" readonly placeholder="Os valores de parcelamento aparecerão aqui."></textarea>
-        </div>
-        <div class="copy-actions">
-            <button type="button" class="copy-button" onclick="copiarTexto()">Copiar Texto</button>
-            <span id="mensagemCopiado" class="copy-message">Copiado!</span>
+        <div class="section-card">
+            <div class="section-title">📋 Resultado</div>
+            <textarea id="resultado" readonly style="height:200px; font-family:monospace;"></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-primary" onclick="copiarTexto()">📋 Copiar</button>
+                <button class="btn btn-outline" onclick="limparCampos()">🗑️ Limpar</button>
+            </div>
+            <div id="mensagemCopiado" class="copy-message">✅ Copiado!</div>
         </div>
     </div>
 
     <script>
-        const valorBaseInput = document.getElementById('valorBase');
-        const parcelaEspecificaInput = document.getElementById('parcelaEspecifica');
-        const lucroAdicionalInput = document.getElementById('lucroAdicional');
-        const valorEntradaInput = document.getElementById('valorEntrada');
-        const resultadoTextarea = document.getElementById('resultado');
-        const mensagemCopiado = document.getElementById('mensagemCopiado');
-
-        const toggleAdvancedOptions = document.getElementById('toggleAdvancedOptions');
-        const advancedOptionsDiv = document.getElementById('advancedOptions');
-        const hideDinheiroPixCheckbox = document.getElementById('hideDinheiroPix');
-        const showDebitoCheckbox = document.getElementById('showDebito');
-        const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
-        const showTotalValueCheckbox = document.getElementById('showTotalValue');
-        const boldProductNameCheckbox = document.getElementById('boldProductName');
-        const textoAdicionalLinhaInput = document.getElementById('textoAdicionalLinha');
-        const produtoPrefixInput = document.getElementById('produtoPrefix');
-        const textoFinalMensagemTextarea = document.getElementById('textoFinalMensagem');
-        const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
-        const selectAllButton = document.getElementById('selectAll');
-        const deselectAllButton = document.getElementById('deselectAll');
-        const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
-        const fatorArredondamentoInput = document.getElementById('fatorArredondamento');
-        
-        // Elementos para personalização de porcentagem
-        const porcentagemPixInput = document.getElementById('porcentagemPix');
-        const porcentagemDebitoInput = document.getElementById('porcentagemDebito');
-        const porcentagemPixContainer = document.getElementById('porcentagemPixContainer');
-        const porcentagemDebitoContainer = document.getElementById('porcentagemDebitoContainer');
-
-        const toggleProductList = document.getElementById('toggleProductList');
-        const productListSection = document.getElementById('productListSection');
-        const productListTextarea = document.getElementById('productList');
-        const productListLoading = document.getElementById('productListLoading');
-        const productListResult = document.getElementById('productListResult');
-        const aiPromptTextarea = document.getElementById('aiPrompt');
-		const API_BASE_URL = "https://caixa-kal3.vercel.app";
-
-
-        const taxasDeJurosPadrao = {
-            'pix': 0, 1: 0.045, 2: 0.06, 3: 0.07, 4: 0.075, 5: 0.08, 6: 0.09, 7: 0.095, 8: 0.10, 9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125, 13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025
-        };
-
+        const taxasDeJurosPadrao = { 'pix': 0, 1: 0.045, 2: 0.06, 3: 0.07, 4: 0.075, 5: 0.08, 6: 0.09, 7: 0.095, 8: 0.10, 9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125, 13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025 };
         const parcelasPadrao = [3, 6, 10, 12];
         let products = [];
         let selectedProducts = [];
 
-        function gerarCheckboxesAvancadas() {
-            parcelasAvancadasDiv.innerHTML = '';
+        // --- LÓGICA DE LOCALSTORAGE (SALVAMENTO) ---
+        const fieldsToSave = [
+            'aiPrompt', 'fatorArredondamento', 'produtoPrefix', 
+            'textoAdicionalLinha', 'textoCabecalhoMensagem', 'textoFinalMensagem',
+            'hideDinheiroPix', 'showDebito', 'showComparison', 'hideEntradaText', 
+            'showTotalValue', 'boldProductName', 'porcentagemPix', 'porcentagemDebito',
+            'descontoPercentual', 'descontoFixo', 'descontoPixExtra', 'lucroAdicional'
+        ];
+
+        function saveSettings() {
+            if (!document.getElementById('saveLocalStorage').checked) return;
+            const settings = {};
+            fieldsToSave.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) settings[id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+            const taxas = {};
             for (let i = 1; i <= 18; i++) {
-                const div = document.createElement('div');
-                div.className = 'checkbox-item';
-                const parcelaGroup = document.createElement('div');
-                parcelaGroup.className = 'parcela-input-group';
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.id = `parcela${i}x`;
-                input.value = i;
-                input.checked = parcelasPadrao.includes(i);
-                input.addEventListener('change', () => {
-                    togglePorcentagemInput(i, input.checked);
-                    calcularParcelas();
-                });
-                const label = document.createElement('label');
-                label.htmlFor = `parcela${i}x`;
-                label.textContent = `${i}x`;
-                parcelaGroup.appendChild(input);
-                parcelaGroup.appendChild(label);
-                const percentContainer = document.createElement('div');
-                percentContainer.className = 'percent-input-container';
-                percentContainer.id = `porcentagem${i}xContainer`;
-                if (input.checked) percentContainer.classList.add('show');
-                const percentInput = document.createElement('input');
-                percentInput.type = 'number';
-                percentInput.id = `porcentagem${i}x`;
-                percentInput.value = (taxasDeJurosPadrao[i] * 100).toFixed(2); 
-                percentInput.addEventListener('input', calcularParcelas);
-                percentContainer.appendChild(percentInput);
-                percentContainer.appendChild(document.createTextNode('%'));
-                parcelaGroup.appendChild(percentContainer);
-                div.appendChild(parcelaGroup);
-                parcelasAvancadasDiv.appendChild(div);
+                const input = document.getElementById(`porcentagem${i}x`);
+                const check = document.getElementById(`parcela${i}x`);
+                if (input) taxas[`taxa${i}`] = input.value;
+                if (check) taxas[`check${i}`] = check.checked;
+            }
+            settings['taxasCustom'] = taxas;
+            settings['autoSaveActive'] = true;
+            localStorage.setItem('calcPro_v1', JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('calcPro_v1');
+            if (!saved) return;
+            const settings = JSON.parse(saved);
+            if (!settings.autoSaveActive) return;
+
+            document.getElementById('saveLocalStorage').checked = true;
+            fieldsToSave.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && settings[id] !== undefined) {
+                    if (el.type === 'checkbox') el.checked = settings[id];
+                    else el.value = settings[id];
+                }
+            });
+            if (settings.taxasCustom) {
+                for (let i = 1; i <= 18; i++) {
+                    const input = document.getElementById(`porcentagem${i}x`);
+                    const check = document.getElementById(`parcela${i}x`);
+                    if (input && settings.taxasCustom[`taxa${i}`]) input.value = settings.taxasCustom[`taxa${i}`];
+                    if (check && settings.taxasCustom[`check${i}`] !== undefined) check.checked = settings.taxasCustom[`check${i}`];
+                }
             }
         }
 
-								async function processWithAI() {
-			    const rawText = productListTextarea.value;
-			    if (!rawText) {
-			        displayErrorList('Por favor, cole o texto bagunçado para a IA processar.');
-			        return;
-			    }
-			
-			    productListLoading.style.display = 'block';
-			    productListResult.innerHTML = '';
-			
-			    try {
-			        console.log('Enviando requisição para a API...');
-			        
-			        // MUDANÇA: Use a URL completa do Vercel
-			        const response = await fetch("https://caixa-kal3.vercel.app/api/groq", {
-			            method: "POST",
-			            headers: {
-			                "Content-Type": "application/json"
-			            },
-			            body: JSON.stringify({
-			                systemPrompt: aiPromptTextarea.value,
-			                messages: rawText
-			            })
-			        });
-			
-			        console.log('Status da resposta:', response.status);
-			        
-			        let data;
-			        try {
-			            data = await response.json();
-			        } catch (jsonError) {
-			            console.error('Erro ao fazer parse do JSON:', jsonError);
-			            throw new Error('Resposta inválida do servidor.');
-			        }
-			
-			        console.log('Dados recebidos:', data);
-			        
-			        if (!response.ok) {
-			            throw new Error(data.error || data.message || "Erro na requisição");
-			        }
-			        
-			        if (data.choices && data.choices[0]) {
-			            const aiResult = data.choices[0].message.content;
-			            productListTextarea.value = aiResult;
-			            processList();
-			        } else {
-			            throw new Error("Resposta da IA não contém choices");
-			        }
-			    } catch (error) {
-			        console.error('Erro completo:', error);
-			        displayErrorList(`Erro na IA: ${error.message}`);
-			    } finally {
-			        productListLoading.style.display = 'none';
-			    }
-			}
+        // --- FUNÇÕES DE INTERFACE ---
+        function toggleTheme() {
+            const body = document.body;
+            const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
 
-        function togglePorcentagemInput(parcelas, isChecked) {
-            const container = document.getElementById(`porcentagem${parcelas}xContainer`);
-            if (container) container.classList.toggle('show', isChecked && toggleAdvancedOptions.checked);
+        function toggleProductListSection() {
+            document.getElementById('productListSection').classList.toggle('show', document.getElementById('toggleProductList').checked);
+            document.getElementById('valorBase').disabled = document.getElementById('toggleProductList').checked;
+            calcularParcelas();
+        }
+
+        function toggleAdvancedSection() {
+            document.getElementById('advancedOptions').classList.toggle('show', document.getElementById('toggleAdvancedOptions').checked);
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
         }
 
         function toggleDebitoPixPorcentagemInputs() {
-            porcentagemPixContainer.classList.toggle('show', !hideDinheiroPixCheckbox.checked && toggleAdvancedOptions.checked);
-            porcentagemDebitoContainer.classList.toggle('show', showDebitoCheckbox.checked && toggleAdvancedOptions.checked);
+            document.getElementById('porcentagemPixContainer').classList.toggle('show', !document.getElementById('hideDinheiroPix').checked);
+            document.getElementById('porcentagemDebitoContainer').classList.toggle('show', document.getElementById('showDebito').checked);
         }
 
-        function arredondarParaMultiplo(valor, fator) {
-            if (fator <= 0) fator = 1;
+        function gerarCheckboxesAvancadas() {
+            const container = document.getElementById('parcelasAvancadas');
+            container.innerHTML = '';
+            for (let i = 1; i <= 18; i++) {
+                const div = document.createElement('div');
+                div.className = 'parcela-input-group';
+                const checked = parcelasPadrao.includes(i) ? 'checked' : '';
+                div.innerHTML = `
+                    <input type="checkbox" id="parcela${i}x" value="${i}" ${checked} onchange="togglePorcentagemInput(${i}, this.checked); calcularParcelas();">
+                    <label for="parcela${i}x">${i}x</label>
+                    <div class="percent-input-container ${checked?'show':''}" id="porcentagem${i}xContainer">
+                        <input type="number" id="porcentagem${i}x" value="${(taxasDeJurosPadrao[i]*100).toFixed(2)}" oninput="calcularParcelas()">%
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function togglePorcentagemInput(i, isChecked) {
+            document.getElementById(`porcentagem${i}xContainer`).classList.toggle('show', isChecked);
+        }
+
+        // --- CÁLCULOS ---
+        function arredondar(valor) {
+            const fator = parseFloat(document.getElementById('fatorArredondamento').value) || 1;
             return Math.ceil(valor / fator) * fator;
         }
 
-        gerarCheckboxesAvancadas();
-
-        valorBaseInput.addEventListener('input', calcularParcelas);
-        parcelaEspecificaInput.addEventListener('input', calcularParcelas);
-        lucroAdicionalInput.addEventListener('input', calcularParcelas);
-        valorEntradaInput.addEventListener('input', calcularParcelas);
-        fatorArredondamentoInput.addEventListener('input', calcularParcelas);
-        
-        hideDinheiroPixCheckbox.addEventListener('change', () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        showDebitoCheckbox.addEventListener('change', () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        porcentagemPixInput.addEventListener('input', calcularParcelas);
-        porcentagemDebitoInput.addEventListener('input', calcularParcelas);
-        hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
-        showTotalValueCheckbox.addEventListener('change', calcularParcelas);
-        boldProductNameCheckbox.addEventListener('change', calcularParcelas);
-        textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
-        produtoPrefixInput.addEventListener('input', calcularParcelas);
-        textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
-        textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
-        
-        toggleAdvancedOptions.addEventListener('change', () => {
-            advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
-            toggleDebitoPixPorcentagemInputs();
-            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => togglePorcentagemInput(parseInt(cb.value), cb.checked));
-            calcularParcelas();
-        });
-
-        selectAllButton.addEventListener('click', () => {
-            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); });
-            calcularParcelas();
-        });
-
-        deselectAllButton.addEventListener('click', () => {
-            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); });
-            calcularParcelas();
-        });
-        
-        toggleProductList.addEventListener('change', () => {
-            productListSection.classList.toggle('show', toggleProductList.checked);
-            valorBaseInput.disabled = toggleProductList.checked;
-            if (!toggleProductList.checked) { products = []; selectedProducts = []; productListResult.innerHTML = ''; }
-            calcularParcelas();
-        });
-
-        function processList() {
-            const list = productListTextarea.value;
-            if (!list) { displayErrorList('Por favor, cole a lista de produtos.'); return; }
-            productListLoading.style.display = 'block';
-            productListResult.innerHTML = '';
-            try {
-                products = parseProducts(list);
-                displayTable(products);
-                selectedProducts = [];
-                handleProductSelection();
-            } catch (error) {
-                displayErrorList(`Erro: ${error.message}`);
-            } finally {
-                productListLoading.style.display = 'none';
-            }
-        }
-
-        function parseProducts(text) {
-            const cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u00A9|\u00AE|[\u2000-\u3300]/g, '');
-            const lines = cleanText.split('\n');
-            const prods = [];
-            const priceRegex = /(?:R\$\s*|[-])?\s*([\d\.]+,?\d{2}|\d+)\s*$/;
-            lines.forEach(line => {
-                const trimmed = line.trim();
-                if (trimmed.length === 0 || trimmed.match(/^[📌📢Ⓜ️✳️❇☑️📺]/)) return;
-                const match = trimmed.match(priceRegex);
-                if (match) {
-                    const price = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
-                    const name = trimmed.substring(0, match.index).replace(/`|\*|\-/g, '').trim();
-                    if (name && !isNaN(price)) prods.push({ produto: name, preco: price });
-                }
-            });
-            if (prods.length === 0) throw new Error('Nenhum produto encontrado.');
-            return prods;
-        }
-
-        function displayTable(prods) {
-            let html = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th><th>Imagem</th></tr></thead><tbody>';
-            prods.forEach((p, i) => {
-                const price = `R$ ${p.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                html += `<tr><td><input type="checkbox" class="product-checkbox" value="${i}"></td><td>${p.produto}</td><td>${price}</td><td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">Ver</a></td></tr>`;
-            });
-            html += '</tbody></table>';
-            productListResult.innerHTML = html;
-            document.getElementById('selectAllProducts').addEventListener('change', (e) => {
-                document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = e.target.checked);
-                handleProductSelection();
-            });
-            document.querySelectorAll('.product-checkbox').forEach(cb => cb.addEventListener('change', handleProductSelection));
-        }
-
-        function handleProductSelection() {
-            selectedProducts = [];
-            document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
-                const p = products[parseInt(cb.value)];
-                if (p) selectedProducts.push(p);
-            });
-            calcularParcelas();
-        }
-
-        function displayErrorList(msg) { productListResult.innerHTML = `<div class="error-message">${msg}</div>`; }
-
-        function getTaxa(parcelas) {
-            if (toggleAdvancedOptions.checked) {
-                if (parcelas === 'pix') return (parseFloat(porcentagemPixInput.value) || 0) / 100;
-                if (parcelas === 'debito') return (parseFloat(porcentagemDebitoInput.value) || 0) / 100;
-                const input = document.getElementById(`porcentagem${parcelas}x`);
-                return input ? (parseFloat(input.value) || 0) / 100 : (taxasDeJurosPadrao[parcelas] || 0);
-            }
-            return taxasDeJurosPadrao[parcelas] || 0;
-        }
-
         function calcularParcelas() {
-            const lucro = parseFloat(lucroAdicionalInput.value) || 0;
-            const entrada = parseFloat(valorEntradaInput.value) || 0;
             const res = [];
-            const parcelasToCalc = getParcelasSelecionadas();
+            const config = getParcelasSelecionadas();
+            const entrada = parseFloat(document.getElementById('valorEntrada').value) || 0;
+            const txtAdd = document.getElementById('textoAdicionalLinha').value;
 
             if (selectedProducts.length > 0) {
                 selectedProducts.forEach((p, i) => {
-                    let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
-                    if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
-                    const r = calcularParcelasParaUmProduto(p.preco + lucro, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, false, parcelasToCalc);
-                    if (r) res.push(r);
-                    if (i < selectedProducts.length - 1) res.push('\n----------------------------------------');
+                    res.push(gerarTextoProduto(p.produto, p.preco, entrada, txtAdd, config));
+                    if (i < selectedProducts.length - 1) res.push('━'.repeat(25));
                 });
             } else {
-                const base = parseFloat(valorBaseInput.value);
-                if (!isNaN(base) && base > 0) {
-                    const r = calcularParcelasParaUmProduto(base + lucro, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, "", false, parcelasToCalc);
-                    if (r) res.push(r);
-                }
+                const base = parseFloat(document.getElementById('valorBase').value) || 0;
+                if (base > 0) res.push(gerarTextoProduto("", base, entrada, txtAdd, config));
             }
 
-            let final = res;
-            if (textoCabecalhoMensagemTextarea.value) final = [`${textoCabecalhoMensagemTextarea.value}\n`, ...res];
-            if (textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
-            resultadoTextarea.value = final.join('\n');
+            const cabecalho = document.getElementById('textoCabecalhoMensagem').value;
+            const rodape = document.getElementById('textoFinalMensagem').value;
+            document.getElementById('resultado').value = `${cabecalho ? cabecalho + '\n' : ''}${res.join('\n')}${rodape ? '\n' + rodape : ''}`;
+            
+            atualizarResumoDescontos();
+            saveSettings(); // Salva sempre que algo for calculado
+        }
+
+        function gerarTextoProduto(nome, preco, ent, txtAdd, config) {
+            let linhas = [];
+            if (nome) {
+                const prefix = document.getElementById('produtoPrefix').value;
+                const bold = document.getElementById('boldProductName').checked;
+                linhas.push(`${prefix}${bold ? '*' + nome + '*' : nome}`);
+            }
+
+            let valLiq = preco;
+            const dPerc = parseFloat(document.getElementById('descontoPercentual').value) || 0;
+            const dFix = parseFloat(document.getElementById('descontoFixo.value')) || 0;
+            valLiq = (valLiq * (1 - dPerc / 100)) - (parseFloat(document.getElementById('descontoFixo').value) || 0);
+            valLiq += parseFloat(document.getElementById('lucroAdicional').value) || 0;
+
+            // Pix
+            if (!document.getElementById('hideDinheiroPix').checked && !config.especifica) {
+                const dExtraPix = parseFloat(document.getElementById('descontoPixExtra').value) || 0;
+                const taxaPix = (parseFloat(document.getElementById('porcentagemPix').value) || 0) / 100;
+                const vPix = arredondar((valLiq * (1 - dExtraPix/100)) / (1 - taxaPix));
+                let txtPix = `💸 Dinheiro/Pix: R$ ${vPix.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                if (document.getElementById('showComparison').checked && preco > vPix) {
+                    txtPix += ` (Economize R$ ${(preco - vPix).toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
+                }
+                linhas.push(txtPix);
+            }
+
+            // Débito
+            if (document.getElementById('showDebito').checked && !config.especifica) {
+                const taxaDeb = (parseFloat(document.getElementById('porcentagemDebito').value) || 2.5) / 100;
+                const vDeb = arredondar(valLiq / (1 - taxaDeb));
+                linhas.push(`💳 Débito: R$ ${vDeb.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
+            }
+
+            // Parcelas
+            const showEnt = !document.getElementById('hideEntradaText').checked && ent > 0;
+            const aParc = valLiq - ent;
+            config.parcelas.forEach(p => {
+                const inputTaxa = document.getElementById(`porcentagem${p}x`);
+                const taxa = inputTaxa ? parseFloat(inputTaxa.value)/100 : 0;
+                const vParc = arredondar((aParc / (1 - taxa)) / p);
+                let l = `💳 ${showEnt ? 'Entrada + ' : ''}${p}x de R$ ${vParc.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                if (document.getElementById('showTotalValue').checked) l += ` (Total R$ ${(ent + (vParc * p)).toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
+                if (txtAdd) l += ` ${txtAdd}`;
+                linhas.push(l);
+            });
+
+            return linhas.join('\n');
         }
 
         function getParcelasSelecionadas() {
-            const spec = parseInt(parcelaEspecificaInput.value);
-            if (!isNaN(spec) && spec > 0) return [spec];
-            if (toggleAdvancedOptions.checked) {
-                const sel = [];
-                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => sel.push(parseInt(cb.value)));
-                return sel.sort((a,b) => a-b);
-            }
-            return [...parcelasPadrao];
+            const spec = parseInt(document.getElementById('parcelaEspecifica').value);
+            if (spec > 0) return { especifica: true, parcelas: [spec] };
+            const sel = [];
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => sel.push(parseInt(cb.value)));
+            return { especifica: false, parcelas: sel.sort((a,b)=>a-b) };
         }
 
-        function calcularParcelasParaUmProduto(valLiq, ent, txtAdd, showTot, nome, isSpec, parcs) {
-            let res = [];
-            let fator = parseFloat(fatorArredondamentoInput.value) || 1;
-            if (nome) res.push(`\n${nome}\n`);
-            const showEnt = !hideEntradaTextCheckbox.checked && ent > 0;
-            const txtEnt = showEnt ? `Entrada de R$ ${ent.toLocaleString('pt-BR', {minimumFractionDigits:2})} + ` : '';
-            const aParc = valLiq - ent;
-
-            if (valLiq >= ent) {
-                if (!isSpec && !hideDinheiroPixCheckbox.checked) {
-                    const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('pix')), fator);
-                    res.push(`Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
-                }
-                if (!isSpec && showDebitoCheckbox.checked && ent === 0) {
-                    const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('debito')), fator);
-                    res.push(`Débito: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
-                }
-                parcs.forEach(p => {
-                    const vParc = arredondarParaMultiplo((aParc / (1 - getTaxa(p))) / p, fator);
-                    let linha = `${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-                    if (showTot) linha += ` (R$ ${(ent + (vParc * p)).toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
-                    if (txtAdd) linha += ` ${txtAdd}`;
-                    res.push(linha);
-                });
-            }
-            return res.join('\n');
+        function atualizarResumoDescontos() {
+            const base = parseFloat(document.getElementById('valorBase').value) || 0;
+            if (base === 0) { document.getElementById('discountSummary').style.display='none'; return; }
+            document.getElementById('discountSummary').style.display='block';
+            document.getElementById('discountDetails').innerText = `Valor base atual com ajustes: R$ ${base.toLocaleString('pt-BR')}`;
         }
 
+        // --- OUTRAS UTILIDADES ---
         function copiarTexto() {
-            const txt = resultadoTextarea.value;
-            if (!txt) return;
-            navigator.clipboard.writeText(txt).then(() => {
-                mensagemCopiado.classList.add('show');
-                setTimeout(() => mensagemCopiado.classList.remove('show'), 1500);
-            });
+            const area = document.getElementById('resultado');
+            area.select();
+            document.execCommand('copy');
+            document.getElementById('mensagemCopiado').classList.add('show');
+            setTimeout(() => document.getElementById('mensagemCopiado').classList.remove('show'), 2000);
         }
-        
-        calcularParcelas();
+
+        function limparCampos() {
+            if (!confirm('Limpar tudo?')) return;
+            localStorage.removeItem('calcPro_v1');
+            location.reload();
+        }
+
+        async function processWithAI() {
+            const text = document.getElementById('productList').value;
+            const prompt = document.getElementById('aiPrompt').value;
+            if (!text) return alert('Cole a lista');
+            document.getElementById('productListLoading').style.display = 'block';
+            try {
+                const response = await fetch("https://caixa-kal3.vercel.app/api/groq", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ systemPrompt: prompt, messages: text })
+                });
+                const data = await response.json();
+                document.getElementById('productList').value = data.choices[0].message.content;
+                processList();
+            } catch (e) { alert('Erro na IA'); }
+            finally { document.getElementById('productListLoading').style.display = 'none'; }
+        }
+
+        function processList() {
+            const text = document.getElementById('productList').value;
+            products = [];
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                const match = line.match(/(.+?)\s*R\$\s*([\d\.,]+)/i);
+                if (match) {
+                    const preco = parseFloat(match[2].replace(/\./g, '').replace(',', '.'));
+                    products.push({ produto: match[1].trim(), preco });
+                }
+            });
+            renderTable();
+        }
+
+        function renderTable() {
+            let html = `<table><tr><th>Select</th><th>Produto</th><th>Preço</th></tr>`;
+            products.forEach((p, i) => {
+                html += `<tr>
+                    <td><input type="checkbox" onchange="updateSelected(${i}, this.checked)"></td>
+                    <td>${p.produto}</td>
+                    <td>R$ ${p.preco.toLocaleString('pt-BR')}</td>
+                </tr>`;
+            });
+            document.getElementById('productListResult').innerHTML = html + `</table>`;
+        }
+
+        function updateSelected(i, isChecked) {
+            if (isChecked) selectedProducts.push(products[i]);
+            else selectedProducts = selectedProducts.filter(p => p !== products[i]);
+            calcularParcelas();
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = () => {
+            gerarCheckboxesAvancadas();
+            loadSettings();
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+            
+            // Ouvintes para salvar alterações instantaneamente
+            document.querySelectorAll('input, textarea, checkbox').forEach(el => {
+                el.addEventListener('change', saveSettings);
+            });
+            calcularParcelas();
+        };
     </script>
 </body>
 </html>
