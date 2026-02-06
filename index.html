@@ -228,7 +228,6 @@
             background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
         }
 
-        /* CORREÇÃO: Toggle section agora responde ao clique no checkbox */
         .toggle-section {
             display: flex;
             align-items: center;
@@ -456,7 +455,6 @@
             border-left: 4px solid #d9534f;
         }
 
-        /* CORREÇÃO: Tabela centralizada */
         #productListResult table {
             width: 100%;
             border-collapse: collapse;
@@ -468,7 +466,7 @@
         #productListResult th, #productListResult td {
             border: 1px solid var(--border-color);
             padding: 12px;
-            text-align: center; /* Centralizado */
+            text-align: center;
         }
 
         #productListResult th {
@@ -481,7 +479,6 @@
             background: var(--bg-primary);
         }
 
-        /* CORREÇÃO: Link de pesquisa estilizado */
         #productListResult a {
             color: var(--secondary-color);
             text-decoration: none;
@@ -547,14 +544,12 @@
             z-index: 1000;
         }
 
-        /* MELHORIA: Destaque visual quando campos têm valor */
         input[type="number"]:not(:placeholder-shown),
         input[type="text"]:not(:placeholder-shown) {
             border-color: var(--success-color);
             background: rgba(76, 175, 80, 0.05);
         }
 
-        /* MELHORIA: Animação smooth para mensagens */
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -570,7 +565,6 @@
             animation: slideIn 0.3s ease;
         }
 
-        /* MELHORIA: Badge de contagem de produtos */
         .product-count-badge {
             background: var(--secondary-color);
             color: white;
@@ -579,6 +573,84 @@
             font-size: 0.85rem;
             font-weight: 600;
             margin-left: 8px;
+        }
+
+        /* Estilos do Histórico */
+        .historico-item {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .historico-item:hover {
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-color);
+        }
+
+        .historico-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .historico-titulo {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .historico-data {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .historico-comentarios {
+            background: var(--bg-secondary);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .historico-dados {
+            background: var(--bg-secondary);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .historico-dados strong {
+            color: var(--primary-color);
+        }
+
+        .historico-acoes {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .historico-acoes button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .empty-historico {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-historico-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
         }
 
         @media (max-width: 600px) {
@@ -602,6 +674,12 @@
                 position: static;
                 margin-top: 10px;
             }
+
+            .historico-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
         }
     </style>
 </head>
@@ -616,6 +694,44 @@
             <a href="https://calculadoracaixa.netlify.app/listas/" target="_blank">📋 Processamento de Lista</a>
             |
             <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
+        </div>
+
+        <!-- Sistema de Histórico -->
+        <div class="toggle-section">
+            <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
+            <label for="toggleHistorico">📚 Salvar no Histórico</label>
+        </div>
+
+        <div id="historicoSection" class="collapsible-content">
+            <div class="section-card">
+                <div class="input-group">
+                    <label for="historicoTitulo">Título do cálculo:</label>
+                    <div class="input-with-icon">
+                        <span class="input-icon">📝</span>
+                        <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="historicoComentarios">Comentários (opcional):</label>
+                    <textarea id="historicoComentarios" placeholder="Observações sobre este cálculo..." style="min-height: 80px;"></textarea>
+                </div>
+                <div class="button-row">
+                    <button class="btn btn-primary" onclick="salvarNoHistorico()">💾 Salvar Agora</button>
+                    <button class="btn btn-secondary" onclick="toggleVerHistorico()">📋 Ver Histórico</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualização do Histórico -->
+        <div id="visualizarHistoricoSection" class="collapsible-content">
+            <div class="section-card">
+                <div class="section-title">📖 Histórico de Cálculos</div>
+                <div id="historicoLista"></div>
+                <div class="button-row" style="margin-top: 15px;">
+                    <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
+                    <button class="btn btn-danger" onclick="limparHistoricoCompleto()">🗑️ Limpar Histórico</button>
+                </div>
+            </div>
         </div>
 
         <!-- Lista de Produtos -->
@@ -663,7 +779,7 @@
             </div>
         </div>
 
-        <!-- CORREÇÃO: Acréscimos e Descontos com Lucro primeiro -->
+        <!-- Acréscimos e Descontos -->
         <div class="section-card">
             <div class="section-title">🎁 Acréscimos e Descontos</div>
             
@@ -725,7 +841,7 @@
             </div>
         </div>
 
-        <!-- CORREÇÃO: Opções Avançadas com checkbox funcional -->
+        <!-- Opções Avançadas -->
         <div class="toggle-section">
             <input type="checkbox" id="toggleAdvancedOptions" onchange="toggleAdvancedSection()">
             <label for="toggleAdvancedOptions">⚙️ Opções Avançadas</label>
@@ -918,6 +1034,14 @@ Capa silicone R$ 50,00
         const productListResult = document.getElementById('productListResult');
         const aiPromptTextarea = document.getElementById('aiPrompt');
 
+        // Elementos do Histórico
+        const toggleHistorico = document.getElementById('toggleHistorico');
+        const historicoSection = document.getElementById('historicoSection');
+        const historicoTituloInput = document.getElementById('historicoTitulo');
+        const historicoComentariosTextarea = document.getElementById('historicoComentarios');
+        const visualizarHistoricoSection = document.getElementById('visualizarHistoricoSection');
+        const historicoLista = document.getElementById('historicoLista');
+
         const taxasDeJurosPadrao = {
             'pix': 0, 1: 0.045, 2: 0.06, 3: 0.07, 4: 0.075, 5: 0.08, 6: 0.09, 7: 0.095, 8: 0.10, 9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125, 13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025
         };
@@ -925,6 +1049,387 @@ Capa silicone R$ 50,00
         const parcelasPadrao = [3, 6, 10, 12];
         let products = [];
         let selectedProducts = [];
+
+        // ===== FUNÇÕES DE HISTÓRICO =====
+        
+        function toggleHistoricoSection() {
+            const checkbox = toggleHistorico;
+            const section = historicoSection;
+            section.classList.toggle('show', checkbox.checked);
+        }
+
+        function toggleVerHistorico() {
+            visualizarHistoricoSection.classList.toggle('show');
+            if (visualizarHistoricoSection.classList.contains('show')) {
+                carregarHistorico();
+            }
+        }
+
+        function obterDataFormatada() {
+            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const agora = new Date();
+            const diaSemana = diasSemana[agora.getDay()];
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const ano = agora.getFullYear();
+            const hora = String(agora.getHours()).padStart(2, '0');
+            const minuto = String(agora.getMinutes()).padStart(2, '0');
+            
+            return `${diaSemana}, ${dia}/${mes}/${ano} às ${hora}:${minuto}`;
+        }
+
+        function obterDadosCalculadora() {
+            // Coletar parcelas selecionadas
+            const parcelasSelecionadas = [];
+            const parcelasTaxas = {};
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => {
+                const num = parseInt(cb.value);
+                parcelasSelecionadas.push(num);
+                const taxaInput = document.getElementById(`porcentagem${num}x`);
+                if (taxaInput) {
+                    parcelasTaxas[num] = taxaInput.value;
+                }
+            });
+
+            return {
+                // Valores principais
+                valorBase: valorBaseInput.value,
+                parcelaEspecifica: parcelaEspecificaInput.value,
+                descontoPercentual: descontoPercentualInput.value,
+                descontoFixo: descontoFixoInput.value,
+                descontoPixExtra: descontoPixExtraInput.value,
+                lucroAdicional: lucroAdicionalInput.value,
+                valorEntrada: valorEntradaInput.value,
+                fatorArredondamento: fatorArredondamentoInput.value,
+                
+                // Resultado
+                resultado: resultadoTextarea.value,
+                
+                // Lista de produtos
+                usandoListaProdutos: toggleProductList.checked,
+                listaProdutosTexto: productListTextarea.value,
+                produtosSelecionados: selectedProducts,
+                todosProdutos: products,
+                
+                // Opções avançadas
+                opcoesAvancadasAtivo: toggleAdvancedOptions.checked,
+                
+                // Checkboxes de texto
+                opcoes: {
+                    hideDinheiroPix: hideDinheiroPixCheckbox.checked,
+                    showDebito: showDebitoCheckbox.checked,
+                    showComparison: showComparisonCheckbox.checked,
+                    hideEntradaText: hideEntradaTextCheckbox.checked,
+                    showTotalValue: showTotalValueCheckbox.checked,
+                    boldProductName: boldProductNameCheckbox.checked
+                },
+                
+                // Porcentagens
+                porcentagemPix: porcentagemPixInput.value,
+                porcentagemDebito: porcentagemDebitoInput.value,
+                
+                // Textos personalizados
+                textos: {
+                    produtoPrefix: produtoPrefixInput.value,
+                    textoAdicionalLinha: textoAdicionalLinhaInput.value,
+                    textoCabecalho: textoCabecalhoMensagemTextarea.value,
+                    textoFinal: textoFinalMensagemTextarea.value,
+                    aiPrompt: aiPromptTextarea.value
+                },
+                
+                // Parcelas e taxas
+                parcelasSelecionadas: parcelasSelecionadas,
+                parcelasTaxas: parcelasTaxas
+            };
+        }
+
+        function salvarNoHistorico() {
+            const titulo = historicoTituloInput.value.trim();
+            
+            if (!titulo) {
+                alert('⚠️ Por favor, insira um título para o cálculo');
+                historicoTituloInput.focus();
+                return;
+            }
+
+            if (!resultadoTextarea.value) {
+                alert('⚠️ Não há cálculo para salvar. Preencha os campos e calcule primeiro.');
+                return;
+            }
+
+            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            
+            const novoRegistro = {
+                id: Date.now(),
+                data: obterDataFormatada(),
+                titulo: titulo,
+                comentarios: historicoComentariosTextarea.value.trim(),
+                dados: obterDadosCalculadora()
+            };
+
+            historico.unshift(novoRegistro); // Adiciona no início do array
+            localStorage.setItem('historicoCalculos', JSON.stringify(historico));
+
+            // Limpar campos do histórico
+            historicoTituloInput.value = '';
+            historicoComentariosTextarea.value = '';
+
+            // Mostrar mensagem de sucesso
+            mensagemCopiado.textContent = '✅ Cálculo salvo no histórico!';
+            mensagemCopiado.classList.add('show');
+            setTimeout(() => {
+                mensagemCopiado.classList.remove('show');
+                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
+            }, 2000);
+        }
+
+        function carregarHistorico() {
+            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            
+            if (historico.length === 0) {
+                historicoLista.innerHTML = `
+                    <div class="empty-historico">
+                        <div class="empty-historico-icon">📭</div>
+                        <p>Nenhum cálculo salvo ainda</p>
+                        <small>Salve seus cálculos para acessá-los depois!</small>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            historico.forEach(item => {
+                let resumoValor = '';
+                
+                if (item.dados.usandoListaProdutos && item.dados.produtosSelecionados && item.dados.produtosSelecionados.length > 0) {
+                    resumoValor = `${item.dados.produtosSelecionados.length} produto${item.dados.produtosSelecionados.length > 1 ? 's' : ''} selecionado${item.dados.produtosSelecionados.length > 1 ? 's' : ''}`;
+                } else if (item.dados.valorBase) {
+                    resumoValor = `R$ ${parseFloat(item.dados.valorBase).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                } else {
+                    resumoValor = 'Sem valor';
+                }
+
+                let detalhesExtras = [];
+                if (item.dados.descontoPercentual) detalhesExtras.push(`Desconto: ${item.dados.descontoPercentual}%`);
+                if (item.dados.descontoFixo) detalhesExtras.push(`Desc. fixo: R$ ${parseFloat(item.dados.descontoFixo).toFixed(2)}`);
+                if (item.dados.lucroAdicional) detalhesExtras.push(`Lucro: R$ ${parseFloat(item.dados.lucroAdicional).toFixed(2)}`);
+                if (item.dados.valorEntrada) detalhesExtras.push(`Entrada: R$ ${parseFloat(item.dados.valorEntrada).toFixed(2)}`);
+                if (item.dados.parcelaEspecifica) detalhesExtras.push(`Parcela: ${item.dados.parcelaEspecifica}x`);
+                
+                const detalhesStr = detalhesExtras.length > 0 ? ' | ' + detalhesExtras.join(' | ') : '';
+
+                html += `
+                    <div class="historico-item">
+                        <div class="historico-header">
+                            <div class="historico-titulo">${item.titulo}</div>
+                            <div class="historico-data">${item.data}</div>
+                        </div>
+                        ${item.comentarios ? `<div class="historico-comentarios">💬 ${item.comentarios}</div>` : ''}
+                        <div class="historico-dados">
+                            <strong>Valor:</strong> ${resumoValor}${detalhesStr}
+                        </div>
+                        <div class="historico-acoes">
+                            <button class="btn btn-primary" onclick="restaurarCalculo(${item.id})">🔄 Restaurar</button>
+                            <button class="btn btn-secondary" onclick="copiarResultadoHistorico(${item.id})">📋 Copiar</button>
+                            <button class="btn btn-danger" onclick="excluirDoHistorico(${item.id})">🗑️ Excluir</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            historicoLista.innerHTML = html;
+        }
+
+        function restaurarCalculo(id) {
+            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            const item = historico.find(h => h.id === id);
+            
+            if (!item) {
+                alert('Registro não encontrado');
+                return;
+            }
+
+            const dados = item.dados;
+            
+            // Restaurar valores principais
+            valorBaseInput.value = dados.valorBase || '';
+            parcelaEspecificaInput.value = dados.parcelaEspecifica || '';
+            descontoPercentualInput.value = dados.descontoPercentual || '';
+            descontoFixoInput.value = dados.descontoFixo || '';
+            descontoPixExtraInput.value = dados.descontoPixExtra || '';
+            lucroAdicionalInput.value = dados.lucroAdicional || '';
+            valorEntradaInput.value = dados.valorEntrada || '';
+            fatorArredondamentoInput.value = dados.fatorArredondamento || '1';
+            
+            // Restaurar porcentagens
+            if (dados.porcentagemPix) porcentagemPixInput.value = dados.porcentagemPix;
+            if (dados.porcentagemDebito) porcentagemDebitoInput.value = dados.porcentagemDebito;
+            
+            // Restaurar textos personalizados
+            if (dados.textos) {
+                produtoPrefixInput.value = dados.textos.produtoPrefix || '➡️ ';
+                textoAdicionalLinhaInput.value = dados.textos.textoAdicionalLinha || '';
+                textoCabecalhoMensagemTextarea.value = dados.textos.textoCabecalho || '';
+                textoFinalMensagemTextarea.value = dados.textos.textoFinal || '';
+                aiPromptTextarea.value = dados.textos.aiPrompt || aiPromptTextarea.value;
+            }
+            
+            // Restaurar lista de produtos
+            if (dados.usandoListaProdutos) {
+                toggleProductList.checked = true;
+                productListTextarea.value = dados.listaProdutosTexto || '';
+                
+                if (dados.todosProdutos && dados.todosProdutos.length > 0) {
+                    products = dados.todosProdutos;
+                    displayTable(products);
+                    
+                    // Marcar produtos selecionados
+                    if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
+                        selectedProducts = dados.produtosSelecionados;
+                        
+                        // Marcar os checkboxes correspondentes
+                        setTimeout(() => {
+                            dados.produtosSelecionados.forEach(prodSelecionado => {
+                                const index = products.findIndex(p => 
+                                    p.produto === prodSelecionado.produto && 
+                                    p.preco === prodSelecionado.preco
+                                );
+                                if (index !== -1) {
+                                    const checkbox = document.querySelector(`.product-checkbox[value="${index}"]`);
+                                    if (checkbox) checkbox.checked = true;
+                                }
+                            });
+                        }, 100);
+                    }
+                }
+                
+                toggleProductListSection();
+            } else {
+                toggleProductList.checked = false;
+                if (productListSection.classList.contains('show')) {
+                    toggleProductListSection();
+                }
+            }
+            
+            // Restaurar opções
+            if (dados.opcoes) {
+                hideDinheiroPixCheckbox.checked = dados.opcoes.hideDinheiroPix || false;
+                showDebitoCheckbox.checked = dados.opcoes.showDebito || false;
+                showComparisonCheckbox.checked = dados.opcoes.showComparison || false;
+                hideEntradaTextCheckbox.checked = dados.opcoes.hideEntradaText || false;
+                showTotalValueCheckbox.checked = dados.opcoes.showTotalValue || false;
+                boldProductNameCheckbox.checked = dados.opcoes.boldProductName !== undefined ? dados.opcoes.boldProductName : true;
+            }
+            
+            // Restaurar opções avançadas e parcelas
+            if (dados.opcoesAvancadasAtivo) {
+                toggleAdvancedOptions.checked = true;
+                toggleAdvancedSection();
+                
+                // Desmarcar todas as parcelas primeiro
+                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
+                    cb.checked = false;
+                    togglePorcentagemInput(parseInt(cb.value), false);
+                });
+                
+                // Restaurar parcelas selecionadas e suas taxas
+                if (dados.parcelasSelecionadas && dados.parcelasSelecionadas.length > 0) {
+                    dados.parcelasSelecionadas.forEach(numParcela => {
+                        const checkbox = document.getElementById(`parcela${numParcela}x`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            togglePorcentagemInput(numParcela, true);
+                            
+                            // Restaurar taxa personalizada se houver
+                            if (dados.parcelasTaxas && dados.parcelasTaxas[numParcela]) {
+                                const taxaInput = document.getElementById(`porcentagem${numParcela}x`);
+                                if (taxaInput) {
+                                    taxaInput.value = dados.parcelasTaxas[numParcela];
+                                }
+                            }
+                        }
+                    });
+                }
+            } else {
+                toggleAdvancedOptions.checked = false;
+                if (advancedOptionsDiv.classList.contains('show')) {
+                    toggleAdvancedSection();
+                }
+            }
+
+            // Fechar histórico e recalcular
+            toggleVerHistorico();
+            
+            // Atualizar resumo e recalcular
+            atualizarResumoDescontos();
+            calcularParcelas();
+            
+            // Scroll para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            mensagemCopiado.textContent = `✅ Cálculo "${item.titulo}" restaurado!`;
+            mensagemCopiado.classList.add('show');
+            setTimeout(() => {
+                mensagemCopiado.classList.remove('show');
+                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
+            }, 2000);
+        }
+
+        function copiarResultadoHistorico(id) {
+            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            const item = historico.find(h => h.id === id);
+            
+            if (!item || !item.dados.resultado) {
+                alert('Resultado não encontrado');
+                return;
+            }
+
+            navigator.clipboard.writeText(item.dados.resultado).then(() => {
+                mensagemCopiado.textContent = `✅ Resultado de "${item.titulo}" copiado!`;
+                mensagemCopiado.classList.add('show');
+                setTimeout(() => {
+                    mensagemCopiado.classList.remove('show');
+                    mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
+                }, 2000);
+            });
+        }
+
+        function excluirDoHistorico(id) {
+            if (!confirm('⚠️ Deseja realmente excluir este registro do histórico?')) {
+                return;
+            }
+
+            let historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            historico = historico.filter(h => h.id !== id);
+            localStorage.setItem('historicoCalculos', JSON.stringify(historico));
+            
+            carregarHistorico();
+            
+            mensagemCopiado.textContent = '✅ Registro excluído do histórico!';
+            mensagemCopiado.classList.add('show');
+            setTimeout(() => {
+                mensagemCopiado.classList.remove('show');
+                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
+            }, 2000);
+        }
+
+        function limparHistoricoCompleto() {
+            if (!confirm('⚠️ ATENÇÃO: Isso irá excluir TODOS os registros do histórico permanentemente. Deseja continuar?')) {
+                return;
+            }
+
+            localStorage.removeItem('historicoCalculos');
+            carregarHistorico();
+            
+            mensagemCopiado.textContent = '✅ Histórico completamente limpo!';
+            mensagemCopiado.classList.add('show');
+            setTimeout(() => {
+                mensagemCopiado.classList.remove('show');
+                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
+            }, 2000);
+        }
+
+        // ===== FIM DAS FUNÇÕES DE HISTÓRICO =====
 
         // Tema
         function toggleTheme() {
@@ -941,7 +1446,6 @@ Capa silicone R$ 50,00
             document.body.setAttribute('data-theme', savedTheme);
         }
 
-        // CORREÇÃO: Toggle de seções agora funciona com checkbox
         function toggleProductListSection() {
             const checkbox = toggleProductList;
             const section = productListSection;
@@ -1283,7 +1787,6 @@ Capa silicone R$ 50,00
             return prods;
         }
 
-        // CORREÇÃO: Tabela centralizada com link "Pesquisar"
         function displayTable(prods) {
             let html = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th><th>Imagem</th></tr></thead><tbody>';
             
@@ -1299,7 +1802,6 @@ Capa silicone R$ 50,00
             
             html += '</tbody></table>';
             
-            // MELHORIA: Badge de contagem
             const badge = `<span class="product-count-badge">${prods.length} produto${prods.length > 1 ? 's' : ''} encontrado${prods.length > 1 ? 's' : ''}</span>`;
             productListResult.innerHTML = badge + html;
             
