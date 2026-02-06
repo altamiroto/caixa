@@ -575,11 +575,9 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
                 lines.forEach((line, index) => {
                     const normalizeText = str => str
-                        .normalize('NFKD')
-                        .replace(/[\u0300-\u036f]/g, '')
-                        .replace(/[\u{1F300}-\u{1FAD6}]/gu, '')
-                        .replace(/[\uFE00-\uFE0F]/g, '')
-                        .replace(/[\p{Script=Latin}\p{Script=Common}]/gu, c => c.toLowerCase());
+					.toLowerCase()
+					.normalize('NFD')
+					.replace(/[\u0300-\u036f]/g, ""); // Remove apenas acentos
 
                     const lineNormalized = normalizeText(line);
                     const searchNormalized = normalizeText(searchTerm);
@@ -721,4 +719,5 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
 </body>
 </html>
+
 
