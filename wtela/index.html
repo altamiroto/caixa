@@ -5,309 +5,633 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparador de Listas de Fornecedores</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            color: #333;
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --accent-color: #ff9800;
+            --danger-color: #f44336;
+            --bg-primary: #f4f4f4;
+            --bg-secondary: #fff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #ccc;
+            --shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 12px rgba(0,0,0,0.2);
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #e0e0e0 100%);
+            color: var(--text-primary);
+            padding: 15px;
+        }
+
         .header {
             text-align: center;
             margin-bottom: 20px;
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
-        .controls {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .control-group {
-            display: inline-block;
-            margin: 0 10px;
-            text-align: left;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            justify-content: flex-start;
-            padding-bottom: 10px;
-        }
-        .text-area-wrapper {
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex: 0 0 300px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column; 
-        }
+
         h1 {
-            color: #333;
-            margin-bottom: 5px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 1.8rem;
         }
-        input[type="text"], input[type="number"], select {
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Controles principais */
+        .controls {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], 
+        input[type="number"], 
+        select {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-            display: block; 
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--bg-secondary);
         }
-        input[type="number"] {
-            width: 50px; 
-            display: inline-block;
+
+        input[type="text"]:focus, 
+        input[type="number"]:focus, 
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        /* Container de listas */
+        .container {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .text-area-wrapper {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .text-area-wrapper:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .supplier-header {
+            margin-bottom: 10px;
+        }
+
+        .supplier-header input {
+            font-weight: 600;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
         }
 
         textarea {
             width: 100%;
-            height: 250px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-            resize: both;
-            white-space: pre; 
-            overflow: auto;
-            margin-bottom: 15px;
+            min-height: 200px;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
 
         .filtered-output {
             width: 100%;
-            height: 250px;
-            padding: 10px;
-            border: 1px solid #007bff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-            background-color: #eaf3ff;
+            min-height: 150px;
+            padding: 12px;
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            background: #e3f2fd;
+            margin-top: 10px;
             overflow: auto;
             white-space: pre-wrap;
             display: none;
-            text-align: left;
-            flex-grow: 1;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-        #telaSelector {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        .highlight {
-            background-color: yellow;
-            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
         }
 
-        /* Estilos para Opções Avançadas */
-        .advanced-section {
-            margin: 20px auto;
-            max-width: 900px;
-            background-color: #fff;
+        .highlight {
+            background-color: #ffeb3b;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .highlight-sub {
+            background-color: #80deea;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* Legenda de cores para busca */
+        .search-legend {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            display: none;
+        }
+
+        .search-legend.show {
+            display: block;
+        }
+
+        .search-legend span {
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* Botões */
+        .btn {
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
+            color: white;
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #f57c00 100%);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-buttons {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .action-buttons .control-group {
+            margin-bottom: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #historicoSelect {
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Seção de IA */
+        .advanced-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
             overflow: hidden;
         }
-        
+
         .advanced-header {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
             color: white;
-            padding: 15px;
+            padding: 18px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             user-select: none;
+            font-weight: 600;
         }
-        
+
         .advanced-header:hover {
-            background-color: #45a049;
+            background: linear-gradient(135deg, #45a049 0%, var(--primary-color) 100%);
         }
-        
-        .advanced-content {
-            padding: 20px;
-            display: none;
-        }
-        
-        .advanced-content.active {
-            display: block;
-        }
-        
+
         .toggle-icon {
             font-size: 20px;
             transition: transform 0.3s;
         }
-        
+
         .toggle-icon.rotated {
             transform: rotate(180deg);
         }
-        
-        .ai-controls {
-            margin-bottom: 15px;
+
+        .advanced-content {
+            padding: 20px;
+            display: none;
         }
-        
+
+        .advanced-content.active {
+            display: block;
+        }
+
+        .api-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-left: 4px solid var(--secondary-color);
+        }
+
         .ai-prompt-area {
             width: 100%;
-            min-height: 120px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            min-height: 200px;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
             font-size: 14px;
             resize: vertical;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
         }
-        
+
         .ai-result {
             margin-top: 20px;
             padding: 15px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            background: #f9f9f9;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
             white-space: pre-wrap;
             max-height: 500px;
             overflow-y: auto;
             display: none;
-        }
-        
-        .ai-result.show {
-            display: block;
-        }
-        
-        .ai-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-        
-        .ai-button:hover {
-            background-color: #45a049;
-        }
-        
-        .ai-button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        .loading {
-            display: none;
-            color: #4CAF50;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        
-        .loading.show {
-            display: inline;
-        }
-
-        .product-search-input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            font-family: 'Courier New', monospace;
             font-size: 14px;
         }
 
-        .api-info {
-            background-color: #e3f2fd;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 13px;
+        .ai-result.show {
+            display: block;
         }
 
-        .api-info a {
-            color: #1976d2;
-            text-decoration: none;
+        .loading {
+            display: none;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
         }
 
-        .api-info a:hover {
-            text-decoration: underline;
+        .loading.show {
+            display: block;
+        }
+
+        /* FAB - Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        .fab-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+
+        .fab-badge.show {
+            display: flex;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 0.85rem;
+            }
+
+            .control-row {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            textarea {
+                min-height: 150px;
+                font-size: 16px; /* Evita zoom no iOS */
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 16px 20px;
+            }
+
+            .filtered-output {
+                font-size: 13px;
+            }
+
+            .ai-prompt-area {
+                min-height: 150px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1200px) {
+            /* Tablets */
+            .container.grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .container.grid-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .container.grid-4,
+            .container.grid-5,
+            .container.grid-6 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 1201px) {
+            /* Desktops grandes */
+            .container.grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .container.grid-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .container.grid-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .container.grid-5 {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            .container.grid-6 {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        /* Animações */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .text-area-wrapper {
+            animation: slideIn 0.3s ease;
+        }
+
+        /* Toasts */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-hover);
+            z-index: 9999;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .toast.success {
+            background: var(--primary-color);
+        }
+
+        .toast.error {
+            background: var(--danger-color);
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Comparador de Listas de Fornecedores</h1>
-        <p>Edite os nomes e cole as mensagens de WhatsApp para comparar.</p>
+        <h1>📊 Comparador de Listas de Fornecedores</h1>
+        <p>Compare preços de múltiplos fornecedores com facilidade</p>
     </div>
 
     <div class="controls">
-        <div class="control-group">
-            <label for="telaSelector">Telas:</label>
-            <select id="telaSelector" onchange="updateLayout()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4" selected>4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-            </select>
+        <div class="control-row">
+            <div class="control-group">
+                <label for="telaSelector">📱 Número de Fornecedores (1-16):</label>
+                <select id="telaSelector" onchange="updateLayout()">
+                    <option value="1">1 Fornecedor</option>
+                    <option value="2">2 Fornecedores</option>
+                    <option value="3">3 Fornecedores</option>
+                    <option value="4" selected>4 Fornecedores</option>
+                    <option value="5">5 Fornecedores</option>
+                    <option value="6">6 Fornecedores</option>
+                    <option value="7">7 Fornecedores</option>
+                    <option value="8">8 Fornecedores</option>
+                    <option value="9">9 Fornecedores</option>
+                    <option value="10">10 Fornecedores</option>
+                    <option value="11">11 Fornecedores</option>
+                    <option value="12">12 Fornecedores</option>
+                    <option value="13">13 Fornecedores</option>
+                    <option value="14">14 Fornecedores</option>
+                    <option value="15">15 Fornecedores</option>
+                    <option value="16">16 Fornecedores</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="contextLines">📝 Linhas de contexto:</label>
+                <input type="number" id="contextLines" value="2" min="0" max="10" onchange="applyFilter()">
+            </div>
         </div>
-        
-        <div class="control-group" style="width: 250px;">
-            <label for="searchInput">Buscar produto:</label>
-            <input type="text" id="searchInput" placeholder="Digite o produto..." oninput="applyFilter()">
-        </div>
-        
+
         <div class="control-group">
-            <label for="contextLines">Linhas de contexto (antes/depois):</label>
-            <input type="number" id="contextLines" value="2" min="0" onchange="applyFilter()" style="width: 60px;">
+            <label for="searchInput">🔍 Buscar produto:</label>
+            <input type="text" id="searchInput" placeholder="Digite o nome do produto..." oninput="applyFilter()">
+        </div>
+
+        <div class="control-group">
+            <label for="subSearchInput">🔎 Refinar busca (sub-busca):</label>
+            <input type="text" id="subSearchInput" placeholder="Ex: 256gb, vermelho, 1kg..." oninput="applyFilter()">
+            <div class="search-legend" id="searchLegend">
+                <span><span class="legend-color" style="background-color: #ffeb3b;"></span>Busca principal</span>
+                <span><span class="legend-color" style="background-color: #80deea;"></span>Sub-busca</span>
+            </div>
         </div>
     </div>
 
-    <div id="container-listas" class="container">
-    </div>
-	
-    <div style="margin: 15px auto; width: 80%; max-width: 500px; text-align: left;">
-        <label for="tagInput" style="display:inline-block; margin-right: 10px;">🏷️ **Tag (Título) para o Histórico:**</label>
-        <input type="text" id="tagInput" placeholder="Ex: Lista do dia 22/10/2025" style="width: calc(100% - 10px); display: block;">
-    </div>
+    <div id="container-listas" class="container"></div>
 
-    <div style="margin-bottom: 15px; text-align:center;">
-        <button onclick="salvarDados()">💾 Salvar Dados</button>
-        <button onclick="carregarHistorico()">📜 Consultar histórico</button>
-        <select id="historicoSelect" style="padding:6px; display:none;" onchange="aplicarHistorico()">
+    <div class="action-buttons">
+        <div class="control-group">
+            <label for="tagInput">🏷️ Título para o Histórico:</label>
+            <input type="text" id="tagInput" placeholder="Ex: Compras da semana 12/01/2026">
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="salvarDados()">💾 Salvar Dados</button>
+            <button class="btn btn-secondary" onclick="carregarHistorico()">📜 Ver Histórico</button>
+        </div>
+
+        <select id="historicoSelect" onchange="aplicarHistorico()">
             <option value="">Selecione um histórico...</option>
         </select>
     </div>
 
-    <!-- Seção de Opções Avançadas -->
+    <!-- Seção de IA -->
     <div class="advanced-section">
         <div class="advanced-header" onclick="toggleAdvanced()">
-            <span>🤖 Opções Avançadas - Análise com IA Google Gemini (GRATUITO)</span>
+            <span>🤖 Análise com IA Google Gemini (Gratuito)</span>
             <span class="toggle-icon" id="toggleIcon">▼</span>
         </div>
         <div class="advanced-content" id="advancedContent">
             <div class="api-info">
-                <strong>ℹ️ Análise com IA Google Gemini:</strong><br>
-                Modelo: Gemini 2.5 Flash (1 milhão de tokens!) - O mais avançado disponível!<br>
-                Lançado em Junho 2025 - Alta qualidade e totalmente gratuito.
+                <strong>ℹ️ Análise Inteligente:</strong><br>
+                Modelo: Gemini 2.5 Flash - Alta qualidade e totalmente gratuito<br>
+                Analise automaticamente os melhores preços entre todos os fornecedores
             </div>
 
-            <div class="ai-controls">
-
+            <div class="control-group">
                 <label for="productSearchAI">🔍 Produto(s) para buscar (separados por vírgula):</label>
-                <input type="text" id="productSearchAI" class="product-search-input" 
-                       placeholder="Ex: Arroz, Feijão, Óleo de soja">
-                
+                <input type="text" id="productSearchAI" placeholder="Ex: Arroz, Feijão, Óleo de soja">
+            </div>
+            
+            <div class="control-group">
                 <label for="aiPrompt">✏️ Prompt personalizado para IA:</label>
                 <textarea id="aiPrompt" class="ai-prompt-area">Você é um assistente especializado em análise de preços de produtos. 
 
@@ -319,7 +643,7 @@ Para cada produto solicitado:
 3. Indique qual fornecedor oferece o MENOR PREÇO
 4. Mostre o preço mais barato encontrado
 5. Se houver variações de marca ou embalagem, especifique
-6. Mostrar outras opções que atendem parcialmente a busca
+6. Mostre outras opções que atendem parcialmente a busca
 
 FORMATO DA RESPOSTA:
 Para cada produto, forneça:
@@ -331,35 +655,59 @@ Para cada produto, forneça:
 Se um produto tiver múltiplas opções (marcas/tamanhos diferentes), liste as 3 melhores opções.
 
 Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
-                
-                <div style="margin-top: 15px;">
-                    <button class="ai-button" onclick="listModels()" id="listModelsBtn" style="background-color: #2196F3;">
-                        🔍 Listar Modelos Disponíveis
-                    </button>
-                    <button class="ai-button" onclick="analyzeWithAI()" id="analyzeBtn">
-                        🚀 Analisar com IA
-                    </button>
-                    <button class="ai-button" onclick="resetPrompt()" style="background-color: #ff9800;">
-                        🔄 Restaurar Prompt Padrão
-                    </button>
-                    <span class="loading" id="loadingIndicator">⏳ Analisando...</span>
-                </div>
             </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="listModels()" id="listModelsBtn">
+                    🔍 Listar Modelos Disponíveis
+                </button>
+                <button class="btn btn-primary" onclick="analyzeWithAI()" id="analyzeBtn">
+                    🚀 Analisar com IA
+                </button>
+                <button class="btn btn-accent" onclick="resetPrompt()">
+                    🔄 Restaurar Prompt Padrão
+                </button>
+            </div>
+
+            <div class="loading" id="loadingIndicator">⏳ Analisando os melhores preços...</div>
             
-            <div class="ai-result" id="aiResult">
-                <!-- Resultado da análise aparece aqui -->
-            </div>
+            <div class="ai-result" id="aiResult"></div>
         </div>
     </div>
+
+    <!-- FAB -->
+    <button class="fab" onclick="scrollToTop()" title="Voltar ao topo">
+        ↑
+    </button>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
     <script>
         const container = document.getElementById('container-listas');
         const select = document.getElementById('telaSelector');
         const searchInput = document.getElementById('searchInput');
+        const subSearchInput = document.getElementById('subSearchInput');
         const contextLinesInput = document.getElementById('contextLines');
         const DEFAULT_PROMPT = document.getElementById('aiPrompt').value;
-        const GEMINI_MODEL = "gemini-2.5-flash";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
 
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Scroll to top
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Toggle advanced section
         function toggleAdvanced() {
             const content = document.getElementById('advancedContent');
             const icon = document.getElementById('toggleIcon');
@@ -367,10 +715,13 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             icon.classList.toggle('rotated');
         }
 
+        // Reset prompt
         function resetPrompt() {
             document.getElementById('aiPrompt').value = DEFAULT_PROMPT;
+            showToast('✅ Prompt restaurado para o padrão');
         }
 
+        // List AI models
         async function listModels() {
             const resultDiv = document.getElementById('aiResult');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -381,118 +732,119 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             resultDiv.classList.remove('show');
 
             try {
-                const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    }
-                );
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Erro: ${errorData.error?.message || response.statusText}`);
-                }
+                const response = await fetch("https://caixa-kal3.vercel.app/api/gemini", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        systemPrompt: "Liste os modelos disponíveis.",
+                        messages: "Quais modelos estão disponíveis?"
+                    })
+                });
 
                 const data = await response.json();
                 
-                let modelsList = "📋 MODELOS DISPONÍVEIS NA SUA API:\n\n";
-                if (data.models && data.models.length > 0) {
-                    data.models.forEach(model => {
-                        modelsList += `✅ ${model.name}\n`;
-                        if (model.displayName) modelsList += `   Nome: ${model.displayName}\n`;
-                        if (model.description) modelsList += `   Descrição: ${model.description}\n`;
-                        modelsList += "\n";
-                    });
+                if (!response.ok) {
+                    throw new Error(data.error || "Erro na API");
+                }
+
+                let modelsList = "📋 ANÁLISE DE MODELOS DISPONÍVEIS:\n\n";
+                if (data.choices && data.choices[0]?.message?.content) {
+                    modelsList += data.choices[0].message.content;
                 } else {
-                    modelsList = "⚠️ Nenhum modelo encontrado ou erro na API.";
+                    modelsList = "⚠️ Resposta inesperada da API.";
                 }
 
                 resultDiv.textContent = modelsList;
                 resultDiv.classList.add('show');
+                showToast('✅ Modelos listados com sucesso');
 
             } catch (error) {
-                resultDiv.textContent = `❌ Erro ao listar modelos:\n\n${error.message}\n\nSua chave API pode estar inválida ou sem permissões.`;
+                resultDiv.textContent = `❌ Erro ao listar modelos:\n\n${error.message}`;
                 resultDiv.classList.add('show');
-                console.error('Erro completo:', error);
+                showToast('❌ Erro ao listar modelos', 'error');
             } finally {
                 loadingIndicator.classList.remove('show');
                 listModelsBtn.disabled = false;
             }
         }
 
+        // Analyze with AI
         async function analyzeWithAI() {
-    const productInput = document.getElementById('productSearchAI').value.trim();
-    const promptTemplate = document.getElementById('aiPrompt').value;
-    const resultDiv = document.getElementById('aiResult');
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    const analyzeBtn = document.getElementById('analyzeBtn');
+            const productInput = document.getElementById('productSearchAI').value.trim();
+            const promptTemplate = document.getElementById('aiPrompt').value;
+            const resultDiv = document.getElementById('aiResult');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const analyzeBtn = document.getElementById('analyzeBtn');
 
-    if (!productInput) {
-        alert('⚠️ Por favor, digite ao menos um produto para buscar.');
-        return;
-    }
+            if (!productInput) {
+                showToast('⚠️ Digite ao menos um produto', 'error');
+                return;
+            }
 
-    const textareas = container.querySelectorAll('textarea');
-    const inputs = container.querySelectorAll('input[type=text]');
-    
-    let supplierData = '';
-    for (let i = 0; i < textareas.length; i++) {
-        const supplierName = inputs[i]?.value || `Fornecedor ${i + 1}`;
-        const supplierList = textareas[i]?.value || '';
-        if (supplierList.trim()) {
-            supplierData += `\n\n=== ${supplierName} ===\n${supplierList}`;
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('.supplier-header input[type=text]');
+            
+            let supplierData = '';
+            for (let i = 0; i < textareas.length; i++) {
+                const supplierName = inputs[i]?.value || `Fornecedor ${i + 1}`;
+                const supplierList = textareas[i]?.value || '';
+                if (supplierList.trim()) {
+                    supplierData += `\n\n=== ${supplierName} ===\n${supplierList}`;
+                }
+            }
+
+            if (!supplierData.trim()) {
+                showToast('⚠️ Nenhuma lista encontrada', 'error');
+                return;
+            }
+
+            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) + 
+                               '\n\nLISTAS DE FORNECEDORES:' + supplierData;
+
+            loadingIndicator.classList.add('show');
+            analyzeBtn.disabled = true;
+            resultDiv.classList.remove('show');
+
+            try {
+                const response = await fetch("https://caixa-kal3.vercel.app/api/gemini", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        systemPrompt: "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
+                        messages: finalPrompt
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || "Erro na API");
+                }
+
+                if (data.choices && data.choices[0]?.message?.content) {
+                    resultDiv.textContent = data.choices[0].message.content;
+                    resultDiv.classList.add('show');
+                    showToast('✅ Análise concluída!');
+                    
+                    // Scroll suave até o resultado
+                    setTimeout(() => {
+                        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                } else {
+                    throw new Error('Resposta em formato inesperado.');
+                }
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}`;
+                resultDiv.classList.add('show');
+                showToast('❌ Erro na análise', 'error');
+            } finally {
+                loadingIndicator.classList.remove('show');
+                analyzeBtn.disabled = false;
+            }
         }
-    }
 
-    if (!supplierData.trim()) {
-        alert('⚠️ Nenhuma lista de fornecedor encontrada.');
-        return;
-    }
-
-    const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) + 
-                       '\n\nLISTAS DE FORNECEDORES:' + supplierData;
-
-    loadingIndicator.classList.add('show');
-    analyzeBtn.disabled = true;
-    resultDiv.classList.remove('show');
-
-    try {
-        // ALTERAÇÃO AQUI: Apontando para sua API no Vercel
-        const response = await fetch("https://caixa-kal3.vercel.app/api/gemini", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                systemPrompt: "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
-                messages: finalPrompt // Enviando o prompt completo como corpo da mensagem
-            })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || "Erro na API do Vercel");
-        }
-
-        // ALTERAÇÃO AQUI: Adaptando para a estrutura de resposta da sua API (choices[0].message.content)
-        if (data.choices && data.choices[0]?.message?.content) {
-            resultDiv.textContent = data.choices[0].message.content;
-            resultDiv.classList.add('show');
-        } else {
-            throw new Error('Resposta da IA em formato inesperado.');
-        }
-
-    } catch (error) {
-        resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}`;
-        resultDiv.classList.add('show');
-    } finally {
-        loadingIndicator.classList.remove('show');
-        analyzeBtn.disabled = false;
-    }
-}
-
+        // Setup event listeners
         function setupListeners() {
             const textareas = container.querySelectorAll('textarea');
             textareas.forEach(textarea => {
@@ -507,30 +859,46 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             applyFilter();
         }
 
+        // Update layout based on number of suppliers
         function updateLayout() {
             const numTelas = parseInt(select.value);
             const currentNumTelas = container.children.length;
+
+            // Definir grid class baseado no número de telas e largura da tela
+            container.className = 'container';
+            if (window.innerWidth > 768) {
+                if (numTelas <= 6) {
+                    container.classList.add(`grid-${numTelas}`);
+                } else {
+                    container.classList.add('grid-6');
+                }
+            }
 
             if (numTelas > currentNumTelas) {
                 for (let i = currentNumTelas + 1; i <= numTelas; i++) {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'text-area-wrapper';
 
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'supplier-header';
+
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.value = `Fornecedor ${i}`;
+                    input.placeholder = `Nome do fornecedor ${i}`;
 
                     const textarea = document.createElement('textarea');
                     textarea.id = `fornecedor${i}`;
                     textarea.dataset.originalContent = "";
-                    textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...`;
+                    textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...\n\nEx:\nArroz 5kg - R$ 25,00\nFeijão 1kg - R$ 8,50\nÓleo 900ml - R$ 7,20`;
                     
                     const resultDiv = document.createElement('div');
                     resultDiv.id = `resultado${i}`;
                     resultDiv.className = 'filtered-output';
                     resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
 
-                    wrapper.appendChild(input);
+                    headerDiv.appendChild(input);
+                    wrapper.appendChild(headerDiv);
                     wrapper.appendChild(textarea);
                     wrapper.appendChild(resultDiv);
                     container.appendChild(wrapper);
@@ -544,9 +912,19 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             applyFilter();
         }
 
+        // Apply search filter
         function applyFilter() {
             const searchTerm = searchInput.value.toLowerCase().trim();
+            const subSearchTerm = subSearchInput.value.toLowerCase().trim();
             const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
+
+            // Mostrar/ocultar legenda de cores
+            const searchLegend = document.getElementById('searchLegend');
+            if (searchTerm.length > 0 && subSearchTerm.length > 0) {
+                searchLegend.classList.add('show');
+            } else {
+                searchLegend.classList.remove('show');
+            }
 
             const textareas = container.querySelectorAll('textarea');
 
@@ -573,16 +951,26 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 let filteredLinesWithHighlight = [];
                 let lineAdded = new Array(lines.length).fill(false);
 
-                lines.forEach((line, index) => {
-                    const normalizeText = str => str
-					.toLowerCase()
-					.normalize('NFD')
-					.replace(/[\u0300-\u036f]/g, ""); // Remove apenas acentos
+                const normalizeText = str => str
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, "");
 
+                lines.forEach((line, index) => {
                     const lineNormalized = normalizeText(line);
                     const searchNormalized = normalizeText(searchTerm);
-
+                    
+                    // Verificar se a linha contém o termo de busca principal
                     if (lineNormalized.includes(searchNormalized)) {
+                        // Se houver sub-busca, verificar se também contém o termo de sub-busca
+                        if (subSearchTerm.length > 0) {
+                            const subSearchNormalized = normalizeText(subSearchTerm);
+                            if (!lineNormalized.includes(subSearchNormalized)) {
+                                return; // Pula esta linha se não contiver o termo de sub-busca
+                            }
+                        }
+
+                        // Add context before
                         for (let i = Math.max(0, index - contextLines); i < index; i++) {
                             if (!lineAdded[i]) {
                                 filteredLinesWithHighlight.push(lines[i]);
@@ -590,12 +978,23 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                             }
                         }
                         
+                        // Add highlighted line
+                        let highlightedLine = line;
+                        
+                        // Highlight busca principal
                         const regex = new RegExp(`(${searchTerm})`, 'gi');
-                        const highlightedLine = line.replace(regex, '<span class="highlight">$1</span>');
+                        highlightedLine = highlightedLine.replace(regex, '<span class="highlight">$1</span>');
+                        
+                        // Highlight sub-busca se existir
+                        if (subSearchTerm.length > 0) {
+                            const subRegex = new RegExp(`(${subSearchTerm})`, 'gi');
+                            highlightedLine = highlightedLine.replace(subRegex, '<span class="highlight" style="background-color: #80deea;">$1</span>');
+                        }
 
                         filteredLinesWithHighlight.push(highlightedLine);
                         lineAdded[index] = true;
 
+                        // Add context after
                         for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
                             if (!lineAdded[i]) {
                                 filteredLinesWithHighlight.push(lines[i]);
@@ -606,7 +1005,8 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 });
 
                 if (filteredLinesWithHighlight.length === 0) {
-                    resultDiv.innerHTML = `<span style="color: red;">Nenhum resultado encontrado para "${searchInput.value}".</span>`;
+                    const subText = subSearchTerm.length > 0 ? ` com "${subSearchInput.value}"` : '';
+                    resultDiv.innerHTML = `<span style="color: var(--danger-color);">❌ Nenhum resultado para "${searchInput.value}"${subText}</span>`;
                 } else {
                     resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
                 }
@@ -619,8 +1019,118 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 textarea.dataset.originalContent = textarea.value;
             });
         }
-        
-        // Inicialização
+
+        // Save data to Google Sheets
+        async function salvarDados() {
+            const textareas = container.querySelectorAll('textarea');
+            const inputs = container.querySelectorAll('.supplier-header input[type=text]');
+            const tagInput = document.getElementById('tagInput');
+            
+            const params = new URLSearchParams();
+            params.append('tag', tagInput.value || '');
+            
+            // Salvar até 16 fornecedores
+            for (let i = 0; i < 16; i++) {
+                params.append(`name${i+1}`, inputs[i]?.value || '');
+                params.append(`text${i+1}`, textareas[i]?.value || '');
+            }
+
+            try {
+                showToast('⏳ Salvando dados...');
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: params
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast('✅ Dados salvos com sucesso!');
+                    tagInput.value = ''; // Limpar tag após salvar
+                } else {
+                    throw new Error(JSON.stringify(json));
+                }
+            } catch (err) {
+                showToast('❌ Erro ao salvar: ' + err.message, 'error');
+            }
+        }
+
+        // Load history
+        async function carregarHistorico() {
+            try {
+                showToast('⏳ Carregando histórico...');
+                const res = await fetch(SCRIPT_URL);
+                if (!res.ok) throw new Error("Erro HTTP: " + res.status);
+                const data = await res.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    showToast('⚠️ Nenhum registro encontrado', 'error');
+                    return;
+                }
+
+                const selectHistorico = document.getElementById("historicoSelect");
+                selectHistorico.innerHTML = '<option value="">Selecione um histórico...</option>';
+                data.forEach((item, index) => {
+                    const opt = document.createElement("option");
+                    const dataLocal = new Date(item.date).toLocaleString("pt-BR");
+                    const tagText = item.tag ? ` (${item.tag})` : '';
+                    opt.value = index;
+                    opt.textContent = `${index + 1} - ${dataLocal}${tagText}`;
+                    selectHistorico.appendChild(opt);
+                });
+
+                selectHistorico.style.display = "block";
+                selectHistorico.dataset.registros = JSON.stringify(data);
+                showToast('✅ Histórico carregado!');
+            } catch (err) {
+                showToast('❌ Erro ao carregar histórico: ' + err.message, 'error');
+            }
+        }
+
+        // Apply history
+        function aplicarHistorico() {
+            const selectHistorico = document.getElementById("historicoSelect");
+            const index = parseInt(selectHistorico.value);
+            if (isNaN(index)) return;
+
+            const data = JSON.parse(selectHistorico.dataset.registros);
+            const tagInput = document.getElementById("tagInput");
+            const registro = data[index];
+
+            // Contar quantos fornecedores têm dados
+            let numFornecedoresComDados = 0;
+            for (let i = 0; i < 16; i++) {
+                if (registro[`name${i+1}`] || registro[`text${i+1}`]) {
+                    numFornecedoresComDados = i + 1;
+                }
+            }
+
+            // Ajustar o seletor de telas para o número correto
+            if (numFornecedoresComDados > 0) {
+                select.value = numFornecedoresComDados;
+                updateLayout();
+            }
+
+            // Aguardar um pouco para garantir que o layout foi atualizado
+            setTimeout(() => {
+                const textareas = container.querySelectorAll('textarea');
+                const inputs = container.querySelectorAll('.supplier-header input[type=text]');
+                
+                if (tagInput) tagInput.value = registro['tag'] || '';
+
+                // Restaurar até 16 fornecedores
+                for (let i = 0; i < numFornecedoresComDados; i++) {
+                    if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
+                    if (textareas[i]) {
+                        textareas[i].value = registro[`text${i+1}`] || '';
+                        textareas[i].dataset.originalContent = textareas[i].value;
+                    }
+                }
+
+                showToast('✅ Registro carregado com ' + numFornecedoresComDados + ' fornecedor(es)!');
+                applyFilter();
+            }, 100);
+        }
+
+        // Initialization
         updateLayout();
         initializeContent();
 
@@ -630,94 +1140,12 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 applyFilter();
             }
         });
-        
-    </script>
 
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
-
-        async function salvarDados() {
-            const textareas = container.querySelectorAll('textarea');
-            const inputs = container.querySelectorAll('input[type=text]');
-            const tagInput = document.getElementById('tagInput');
-            
-            const params = new URLSearchParams();
-            params.append('tag', tagInput.value || '');
-            
-            for (let i = 0; i < 8; i++) {
-                params.append(`name${i+1}`, inputs[i]?.value || '');
-                params.append(`text${i+1}`, textareas[i]?.value || '');
-            }
-
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: params
-                });
-                const json = await res.json();
-                if (json.status === 'success') {
-                    alert('✅ Dados salvos com sucesso!');
-                } else {
-                    alert('❌ Erro do servidor: ' + JSON.stringify(json));
-                }
-            } catch (err) {
-                alert('❌ Erro ao salvar: ' + err);
-            }
-        }
-
-        async function carregarHistorico() {
-            try {
-                const res = await fetch(SCRIPT_URL);
-                if (!res.ok) throw new Error("Erro HTTP: " + res.status);
-                const data = await res.json();
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    alert("Nenhum registro encontrado.");
-                    return;
-                }
-
-                const select = document.getElementById("historicoSelect");
-                select.innerHTML = '<option value="">Selecione um histórico...</option>';
-                data.forEach((item, index) => {
-                    const opt = document.createElement("option");
-                    const dataLocal = new Date(item.date).toLocaleString("pt-BR");
-                    const tagText = item.tag ? ` (${item.tag})` : '';
-                    opt.value = index;
-                    opt.textContent = `${index + 1} - ${dataLocal}${tagText}`;
-                    select.appendChild(opt);
-                });
-
-                select.style.display = "inline-block";
-                select.dataset.registros = JSON.stringify(data);
-            } catch (err) {
-                alert("❌ Erro ao carregar histórico: " + err);
-            }
-        }
-
-        function aplicarHistorico() {
-            const select = document.getElementById("historicoSelect");
-            const index = parseInt(select.value);
-            if (isNaN(index)) return;
-
-            const data = JSON.parse(select.dataset.registros);
-            const tagInput = document.getElementById("tagInput");
-            const registro = data[index];
-
-            const textareas = container.querySelectorAll('textarea');
-            const inputs = container.querySelectorAll('input[type=text]');
-            
-            if (tagInput) tagInput.value = registro['tag'] || '';
-
-            for (let i = 0; i < 8; i++) {
-                if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
-                if (textareas[i]) textareas[i].value = registro[`text${i+1}`] || '';
-            }
-
-            alert("✅ Registro carregado na tela!");
-        }
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            updateLayout();
+        });
     </script>
 
 </body>
 </html>
-
-
