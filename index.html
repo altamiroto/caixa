@@ -173,7 +173,7 @@
 
         input[type="number"], input[type="text"] {
             width: 100%;
-            padding: 12px 12px 12px 40px;
+            padding: 14px 14px 14px 42px;
             font-size: 16px;
             border: 2px solid var(--border-color);
             border-radius: 10px;
@@ -233,10 +233,12 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 15px;
-            padding: 12px;
+            padding: 15px;
             background: var(--bg-primary);
             border-radius: 10px;
             transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 54px;
         }
 
         .toggle-section:hover {
@@ -244,9 +246,10 @@
         }
 
         .toggle-section input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .toggle-section label {
@@ -254,6 +257,7 @@
             cursor: pointer;
             flex: 1;
             user-select: none;
+            font-size: 1rem;
         }
 
         .collapsible-content {
@@ -340,7 +344,7 @@
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 14px 24px;
             font-size: 16px;
             font-weight: 600;
             border: none;
@@ -351,6 +355,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            min-height: 48px;
         }
 
         .btn:hover {
@@ -653,6 +658,54 @@
             margin-bottom: 10px;
         }
 
+        /* Botão flutuante de acesso rápido ao histórico */
+        .fab-historico {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab-historico:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+
+        .fab-historico:active {
+            transform: scale(0.95);
+        }
+
+        /* Badge de contador no FAB */
+        .fab-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-secondary);
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -680,6 +733,54 @@
                 align-items: flex-start;
                 gap: 5px;
             }
+
+            /* Melhorar legibilidade de inputs no mobile */
+            input[type="number"], input[type="text"] {
+                font-size: 16px; /* Evita zoom automático no iOS */
+            }
+
+            textarea {
+                font-size: 16px;
+            }
+
+            /* Botões maiores no mobile */
+            .btn {
+                padding: 16px 20px;
+                min-height: 52px;
+            }
+
+            /* Aumentar área de toque dos checkboxes */
+            .checkbox-item input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* Melhorar visualização do histórico em mobile */
+            .historico-acoes {
+                flex-direction: column;
+            }
+
+            .historico-acoes button {
+                width: 100%;
+            }
+
+            /* Reduzir padding dos cards no mobile */
+            .section-card {
+                padding: 15px;
+            }
+
+            /* Quick access mobile */
+            .quick-access-mobile {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 15px;
+            }
+
+            .quick-access-mobile .btn {
+                flex: 1;
+                font-size: 14px;
+                padding: 12px 8px;
+            }
         }
     </style>
 </head>
@@ -694,44 +795,6 @@
             <a href="https://calculadoracaixa.netlify.app/listas/" target="_blank">📋 Processamento de Lista</a>
             |
             <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
-        </div>
-
-        <!-- Sistema de Histórico -->
-        <div class="toggle-section">
-            <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
-            <label for="toggleHistorico">📚 Salvar no Histórico</label>
-        </div>
-
-        <div id="historicoSection" class="collapsible-content">
-            <div class="section-card">
-                <div class="input-group">
-                    <label for="historicoTitulo">Título do cálculo:</label>
-                    <div class="input-with-icon">
-                        <span class="input-icon">📝</span>
-                        <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="historicoComentarios">Comentários (opcional):</label>
-                    <textarea id="historicoComentarios" placeholder="Observações sobre este cálculo..." style="min-height: 80px;"></textarea>
-                </div>
-                <div class="button-row">
-                    <button class="btn btn-primary" onclick="salvarNoHistorico()">💾 Salvar Agora</button>
-                    <button class="btn btn-secondary" onclick="toggleVerHistorico()">📋 Ver Histórico</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Visualização do Histórico -->
-        <div id="visualizarHistoricoSection" class="collapsible-content">
-            <div class="section-card">
-                <div class="section-title">📖 Histórico de Cálculos</div>
-                <div id="historicoLista"></div>
-                <div class="button-row" style="margin-top: 15px;">
-                    <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
-                    <button class="btn btn-danger" onclick="limparHistoricoCompleto()">🗑️ Limpar Histórico</button>
-                </div>
-            </div>
         </div>
 
         <!-- Lista de Produtos -->
@@ -989,7 +1052,51 @@ Capa silicone R$ 50,00
             </div>
             <div id="mensagemCopiado" class="copy-message">✅ Texto copiado para área de transferência!</div>
         </div>
+
+        <!-- Sistema de Histórico -->
+        <div class="toggle-section">
+            <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
+            <label for="toggleHistorico">📚 Salvar no Histórico</label>
+        </div>
+
+        <div id="historicoSection" class="collapsible-content">
+            <div class="section-card">
+                <div class="input-group">
+                    <label for="historicoTitulo">Título do cálculo:</label>
+                    <div class="input-with-icon">
+                        <span class="input-icon">📝</span>
+                        <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="historicoComentarios">Comentários (opcional):</label>
+                    <textarea id="historicoComentarios" placeholder="Observações sobre este cálculo..." style="min-height: 80px;"></textarea>
+                </div>
+                <div class="button-row">
+                    <button class="btn btn-primary" onclick="salvarNoHistorico()">💾 Salvar Agora</button>
+                    <button class="btn btn-secondary" onclick="toggleVerHistorico()">📋 Ver Histórico</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualização do Histórico -->
+        <div id="visualizarHistoricoSection" class="collapsible-content">
+            <div class="section-card">
+                <div class="section-title">📖 Histórico de Cálculos</div>
+                <div id="historicoLista"></div>
+                <div class="button-row" style="margin-top: 15px;">
+                    <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
+                    <button class="btn btn-danger" onclick="limparHistoricoCompleto()">🗑️ Limpar Histórico</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Botão Flutuante de Acesso Rápido ao Histórico -->
+    <button class="fab-historico" onclick="abrirHistoricoRapido()" title="Ver histórico">
+        📚
+        <span class="fab-badge" id="fabBadge" style="display: none;">0</span>
+    </button>
 
     <script>
         // Elementos do DOM
@@ -1062,6 +1169,32 @@ Capa silicone R$ 50,00
             visualizarHistoricoSection.classList.toggle('show');
             if (visualizarHistoricoSection.classList.contains('show')) {
                 carregarHistorico();
+                // Scroll suave até o histórico
+                setTimeout(() => {
+                    visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        function abrirHistoricoRapido() {
+            // Abrir seção de visualização do histórico
+            if (!visualizarHistoricoSection.classList.contains('show')) {
+                visualizarHistoricoSection.classList.add('show');
+                carregarHistorico();
+            }
+            // Scroll suave até o histórico
+            visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function atualizarBadgeHistorico() {
+            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            const badge = document.getElementById('fabBadge');
+            
+            if (historico.length > 0) {
+                badge.textContent = historico.length > 99 ? '99+' : historico.length;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
             }
         }
 
@@ -1169,6 +1302,9 @@ Capa silicone R$ 50,00
 
             historico.unshift(novoRegistro); // Adiciona no início do array
             localStorage.setItem('historicoCalculos', JSON.stringify(historico));
+
+            // Atualizar badge do FAB
+            atualizarBadgeHistorico();
 
             // Limpar campos do histórico
             historicoTituloInput.value = '';
@@ -1403,6 +1539,9 @@ Capa silicone R$ 50,00
             historico = historico.filter(h => h.id !== id);
             localStorage.setItem('historicoCalculos', JSON.stringify(historico));
             
+            // Atualizar badge do FAB
+            atualizarBadgeHistorico();
+            
             carregarHistorico();
             
             mensagemCopiado.textContent = '✅ Registro excluído do histórico!';
@@ -1419,6 +1558,7 @@ Capa silicone R$ 50,00
             }
 
             localStorage.removeItem('historicoCalculos');
+            atualizarBadgeHistorico();
             carregarHistorico();
             
             mensagemCopiado.textContent = '✅ Histórico completamente limpo!';
@@ -1471,6 +1611,22 @@ Capa silicone R$ 50,00
             );
             calcularParcelas();
         }
+
+        // Tornar toda a área do toggle clicável (melhor UX mobile)
+        window.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.toggle-section').forEach(section => {
+                section.addEventListener('click', function(e) {
+                    // Evitar duplo clique se clicar diretamente no checkbox ou label
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        if (checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }
+                    }
+                });
+            });
+        });
 
         // Gerar checkboxes de parcelas
         function gerarCheckboxesAvancadas() {
@@ -2009,6 +2165,7 @@ Capa silicone R$ 50,00
 
         // Inicializar
         calcularParcelas();
+        atualizarBadgeHistorico();
     </script>
 </body>
 </html>
