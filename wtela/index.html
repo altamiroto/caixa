@@ -956,7 +956,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                     .normalize('NFD')
                     .replace(/[\u0300-\u036f]/g, "");
 
-                lines.forEach((line, index) => {
+             /*   lines.forEach((line, index) => {
                     const lineNormalized = normalizeText(line);
                     const searchNormalized = normalizeText(searchTerm);
                     
@@ -1002,7 +1002,57 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                             }
                         }
                     }
+                });*/
+
+// Criamos um mapa de quais blocos de contexto satisfazem a sub-busca
+                lines.forEach((line, index) => {
+                    const lineNormalized = normalizeText(line);
+                    const searchNormalized = normalizeText(searchTerm);
+
+                    // Se encontrou o termo principal
+                    if (lineNormalized.includes(searchNormalized)) {
+                        
+                        // Definimos o intervalo do bloco (linha atual + contexto)
+                        let start = Math.max(0, index - contextLines);
+                        let end = Math.min(lines.length - 1, index + contextLines);
+                        
+                        let blocoTextoContexto = "";
+                        for (let i = start; i <= end; i++) {
+                            blocoTextoContexto += normalizeText(lines[i]) + " ";
+                        }
+
+                        // Agora verificamos se a SUB-BUSCA existe em QUALQUER lugar desse bloco
+                        let atendeSubBusca = true;
+                        if (subSearchTerm.length > 0) {
+                            const subSearchNormalized = normalizeText(subSearchTerm);
+                            if (!blocoTextoContexto.includes(subSearchNormalized)) {
+                                atendeSubBusca = false;
+                            }
+                        }
+
+                        // Se o bloco inteiro for válido, adicionamos as linhas ao resultado
+                        if (atendeSubBusca) {
+                            for (let i = start; i <= end; i++) {
+                                if (!lineAdded[i]) {
+                                    let content = lines[i];
+                                    
+                                    // Aplicar destaques (apenas se for a linha principal ou se o termo aparecer no contexto)
+                                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                                    content = content.replace(regex, '<span class="highlight">$1</span>');
+
+                                    if (subSearchTerm.length > 0) {
+                                        const subRegex = new RegExp(`(${subSearchTerm})`, 'gi');
+                                        content = content.replace(subRegex, '<span class="highlight" style="background-color: #80deea;">$1</span>');
+                                    }
+
+                                    filteredLinesWithHighlight.push(content);
+                                    lineAdded[i] = true;
+                                }
+                            }
+                        }
+                    }
                 });
+                
 
                 if (filteredLinesWithHighlight.length === 0) {
                     const subText = subSearchTerm.length > 0 ? ` com "${subSearchInput.value}"` : '';
@@ -1149,3 +1199,4 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
 </body>
 </html>
+
