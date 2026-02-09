@@ -34,38 +34,38 @@
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 15px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
         }
 
         h1 {
             color: var(--primary-color);
-            margin-bottom: 8px;
-            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-size: 1.5rem;
         }
 
         .header p {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        /* Controles principais */
+        /* Controles principais - mais compactos */
         .controls {
             background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 12px 15px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .control-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 10px;
         }
 
         .control-group {
@@ -75,19 +75,19 @@
 
         .control-group label {
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             color: var(--text-primary);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         input[type="text"], 
         input[type="number"], 
         select {
             width: 100%;
-            padding: 12px;
+            padding: 8px 10px;
             border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 14px;
             transition: all 0.3s ease;
             background: var(--bg-secondary);
         }
@@ -100,17 +100,17 @@
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
 
-        /* Container de listas */
+        /* Container de listas - otimizado para desktop */
         .container {
             display: grid;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
         .text-area-wrapper {
             background: var(--bg-secondary);
-            padding: 15px;
-            border-radius: 12px;
+            padding: 10px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
         }
@@ -120,24 +120,27 @@
         }
 
         .supplier-header {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .supplier-header input {
             font-weight: 600;
             background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            font-size: 13px;
+            padding: 6px 8px;
         }
 
         textarea {
             width: 100%;
-            min-height: 200px;
-            padding: 12px;
+            min-height: 150px;
+            padding: 8px;
             border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 12px;
             resize: vertical;
             font-family: 'Courier New', monospace;
             transition: all 0.3s ease;
+            line-height: 1.4;
         }
 
         textarea:focus {
@@ -148,17 +151,18 @@
 
         .filtered-output {
             width: 100%;
-            min-height: 150px;
-            padding: 12px;
+            min-height: 100px;
+            padding: 8px;
             border: 2px solid var(--secondary-color);
-            border-radius: 8px;
+            border-radius: 6px;
             background: #e3f2fd;
-            margin-top: 10px;
+            margin-top: 8px;
             overflow: auto;
             white-space: pre-wrap;
             display: none;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 11px;
+            line-height: 1.4;
         }
 
         .highlight {
@@ -177,9 +181,9 @@
 
         /* Legenda de cores para busca */
         .search-legend {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
-            margin-top: 8px;
+            margin-top: 6px;
             display: none;
         }
 
@@ -189,32 +193,32 @@
 
         .search-legend span {
             display: inline-block;
-            margin-right: 15px;
+            margin-right: 12px;
         }
 
         .legend-color {
             display: inline-block;
-            width: 20px;
-            height: 12px;
+            width: 18px;
+            height: 10px;
             border-radius: 3px;
-            margin-right: 5px;
+            margin-right: 4px;
             vertical-align: middle;
         }
 
-        /* Botões */
+        /* Botões - mais compactos */
         .btn {
-            padding: 14px 24px;
-            font-size: 16px;
+            padding: 10px 18px;
+            font-size: 14px;
             font-weight: 600;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-height: 48px;
+            min-height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn:hover {
@@ -255,48 +259,49 @@
 
         .action-buttons {
             background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 12px 15px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: center;
         }
 
         .action-buttons .control-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         #historicoSelect {
-            margin-top: 10px;
+            margin-top: 8px;
             display: none;
         }
 
-        /* Seção de IA */
+        /* Seção de IA - mais compacta */
         .advanced-section {
             background: var(--bg-secondary);
-            border-radius: 12px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             overflow: hidden;
         }
 
         .advanced-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
             color: white;
-            padding: 18px;
+            padding: 12px 15px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             user-select: none;
             font-weight: 600;
+            font-size: 14px;
         }
 
         .advanced-header:hover {
@@ -304,7 +309,7 @@
         }
 
         .toggle-icon {
-            font-size: 20px;
+            font-size: 18px;
             transition: transform 0.3s;
         }
 
@@ -313,7 +318,7 @@
         }
 
         .advanced-content {
-            padding: 20px;
+            padding: 15px;
             display: none;
         }
 
@@ -323,37 +328,37 @@
 
         .api-info {
             background: #e3f2fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 14px;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 13px;
             border-left: 4px solid var(--secondary-color);
         }
 
         .ai-prompt-area {
             width: 100%;
-            min-height: 200px;
-            padding: 12px;
+            min-height: 150px;
+            padding: 10px;
             border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 6px;
+            font-size: 12px;
             resize: vertical;
             font-family: 'Courier New', monospace;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .ai-result {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 12px;
             background: #f9f9f9;
             border: 2px solid var(--primary-color);
-            border-radius: 8px;
+            border-radius: 6px;
             white-space: pre-wrap;
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
             display: none;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .ai-result.show {
@@ -364,8 +369,9 @@
             display: none;
             color: var(--primary-color);
             font-weight: bold;
-            margin-top: 10px;
+            margin-top: 8px;
             text-align: center;
+            font-size: 13px;
         }
 
         .loading.show {
@@ -377,13 +383,13 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
             color: white;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
             transition: all 0.3s ease;
@@ -402,35 +408,14 @@
             transform: scale(0.95);
         }
 
-        .fab-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger-color);
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid white;
-        }
-
-        .fab-badge.show {
-            display: flex;
-        }
-
         /* Mobile optimizations */
         @media (max-width: 768px) {
             h1 {
-                font-size: 1.5rem;
+                font-size: 1.3rem;
             }
 
             .header p {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
 
             .control-row {
@@ -438,7 +423,7 @@
             }
 
             .container {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
             }
 
             textarea {
@@ -452,35 +437,23 @@
 
             .btn {
                 width: 100%;
-                padding: 16px 20px;
+                padding: 14px 18px;
             }
 
             .filtered-output {
-                font-size: 13px;
+                font-size: 12px;
             }
 
             .ai-prompt-area {
-                min-height: 150px;
+                min-height: 130px;
             }
         }
 
-        @media (min-width: 769px) and (max-width: 1200px) {
-            /* Tablets */
-            .container.grid-2 {
-                grid-template-columns: repeat(2, 1fr);
+        /* Desktop - máximo de 8 colunas lado a lado */
+        @media (min-width: 769px) {
+            .container.grid-1 {
+                grid-template-columns: 1fr;
             }
-            .container.grid-3 {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .container.grid-4,
-            .container.grid-5,
-            .container.grid-6 {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        @media (min-width: 1201px) {
-            /* Desktops grandes */
             .container.grid-2 {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -495,6 +468,20 @@
             }
             .container.grid-6 {
                 grid-template-columns: repeat(6, 1fr);
+            }
+            .container.grid-7 {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            .container.grid-8,
+            .container.grid-9,
+            .container.grid-10,
+            .container.grid-11,
+            .container.grid-12,
+            .container.grid-13,
+            .container.grid-14,
+            .container.grid-15,
+            .container.grid-16 {
+                grid-template-columns: repeat(8, 1fr);
             }
         }
 
@@ -522,12 +509,13 @@
             transform: translateX(-50%);
             background: var(--text-primary);
             color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
             box-shadow: var(--shadow-hover);
             z-index: 9999;
             display: none;
             animation: slideIn 0.3s ease;
+            font-size: 14px;
         }
 
         .toast.show {
@@ -864,14 +852,10 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             const numTelas = parseInt(select.value);
             const currentNumTelas = container.children.length;
 
-            // Definir grid class baseado no número de telas e largura da tela
+            // Definir grid class baseado no número de telas
             container.className = 'container';
             if (window.innerWidth > 768) {
-                if (numTelas <= 6) {
-                    container.classList.add(`grid-${numTelas}`);
-                } else {
-                    container.classList.add('grid-6');
-                }
+                container.classList.add(`grid-${numTelas}`);
             }
 
             if (numTelas > currentNumTelas) {
@@ -956,55 +940,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                     .normalize('NFD')
                     .replace(/[\u0300-\u036f]/g, "");
 
-             /*   lines.forEach((line, index) => {
-                    const lineNormalized = normalizeText(line);
-                    const searchNormalized = normalizeText(searchTerm);
-                    
-                    // Verificar se a linha contém o termo de busca principal
-                    if (lineNormalized.includes(searchNormalized)) {
-                        // Se houver sub-busca, verificar se também contém o termo de sub-busca
-                        if (subSearchTerm.length > 0) {
-                            const subSearchNormalized = normalizeText(subSearchTerm);
-                            if (!lineNormalized.includes(subSearchNormalized)) {
-                                return; // Pula esta linha se não contiver o termo de sub-busca
-                            }
-                        }
-
-                        // Add context before
-                        for (let i = Math.max(0, index - contextLines); i < index; i++) {
-                            if (!lineAdded[i]) {
-                                filteredLinesWithHighlight.push(lines[i]);
-                                lineAdded[i] = true;
-                            }
-                        }
-                        
-                        // Add highlighted line
-                        let highlightedLine = line;
-                        
-                        // Highlight busca principal
-                        const regex = new RegExp(`(${searchTerm})`, 'gi');
-                        highlightedLine = highlightedLine.replace(regex, '<span class="highlight">$1</span>');
-                        
-                        // Highlight sub-busca se existir
-                        if (subSearchTerm.length > 0) {
-                            const subRegex = new RegExp(`(${subSearchTerm})`, 'gi');
-                            highlightedLine = highlightedLine.replace(subRegex, '<span class="highlight" style="background-color: #80deea;">$1</span>');
-                        }
-
-                        filteredLinesWithHighlight.push(highlightedLine);
-                        lineAdded[index] = true;
-
-                        // Add context after
-                        for (let i = index + 1; i <= Math.min(lines.length - 1, index + contextLines); i++) {
-                            if (!lineAdded[i]) {
-                                filteredLinesWithHighlight.push(lines[i]);
-                                lineAdded[i] = true;
-                            }
-                        }
-                    }
-                });*/
-
-// Criamos um mapa de quais blocos de contexto satisfazem a sub-busca
+                // Criamos um mapa de quais blocos de contexto satisfazem a sub-busca
                 lines.forEach((line, index) => {
                     const lineNormalized = normalizeText(line);
                     const searchNormalized = normalizeText(searchTerm);
@@ -1199,4 +1135,3 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
 </body>
 </html>
-
