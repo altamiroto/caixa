@@ -797,7 +797,6 @@
             <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
         </div>
 
-        <!-- Lista de Produtos -->
         <div class="toggle-section">
             <input type="checkbox" id="toggleProductList" onchange="toggleProductListSection()">
             <label for="toggleProductList">📦 Usar lista de produtos</label>
@@ -821,7 +820,6 @@
             </div>
         </div>
 
-        <!-- Valores Principais -->
         <div class="section-card">
             <div class="section-title">💵 Valores Principais</div>
             
@@ -842,7 +840,6 @@
             </div>
         </div>
 
-        <!-- Acréscimos e Descontos -->
         <div class="section-card">
             <div class="section-title">🎁 Acréscimos e Descontos</div>
             
@@ -904,7 +901,6 @@
             </div>
         </div>
 
-        <!-- Opções Avançadas -->
         <div class="toggle-section">
             <input type="checkbox" id="toggleAdvancedOptions" onchange="toggleAdvancedSection()">
             <label for="toggleAdvancedOptions">⚙️ Opções Avançadas</label>
@@ -915,15 +911,39 @@
                 <div class="option-group">
                     <h4>🤖 Configuração da IA (Groq)</h4>
                     <div class="input-group">
-                        <textarea id="aiPrompt" style="height: 120px;">Você é um assistente que extrai produtos e preços de textos bagunçados. 
+                        <textarea id="aiPrompt" style="height: 120px;">Você é um assistente que extrai produtos e preços de textos bagunçados. 
 Sua saída deve ser APENAS uma lista no formato: Nome do Produto R$ Valor.
-Exemplo: 
+Exemplo: 
 iPhone 13 R$ 3.500,00
 Capa silicone R$ 50,00
 
 - Caso tenha informações adicionais do produto colocar entre parênteses, após o nome do produto, no formato (informação 1/informação 2, etc)
 - A saida deve ter a virgula como casa de separação de centavos
 - Não escreva introduções nem conclusões.</textarea>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="option-group">
+                    <h4>✨ Emoticons nos Valores</h4>
+                    <div class="checkbox-item">
+                        <div class="parcela-input-group">
+                            <input type="checkbox" id="useEmoticons" onchange="calcularParcelas()">
+                            <label for="useEmoticons">Ativar emoticons no texto de saída</label>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div class="input-group">
+                            <label for="emoticonDinheiro">Dinheiro:</label>
+                            <input type="text" id="emoticonDinheiro" value="💸 " placeholder="Ex: 💸">
+                            <small>Sugestões: 💸 💵 💰 🤑</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="emoticonCartao">Cartão:</label>
+                            <input type="text" id="emoticonCartao" value="💳 " placeholder="Ex: 💳">
+                            <small>Sugestões: 💳 🏧 🪪 🛒</small>
+                        </div>
                     </div>
                 </div>
 
@@ -946,7 +966,7 @@ Capa silicone R$ 50,00
                 <hr>
 
                 <div class="option-group">
-                    <h4>📝 Personalizar Texto de Saída</h4>
+                    <h4>禁 Personalizar Texto de Saída</h4>
                     
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
@@ -1041,7 +1061,6 @@ Capa silicone R$ 50,00
             </div>
         </div>
 
-        <!-- Resultado -->
         <div class="section-card">
             <div class="section-title">📋 Resultado</div>
             <div class="input-group">
@@ -1054,7 +1073,6 @@ Capa silicone R$ 50,00
             <div id="mensagemCopiado" class="copy-message">✅ Texto copiado para área de transferência!</div>
         </div>
 
-        <!-- Sistema de Histórico -->
         <div class="toggle-section">
             <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
             <label for="toggleHistorico">📚 Salvar no Histórico</label>
@@ -1080,7 +1098,6 @@ Capa silicone R$ 50,00
             </div>
         </div>
 
-        <!-- Visualização do Histórico -->
         <div id="visualizarHistoricoSection" class="collapsible-content">
             <div class="section-card">
                 <div class="section-title">📖 Histórico de Cálculos</div>
@@ -1093,7 +1110,6 @@ Capa silicone R$ 50,00
         </div>
     </div>
 
-    <!-- Botão Flutuante de Acesso Rápido ao Histórico -->
     <button class="fab-historico" onclick="abrirHistoricoRapido()" title="Ver histórico">
         📚
         <span class="fab-badge" id="fabBadge" style="display: none;">0</span>
@@ -1141,6 +1157,11 @@ Capa silicone R$ 50,00
         const productListLoading = document.getElementById('productListLoading');
         const productListResult = document.getElementById('productListResult');
         const aiPromptTextarea = document.getElementById('aiPrompt');
+
+        // Elementos dos Novos Emoticons
+        const useEmoticonsCheckbox = document.getElementById('useEmoticons');
+        const emoticonDinheiroInput = document.getElementById('emoticonDinheiro');
+        const emoticonCartaoInput = document.getElementById('emoticonCartao');
 
         // Elementos do Histórico
         const toggleHistorico = document.getElementById('toggleHistorico');
@@ -1255,7 +1276,8 @@ Capa silicone R$ 50,00
                     showComparison: showComparisonCheckbox.checked,
                     hideEntradaText: hideEntradaTextCheckbox.checked,
                     showTotalValue: showTotalValueCheckbox.checked,
-                    boldProductName: boldProductNameCheckbox.checked
+                    boldProductName: boldProductNameCheckbox.checked,
+                    useEmoticons: useEmoticonsCheckbox.checked
                 },
                 
                 // Porcentagens
@@ -1268,7 +1290,9 @@ Capa silicone R$ 50,00
                     textoAdicionalLinha: textoAdicionalLinhaInput.value,
                     textoCabecalho: textoCabecalhoMensagemTextarea.value,
                     textoFinal: textoFinalMensagemTextarea.value,
-                    aiPrompt: aiPromptTextarea.value
+                    aiPrompt: aiPromptTextarea.value,
+                    emoticonDinheiro: emoticonDinheiroInput.value,
+                    emoticonCartao: emoticonCartaoInput.value
                 },
                 
                 // Parcelas e taxas
@@ -1409,6 +1433,8 @@ Capa silicone R$ 50,00
                 textoCabecalhoMensagemTextarea.value = dados.textos.textoCabecalho || '';
                 textoFinalMensagemTextarea.value = dados.textos.textoFinal || '';
                 aiPromptTextarea.value = dados.textos.aiPrompt || aiPromptTextarea.value;
+                emoticonDinheiroInput.value = dados.textos.emoticonDinheiro || '💸 ';
+                emoticonCartaoInput.value = dados.textos.emoticonCartao || '💳 ';
             }
             
             // Restaurar lista de produtos
@@ -1456,6 +1482,7 @@ Capa silicone R$ 50,00
                 hideEntradaTextCheckbox.checked = dados.opcoes.hideEntradaText || false;
                 showTotalValueCheckbox.checked = dados.opcoes.showTotalValue || false;
                 boldProductNameCheckbox.checked = dados.opcoes.boldProductName !== undefined ? dados.opcoes.boldProductName : true;
+                useEmoticonsCheckbox.checked = dados.opcoes.useEmoticons || false;
             }
             
             // Restaurar opções avançadas e parcelas
@@ -1869,6 +1896,9 @@ Capa silicone R$ 50,00
         textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
         textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
 
+        emoticonDinheiroInput.addEventListener('input', calcularParcelas);
+        emoticonCartaoInput.addEventListener('input', calcularParcelas);
+
         parcelaEspecificaInput.addEventListener('input', function() {
             const val = parseInt(this.value);
             
@@ -2069,6 +2099,11 @@ Capa silicone R$ 50,00
             let res = [];
             let fator = parseFloat(fatorArredondamentoInput.value) || 1;
             
+            // Novos Emoticons das Opções Avançadas
+            const emoAtivo = useEmoticonsCheckbox.checked;
+            const emoDinheiro = emoAtivo ? emoticonDinheiroInput.value : "";
+            const emoCartao = emoAtivo ? emoticonCartaoInput.value : "";
+            
             // Aplicar descontos
             let valLiq = calcularValorComDesconto(valorBase);
             
@@ -2094,7 +2129,7 @@ Capa silicone R$ 50,00
                     }
                     
                     const v = arredondarParaMultiplo(valorPix / (1 - getTaxa('pix')), fator);
-                    let linhaPix = `💸 Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                    let linhaPix = `${emoDinheiro}Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
                     
                     if (showComparisonCheckbox.checked && valorOriginal !== valLiq) {
                         const economia = valorOriginal - v;
@@ -2107,13 +2142,13 @@ Capa silicone R$ 50,00
                 // Débito
                 if (!config.especifica && showDebitoCheckbox.checked && ent === 0) {
                     const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('debito')), fator);
-                    res.push(`💳 Débito: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
+                    res.push(`${emoCartao}Débito: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
                 }
                 
                 // Parcelas
                 config.parcelas.forEach(p => {
                     const vParc = arredondarParaMultiplo((aParc / (1 - getTaxa(p))) / p, fator);
-                    let linha = `💳 ${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                    let linha = `${emoCartao}${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
                     
                     if (showTot) {
                         linha += ` (R$ ${(ent + (vParc * p)).toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
