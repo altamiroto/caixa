@@ -33,8 +33,8 @@ export default async function handler(req, res) {
           }
         ],
         generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 8192, // MÁXIMO GRATUITO
+          temperature: 0.3,
+          maxOutputTokens: 65536, // ← MÁXIMO GRATUITO CORRETO!
           topP: 0.95,
           topK: 40
         },
@@ -59,16 +59,23 @@ export default async function handler(req, res) {
     const candidate = responseData.candidates?.[0];
     const cleanText = candidate?.content?.parts?.[0]?.text || "";
     
-    // Log para monitoramento
-    console.log('Finish Reason:', candidate?.finishReason);
-    console.log('Tokens Input:', responseData.usageMetadata?.promptTokenCount);
-    console.log('Tokens Output:', responseData.usageMetadata?.candidatesTokenCount);
-    console.log('Total Tokens:', responseData.usageMetadata?.totalTokenCount);
+    // Log detalhado para monitoramento
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📊 Estatísticas da Requisição:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('✅ Finish Reason:', candidate?.finishReason);
+    console.log('📥 Tokens Input:', responseData.usageMetadata?.promptTokenCount);
+    console.log('📤 Tokens Output:', responseData.usageMetadata?.candidatesTokenCount);
+    console.log('📊 Total Tokens:', responseData.usageMetadata?.totalTokenCount);
+    console.log('📝 Caracteres Output:', cleanText.length);
     
-    // Avisar se truncou
     if (candidate?.finishReason === 'MAX_TOKENS') {
-      console.warn('⚠️ ATENÇÃO: Resposta truncada! Lista muito grande para processar de uma vez.');
+      console.warn('⚠️  ATENÇÃO: Resposta truncada por limite de tokens!');
+      console.warn('💡 Considere dividir a lista em partes menores.');
+    } else if (candidate?.finishReason === 'STOP') {
+      console.log('✅ Processamento completo!');
     }
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     return res.status(200).json({
       choices: [
@@ -89,6 +96,7 @@ export default async function handler(req, res) {
     });
     
   } catch (error) {
+    console.error('❌ Erro na API:', error);
     return res.status(500).json({ error: "Erro interno", message: error.message });
   }
 }
