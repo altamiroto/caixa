@@ -369,7 +369,7 @@ Regras importantes:
             localStorage.setItem(PROMPT_STORAGE, this.value);
         });
 
-        // Função para processar com IA (usando API Gemini)
+        // Função para processar com IA (usando API Groq)
         async function processWithAI() {
             const customPrompt = document.getElementById('aiPrompt').value.trim();
             const listText = document.getElementById('productList').value.trim();
@@ -389,7 +389,7 @@ Regras importantes:
             aiButton.disabled = true;
 
             try {
-                const result = await processWithGemini(listText, customPrompt);
+                const result = await processWithGroq(listText, customPrompt);
                 
                 // Substitui o conteúdo da textarea com o resultado da IA
                 document.getElementById('productList').value = result;
@@ -408,13 +408,13 @@ Regras importantes:
             }
         }
 
-        async function processWithGemini(text, customPrompt) {
+        async function processWithGroq(text, customPrompt) {
             const finalPrompt = `${customPrompt}
 
 Lista para processar:
 ${text}`;
 
-            const response = await fetch('https://caixa-kal3.vercel.app/api/gemini', {
+            const response = await fetch('https://caixa-kal3.vercel.app/api/groq', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -427,7 +427,7 @@ ${text}`;
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'Erro ao chamar API Gemini');
+                throw new Error(error.error || 'Erro ao chamar API Groq');
             }
 
             const data = await response.json();
