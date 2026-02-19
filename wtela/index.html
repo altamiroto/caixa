@@ -52,7 +52,6 @@
             font-size: 0.85rem;
         }
 
-        /* Controles principais - mais compactos */
         .controls {
             background: var(--bg-secondary);
             padding: 12px 15px;
@@ -100,7 +99,6 @@
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
 
-        /* Container de listas - otimizado para desktop */
         .container {
             display: grid;
             gap: 12px;
@@ -179,7 +177,6 @@
             border-radius: 3px;
         }
 
-        /* Legenda de cores para busca */
         .search-legend {
             font-size: 0.75rem;
             color: var(--text-secondary);
@@ -205,7 +202,6 @@
             vertical-align: middle;
         }
 
-        /* Botões - mais compactos */
         .btn {
             padding: 10px 18px;
             font-size: 14px;
@@ -282,7 +278,6 @@
             display: none;
         }
 
-        /* Seção de IA - mais compacta */
         .advanced-section {
             background: var(--bg-secondary);
             border-radius: 8px;
@@ -378,7 +373,6 @@
             display: block;
         }
 
-        /* FAB - Floating Action Button */
         .fab {
             position: fixed;
             bottom: 20px;
@@ -408,70 +402,26 @@
             transform: scale(0.95);
         }
 
-        /* Mobile optimizations */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 1.3rem;
-            }
-
-            .header p {
-                font-size: 0.8rem;
-            }
-
-            .control-row {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                grid-template-columns: 1fr !important;
-            }
-
-            textarea {
-                min-height: 150px;
-                font-size: 16px; /* Evita zoom no iOS */
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                padding: 14px 18px;
-            }
-
-            .filtered-output {
-                font-size: 12px;
-            }
-
-            .ai-prompt-area {
-                min-height: 130px;
-            }
+            h1 { font-size: 1.3rem; }
+            .header p { font-size: 0.8rem; }
+            .control-row { grid-template-columns: 1fr; }
+            .container { grid-template-columns: 1fr !important; }
+            textarea { min-height: 150px; font-size: 16px; }
+            .button-group { flex-direction: column; }
+            .btn { width: 100%; padding: 14px 18px; }
+            .filtered-output { font-size: 12px; }
+            .ai-prompt-area { min-height: 130px; }
         }
 
-        /* Desktop - máximo de 8 colunas lado a lado */
         @media (min-width: 769px) {
-            .container.grid-1 {
-                grid-template-columns: 1fr;
-            }
-            .container.grid-2 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .container.grid-3 {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .container.grid-4 {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            .container.grid-5 {
-                grid-template-columns: repeat(5, 1fr);
-            }
-            .container.grid-6 {
-                grid-template-columns: repeat(6, 1fr);
-            }
-            .container.grid-7 {
-                grid-template-columns: repeat(7, 1fr);
-            }
+            .container.grid-1 { grid-template-columns: 1fr; }
+            .container.grid-2 { grid-template-columns: repeat(2, 1fr); }
+            .container.grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .container.grid-4 { grid-template-columns: repeat(4, 1fr); }
+            .container.grid-5 { grid-template-columns: repeat(5, 1fr); }
+            .container.grid-6 { grid-template-columns: repeat(6, 1fr); }
+            .container.grid-7 { grid-template-columns: repeat(7, 1fr); }
             .container.grid-8,
             .container.grid-9,
             .container.grid-10,
@@ -480,28 +430,16 @@
             .container.grid-13,
             .container.grid-14,
             .container.grid-15,
-            .container.grid-16 {
-                grid-template-columns: repeat(8, 1fr);
-            }
+            .container.grid-16 { grid-template-columns: repeat(8, 1fr); }
         }
 
-        /* Animações */
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .text-area-wrapper {
-            animation: slideIn 0.3s ease;
-        }
+        .text-area-wrapper { animation: slideIn 0.3s ease; }
 
-        /* Toasts */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -518,17 +456,9 @@
             font-size: 14px;
         }
 
-        .toast.show {
-            display: block;
-        }
-
-        .toast.success {
-            background: var(--primary-color);
-        }
-
-        .toast.error {
-            background: var(--danger-color);
-        }
+        .toast.show { display: block; }
+        .toast.success { background: var(--primary-color); }
+        .toast.error { background: var(--danger-color); }
     </style>
 </head>
 <body>
@@ -664,9 +594,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
     </div>
 
     <!-- FAB -->
-    <button class="fab" onclick="scrollToTop()" title="Voltar ao topo">
-        ↑
-    </button>
+    <button class="fab" onclick="scrollToTop()" title="Voltar ao topo">↑</button>
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
@@ -680,22 +608,228 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
         const DEFAULT_PROMPT = document.getElementById('aiPrompt').value;
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
 
+        // ============================================================
+        // NORMALIZAÇÃO UNICODE ROBUSTA
+        // Converte caracteres Unicode especiais (bold, italic, fraktur,
+        // matemáticos, etc.) para seus equivalentes ASCII básicos,
+        // depois remove acentos e converte para minúsculas.
+        // Isso garante que "X7", "x7", "𝗫𝟳", "Ｘ７" sejam iguais na busca.
+        // ============================================================
+        const unicodeMap = (() => {
+            const map = {};
+
+            // Blocos de letras Unicode mapeados para ASCII
+            // Cada entrada: [codigoInicial, 'abcde...'] ou ranges numéricos
+            const ranges = [
+                // Mathematical Bold
+                [0x1D400, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D41A, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Italic
+                [0x1D434, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D44E, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Bold Italic
+                [0x1D468, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D482, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Script
+                [0x1D49C, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D4B6, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Bold Script
+                [0x1D4D0, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D4EA, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Fraktur
+                [0x1D504, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D51E, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Double-struck
+                [0x1D538, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D552, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Bold Fraktur
+                [0x1D56C, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D586, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Sans-Serif
+                [0x1D5A0, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D5BA, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Sans-Serif Bold (𝗔-𝗭, 𝗮-𝘇)
+                [0x1D5D4, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D5EE, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Sans-Serif Italic
+                [0x1D608, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D622, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Sans-Serif Bold Italic
+                [0x1D63C, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D656, 'abcdefghijklmnopqrstuvwxyz'],
+                // Mathematical Monospace
+                [0x1D670, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0x1D68A, 'abcdefghijklmnopqrstuvwxyz'],
+                // Fullwidth Latin (Ａ-Ｚ, ａ-ｚ)
+                [0xFF21, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                [0xFF41, 'abcdefghijklmnopqrstuvwxyz'],
+            ];
+
+            ranges.forEach(([start, chars]) => {
+                for (let i = 0; i < chars.length; i++) {
+                    map[start + i] = chars[i];
+                }
+            });
+
+            // Dígitos matemáticos Bold (𝟎-𝟗)
+            [0x1D7CE, 0x1D7D8, 0x1D7E2, 0x1D7EC, 0x1D7F6].forEach(start => {
+                for (let i = 0; i <= 9; i++) map[start + i] = String(i);
+            });
+
+            // Fullwidth digits (０-９)
+            for (let i = 0; i <= 9; i++) map[0xFF10 + i] = String(i);
+
+            // Casos individuais comuns
+            const individual = {
+                0x1D49: 'e', // ℰ script
+                0x210A: 'g', 0x210B: 'H', 0x210C: 'H', 0x210D: 'H',
+                0x2110: 'I', 0x2111: 'I', 0x2112: 'L', 0x2113: 'l',
+                0x211B: 'R', 0x211C: 'R', 0x211D: 'R',
+                0x2124: 'Z', 0x2128: 'Z',
+                0x212C: 'B', 0x212D: 'C', 0x212F: 'e', 0x2130: 'E',
+                0x2131: 'F', 0x2133: 'M', 0x2134: 'o',
+            };
+            Object.assign(map, individual);
+
+            return map;
+        })();
+
+        /**
+         * Normaliza um texto para busca insensível a:
+         * - maiúsculas/minúsculas
+         * - acentos e diacríticos
+         * - caracteres Unicode especiais (bold, italic, fullwidth, etc.)
+         */
+        function normalizeForSearch(str) {
+            if (!str) return '';
+            
+            // 1. Converte caracteres Unicode especiais via mapa
+            let result = '';
+            for (let i = 0; i < str.length; i++) {
+                const cp = str.codePointAt(i);
+                if (cp > 0xFFFF) i++; // Avança 2 posições para surrogate pairs
+                
+                if (unicodeMap[cp] !== undefined) {
+                    result += unicodeMap[cp];
+                } else {
+                    result += str[i];
+                    if (cp > 0xFFFF && str[i + 1]) {
+                        // já avançamos o índice, não precisamos adicionar o surrogate pair
+                    }
+                }
+            }
+
+            // 2. Normaliza NFD (decompõe caracteres acentuados)
+            // 3. Remove diacríticos (acentos, cedilhas derivados)
+            // 4. Converte para minúsculas
+            return result
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+        }
+
+        /**
+         * Escapa caracteres especiais de RegExp para uso seguro em new RegExp()
+         */
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        /**
+         * Destaca ocorrências de 'term' em 'text' (comparação normalizada),
+         * retornando HTML com <span class="highlight"> ao redor dos trechos.
+         * styleAttr permite sobrescrever o estilo (para sub-busca).
+         */
+        function highlightTerm(text, term, styleAttr = '') {
+            if (!term) return text;
+            
+            const normTerm = normalizeForSearch(term);
+            const normText = normalizeForSearch(text);
+            const escapedTerm = escapeRegExp(normTerm);
+            const regex = new RegExp(escapedTerm, 'g');
+
+            let result = '';
+            let lastIndex = 0;
+            let match;
+
+            // Itera sobre o texto NORMALIZADO para encontrar posições,
+            // mas extrai trechos do texto ORIGINAL (para preservar formatação original).
+            // Como normalização pode mudar comprimento (surrogate pairs),
+            // precisamos mapear índices normalizados → originais.
+            
+            // Mapeamento de índice normalizado → índice original
+            const indexMap = buildIndexMap(text);
+
+            while ((match = regex.exec(normText)) !== null) {
+                const normStart = match.index;
+                const normEnd = match.index + match[0].length;
+
+                // Obtém índices no texto original
+                const origStart = indexMap[normStart] !== undefined ? indexMap[normStart] : normStart;
+                const origEnd = indexMap[normEnd] !== undefined ? indexMap[normEnd] : normEnd;
+
+                // Texto antes do match
+                result += escapeHtml(text.slice(lastIndex, origStart));
+                // Texto do match com highlight
+                const style = styleAttr ? ` style="${styleAttr}"` : '';
+                result += `<span class="highlight"${style}>${escapeHtml(text.slice(origStart, origEnd))}</span>`;
+                lastIndex = origEnd;
+            }
+
+            result += escapeHtml(text.slice(lastIndex));
+            return result;
+        }
+
+        /**
+         * Constrói mapa: índice no texto normalizado → índice no texto original.
+         * Necessário porque normalização de caracteres pode mudar comprimentos.
+         */
+        function buildIndexMap(originalText) {
+            const map = {};
+            let normIdx = 0;
+
+            for (let i = 0; i < originalText.length; i++) {
+                const cp = originalText.codePointAt(i);
+                const isSurrogate = cp > 0xFFFF;
+
+                // Obtém o caractere original (1 ou 2 unidades UTF-16)
+                const origChar = isSurrogate
+                    ? originalText.slice(i, i + 2)
+                    : originalText[i];
+
+                // Normaliza o caractere individualmente
+                const normChar = normalizeForSearch(origChar);
+
+                map[normIdx] = i;
+                normIdx += normChar.length;
+
+                if (isSurrogate) i++; // Pula surrogate pair
+            }
+
+            map[normIdx] = originalText.length; // Sentinela final
+            return map;
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         // Toast notifications
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = `toast show ${type}`;
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // Scroll to top
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Toggle advanced section
         function toggleAdvanced() {
             const content = document.getElementById('advancedContent');
             const icon = document.getElementById('toggleIcon');
@@ -703,13 +837,11 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             icon.classList.toggle('rotated');
         }
 
-        // Reset prompt
         function resetPrompt() {
             document.getElementById('aiPrompt').value = DEFAULT_PROMPT;
             showToast('✅ Prompt restaurado para o padrão');
         }
 
-        // List AI models
         async function listModels() {
             const resultDiv = document.getElementById('aiResult');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -730,10 +862,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 });
 
                 const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || "Erro na API");
-                }
+                if (!response.ok) throw new Error(data.error || "Erro na API");
 
                 let modelsList = "📋 ANÁLISE DE MODELOS DISPONÍVEIS:\n\n";
                 if (data.choices && data.choices[0]?.message?.content) {
@@ -745,7 +874,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 resultDiv.textContent = modelsList;
                 resultDiv.classList.add('show');
                 showToast('✅ Modelos listados com sucesso');
-
             } catch (error) {
                 resultDiv.textContent = `❌ Erro ao listar modelos:\n\n${error.message}`;
                 resultDiv.classList.add('show');
@@ -756,7 +884,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             }
         }
 
-        // Analyze with AI
         async function analyzeWithAI() {
             const productInput = document.getElementById('productSearchAI').value.trim();
             const promptTemplate = document.getElementById('aiPrompt').value;
@@ -786,7 +913,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 return;
             }
 
-            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) + 
+            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) +
                                '\n\nLISTAS DE FORNECEDORES:' + supplierData;
 
             loadingIndicator.classList.add('show');
@@ -804,24 +931,16 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 });
 
                 const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || "Erro na API");
-                }
+                if (!response.ok) throw new Error(data.error || "Erro na API");
 
                 if (data.choices && data.choices[0]?.message?.content) {
                     resultDiv.textContent = data.choices[0].message.content;
                     resultDiv.classList.add('show');
                     showToast('✅ Análise concluída!');
-                    
-                    // Scroll suave até o resultado
-                    setTimeout(() => {
-                        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
+                    setTimeout(() => resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                 } else {
                     throw new Error('Resposta em formato inesperado.');
                 }
-
             } catch (error) {
                 resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}`;
                 resultDiv.classList.add('show');
@@ -832,7 +951,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             }
         }
 
-        // Setup event listeners
         function setupListeners() {
             const textareas = container.querySelectorAll('textarea');
             textareas.forEach(textarea => {
@@ -847,12 +965,10 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             applyFilter();
         }
 
-        // Update layout based on number of suppliers
         function updateLayout() {
             const numTelas = parseInt(select.value);
             const currentNumTelas = container.children.length;
 
-            // Definir grid class baseado no número de telas
             container.className = 'container';
             if (window.innerWidth > 768) {
                 container.classList.add(`grid-${numTelas}`);
@@ -896,15 +1012,21 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             applyFilter();
         }
 
-        // Apply search filter
+        // ============================================================
+        // FILTRO PRINCIPAL — usa normalizeForSearch em tudo
+        // ============================================================
         function applyFilter() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const subSearchTerm = subSearchInput.value.toLowerCase().trim();
+            const searchTerm = searchInput.value.trim();
+            const subSearchTerm = subSearchInput.value.trim();
             const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
 
-            // Mostrar/ocultar legenda de cores
+            // Termos normalizados para comparação
+            const normSearch = normalizeForSearch(searchTerm);
+            const normSubSearch = normalizeForSearch(subSearchTerm);
+
+            // Mostrar/ocultar legenda
             const searchLegend = document.getElementById('searchLegend');
-            if (searchTerm.length > 0 && subSearchTerm.length > 0) {
+            if (normSearch.length > 0 && normSubSearch.length > 0) {
                 searchLegend.classList.add('show');
             } else {
                 searchLegend.classList.remove('show');
@@ -916,15 +1038,14 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
                 const resultDiv = document.getElementById(resultDivId);
 
-                let originalContent = textarea.dataset.originalContent || textarea.value;
-                
+                const originalContent = textarea.dataset.originalContent || textarea.value;
                 if (!textarea.dataset.originalContent) {
                     textarea.dataset.originalContent = originalContent;
                 }
 
                 const lines = originalContent.split('\n');
 
-                if (searchTerm.length === 0) {
+                if (normSearch.length === 0) {
                     resultDiv.style.display = 'none';
                     resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
                     return;
@@ -932,66 +1053,47 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
                 resultDiv.style.display = 'block';
 
+                // Pré-normaliza todas as linhas para evitar recalcular
+                const normLines = lines.map(l => normalizeForSearch(l));
+
                 let filteredLinesWithHighlight = [];
                 let lineAdded = new Array(lines.length).fill(false);
+                const escapedSearch = escapeRegExp(normSearch);
+                const escapedSubSearch = normSubSearch ? escapeRegExp(normSubSearch) : '';
 
-                const normalizeText = str => str
-                    .toLowerCase()
-                    .normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, "");
-
-                // Criamos um mapa de quais blocos de contexto satisfazem a sub-busca
                 lines.forEach((line, index) => {
-                    const lineNormalized = normalizeText(line);
-                    const searchNormalized = normalizeText(searchTerm);
+                    // Verifica se a linha contém o termo principal
+                    if (!normLines[index].includes(normSearch)) return;
 
-                    // Se encontrou o termo principal
-                    if (lineNormalized.includes(searchNormalized)) {
-                        
-                        // Definimos o intervalo do bloco (linha atual + contexto)
-                        let start = Math.max(0, index - contextLines);
-                        let end = Math.min(lines.length - 1, index + contextLines);
-                        
-                        let blocoTextoContexto = "";
-                        for (let i = start; i <= end; i++) {
-                            blocoTextoContexto += normalizeText(lines[i]) + " ";
+                    // Define intervalo de contexto
+                    const start = Math.max(0, index - contextLines);
+                    const end = Math.min(lines.length - 1, index + contextLines);
+
+                    // Texto do bloco normalizado (para verificar sub-busca)
+                    const blocoNorm = normLines.slice(start, end + 1).join(' ');
+
+                    // Verifica sub-busca no bloco
+                    if (normSubSearch && !blocoNorm.includes(normSubSearch)) return;
+
+                    // Adiciona linhas do bloco com highlight
+                    for (let i = start; i <= end; i++) {
+                        if (lineAdded[i]) continue;
+
+                        let html = highlightTerm(lines[i], searchTerm);
+                        if (normSubSearch) {
+                            // Re-aplica highlight de sub-busca por cima, no HTML resultante
+                            // Como highlightTerm retorna HTML, precisamos aplicar no texto original
+                            // Estratégia: aplicar ambos highlights ao mesmo tempo no texto original
+                            html = highlightBoth(lines[i], searchTerm, normSearch, subSearchTerm, normSubSearch);
                         }
 
-                        // Agora verificamos se a SUB-BUSCA existe em QUALQUER lugar desse bloco
-                        let atendeSubBusca = true;
-                        if (subSearchTerm.length > 0) {
-                            const subSearchNormalized = normalizeText(subSearchTerm);
-                            if (!blocoTextoContexto.includes(subSearchNormalized)) {
-                                atendeSubBusca = false;
-                            }
-                        }
-
-                        // Se o bloco inteiro for válido, adicionamos as linhas ao resultado
-                        if (atendeSubBusca) {
-                            for (let i = start; i <= end; i++) {
-                                if (!lineAdded[i]) {
-                                    let content = lines[i];
-                                    
-                                    // Aplicar destaques (apenas se for a linha principal ou se o termo aparecer no contexto)
-                                    const regex = new RegExp(`(${searchTerm})`, 'gi');
-                                    content = content.replace(regex, '<span class="highlight">$1</span>');
-
-                                    if (subSearchTerm.length > 0) {
-                                        const subRegex = new RegExp(`(${subSearchTerm})`, 'gi');
-                                        content = content.replace(subRegex, '<span class="highlight" style="background-color: #80deea;">$1</span>');
-                                    }
-
-                                    filteredLinesWithHighlight.push(content);
-                                    lineAdded[i] = true;
-                                }
-                            }
-                        }
+                        filteredLinesWithHighlight.push(html);
+                        lineAdded[i] = true;
                     }
                 });
-                
 
                 if (filteredLinesWithHighlight.length === 0) {
-                    const subText = subSearchTerm.length > 0 ? ` com "${subSearchInput.value}"` : '';
+                    const subText = normSubSearch ? ` com "${subSearchInput.value}"` : '';
                     resultDiv.innerHTML = `<span style="color: var(--danger-color);">❌ Nenhum resultado para "${searchInput.value}"${subText}</span>`;
                 } else {
                     resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
@@ -999,14 +1101,76 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             });
         }
 
+        /**
+         * Aplica highlight de AMBOS os termos (principal e sub-busca) em uma linha,
+         * usando o texto original e comparação normalizada.
+         * O highlight principal é amarelo; o sub-busca é ciano.
+         * Quando há sobreposição, prevalece o sub-busca.
+         */
+        function highlightBoth(text, mainTerm, normMain, subTerm, normSub) {
+            const normText = normalizeForSearch(text);
+            const indexMap = buildIndexMap(text);
+            
+            // Encontra todos os matches para cada termo
+            const mainRegex = new RegExp(escapeRegExp(normMain), 'g');
+            const subRegex = new RegExp(escapeRegExp(normSub), 'g');
+
+            // Cria array de marcações: 0=nenhum, 1=principal, 2=sub
+            const marks = new Array(text.length).fill(0);
+
+            let match;
+            // Marca main
+            while ((match = mainRegex.exec(normText)) !== null) {
+                const origStart = indexMap[match.index] ?? match.index;
+                const origEnd = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
+                for (let i = origStart; i < origEnd; i++) marks[i] = 1;
+            }
+            // Marca sub (sobrescreve main onde há sobreposição)
+            while ((match = subRegex.exec(normText)) !== null) {
+                const origStart = indexMap[match.index] ?? match.index;
+                const origEnd = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
+                for (let i = origStart; i < origEnd; i++) marks[i] = 2;
+            }
+
+            // Constrói HTML agrupando runs consecutivos do mesmo tipo
+            let html = '';
+            let i = 0;
+            while (i < text.length) {
+                const mark = marks[i];
+                let j = i;
+                while (j < text.length && marks[j] === mark) j++;
+                const chunk = escapeHtml(text.slice(i, j));
+                if (mark === 1) {
+                    html += `<span class="highlight">${chunk}</span>`;
+                } else if (mark === 2) {
+                    html += `<span class="highlight" style="background-color: #80deea;">${chunk}</span>`;
+                } else {
+                    html += chunk;
+                }
+                i = j;
+            }
+            return html;
+        }
+
         function initializeContent() {
-            const initialTextareas = container.querySelectorAll('textarea');
-            initialTextareas.forEach(textarea => {
+            container.querySelectorAll('textarea').forEach(textarea => {
                 textarea.dataset.originalContent = textarea.value;
             });
         }
 
-        // Save data to Google Sheets
+        updateLayout();
+        initializeContent();
+
+        container.addEventListener('change', (event) => {
+            if (event.target.tagName === 'TEXTAREA') {
+                event.target.dataset.originalContent = event.target.value;
+                applyFilter();
+            }
+        });
+
+        window.addEventListener('resize', () => updateLayout());
+
+        // Save data
         async function salvarDados() {
             const textareas = container.querySelectorAll('textarea');
             const inputs = container.querySelectorAll('.supplier-header input[type=text]');
@@ -1015,7 +1179,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             const params = new URLSearchParams();
             params.append('tag', tagInput.value || '');
             
-            // Salvar até 16 fornecedores
             for (let i = 0; i < 16; i++) {
                 params.append(`name${i+1}`, inputs[i]?.value || '');
                 params.append(`text${i+1}`, textareas[i]?.value || '');
@@ -1023,14 +1186,11 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
             try {
                 showToast('⏳ Salvando dados...');
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: params
-                });
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
                 const json = await res.json();
                 if (json.status === 'success') {
                     showToast('✅ Dados salvos com sucesso!');
-                    tagInput.value = ''; // Limpar tag após salvar
+                    tagInput.value = '';
                 } else {
                     throw new Error(JSON.stringify(json));
                 }
@@ -1039,7 +1199,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             }
         }
 
-        // Load history
         async function carregarHistorico() {
             try {
                 showToast('⏳ Carregando histórico...');
@@ -1071,7 +1230,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             }
         }
 
-        // Apply history
         function aplicarHistorico() {
             const selectHistorico = document.getElementById("historicoSelect");
             const index = parseInt(selectHistorico.value);
@@ -1081,7 +1239,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             const tagInput = document.getElementById("tagInput");
             const registro = data[index];
 
-            // Contar quantos fornecedores têm dados
             let numFornecedoresComDados = 0;
             for (let i = 0; i < 16; i++) {
                 if (registro[`name${i+1}`] || registro[`text${i+1}`]) {
@@ -1089,20 +1246,17 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 }
             }
 
-            // Ajustar o seletor de telas para o número correto
             if (numFornecedoresComDados > 0) {
                 select.value = numFornecedoresComDados;
                 updateLayout();
             }
 
-            // Aguardar um pouco para garantir que o layout foi atualizado
             setTimeout(() => {
                 const textareas = container.querySelectorAll('textarea');
                 const inputs = container.querySelectorAll('.supplier-header input[type=text]');
                 
                 if (tagInput) tagInput.value = registro['tag'] || '';
 
-                // Restaurar até 16 fornecedores
                 for (let i = 0; i < numFornecedoresComDados; i++) {
                     if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
                     if (textareas[i]) {
@@ -1115,22 +1269,6 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 applyFilter();
             }, 100);
         }
-
-        // Initialization
-        updateLayout();
-        initializeContent();
-
-        container.addEventListener('change', (event) => {
-            if (event.target.tagName === 'TEXTAREA') {
-                event.target.dataset.originalContent = event.target.value;
-                applyFilter();
-            }
-        });
-
-        // Window resize handler
-        window.addEventListener('resize', () => {
-            updateLayout();
-        });
     </script>
 
 </body>
