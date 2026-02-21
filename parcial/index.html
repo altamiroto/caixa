@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Entrada Proporcional</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #0f1117;
+            --surface: #181c27;
+            --surface2: #1e2333;
+            --border: #2a3148;
+            --accent: #4f8ef7;
+            --accent2: #f7934f;
+            --green: #3ecf8e;
+            --red: #f75f5f;
+            --text: #e8eaf2;
+            --muted: #6b7499;
+            --radius: 14px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 32px 16px 48px;
+        }
+
+        .wrap { width: 100%; max-width: 580px; }
+
+        .header { text-align: center; margin-bottom: 28px; }
+        .header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            line-height: 1.15;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+        }
+        .header p { color: var(--muted); font-size: 0.9rem; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label { font-size: 0.82rem; font-weight: 500; color: var(--muted); }
+        .field label span { font-size: 0.75rem; font-weight: 400; opacity: 0.7; }
+
+        .input-wrap { position: relative; }
+        .input-wrap .prefix {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted); font-size: 0.9rem; pointer-events: none;
+        }
+        .input-wrap input {
+            width: 100%;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem; font-weight: 500;
+            padding: 11px 12px 11px 34px;
+            transition: border-color 0.2s;
+            -moz-appearance: textfield;
+        }
+        .input-wrap input::-webkit-outer-spin-button,
+        .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .input-wrap input::placeholder { color: var(--muted); opacity: 0.5; font-weight: 400; }
+        .input-wrap input:focus { outline: none; border-color: var(--accent); }
+        .input-wrap input.accent2:focus { border-color: var(--accent2); }
+
+        .field-row { display: flex; gap: 8px; }
+        .field-row .input-wrap { flex: 1; }
+        .parcelas-input {
+            width: 68px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem; font-weight: 500;
+            padding: 11px 8px; text-align: center;
+            transition: border-color 0.2s;
+            -moz-appearance: textfield;
+        }
+        .parcelas-input::-webkit-outer-spin-button,
+        .parcelas-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .parcelas-input:focus { outline: none; border-color: var(--accent2); }
+        .parcelas-label { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 4px; }
+
+        /* Mode toggle */
+        .mode-toggle {
+            display: flex;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px; gap: 4px;
+            margin-bottom: 16px;
+        }
+        .mode-btn {
+            flex: 1; padding: 9px 8px; border: none;
+            border-radius: 7px; background: transparent;
+            color: var(--muted); font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; text-align: center;
+        }
+        .mode-btn.active { background: var(--accent); color: #fff; }
+        .mode-btn.active.alt { background: var(--accent2); }
+
+        /* Collapsible avançado */
+        .advanced-toggle {
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; user-select: none;
+            color: var(--muted); font-size: 0.82rem; font-weight: 500;
+            padding: 4px 0;
+        }
+        .advanced-toggle .arrow {
+            transition: transform 0.25s;
+            font-size: 0.7rem;
+        }
+        .advanced-toggle.open .arrow { transform: rotate(90deg); }
+
+        .advanced-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .advanced-body.open { max-height: 600px; }
+
+        /* Fator chips */
+        .fator-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+        .fator-row label { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+        .fator-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+        .fator-chip {
+            padding: 5px 12px; border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--surface2); color: var(--muted);
+            font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .fator-chip.active { border-color: var(--accent); background: rgba(79,142,247,0.12); color: var(--accent); }
+        .fator-chip-custom {
+            display: flex; align-items: center; gap: 4px;
+            padding: 4px 8px; border-radius: 20px;
+            border: 1.5px solid var(--border); background: var(--surface2);
+        }
+        .fator-chip-custom input {
+            width: 48px; background: transparent; border: none;
+            color: var(--text); font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 600;
+            text-align: center; -moz-appearance: textfield;
+        }
+        .fator-chip-custom input::-webkit-outer-spin-button,
+        .fator-chip-custom input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .fator-chip-custom input:focus { outline: none; }
+        .fator-chip-custom.active { border-color: var(--accent); background: rgba(79,142,247,0.1); }
+
+        /* Prompt IA */
+        .prompt-area {
+            width: 100%;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem;
+            padding: 10px 12px;
+            resize: vertical;
+            min-height: 90px;
+            margin-top: 14px;
+            transition: border-color 0.2s;
+        }
+        .prompt-area:focus { outline: none; border-color: var(--accent); }
+        .prompt-area::placeholder { color: var(--muted); opacity: 0.5; }
+
+        /* Seção IA */
+        .ia-divider {
+            display: flex; align-items: center; gap: 10px; margin: 4px 0 14px;
+        }
+        .ia-divider::before, .ia-divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+        .ia-divider span { font-size: 0.73rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+
+        .ia-textarea {
+            width: 100%;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            padding: 12px 14px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.2s;
+        }
+        .ia-textarea:focus { outline: none; border-color: var(--accent); }
+        .ia-textarea::placeholder { color: var(--muted); opacity: 0.45; }
+
+        .btn-ia {
+            width: 100%; padding: 12px;
+            border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: #fff; font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem; font-weight: 600;
+            cursor: pointer; margin-top: 10px;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-ia:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.35); }
+        .btn-ia:active { transform: translateY(0); }
+        .btn-ia:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .ia-status {
+            font-size: 0.8rem; color: var(--muted);
+            text-align: center; margin-top: 8px; min-height: 20px;
+        }
+        .ia-status.erro { color: var(--red); }
+        .ia-status.ok { color: var(--green); }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Resultado */
+        .resultado-card {
+            background: linear-gradient(135deg, #1a2340 0%, #1e2b3f 100%);
+            border: 1.5px solid #2a3d60;
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            margin-bottom: 14px;
+            display: none;
+            animation: fadeUp 0.3s ease;
+        }
+        .resultado-card.show { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .resultado-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #4f8ef7; margin-bottom: 16px; }
+        .resultado-linha { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a3d60; }
+        .resultado-linha:last-child { border-bottom: none; padding-bottom: 0; }
+        .resultado-label { font-size: 0.88rem; color: var(--muted); }
+        .resultado-valor { font-size: 1.05rem; font-weight: 600; color: var(--text); }
+        .resultado-valor.destaque { color: var(--green); font-size: 1.2rem; }
+        .resultado-valor.laranja { color: var(--accent2); }
+        .resultado-perc { display: inline-block; font-size: 0.73rem; color: var(--muted); margin-left: 8px; font-weight: 400; }
+
+        .resultado-texto {
+            margin-top: 14px; background: var(--surface2);
+            border-radius: 10px; padding: 12px 14px;
+            font-size: 0.88rem; color: var(--text);
+            line-height: 1.5; white-space: pre-wrap;
+        }
+
+        .btn-copy {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent) 0%, #3a7af0 100%);
+            color: #fff; font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem; font-weight: 600;
+            cursor: pointer; margin-top: 10px; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-copy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,142,247,0.3); }
+        .btn-copy:active { transform: translateY(0); }
+
+        .empty-hint { text-align: center; padding: 20px 0; color: var(--muted); font-size: 0.85rem; }
+
+        @media (max-width: 480px) {
+            .grid2 { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="header">
+        <h1>Entrada Proporcional</h1>
+        <p>Calcule a divisão exata entre entrada e cartão</p>
+    </div>
+
+    <!-- Preços base -->
+    <div class="card">
+        <div class="card-title">💲 Preços do produto</div>
+        <div class="grid2">
+            <div class="field">
+                <label>À vista <span>(dinheiro/Pix)</span></label>
+                <div class="input-wrap">
+                    <span class="prefix">R$</span>
+                    <input type="number" id="valorVista" placeholder="1000,00" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="field">
+                <label>No cartão <span>(total parcelado)</span></label>
+                <div class="field-row">
+                    <div class="input-wrap">
+                        <span class="prefix">R$</span>
+                        <input type="number" id="valorCartao" placeholder="1500,00" step="0.01" min="0" class="accent2">
+                    </div>
+                    <div>
+                        <input type="number" id="numParcelas" class="parcelas-input" placeholder="10" min="1" max="18">
+                        <div class="parcelas-label">parcelas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modo + valor cliente -->
+    <div class="card">
+        <div class="card-title">🎯 O que o cliente sabe?</div>
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="modeEntrada" onclick="setMode('entrada')">💵 Valor da Entrada</button>
+            <button class="mode-btn alt"    id="modeCartao"  onclick="setMode('cartao')">💳 Valor no Cartão</button>
+        </div>
+        <div id="inputEntrada" class="field">
+            <label>Cliente vai pagar de entrada <span>(R$)</span></label>
+            <div class="input-wrap">
+                <span class="prefix">R$</span>
+                <input type="number" id="valorEntradaCliente" placeholder="511,00" step="0.01" min="0">
+            </div>
+        </div>
+        <div id="inputCartaoCliente" class="field" style="display:none;">
+            <label>Cliente quer pagar no cartão <span>(R$)</span></label>
+            <div class="input-wrap">
+                <span class="prefix">R$</span>
+                <input type="number" id="valorCartaoCliente" placeholder="700,00" step="0.01" min="0" class="accent2">
+            </div>
+        </div>
+    </div>
+
+    <!-- Opções avançadas -->
+    <div class="card">
+        <div class="advanced-toggle" id="advToggle" onclick="toggleAdvanced()">
+            <span class="arrow">▶</span>
+            <span>⚙️ Opções Avançadas</span>
+        </div>
+        <div class="advanced-body" id="advBody">
+            <!-- Arredondamento -->
+            <div class="fator-row">
+                <label>Múltiplo de:</label>
+                <div class="fator-chips">
+                    <div class="fator-chip" data-val="0.01" onclick="selectFator(this)">0,01</div>
+                    <div class="fator-chip" data-val="0.5"  onclick="selectFator(this)">0,50</div>
+                    <div class="fator-chip" data-val="1"    onclick="selectFator(this)">1</div>
+                    <div class="fator-chip active" data-val="5" onclick="selectFator(this)">5</div>
+                    <div class="fator-chip" data-val="10"   onclick="selectFator(this)">10</div>
+                    <div class="fator-chip-custom" id="chipCustom">
+                        <input type="number" id="fatorCustom" placeholder="?" step="0.01" min="0.01"
+                               onfocus="selectFatorCustom()" oninput="selectFatorCustom()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prompt IA -->
+            <div style="margin-top: 18px;">
+                <div class="card-title" style="margin-bottom:8px;">🤖 Prompt da IA <span style="font-weight:400;text-transform:none;letter-spacing:0;">(editável)</span></div>
+                <textarea class="prompt-area" id="iaPrompt">Você é um assistente especializado em calcular entradas e parcelamentos de produtos.
+A partir do texto fornecido, extraia:
+1. Valor à vista (dinheiro/Pix)
+2. Valor total no cartão (parcelado)
+3. Número de parcelas (se houver)
+4. Valor que o cliente quer pagar de entrada ou no cartão
+
+Responda APENAS em JSON, sem texto antes ou depois, sem blocos de código, sem explicação:
+{
+  "valorVista": 0,
+  "valorCartao": 0,
+  "numParcelas": null,
+  "modo": "entrada",
+  "valorCliente": 0
+}
+
+- "modo" deve ser "entrada" se o cliente informou quanto quer dar de entrada, ou "cartao" se informou quanto quer pagar no cartão.
+- "numParcelas" pode ser null se não informado.
+- Use apenas números, sem formatação.</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processamento por IA -->
+    <div class="card">
+        <div class="card-title">✨ Processar com IA</div>
+        <div class="ia-divider"><span>Cole o texto do produto e da situação do cliente</span></div>
+        <textarea class="ia-textarea" id="iaTexto" placeholder="Ex:
+📺 Smart TV Toshiba 32&quot;
+10x R$ 99,99 (R$ 999,90)
+R$ 940 (Dinheiro)
+
+Cliente quer dar R$ 500 de entrada, quanto fica o restante?"></textarea>
+        <button class="btn-ia" id="btnIA" onclick="processarIA()">
+            ✨ Processar com IA
+        </button>
+        <div class="ia-status" id="iaStatus"></div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="resultado-card" id="resultado">
+        <div class="resultado-title">📊 Resultado</div>
+        <div id="resultadoLinhas"></div>
+        <div class="resultado-texto" id="resultadoTexto"></div>
+        <button class="btn-copy" onclick="copiar()">📋 Copiar resultado</button>
+    </div>
+
+    <div class="empty-hint" id="emptyHint">Preencha os valores acima ou use a IA ↑</div>
+
+</div>
+
+<script>
+    let modo = 'entrada';
+    let fatorAtivo = 5; // padrão 5
+
+    // ─── Avançado toggle ───
+    function toggleAdvanced() {
+        const toggle = document.getElementById('advToggle');
+        const body   = document.getElementById('advBody');
+        toggle.classList.toggle('open');
+        body.classList.toggle('open');
+    }
+
+    // ─── Modo ───
+    function setMode(m) {
+        modo = m;
+        document.getElementById('modeEntrada').classList.toggle('active', m === 'entrada');
+        document.getElementById('modeCartao').classList.toggle('active', m === 'cartao');
+        document.getElementById('inputEntrada').style.display      = m === 'entrada' ? '' : 'none';
+        document.getElementById('inputCartaoCliente').style.display = m === 'cartao'  ? '' : 'none';
+        calcular();
+    }
+
+    // ─── Fator ───
+    function selectFator(el) {
+        document.querySelectorAll('.fator-chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('chipCustom').classList.remove('active');
+        document.getElementById('fatorCustom').value = '';
+        el.classList.add('active');
+        fatorAtivo = parseFloat(el.dataset.val);
+        calcular();
+    }
+    function selectFatorCustom() {
+        document.querySelectorAll('.fator-chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('chipCustom').classList.add('active');
+        const v = parseFloat(document.getElementById('fatorCustom').value);
+        fatorAtivo = (isNaN(v) || v <= 0) ? 5 : v;
+        calcular();
+    }
+
+    // ─── Helpers ───
+    function arredondar(valor, fator) {
+        if (!fator || fator <= 0) fator = 5;
+        return Math.ceil(valor / fator) * fator;
+    }
+    function fmt(n) {
+        return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function setField(id, val) {
+        const el = document.getElementById(id);
+        el.value = val !== null && val !== undefined ? val : '';
+        el.dispatchEvent(new Event('input'));
+    }
+
+    // ─── Cálculo principal ───
+    function calcular() {
+        const vista    = parseFloat(document.getElementById('valorVista').value)   || 0;
+        const cartao   = parseFloat(document.getElementById('valorCartao').value)  || 0;
+        const parcelas = parseInt(document.getElementById('numParcelas').value)    || null;
+        const resultadoCard = document.getElementById('resultado');
+        const emptyHint     = document.getElementById('emptyHint');
+
+        if (vista <= 0 || cartao <= 0) {
+            resultadoCard.classList.remove('show');
+            emptyHint.style.display = '';
+            return;
+        }
+
+        let entradaCliente = 0, cartaoCliente = 0;
+
+        if (modo === 'entrada') {
+            entradaCliente = parseFloat(document.getElementById('valorEntradaCliente').value) || 0;
+            if (entradaCliente <= 0) { resultadoCard.classList.remove('show'); emptyHint.style.display = ''; return; }
+            const percPago   = entradaCliente / vista;
+            const percCartao = 1 - percPago;
+            cartaoCliente    = arredondar(cartao * percCartao, fatorAtivo);
+        } else {
+            cartaoCliente = parseFloat(document.getElementById('valorCartaoCliente').value) || 0;
+            if (cartaoCliente <= 0) { resultadoCard.classList.remove('show'); emptyHint.style.display = ''; return; }
+            const percCartao  = cartaoCliente / cartao;
+            const percPago    = 1 - percCartao;
+            entradaCliente    = arredondar(vista * percPago, fatorAtivo);
+        }
+
+        const percEntrada     = (entradaCliente / vista * 100);
+        const percCartaoFinal = (cartaoCliente  / cartao * 100);
+        const total           = entradaCliente + cartaoCliente;
+
+        let parcelaStr = '', parcelaValor = null;
+        if (parcelas && parcelas >= 1) {
+            parcelaValor = arredondar(cartaoCliente / parcelas, fatorAtivo);
+            parcelaStr   = ` (${parcelas}x de R$ ${fmt(parcelaValor)})`;
+        }
+
+        document.getElementById('resultadoLinhas').innerHTML = `
+            <div class="resultado-linha">
+                <span class="resultado-label">💵 Entrada (à vista)</span>
+                <span class="resultado-valor destaque">R$ ${fmt(entradaCliente)}<span class="resultado-perc">${percEntrada.toFixed(1)}% do à vista</span></span>
+            </div>
+            <div class="resultado-linha">
+                <span class="resultado-label">💳 Restante no cartão</span>
+                <span class="resultado-valor laranja">R$ ${fmt(cartaoCliente)}${parcelaStr}<span class="resultado-perc">${percCartaoFinal.toFixed(1)}% do cartão</span></span>
+            </div>
+            <div class="resultado-linha">
+                <span class="resultado-label">📦 Total pago</span>
+                <span class="resultado-valor">R$ ${fmt(total)}</span>
+            </div>`;
+
+        let texto = `R$ ${fmt(entradaCliente)} de entrada`;
+        if (parcelas && parcelaValor) {
+            texto += ` + ${parcelas}x de R$ ${fmt(parcelaValor)} no cartão`;
+        } else {
+            texto += ` + R$ ${fmt(cartaoCliente)} no cartão`;
+        }
+        document.getElementById('resultadoTexto').textContent = texto;
+        resultadoCard.classList.add('show');
+        emptyHint.style.display = 'none';
+    }
+
+    // ─── IA ───
+    async function processarIA() {
+        const texto = document.getElementById('iaTexto').value.trim();
+        if (!texto) { setStatus('⚠️ Digite um texto para a IA processar.', 'erro'); return; }
+
+        const btn = document.getElementById('btnIA');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Processando...';
+        setStatus('Aguardando resposta da IA...', '');
+
+        const systemPrompt = document.getElementById('iaPrompt').value;
+
+        try {
+            const response = await fetch('https://caixa-kal3.vercel.app/api/groq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ systemPrompt, messages: texto })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || data.message || 'Erro na API');
+            if (!data.choices?.[0]) throw new Error('Resposta inválida da IA');
+
+            const raw = data.choices[0].message.content.trim()
+                .replace(/```json|```/g, '').trim();
+            const parsed = JSON.parse(raw);
+
+            // Preenche os campos com o que a IA extraiu
+            setField('valorVista',  parsed.valorVista  || '');
+            setField('valorCartao', parsed.valorCartao || '');
+            if (parsed.numParcelas) setField('numParcelas', parsed.numParcelas);
+
+            const modoIA = parsed.modo === 'cartao' ? 'cartao' : 'entrada';
+            setMode(modoIA);
+
+            if (modoIA === 'entrada') {
+                setField('valorEntradaCliente', parsed.valorCliente || '');
+            } else {
+                setField('valorCartaoCliente', parsed.valorCliente || '');
+            }
+
+            calcular();
+            setStatus('✅ Campos preenchidos pela IA!', 'ok');
+        } catch (err) {
+            setStatus(`❌ Erro: ${err.message}`, 'erro');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '✨ Processar com IA';
+        }
+    }
+
+    function setStatus(msg, tipo) {
+        const el = document.getElementById('iaStatus');
+        el.textContent = msg;
+        el.className = 'ia-status' + (tipo ? ' ' + tipo : '');
+    }
+
+    function copiar() {
+        const txt = document.getElementById('resultadoTexto').textContent;
+        navigator.clipboard.writeText(txt).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            btn.textContent = '✅ Copiado!';
+            setTimeout(() => btn.innerHTML = '📋 Copiar resultado', 1800);
+        });
+    }
+
+    // ─── Listeners ───
+    ['valorVista','valorCartao','numParcelas','valorEntradaCliente','valorCartaoCliente']
+        .forEach(id => document.getElementById(id).addEventListener('input', calcular));
+</script>
+</body>
+</html>
