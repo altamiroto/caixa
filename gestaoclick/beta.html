@@ -22,7 +22,7 @@
       --success: #27ae60;
       --radius: 8px;
       --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
-      --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-float: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
     }
 
     body {
@@ -32,78 +32,35 @@
       min-height: 100vh;
     }
 
-    /* HEADER */
+    /* ── HEADER ─────────────────────────────────── */
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 0 24px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       height: 60px;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 50;
     }
     header h1 {
       font-size: 15px;
       font-weight: 600;
       letter-spacing: -0.02em;
-      color: var(--text-primary);
-    }
-    header span {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 400;
     }
 
-    /* CART BUTTON NO HEADER */
-    #btn-carrinho-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      padding: 8px 14px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      position: relative;
-    }
-    #btn-carrinho-header:hover { background: var(--accent-hover); }
-    #badge-carrinho {
-      background: white;
-      color: var(--accent);
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      font-size: 11px;
-      font-weight: 600;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    #badge-carrinho.visivel { display: flex; }
-
-    /* LAYOUT */
+    /* ── LAYOUT ─────────────────────────────────── */
     .layout {
-      max-width: 1100px;
+      max-width: 860px;
       margin: 0 auto;
-      padding: 24px 16px;
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 20px;
-      align-items: start;
+      padding: 24px 16px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    /* PAINEL ESQUERDO */
-    .painel-esquerdo { display: flex; flex-direction: column; gap: 16px; }
-
-    /* BUSCA */
+    /* ── CARDS ──────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -112,10 +69,8 @@
     }
     .card-body { padding: 16px; }
 
-    .busca-row {
-      display: flex;
-      gap: 8px;
-    }
+    /* ── BUSCA ──────────────────────────────────── */
+    .busca-row { display: flex; gap: 8px; }
     .busca-row input {
       flex: 1;
       padding: 9px 13px;
@@ -132,7 +87,7 @@
     .busca-row input::placeholder { color: var(--text-muted); }
 
     .btn-primary {
-      padding: 9px 16px;
+      padding: 9px 18px;
       background: var(--accent);
       color: white;
       border: none;
@@ -146,20 +101,7 @@
     }
     .btn-primary:hover { background: var(--accent-hover); }
 
-    .btn-ghost {
-      padding: 9px 14px;
-      background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* FILTRO */
+    /* ── FILTRO ─────────────────────────────────── */
     #container-filtro { display: none; }
     #container-filtro input {
       width: 100%;
@@ -175,13 +117,9 @@
     #container-filtro input:focus { border-color: var(--accent); background: white; }
     #container-filtro input::placeholder { color: var(--text-muted); }
 
-    /* TABELA */
+    /* ── TABELA ─────────────────────────────────── */
     .table-wrapper { overflow: hidden; border-radius: var(--radius); }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     th, td {
       padding: 10px 14px;
       text-align: left;
@@ -205,85 +143,145 @@
     th:hover { color: var(--text-primary); }
     th.ordenado-asc::after { content: ' ↑'; }
     th.ordenado-desc::after { content: ' ↓'; }
-
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: #fafafa; }
 
-    th:nth-child(1), td:nth-child(1) { width: 42%; }
+    th:nth-child(1), td:nth-child(1) { width: 44%; }
     th:nth-child(2), td:nth-child(2) { width: 13%; text-align: center; }
     th:nth-child(3), td:nth-child(3) { width: 20%; text-align: right; }
-    th:nth-child(4), td:nth-child(4) { width: 20%; text-align: center; }
-    th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
+    th:nth-child(4), td:nth-child(4) { width: 18%; text-align: center; }
+    th:nth-child(5), td:nth-child(5) { width: 5%;  text-align: center; }
 
-    .sem-registro { color: var(--text-muted); font-style: italic; }
+    .sem-registro { color: var(--text-muted); }
+    .tag-estoque-ok  { color: var(--success); font-weight: 500; }
+    .tag-estoque-zero{ color: var(--danger);  font-weight: 500; }
+    .preco-valor { font-family: 'DM Mono', monospace; font-size: 12px; }
 
-    .tag-estoque-ok { color: var(--success); font-weight: 500; }
-    .tag-estoque-zero { color: var(--danger); font-weight: 500; }
+    .status-msg { text-align: center; padding: 28px; color: var(--text-muted); font-size: 13px; }
+    .status-msg.erro { color: var(--danger); }
 
-    .preco-valor {
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: var(--text-primary);
-    }
-
-    /* BTN ADICIONAR */
+    /* ── BTN + TABELA ───────────────────────────── */
     .btn-add {
-      width: 26px;
-      height: 26px;
+      width: 26px; height: 26px;
       background: var(--accent);
       color: white;
       border: none;
       border-radius: 50%;
-      font-size: 16px;
-      line-height: 1;
+      font-size: 17px;
       cursor: pointer;
       transition: background 0.15s, transform 0.1s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      line-height: 1;
     }
     .btn-add:hover { background: var(--accent-hover); transform: scale(1.1); }
     .btn-add:disabled { background: var(--border-strong); cursor: default; transform: none; }
 
-    /* STATUS MSG */
-    .status-msg {
-      text-align: center;
-      padding: 24px;
-      color: var(--text-muted);
-      font-size: 13px;
+    /* ════════════════════════════════════════════
+       CARRINHO FLUTUANTE
+    ════════════════════════════════════════════ */
+    #carrinho-float {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 340px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
     }
-    .status-msg.erro { color: var(--danger); }
 
-    /* CARRINHO */
-    .painel-direito { position: sticky; top: 80px; }
+    /* Painel expansível */
+    #carrinho-painel {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-float);
+      overflow: hidden;
+      max-height: 520px;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transform-origin: bottom right;
+      transition:
+        max-height 0.32s cubic-bezier(0.4,0,0.2,1),
+        opacity    0.22s ease,
+        transform  0.22s cubic-bezier(0.4,0,0.2,1),
+        margin-bottom 0.32s ease;
+      margin-bottom: 10px;
+    }
+    #carrinho-painel.minimizado {
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+      pointer-events: none;
+      margin-bottom: 0;
+    }
 
+    /* Botão toggle — pílula flutuante */
+    #btn-toggle-carrinho {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 11px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: var(--shadow-float);
+      transition: background 0.15s, transform 0.15s;
+      user-select: none;
+    }
+    #btn-toggle-carrinho:hover { background: var(--accent-hover); transform: scale(1.03); }
+    #btn-toggle-carrinho:active { transform: scale(0.97); }
+
+    #badge-float {
+      background: white;
+      color: var(--accent);
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #badge-float.visivel { display: flex; }
+
+    #seta-toggle {
+      font-size: 9px;
+      opacity: 0.6;
+      transition: transform 0.25s ease;
+    }
+    #seta-toggle.aberto { transform: rotate(180deg); }
+
+    /* Cabeçalho do painel */
     .carrinho-header {
-      padding: 14px 16px;
+      padding: 13px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .carrinho-header h2 {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .carrinho-header span {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
+    .carrinho-header h2 { font-size: 13px; font-weight: 600; }
+    .carrinho-header span { font-size: 11px; color: var(--text-muted); }
 
+    /* Lista de itens */
     #lista-carrinho {
-      max-height: 340px;
+      max-height: 260px;
       overflow-y: auto;
-      padding: 8px 0;
+      padding: 4px 0;
     }
     #lista-carrinho:empty::after {
       content: 'Nenhum item adicionado.';
       display: block;
       text-align: center;
-      padding: 32px 16px;
+      padding: 28px 16px;
       color: var(--text-muted);
       font-size: 13px;
     }
@@ -291,18 +289,17 @@
     .item-carrinho {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
+      gap: 8px;
+      padding: 7px 14px;
       border-bottom: 1px solid var(--border);
       animation: fadeIn 0.15s ease;
     }
     .item-carrinho:last-child { border-bottom: none; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:none; } }
 
     .item-nome {
       flex: 1;
       font-size: 12px;
-      color: var(--text-primary);
       font-weight: 500;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -315,205 +312,309 @@
       white-space: nowrap;
     }
 
-    .qty-control {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
+    .qty-control { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
     .qty-btn {
-      width: 22px;
-      height: 22px;
+      width: 20px; height: 20px;
       border: 1px solid var(--border-strong);
       border-radius: 4px;
       background: white;
       cursor: pointer;
       font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.1s;
       color: var(--text-primary);
     }
     .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
     .qty-num {
-      font-size: 13px;
-      font-weight: 600;
-      min-width: 18px;
-      text-align: center;
+      font-size: 12px; font-weight: 600;
+      min-width: 16px; text-align: center;
       font-family: 'DM Mono', monospace;
     }
 
     .btn-remover {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 14px;
-      padding: 2px;
-      transition: color 0.1s;
-      line-height: 1;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 13px; padding: 2px;
+      transition: color 0.1s; line-height: 1;
     }
     .btn-remover:hover { color: var(--danger); }
 
-    /* RODAPÉ CARRINHO */
-    .carrinho-footer {
-      padding: 14px 16px;
-      border-top: 1px solid var(--border);
-    }
+    /* Rodapé */
+    .carrinho-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
     .total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
     }
-    .total-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
-    .total-valor {
-      font-family: 'DM Mono', monospace;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-primary);
+    .total-label {
+      font-size: 11px; color: var(--text-secondary);
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;
     }
+    .total-valor { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 600; }
 
-    .acoes-carrinho { display: flex; flex-direction: column; gap: 8px; }
+    .acoes-carrinho { display: flex; flex-direction: column; gap: 6px; }
 
     #btn-copiar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 10px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      width: 100%; padding: 9px;
+      background: var(--accent); color: white;
+      border: none; border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
     }
     #btn-copiar:hover { background: var(--accent-hover); }
     #btn-copiar.copiado { background: var(--success); }
 
     #btn-limpar {
-      width: 100%;
-      padding: 8px;
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
+      width: 100%; padding: 7px;
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif; font-size: 12px;
+      cursor: pointer; transition: all 0.15s;
     }
     #btn-limpar:hover { color: var(--danger); border-color: var(--danger); }
 
-    /* TOAST */
+    /* ── TOAST ──────────────────────────────────── */
     #toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--accent);
-      color: white;
-      padding: 10px 16px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: all 0.2s;
-      z-index: 999;
-      pointer-events: none;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--accent); color: white;
+      padding: 9px 18px; border-radius: 20px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0; transition: all 0.2s;
+      z-index: 999; pointer-events: none;
+      white-space: nowrap;
     }
-    #toast.visivel { opacity: 1; transform: translateY(0); }
+    #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* MOBILE */
-    @media (max-width: 768px) {
-      .layout { grid-template-columns: 1fr; }
-      .painel-direito { position: static; order: -1; }
-      th:nth-child(4), td:nth-child(4) { display: none; }
+    /* ── MODAL HISTÓRICO ────────────────────────── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
     }
-    @media (max-width: 500px) {
-      th:nth-child(3), td:nth-child(3) { display: none; }
+    #modal-overlay.visivel {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-float);
+      width: 100%;
+      max-width: 560px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+    }
+    #modal-overlay.visivel #modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-header-info h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .modal-header-info span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    #btn-fechar-modal {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 18px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.1s, background 0.1s;
+      flex-shrink: 0;
+    }
+    #btn-fechar-modal:hover { color: var(--text-primary); background: var(--bg); }
+
+    #modal-body {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Tabela de movimentações */
+    #tabela-mov {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    #tabela-mov th, #tabela-mov td {
+      padding: 9px 16px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #tabela-mov th {
+      background: #fafafa;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-strong);
+      cursor: default;
+    }
+    #tabela-mov tbody tr:last-child td { border-bottom: none; }
+    #tabela-mov tbody tr:hover { background: #fafafa; }
+
+    #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 38%; }
+    #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { width: 18%; text-align: center; }
+    #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { width: 20%; text-align: center; }
+    #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 24%; text-align: center; }
+
+    .mov-entrada { color: var(--success); font-weight: 600; }
+    .mov-saida   { color: var(--danger);  font-weight: 600; }
+
+    .modal-status { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 13px; }
+    .modal-status.erro { color: var(--danger); }
+
+    /* Cursor pointer na linha da tabela */
+    #tabela-produtos tbody tr.clicavel { cursor: pointer; }
+    #tabela-produtos tbody tr.clicavel td:first-child {
+      color: var(--text-primary);
+      text-decoration: underline;
+      text-decoration-color: var(--border-strong);
+      text-underline-offset: 3px;
+    }
+    #tabela-produtos tbody tr.clicavel:hover td:first-child {
+      text-decoration-color: var(--text-secondary);
+    }
+
+    /* ── MOBILE ─────────────────────────────────── */
+    @media (max-width: 520px) {
+      #carrinho-float { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
+      th:nth-child(4), td:nth-child(4) { display: none; }
+      #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { display: none; }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div>
-      <h1>Produtos da Loja</h1>
-    </div>
-    <button id="btn-carrinho-header">
-      🛒 Carrinho
-      <span id="badge-carrinho"></span>
-    </button>
+    <h1>Produtos da Loja</h1>
   </header>
 
   <div class="layout">
 
-    <!-- ESQUERDO: busca + tabela -->
-    <div class="painel-esquerdo">
-
-      <div class="card">
-        <div class="card-body">
-          <div class="busca-row">
-            <input type="text" id="campo-busca" placeholder="Buscar produto pelo nome..." />
-            <button class="btn-primary" id="btn-buscar">Buscar</button>
-          </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="busca-row">
+          <input type="text" id="campo-busca" placeholder="Buscar produto pelo nome..." />
+          <button class="btn-primary" id="btn-buscar">Buscar</button>
         </div>
       </div>
+    </div>
 
-      <div class="card" id="container-filtro">
-        <div class="card-body">
-          <input type="text" id="campo-filtro" placeholder="Filtrar nos resultados..." />
-        </div>
+    <div class="card" id="container-filtro">
+      <div class="card-body">
+        <input type="text" id="campo-filtro" placeholder="Filtrar nos resultados..." />
       </div>
+    </div>
 
-      <div class="card table-wrapper">
-        <table id="tabela-produtos">
+    <div class="card table-wrapper">
+      <table id="tabela-produtos">
+        <thead>
+          <tr>
+            <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
+            <th data-coluna="estoque" data-ordem="asc">Estoque</th>
+            <th data-coluna="preco" data-ordem="asc">Preço</th>
+            <th data-coluna="modificado_em" data-ordem="asc">Últ. Movimentação</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="5" class="status-msg">Faça uma busca para ver os produtos.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ── MODAL HISTÓRICO DE MOVIMENTAÇÕES ── -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h3 id="modal-titulo">Histórico de Movimentações</h3>
+          <span id="modal-subtitulo"></span>
+        </div>
+        <button id="btn-fechar-modal" title="Fechar">✕</button>
+      </div>
+      <div id="modal-body">
+        <table id="tabela-mov">
           <thead>
             <tr>
-              <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
-              <th data-coluna="estoque" data-ordem="asc">Estoque</th>
-              <th data-coluna="preco" data-ordem="asc">Preço</th>
-              <th data-coluna="modificado_em" data-ordem="asc">Últ. Movimentação</th>
-              <th></th>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Qtd</th>
+              <th>Saldo</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" class="status-msg">Faça uma busca para ver os produtos.</td>
-            </tr>
+          <tbody id="tbody-mov">
+            <tr><td colspan="4" class="modal-status">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
-
     </div>
+  </div>
 
-    <!-- DIREITO: carrinho -->
-    <div class="painel-direito">
-      <div class="card">
-        <div class="carrinho-header">
-          <h2>Carrinho</h2>
-          <span id="qtd-itens">0 itens</span>
+  <!-- ── CARRINHO FLUTUANTE ── -->
+  <div id="carrinho-float">
+
+    <div id="carrinho-painel" class="minimizado">
+      <div class="carrinho-header">
+        <h2>Carrinho</h2>
+        <span id="qtd-itens">0 itens</span>
+      </div>
+      <div id="lista-carrinho"></div>
+      <div class="carrinho-footer">
+        <div class="total-row">
+          <span class="total-label">Total</span>
+          <span class="total-valor" id="total-valor">R$ 0,00</span>
         </div>
-        <div id="lista-carrinho"></div>
-        <div class="carrinho-footer">
-          <div class="total-row">
-            <span class="total-label">Total</span>
-            <span class="total-valor" id="total-valor">R$ 0,00</span>
-          </div>
-          <div class="acoes-carrinho">
-            <button id="btn-copiar">📋 Copiar pedido</button>
-            <button id="btn-limpar">Limpar carrinho</button>
-          </div>
+        <div class="acoes-carrinho">
+          <button id="btn-copiar">📋 Copiar pedido</button>
+          <button id="btn-limpar">Limpar carrinho</button>
         </div>
       </div>
     </div>
+
+    <button id="btn-toggle-carrinho">
+      🛒 Carrinho
+      <span id="badge-float"></span>
+      <span id="seta-toggle">▲</span>
+    </button>
 
   </div>
 
@@ -523,9 +624,10 @@
     const lojaIdJeta = "361408";
     let todosProdutos = [];
     let produtosFiltrados = [];
-    let carrinho = {}; // { id: { produto, qty } }
+    let carrinho = {};
+    let carrinhoAberto = false;
 
-    // ─── FORMATAÇÃO ─────────────────────────────────────────────────────────────
+    // ── FORMATAÇÃO ────────────────────────────────
 
     function formatarData(dataString) {
       if (!dataString || dataString === "null" || dataString === "") return '<span class="sem-registro">—</span>';
@@ -548,7 +650,7 @@
       return `R$ ${Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 
-    // ─── API ─────────────────────────────────────────────────────────────────────
+    // ── API ───────────────────────────────────────
 
     async function buscarProdutos(nomeBusca = "", pagina = 1) {
       const url = new URL("https://caixa-three.vercel.app/api/produtos");
@@ -563,10 +665,8 @@
       const tbody = document.querySelector("#tabela-produtos tbody");
       tbody.innerHTML = `<tr><td colspan="5" class="status-msg">Carregando...</td></tr>`;
       document.getElementById('container-filtro').style.display = 'none';
-
       let pagina = 1, totalPaginas = 1;
       todosProdutos = [];
-
       try {
         do {
           const dados = await buscarProdutos(nomeBusca, pagina);
@@ -575,7 +675,6 @@
           totalPaginas = dados.meta.total_paginas;
           pagina++;
         } while (pagina <= totalPaginas);
-
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
@@ -584,7 +683,7 @@
       }
     }
 
-    // ─── TABELA ───────────────────────────────────────────────────────────────────
+    // ── TABELA ────────────────────────────────────
 
     function renderizarTabela(produtos) {
       produtosFiltrados = produtos;
@@ -597,9 +696,10 @@
       produtos.forEach(produto => {
         const id = produto.id || produto.nome;
         const estoqueClass = produto.estoque > 0 ? 'tag-estoque-ok' : 'tag-estoque-zero';
-        const noCarrinho = carrinho[id];
         const semEstoque = produto.estoque <= 0;
         const linha = document.createElement("tr");
+        linha.className = 'clicavel';
+        linha.title = 'Clique para ver o histórico de movimentações';
         linha.innerHTML = `
           <td title="${produto.nome}">${produto.nome}</td>
           <td style="text-align:center;" class="${estoqueClass}">${produto.estoque}</td>
@@ -609,14 +709,16 @@
             <button class="btn-add" data-id="${id}" title="${semEstoque ? 'Sem estoque' : 'Adicionar ao carrinho'}" ${semEstoque ? 'disabled' : ''}>+</button>
           </td>
         `;
+        // Clique na linha abre histórico (exceto no botão +)
+        linha.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-add')) return;
+          abrirHistorico(produto);
+        });
         tbody.appendChild(linha);
       });
-
-      // Eventos de adicionar
       document.querySelectorAll('.btn-add').forEach(btn => {
         btn.addEventListener('click', () => {
-          const id = btn.dataset.id;
-          const produto = todosProdutos.find(p => (p.id || p.nome) == id);
+          const produto = todosProdutos.find(p => (p.id || p.nome) == btn.dataset.id);
           if (produto) adicionarAoCarrinho(produto);
         });
       });
@@ -630,118 +732,102 @@
     function ordenarTabela(coluna, ordem) {
       if (!produtosFiltrados.length) return;
       const ordenados = [...produtosFiltrados].sort((a, b) => {
-        let vA = a[coluna] ?? '';
-        let vB = b[coluna] ?? '';
-        if (coluna === 'estoque' || coluna === 'preco') {
-          return ordem === 'asc' ? Number(vA) - Number(vB) : Number(vB) - Number(vA);
-        }
+        let vA = a[coluna] ?? '', vB = b[coluna] ?? '';
+        if (coluna === 'estoque' || coluna === 'preco') return ordem === 'asc' ? Number(vA) - Number(vB) : Number(vB) - Number(vA);
         return ordem === 'asc' ? vA.toString().localeCompare(vB.toString()) : vB.toString().localeCompare(vA.toString());
       });
       renderizarTabela(ordenados);
     }
 
-    // ─── CARRINHO ─────────────────────────────────────────────────────────────────
+    // ── CARRINHO ──────────────────────────────────
+
+    function toggleCarrinho() {
+      carrinhoAberto = !carrinhoAberto;
+      document.getElementById('carrinho-painel').classList.toggle('minimizado', !carrinhoAberto);
+      const seta = document.getElementById('seta-toggle');
+      seta.classList.toggle('aberto', carrinhoAberto);
+    }
 
     function adicionarAoCarrinho(produto) {
       const id = produto.id || produto.nome;
       if (carrinho[id]) {
-        if (carrinho[id].qty >= produto.estoque) {
-          mostrarToast('Estoque insuficiente');
-          return;
-        }
+        if (carrinho[id].qty >= produto.estoque) { mostrarToast('Estoque insuficiente'); return; }
         carrinho[id].qty++;
       } else {
         carrinho[id] = { produto, qty: 1 };
+        // Abre automaticamente ao adicionar o primeiro item
+        if (!carrinhoAberto) toggleCarrinho();
       }
       atualizarCarrinho();
-      mostrarToast(`"${produto.nome.substring(0, 30)}${produto.nome.length > 30 ? '…' : ''}" adicionado`);
+      mostrarToast(`"${produto.nome.substring(0, 28)}${produto.nome.length > 28 ? '…' : ''}" adicionado`);
     }
 
     function alterarQtd(id, delta) {
       if (!carrinho[id]) return;
       carrinho[id].qty += delta;
-      if (carrinho[id].qty <= 0) {
-        delete carrinho[id];
-      } else if (carrinho[id].qty > carrinho[id].produto.estoque) {
+      if (carrinho[id].qty <= 0) delete carrinho[id];
+      else if (carrinho[id].qty > carrinho[id].produto.estoque) {
         carrinho[id].qty = carrinho[id].produto.estoque;
         mostrarToast('Limite de estoque atingido');
       }
       atualizarCarrinho();
     }
 
-    function removerItem(id) {
-      delete carrinho[id];
-      atualizarCarrinho();
-    }
-
-    function limparCarrinho() {
-      carrinho = {};
-      atualizarCarrinho();
-    }
+    function removerItem(id) { delete carrinho[id]; atualizarCarrinho(); }
+    function limparCarrinho() { carrinho = {}; atualizarCarrinho(); }
 
     function atualizarCarrinho() {
       const lista = document.getElementById('lista-carrinho');
       const itens = Object.entries(carrinho);
       const totalItens = itens.reduce((acc, [, v]) => acc + v.qty, 0);
 
-      // Badge
-      const badge = document.getElementById('badge-carrinho');
+      const badge = document.getElementById('badge-float');
       badge.textContent = totalItens;
       badge.classList.toggle('visivel', totalItens > 0);
 
-      // Qtd itens
       document.getElementById('qtd-itens').textContent = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
 
-      // Lista
       lista.innerHTML = '';
-      if (itens.length === 0) {
-        // vazio — o ::empty vai mostrar a msg
-      } else {
-        itens.forEach(([id, { produto, qty }]) => {
-          const subtotal = Number(produto.preco) * qty;
-          const div = document.createElement('div');
-          div.className = 'item-carrinho';
-          div.innerHTML = `
-            <div class="item-nome" title="${produto.nome}">${produto.nome}</div>
-            <div class="item-preco">${formatarPrecoTexto(subtotal)}</div>
-            <div class="qty-control">
-              <button class="qty-btn" data-id="${id}" data-delta="-1">−</button>
-              <span class="qty-num">${qty}</span>
-              <button class="qty-btn" data-id="${id}" data-delta="1">+</button>
-            </div>
-            <button class="btn-remover" data-id="${id}" title="Remover">✕</button>
-          `;
-          lista.appendChild(div);
-        });
+      itens.forEach(([id, { produto, qty }]) => {
+        const subtotal = Number(produto.preco) * qty;
+        const div = document.createElement('div');
+        div.className = 'item-carrinho';
+        div.innerHTML = `
+          <div class="item-nome" title="${produto.nome}">${produto.nome}</div>
+          <div class="item-preco">${formatarPrecoTexto(subtotal)}</div>
+          <div class="qty-control">
+            <button class="qty-btn" data-id="${id}" data-delta="-1">−</button>
+            <span class="qty-num">${qty}</span>
+            <button class="qty-btn" data-id="${id}" data-delta="1">+</button>
+          </div>
+          <button class="btn-remover" data-id="${id}" title="Remover">✕</button>
+        `;
+        lista.appendChild(div);
+      });
 
-        lista.querySelectorAll('.qty-btn').forEach(btn => {
-          btn.addEventListener('click', () => alterarQtd(btn.dataset.id, parseInt(btn.dataset.delta)));
-        });
-        lista.querySelectorAll('.btn-remover').forEach(btn => {
-          btn.addEventListener('click', () => removerItem(btn.dataset.id));
-        });
-      }
+      lista.querySelectorAll('.qty-btn').forEach(btn =>
+        btn.addEventListener('click', () => alterarQtd(btn.dataset.id, parseInt(btn.dataset.delta)))
+      );
+      lista.querySelectorAll('.btn-remover').forEach(btn =>
+        btn.addEventListener('click', () => removerItem(btn.dataset.id))
+      );
 
-      // Total
       const total = itens.reduce((acc, [, { produto, qty }]) => acc + Number(produto.preco) * qty, 0);
       document.getElementById('total-valor').textContent = formatarPrecoTexto(total);
     }
 
-    // ─── COPIAR PEDIDO ────────────────────────────────────────────────────────────
+    // ── COPIAR PEDIDO ─────────────────────────────
 
     function copiarPedido() {
       const itens = Object.values(carrinho);
       if (!itens.length) { mostrarToast('O carrinho está vazio'); return; }
-
       const linhas = itens.map(({ produto, qty }) => {
         const sub = Number(produto.preco) * qty;
         return `• ${produto.nome} — ${qty}x ${formatarPrecoTexto(produto.preco)} = ${formatarPrecoTexto(sub)}`;
       });
-
       const total = itens.reduce((acc, { produto, qty }) => acc + Number(produto.preco) * qty, 0);
       const data = new Date().toLocaleDateString('pt-BR');
       const texto = `PEDIDO — ${data}\n${'─'.repeat(40)}\n${linhas.join('\n')}\n${'─'.repeat(40)}\nTOTAL: ${formatarPrecoTexto(total)}`;
-
       navigator.clipboard.writeText(texto).then(() => {
         const btn = document.getElementById('btn-copiar');
         btn.textContent = '✅ Copiado!';
@@ -750,7 +836,66 @@
       }).catch(() => mostrarToast('Erro ao copiar. Tente novamente.'));
     }
 
-    // ─── TOAST ───────────────────────────────────────────────────────────────────
+    // ── HISTÓRICO DE MOVIMENTAÇÕES ────────────────
+
+    async function abrirHistorico(produto) {
+      const overlay = document.getElementById('modal-overlay');
+      const tbody   = document.getElementById('tbody-mov');
+      document.getElementById('modal-titulo').textContent   = produto.nome;
+      document.getElementById('modal-subtitulo').textContent = `Estoque atual: ${produto.estoque} un.`;
+      tbody.innerHTML = `<tr><td colspan="4" class="modal-status">Carregando...</td></tr>`;
+      overlay.classList.add('visivel');
+      document.body.style.overflow = 'hidden';
+
+      // Tenta dois padrões de endpoint comuns
+      const endpoints = [
+        `https://caixa-three.vercel.app/api/movimentacoes?loja_id=${lojaIdJeta}&produto_id=${produto.id}`,
+        `https://caixa-three.vercel.app/api/produtos/${produto.id}/movimentacoes?loja_id=${lojaIdJeta}`,
+      ];
+
+      let dados = null;
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url);
+          const json = await res.json();
+          if (json.code === 200 || Array.isArray(json.data)) { dados = json; break; }
+        } catch { /* tenta próximo */ }
+      }
+
+      if (!dados || !dados.data || dados.data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="modal-status ${!dados ? 'erro' : ''}">
+          ${!dados ? 'Endpoint de movimentações não encontrado.' : 'Nenhuma movimentação registada.'}
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      dados.data.forEach(mov => {
+        const tipo    = mov.tipo || mov.tipo_movimentacao || '';
+        const qtd     = Number(mov.quantidade ?? mov.qtd ?? 0);
+        const saldo   = mov.saldo_apos ?? mov.estoque_apos ?? '—';
+        const data    = formatarData(mov.criado_em || mov.data || mov.cadastrado_em || '');
+        const tipoLabel = tipo.toLowerCase().includes('entrada') || qtd > 0 ? 'Entrada' : 'Saída';
+        const tipoClass = tipoLabel === 'Entrada' ? 'mov-entrada' : 'mov-saida';
+        const sinal     = tipoLabel === 'Entrada' ? '+' : '';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${data}</td>
+          <td style="text-align:center;"><span class="${tipoClass}">${tipoLabel}</span></td>
+          <td style="text-align:center;" class="${tipoClass}">${sinal}${qtd}</td>
+          <td style="text-align:center;">${saldo}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('visivel');
+      document.body.style.overflow = '';
+    }
+
+
 
     let toastTimer;
     function mostrarToast(msg) {
@@ -761,16 +906,20 @@
       toastTimer = setTimeout(() => t.classList.remove('visivel'), 2200);
     }
 
-    // ─── EVENTOS ─────────────────────────────────────────────────────────────────
+    // ── EVENTOS ───────────────────────────────────
+
+    document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
+    document.getElementById('modal-overlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modal-overlay')) fecharModal();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharModal(); });
 
     document.getElementById('btn-buscar').addEventListener('click', () => carregarProdutos(document.getElementById('campo-busca').value));
     document.getElementById('campo-busca').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('btn-buscar').click(); });
     document.getElementById('campo-filtro').addEventListener('input', filtrarTabela);
     document.getElementById('btn-copiar').addEventListener('click', copiarPedido);
     document.getElementById('btn-limpar').addEventListener('click', limparCarrinho);
-    document.getElementById('btn-carrinho-header').addEventListener('click', () => {
-      document.querySelector('.painel-direito').scrollIntoView({ behavior: 'smooth' });
-    });
+    document.getElementById('btn-toggle-carrinho').addEventListener('click', toggleCarrinho);
 
     document.querySelectorAll('#tabela-produtos thead th[data-coluna]').forEach(header => {
       header.addEventListener('click', () => {
@@ -783,7 +932,6 @@
       });
     });
 
-    // Inicializar carrinho vazio
     atualizarCarrinho();
   </script>
 </body>
