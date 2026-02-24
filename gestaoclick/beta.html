@@ -847,10 +847,10 @@
       overlay.classList.add('visivel');
       document.body.style.overflow = 'hidden';
 
-      // Endpoint baseado no padrão da URL do sistema: /produtos/movimentacoes_estoque/{id}
+      // Usa o proxy genérico com rota=produtos/movimentacoes_estoque/{id}
       const endpoints = [
-        `https://caixa-three.vercel.app/api/produtos/movimentacoes_estoque/${produto.id}?loja_id=${lojaIdJeta}`,
-        `https://caixa-three.vercel.app/api/produtos/${produto.id}/movimentacoes_estoque?loja_id=${lojaIdJeta}`,
+        `https://caixa-three.vercel.app/api/proxy?rota=produtos/movimentacoes_estoque/${produto.id}&loja_id=${lojaIdJeta}`,
+        `https://caixa-three.vercel.app/api/proxy?rota=movimentacoes_estoque&produto_id=${produto.id}&loja_id=${lojaIdJeta}`,
       ];
 
       let dados = null;
@@ -858,7 +858,7 @@
         try {
           const res = await fetch(url);
           const json = await res.json();
-          if (json.code === 200 || Array.isArray(json.data)) { dados = json; break; }
+          if (json.code === 200 || Array.isArray(json.data) || (json.data && json.data.length >= 0)) { dados = json; break; }
         } catch { /* tenta próximo */ }
       }
 
