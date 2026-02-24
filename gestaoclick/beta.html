@@ -530,10 +530,37 @@
     }
 
     /* ── MOBILE ─────────────────────────────────── */
-    @media (max-width: 520px) {
-      #carrinho-float { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
-      th:nth-child(4), td:nth-child(4) { display: none; }
-      #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { display: none; }
+    @media (max-width: 600px) {
+      /* Carrinho */
+      #carrinho-float { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
+
+      /* Tabela de produtos: esconde Preço e Últ. Movimentação */
+      #tabela-produtos th:nth-child(3),
+      #tabela-produtos td:nth-child(3),
+      #tabela-produtos th:nth-child(4),
+      #tabela-produtos td:nth-child(4) { display: none; }
+
+      /* Modal: ocupa tela toda */
+      #modal-overlay { padding: 0; align-items: flex-end; }
+      #modal {
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 16px 16px 0 0;
+      }
+
+      /* Filtro datas no modal: empilha */
+      #modal-filtro-datas { gap: 6px; padding: 8px 12px; }
+      #modal-filtro-datas input[type="date"] { width: 130px; font-size: 11px; padding: 3px 6px; }
+      #modal-resumo { width: 100%; margin-left: 0; text-align: right; }
+
+      /* Tabela movimentações mobile: esconde Tipo e Descrição, mantém Data, Cliente, Qtd */
+      #tabela-mov th:nth-child(3),
+      #tabela-mov td:nth-child(3) { display: none; } /* Tipo */
+      #tabela-mov th:nth-child(5),
+      #tabela-mov td:nth-child(5) { display: none; } /* Descrição */
+      #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 90px; font-size: 11px; }
+      #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { font-size: 11px; }
+      #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 42px; font-size: 12px; }
     }
   </style>
 </head>
@@ -728,11 +755,12 @@
         const linha = document.createElement("tr");
         linha.className = 'clicavel';
         linha.title = 'Clique para ver o histórico de movimentações';
+        const temMovimentacao = produto.modificado_em && produto.cadastrado_em && produto.modificado_em !== produto.cadastrado_em;
         linha.innerHTML = `
           <td title="${produto.nome}">${produto.nome}</td>
           <td style="text-align:center;" class="${estoqueClass}">${produto.estoque}</td>
           <td style="text-align:right;">${formatarPreco(produto.preco)}</td>
-          <td style="text-align:center;">${formatarData(produto.modificado_em || produto.cadastrado_em || '')}</td>
+          <td style="text-align:center;">${temMovimentacao ? formatarData(produto.modificado_em) : '<span class="sem-registro">—</span>'}</td>
           <td style="text-align:center;">
             <button class="btn-add" data-id="${id}" title="${semEstoque ? 'Sem estoque' : 'Adicionar ao carrinho'}" ${semEstoque ? 'disabled' : ''}>+</button>
           </td>
@@ -912,7 +940,7 @@
           <td style="white-space:nowrap">${formatarData(mov.dataISO + (mov.hora ? ' ' + mov.hora : ''))}</td>
           <td>${mov.cliente}</td>
           <td style="text-align:center;"><span class="${tipoClass}">${mov.isEntrada ? 'Entrada' : 'Saída'}</span></td>
-          <td style="text-align:center;" class="${tipoClass}">${sinal}${mov.qtd}</td>
+          <td style="text-align:center;" class="${tipoClass}">${mov.qtd !== null ? sinal + mov.qtd : '<span style="color:var(--text-muted)">—</span>'}</td>
           <td style="font-size:11px;color:var(--text-secondary)">${mov.descricao}</td>
         `;
         tbody.appendChild(tr);
@@ -983,6 +1011,24 @@
               isEntrada: true
             });
           });
+        }
+
+        // Adiciona entrada sintética se produto tem modificado_em diferente de cadastrado_em
+        if (produto.modificado_em && produto.cadastrado_em && produto.modificado_em !== produto.cadastrado_em) {
+          const tsEnt = produto.modificado_em;
+          const partsEnt = tsEnt.split(' ');
+          // Só adiciona se não há já uma movimentação na mesma data/hora
+          const jaExiste = movs.some(m => (m.dataISO + ' ' + m.hora).trim() === tsEnt.trim() || m.dataISO === partsEnt[0]);
+          if (!jaExiste) {
+            movs.push({
+              dataISO: partsEnt[0] || '',
+              hora: partsEnt[1] ? partsEnt[1].substring(0,5) : '',
+              cliente: 'Luciana Santos',
+              qtd: null,
+              descricao: 'Entrada realizada manualmente',
+              isEntrada: true
+            });
+          }
         }
 
         // Ordena mais recente primeiro
