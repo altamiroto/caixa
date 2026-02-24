@@ -847,10 +847,10 @@
       overlay.classList.add('visivel');
       document.body.style.overflow = 'hidden';
 
-      // Tenta dois padrões de endpoint comuns
+      // Endpoint baseado no padrão da URL do sistema: /produtos/movimentacoes_estoque/{id}
       const endpoints = [
-        `https://caixa-three.vercel.app/api/movimentacoes?loja_id=${lojaIdJeta}&produto_id=${produto.id}`,
-        `https://caixa-three.vercel.app/api/produtos/${produto.id}/movimentacoes?loja_id=${lojaIdJeta}`,
+        `https://caixa-three.vercel.app/api/produtos/movimentacoes_estoque/${produto.id}?loja_id=${lojaIdJeta}`,
+        `https://caixa-three.vercel.app/api/produtos/${produto.id}/movimentacoes_estoque?loja_id=${lojaIdJeta}`,
       ];
 
       let dados = null;
@@ -871,13 +871,18 @@
 
       tbody.innerHTML = '';
       dados.data.forEach(mov => {
-        const tipo    = mov.tipo || mov.tipo_movimentacao || '';
-        const qtd     = Number(mov.quantidade ?? mov.qtd ?? 0);
-        const saldo   = mov.saldo_apos ?? mov.estoque_apos ?? '—';
-        const data    = formatarData(mov.criado_em || mov.data || mov.cadastrado_em || '');
-        const tipoLabel = tipo.toLowerCase().includes('entrada') || qtd > 0 ? 'Entrada' : 'Saída';
-        const tipoClass = tipoLabel === 'Entrada' ? 'mov-entrada' : 'mov-saida';
-        const sinal     = tipoLabel === 'Entrada' ? '+' : '';
+        // Campos: tipo pode vir como 'tipo', 'tipo_movimentacao', 'descricao', 'origem'
+        const tipo = (mov.tipo || mov.tipo_movimentacao || mov.descricao || mov.origem || '').toLowerCase();
+        const qtd  = Math.abs(Number(mov.quantidade ?? mov.qtd ?? mov.valor ?? 0));
+        const saldo = mov.saldo ?? mov.saldo_apos ?? mov.estoque_apos ?? mov.estoque ?? '—';
+        const data  = formatarData(mov.data || mov.criado_em || mov.cadastrado_em || mov.created_at || '');
+
+        // Determina entrada ou saída pelo tipo ou pelo sinal da quantidade original
+        const qtdRaw = Number(mov.quantidade ?? mov.qtd ?? 0);
+        const isEntrada = tipo.includes('entr') || tipo.includes('compra') || tipo.includes('ajuste positivo') || qtdRaw > 0;
+        const tipoLabel = isEntrada ? 'Entrada' : 'Saída';
+        const tipoClass = isEntrada ? 'mov-entrada' : 'mov-saida';
+        const sinal     = isEntrada ? '+' : '−';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
