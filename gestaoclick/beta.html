@@ -488,10 +488,11 @@
     #tabela-mov tbody tr:last-child td { border-bottom: none; }
     #tabela-mov tbody tr:hover { background: #fafafa; }
 
-    #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 38%; }
-    #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { width: 18%; text-align: center; }
-    #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { width: 20%; text-align: center; }
-    #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 24%; text-align: center; }
+    #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 90px; }
+    #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { width: 150px; }
+    #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { width: 70px; text-align: center; }
+    #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 50px; text-align: center; }
+    #tabela-mov th:nth-child(5), #tabela-mov td:nth-child(5) { width: auto; }
 
     .mov-entrada { color: var(--success); font-weight: 600; }
     .mov-saida   { color: var(--danger);  font-weight: 600; }
@@ -861,14 +862,17 @@
 
         // Monta lista de movimentações a partir das vendas
         const movs = [];
+        const prodIdStr = String(produto.id);
         json.data.forEach(venda => {
           // Filtra apenas os itens deste produto dentro da venda
-          const itens = (venda.produtos || []).filter(p => p.produto && p.produto.produto_id === String(produto.id));
+          const itens = (venda.produtos || []).filter(p =>
+            p.produto && String(p.produto.produto_id) === prodIdStr
+          );
+          if (itens.length === 0) return; // venda não contém este produto
           const qtdTotal = itens.reduce((s, p) => s + Number(p.produto.quantidade || 1), 0);
           movs.push({
-            data: venda.data || venda.cadastrado_em || '',
+            data: venda.cadastrado_em || venda.data || '',
             cliente: venda.nome_cliente || '—',
-            tipo: venda.nome_situacao || 'Venda',
             qtd: qtdTotal,
             descricao: `Venda nº ${venda.codigo}`,
             isEntrada: false
