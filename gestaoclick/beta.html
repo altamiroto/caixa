@@ -146,11 +146,11 @@
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: #fafafa; }
 
-    th:nth-child(1), td:nth-child(1) { width: 44%; }
-    th:nth-child(2), td:nth-child(2) { width: 13%; text-align: center; }
-    th:nth-child(3), td:nth-child(3) { width: 20%; text-align: right; }
-    th:nth-child(4), td:nth-child(4) { width: 18%; text-align: center; }
-    th:nth-child(5), td:nth-child(5) { width: 5%;  text-align: center; }
+    .tabela-produtos-base th:nth-child(1), .tabela-produtos-base td:nth-child(1) { width: 44%; }
+    .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 13%; text-align: center; }
+    .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 20%; text-align: right; }
+    .tabela-produtos-base th:nth-child(4), .tabela-produtos-base td:nth-child(4) { width: 18%; text-align: center; }
+    .tabela-produtos-base th:nth-child(5), .tabela-produtos-base td:nth-child(5) { width: 5%;  text-align: center; }
 
     .sem-registro { color: var(--text-muted); }
     .tag-estoque-ok  { color: var(--success); font-weight: 500; }
@@ -802,8 +802,7 @@
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
-        // Atualiza última movimentação em background (não bloqueia)
-        atualizarUltimaMovimentacao(todosProdutos);
+
       } catch (err) {
         const placeholder = document.getElementById('card-placeholder');
         placeholder.style.display = 'block';
@@ -886,76 +885,6 @@
       }
     }
 
-    // Atualiza "Última Movimentação" comparando última SAÍDA (venda) e última ENTRADA (modificado_em)
-    // Roda em background em lotes para não travar a UI
-    async function atualizarUltimaMovimentacao(produtos) {
-      const base = `https://caixa-three.vercel.app/api/proxy`;
-      const lote = 5;
-
-      for (let i = 0; i < produtos.length; i += lote) {
-        const grupo = produtos.slice(i, i + lote);
-        await Promise.all(grupo.map(async (produto) => {
-          try {
-            const prodIdStr = String(produto.id);
-
-            // Requisição 1: última saída (venda mais recente deste produto)
-            const [resVenda, resCompra] = await Promise.all([
-              fetch(`${base}?rota=vendas&produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=5`)
-                .then(r => r.json()).catch(() => null),
-              fetch(`${base}?rota=compras&produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=5`)
-                .then(r => r.json()).catch(() => null),
-            ]);
-
-            // Data da última saída: primeira venda que realmente contém o produto
-            let dataUltimaSaida = '';
-            if (resVenda && resVenda.data) {
-              for (const venda of resVenda.data) {
-                const temProduto = (venda.produtos || []).some(p =>
-                  p.produto && String(p.produto.produto_id) === prodIdStr
-                );
-                if (temProduto) {
-                  dataUltimaSaida = venda.cadastrado_em || venda.data || '';
-                  break;
-                }
-              }
-            }
-
-            // Data da última entrada: primeira compra que contém o produto
-            let dataUltimaEntrada = produto.modificado_em || ''; // fallback = modificado_em
-            if (resCompra && resCompra.data) {
-              for (const compra of resCompra.data) {
-                const temProduto = (compra.produtos || []).some(p =>
-                  p.produto && String(p.produto.produto_id) === prodIdStr
-                );
-                if (temProduto) {
-                  dataUltimaEntrada = compra.cadastrado_em || compra.data || dataUltimaEntrada;
-                  break;
-                }
-              }
-            }
-
-            // Mais recente entre saída e entrada
-            const ultimaReal = dataUltimaSaida > dataUltimaEntrada
-              ? dataUltimaSaida
-              : dataUltimaEntrada;
-
-            if (!ultimaReal) return;
-
-            // Atualiza as células nas duas tabelas
-            document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(linha => {
-              const nomeTd = linha.querySelector('td:first-child');
-              if (nomeTd && nomeTd.getAttribute('title') === produto.nome) {
-                const dataTd = linha.querySelectorAll('td')[3];
-                if (dataTd) {
-                  dataTd.setAttribute('data-ultima-mov', ultimaReal);
-                  dataTd.innerHTML = formatarData(ultimaReal);
-                }
-              }
-            });
-          } catch(e) { /* silencioso */ }
-        }));
-      }
-    }
 
     function filtrarTabela() {
       const termo = document.getElementById('campo-filtro').value.toLowerCase().trim();
