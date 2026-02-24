@@ -535,69 +535,66 @@
     .modal-status { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 13px; }
     .modal-status.erro { color: var(--danger); }
 
-    /* Cursor pointer na linha da tabela */
-    #tabela-produtos tbody tr.clicavel { cursor: pointer; }
-    #tabela-produtos tbody tr.clicavel td:first-child {
+    /* Cursor pointer na linha da tabela (ambas as tabelas) */
+    .tabela-produtos-base tbody tr.clicavel { cursor: pointer; }
+    .tabela-produtos-base tbody tr.clicavel td:first-child {
       color: var(--text-primary);
       text-decoration: underline;
       text-decoration-color: var(--border-strong);
       text-underline-offset: 3px;
     }
-    #tabela-produtos tbody tr.clicavel:hover td:first-child {
+    .tabela-produtos-base tbody tr.clicavel:hover td:first-child {
       text-decoration-color: var(--text-secondary);
     }
 
     /* ── MOBILE ─────────────────────────────────── */
     @media (max-width: 600px) {
-      /* Carrinho */
       #carrinho-float { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
 
-      /* Tabela de produtos: esconde Preço e Últ. Movimentação, mantém Nome + Estoque + botão */
-      #tabela-produtos th:nth-child(3),
-      #tabela-produtos td:nth-child(3),
-      #tabela-produtos th:nth-child(4),
-      #tabela-produtos td:nth-child(4) { display: none; }
-      /* Garante que o botão + nunca desapareça */
-      #tabela-produtos th:nth-child(5),
-      #tabela-produtos td:nth-child(5) { display: table-cell !important; width: 36px; }
-      /* Ajusta largura nome no mobile */
-      #tabela-produtos th:nth-child(1),
-      #tabela-produtos td:nth-child(1) { width: auto; }
-      #tabela-produtos th:nth-child(2),
-      #tabela-produtos td:nth-child(2) { width: 56px; }
+      /* Tabela de produtos (ambas): esconde col 3 (Preço) e col 4 (Últ. Mov.) */
+      .tabela-produtos-base th:nth-child(3),
+      .tabela-produtos-base td:nth-child(3),
+      .tabela-produtos-base th:nth-child(4),
+      .tabela-produtos-base td:nth-child(4) { display: none !important; }
+
+      /* Col 1 (Nome): ocupa o espaço disponível */
+      .tabela-produtos-base th:nth-child(1),
+      .tabela-produtos-base td:nth-child(1) { width: auto; min-width: 0; }
+
+      /* Col 2 (Estoque): largura fixa pequena */
+      .tabela-produtos-base th:nth-child(2),
+      .tabela-produtos-base td:nth-child(2) { width: 52px; flex-shrink: 0; }
+
+      /* Col 5 (botão +): sempre visível, tamanho fixo */
+      .tabela-produtos-base th:nth-child(5),
+      .tabela-produtos-base td:nth-child(5) { display: table-cell !important; width: 40px; padding: 6px 8px; }
+
+      /* Previne overflow no nome */
+      .tabela-produtos-base td:nth-child(1) {
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* table-layout fixed para controle preciso */
+      .tabela-produtos-base { table-layout: fixed; width: 100%; }
 
       /* Modal: bottom-sheet */
       #modal-overlay { padding: 0; align-items: flex-end; }
-      #modal {
-        max-width: 100%;
-        max-height: 92vh;
-        border-radius: 16px 16px 0 0;
-      }
+      #modal { max-width: 100%; max-height: 92vh; border-radius: 16px 16px 0 0; }
 
-      /* Barra de datas: compacta em 2 linhas */
-      #modal-filtro-datas {
-        flex-wrap: wrap;
-        gap: 6px;
-        padding: 8px 12px;
-      }
+      /* Barra de datas */
+      #modal-filtro-datas { flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
       #modal-filtro-datas label { font-size: 10px; }
-      #modal-filtro-datas input[type="date"] {
-        width: 120px;
-        font-size: 11px;
-        padding: 3px 5px;
-      }
+      #modal-filtro-datas input[type="date"] { width: 120px; font-size: 11px; padding: 3px 5px; }
       #btn-filtrar-datas { padding: 4px 10px; font-size: 11px; }
       #modal-resumo { width: 100%; margin-left: 0; text-align: right; font-size: 11px; }
 
-      /* Tabela movimentações: scroll horizontal em vez de esconder colunas */
+      /* Tabela movimentações: scroll horizontal */
       #modal-body { overflow-x: auto; overflow-y: auto; }
-      #tabela-mov { min-width: 480px; }
+      #tabela-mov { min-width: 480px; table-layout: auto; }
       #tabela-mov th, #tabela-mov td { padding: 7px 10px; font-size: 11px; }
-      #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 110px; }
-      #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { width: 130px; }
-      #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { width: 60px; }
-      #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 45px; }
-      #tabela-mov th:nth-child(5), #tabela-mov td:nth-child(5) { min-width: 120px; }
     }
   </style>
 </head>
@@ -805,6 +802,8 @@
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
+        // Atualiza última movimentação em background (não bloqueia)
+        atualizarUltimaMovimentacao(todosProdutos);
       } catch (err) {
         const placeholder = document.getElementById('card-placeholder');
         placeholder.style.display = 'block';
@@ -884,6 +883,55 @@
         semEstoque.forEach(p => tbodySem.appendChild(criarLinhaProduto(p)));
       } else {
         cardSem.style.display = 'none';
+      }
+    }
+
+    // Atualiza coluna "Última Movimentação" com a data real da última venda
+    // Chamado após renderizarTabela, em background, sem bloquear a UI
+    async function atualizarUltimaMovimentacao(produtos) {
+      // Processa em lotes de 5 para não sobrecarregar a API
+      const lote = 5;
+      for (let i = 0; i < produtos.length; i += lote) {
+        const grupo = produtos.slice(i, i + lote);
+        await Promise.all(grupo.map(async (produto) => {
+          try {
+            const url = `https://caixa-three.vercel.app/api/proxy?rota=vendas&produto_id=${produto.id}&loja_id=${lojaIdJeta}&limite=1`;
+            const res = await fetch(url);
+            const json = await res.json();
+            if (!json.data || json.data.length === 0) return;
+
+            // Pega a data da venda mais recente que contém este produto
+            const prodIdStr = String(produto.id);
+            let ultimaVenda = null;
+            for (const venda of json.data) {
+              const temProduto = (venda.produtos || []).some(p =>
+                p.produto && String(p.produto.produto_id) === prodIdStr
+              );
+              if (temProduto) {
+                ultimaVenda = venda.cadastrado_em || venda.data || null;
+                break;
+              }
+            }
+            if (!ultimaVenda) return;
+
+            // Compara com modificado_em: usa o mais recente dos dois
+            const dataVenda    = ultimaVenda;
+            const dataModif    = produto.modificado_em || '';
+            const ultimaReal   = dataVenda > dataModif ? dataVenda : dataModif;
+
+            // Atualiza as células nas duas tabelas
+            document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(linha => {
+              const nomeTd = linha.querySelector('td:first-child');
+              if (nomeTd && nomeTd.getAttribute('title') === produto.nome) {
+                const dataTd = linha.querySelectorAll('td')[3];
+                if (dataTd) {
+                  dataTd.setAttribute('data-ultima-mov', ultimaReal);
+                  dataTd.innerHTML = formatarData(ultimaReal);
+                }
+              }
+            });
+          } catch(e) { /* silencioso */ }
+        }));
       }
     }
 
