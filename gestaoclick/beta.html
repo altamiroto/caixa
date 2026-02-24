@@ -782,12 +782,12 @@
     }
 
     async function carregarProdutos(nomeBusca = "") {
-      // Mostrar loading no placeholder
       document.getElementById('card-com-estoque').style.display = 'none';
       document.getElementById('card-sem-estoque').style.display = 'none';
       const placeholder = document.getElementById('card-placeholder');
       placeholder.style.display = 'block';
       placeholder.querySelector('td').textContent = 'Carregando...';
+      placeholder.querySelector('td').className = 'status-msg';
       document.getElementById('container-filtro').style.display = 'none';
       let pagina = 1, totalPaginas = 1;
       todosProdutos = [];
@@ -802,12 +802,42 @@
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
-
+        // Busca modificado_em real em background para todos os produtos (a listagem tem cache)
+        atualizarModificadoEm(todosProdutos);
       } catch (err) {
-        const placeholder = document.getElementById('card-placeholder');
         placeholder.style.display = 'block';
         placeholder.querySelector('td').textContent = err.message;
         placeholder.querySelector('td').className = 'status-msg erro';
+      }
+    }
+
+    // Busca o modificado_em real de cada produto via endpoint individual (sem cache)
+    // e atualiza a célula na tabela em tempo real, em lotes para não sobrecarregar
+    async function atualizarModificadoEm(produtos) {
+      const LOTE = 8;
+      for (let i = 0; i < produtos.length; i += LOTE) {
+        const grupo = produtos.slice(i, i + LOTE);
+        await Promise.all(grupo.map(async (produto) => {
+          try {
+            const url = `https://caixa-three.vercel.app/api/proxy?rota=produtos&id=${produto.id}&loja_id=${lojaIdJeta}`;
+            const res  = await fetch(url);
+            const json = await res.json();
+            if (!json.data || !json.data[0]) return;
+            const modReal = json.data[0].modificado_em;
+            if (!modReal || modReal === produto.modificado_em) return;
+            // Atualiza o objeto em memória
+            produto.modificado_em = modReal;
+            // Atualiza a célula na tabela (ambos os grupos)
+            document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(linha => {
+              if (linha.querySelector('td')?.getAttribute('title') === produto.nome) {
+                const celula = linha.querySelectorAll('td')[3];
+                if (celula) celula.innerHTML = formatarData(modReal);
+              }
+            });
+          } catch(_) {}
+        }));
+        // Pequena pausa entre lotes para não travar
+        await new Promise(r => setTimeout(r, 150));
       }
     }
 
