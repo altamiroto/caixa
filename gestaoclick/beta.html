@@ -411,8 +411,8 @@
       border-radius: 12px;
       box-shadow: var(--shadow-float);
       width: 100%;
-      max-width: 560px;
-      max-height: 80vh;
+      max-width: 800px;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
       transform: translateY(12px) scale(0.98);
@@ -456,17 +456,34 @@
     }
     #btn-fechar-modal:hover { color: var(--text-primary); background: var(--bg); }
 
-    #modal-body {
-      overflow-y: auto;
-      flex: 1;
+    #modal-filtro-datas {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-bottom: 1px solid var(--border);
+      background: #fafafa; flex-shrink: 0; flex-wrap: wrap;
     }
+    #modal-filtro-datas label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    #modal-filtro-datas input[type="date"] {
+      border: 1px solid var(--border-strong); border-radius: 6px;
+      padding: 4px 8px; font-size: 12px; font-family: inherit;
+      color: var(--text-primary); background: var(--surface); cursor: pointer;
+    }
+    #modal-filtro-datas input[type="date"]:focus { outline: none; border-color: var(--accent); }
+    #btn-filtrar-datas {
+      padding: 4px 12px; font-size: 11px; border: 1px solid var(--border-strong);
+      border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer;
+      font-family: inherit; transition: background 0.15s;
+    }
+    #btn-filtrar-datas:hover { background: var(--accent-hover); }
+    #btn-limpar-datas {
+      padding: 4px 10px; font-size: 11px; border: 1px solid var(--border);
+      border-radius: 6px; background: none; color: var(--text-secondary); cursor: pointer; font-family: inherit;
+    }
+    #modal-resumo { font-size: 11px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+
+    #modal-body { overflow-y: auto; flex: 1; }
 
     /* Tabela de movimentações */
-    #tabela-mov {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
+    #tabela-mov { width: 100%; border-collapse: collapse; table-layout: auto; }
     #tabela-mov th, #tabela-mov td {
       padding: 9px 16px;
       font-size: 12px;
@@ -488,10 +505,10 @@
     #tabela-mov tbody tr:last-child td { border-bottom: none; }
     #tabela-mov tbody tr:hover { background: #fafafa; }
 
-    #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 90px; }
-    #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { width: 150px; }
+    #tabela-mov th:nth-child(1), #tabela-mov td:nth-child(1) { width: 130px; white-space: nowrap; }
+    #tabela-mov th:nth-child(2), #tabela-mov td:nth-child(2) { width: 160px; }
     #tabela-mov th:nth-child(3), #tabela-mov td:nth-child(3) { width: 70px; text-align: center; }
-    #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 50px; text-align: center; }
+    #tabela-mov th:nth-child(4), #tabela-mov td:nth-child(4) { width: 55px; text-align: center; }
     #tabela-mov th:nth-child(5), #tabela-mov td:nth-child(5) { width: auto; }
 
     .mov-entrada { color: var(--success); font-weight: 600; }
@@ -571,6 +588,15 @@
           <span id="modal-subtitulo"></span>
         </div>
         <button id="btn-fechar-modal" title="Fechar">✕</button>
+      </div>
+      <div id="modal-filtro-datas">
+        <label>De</label>
+        <input type="date" id="filtro-data-ini" />
+        <label>Até</label>
+        <input type="date" id="filtro-data-fim" />
+        <button id="btn-filtrar-datas">Filtrar</button>
+        <button id="btn-limpar-datas">Limpar</button>
+        <span id="modal-resumo"></span>
       </div>
       <div id="modal-body">
         <table id="tabela-mov">
@@ -840,69 +866,155 @@
 
     // ── HISTÓRICO DE MOVIMENTAÇÕES ────────────────
 
+    let _produtoAtual = null;
+    let _todasMovs = [];
+
+    // Datas padrão: últimos 60 dias
+    function initFiltrosDatas() {
+      const hoje = new Date();
+      const antes = new Date(); antes.setDate(hoje.getDate() - 60);
+      document.getElementById('filtro-data-ini').value = antes.toISOString().substring(0, 10);
+      document.getElementById('filtro-data-fim').value = hoje.toISOString().substring(0, 10);
+    }
+
+    function renderMovs(movs) {
+      const tbody = document.getElementById('tbody-mov');
+      const ini = document.getElementById('filtro-data-ini').value;
+      const fim = document.getElementById('filtro-data-fim').value;
+
+      let filtradas = movs;
+      if (ini || fim) {
+        filtradas = movs.filter(m => {
+          const d = m.dataISO;
+          if (ini && d < ini) return false;
+          if (fim && d > fim) return false;
+          return true;
+        });
+      }
+
+      const entradas = filtradas.filter(m => m.isEntrada).reduce((s, m) => s + m.qtd, 0);
+      const saidas   = filtradas.filter(m => !m.isEntrada).reduce((s, m) => s + m.qtd, 0);
+      document.getElementById('modal-resumo').innerHTML =
+        filtradas.length === 0 ? '' :
+        `<span class="mov-entrada">+${entradas} entrada${entradas !== 1 ? 's' : ''}</span>&nbsp;&nbsp;<span class="mov-saida">−${saidas} saída${saidas !== 1 ? 's' : ''}</span>&nbsp;&nbsp;(${filtradas.length} reg.)`;
+
+      if (filtradas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="modal-status">Nenhuma movimentação no período selecionado.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      filtradas.forEach(mov => {
+        const tipoClass = mov.isEntrada ? 'mov-entrada' : 'mov-saida';
+        const sinal     = mov.isEntrada ? '+' : '−';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="white-space:nowrap">${formatarData(mov.dataISO + (mov.hora ? ' ' + mov.hora : ''))}</td>
+          <td>${mov.cliente}</td>
+          <td style="text-align:center;"><span class="${tipoClass}">${mov.isEntrada ? 'Entrada' : 'Saída'}</span></td>
+          <td style="text-align:center;" class="${tipoClass}">${sinal}${mov.qtd}</td>
+          <td style="font-size:11px;color:var(--text-secondary)">${mov.descricao}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     async function abrirHistorico(produto) {
+      _produtoAtual = produto;
       const overlay = document.getElementById('modal-overlay');
       const tbody   = document.getElementById('tbody-mov');
       document.getElementById('modal-titulo').textContent    = produto.nome;
       document.getElementById('modal-subtitulo').textContent = `Estoque atual: ${produto.estoque} un.`;
       tbody.innerHTML = `<tr><td colspan="5" class="modal-status">Carregando...</td></tr>`;
+      document.getElementById('modal-resumo').textContent = '';
+      initFiltrosDatas();
       overlay.classList.add('visivel');
       document.body.style.overflow = 'hidden';
 
       try {
-        // Busca todas as vendas que contêm este produto
-        const url = `https://caixa-three.vercel.app/api/proxy?rota=vendas&produto_id=${produto.id}&loja_id=${lojaIdJeta}&limite=200`;
-        const res  = await fetch(url);
-        const json = await res.json();
+        const prodIdStr = String(produto.id);
+        const base = `https://caixa-three.vercel.app/api/proxy`;
 
-        if (!json.data || json.data.length === 0) {
+        // Busca vendas (saídas) e compras (entradas) em paralelo
+        const [resVendas, resCompras] = await Promise.all([
+          fetch(`${base}?rota=vendas&produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=500`).then(r => r.json()).catch(() => null),
+          fetch(`${base}?rota=compras&produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=500`).then(r => r.json()).catch(() => null),
+        ]);
+
+        const movs = [];
+
+        // Saídas: vendas
+        if (resVendas && resVendas.data) {
+          resVendas.data.forEach(venda => {
+            const itens = (venda.produtos || []).filter(p =>
+              p.produto && String(p.produto.produto_id) === prodIdStr
+            );
+            if (itens.length === 0) return;
+            const qtdTotal = itens.reduce((s, p) => s + Number(p.produto.quantidade || 1), 0);
+            const ts = venda.cadastrado_em || venda.data || '';
+            const parts = ts.split(' ');
+            movs.push({
+              dataISO: parts[0] || '',
+              hora: parts[1] ? parts[1].substring(0,5) : '',
+              cliente: venda.nome_cliente || '—',
+              qtd: qtdTotal,
+              descricao: `Venda nº ${venda.codigo}`,
+              isEntrada: false
+            });
+          });
+        }
+
+        // Entradas: compras
+        if (resCompras && resCompras.data) {
+          resCompras.data.forEach(compra => {
+            const itens = (compra.produtos || []).filter(p =>
+              p.produto && String(p.produto.produto_id) === prodIdStr
+            );
+            if (itens.length === 0) return;
+            const qtdTotal = itens.reduce((s, p) => s + Number(p.produto.quantidade || 1), 0);
+            const ts = compra.cadastrado_em || compra.data || '';
+            const parts = ts.split(' ');
+            movs.push({
+              dataISO: parts[0] || '',
+              hora: parts[1] ? parts[1].substring(0,5) : '',
+              cliente: compra.nome_fornecedor || compra.nome_cliente || '—',
+              qtd: qtdTotal,
+              descricao: `Compra nº ${compra.codigo || compra.id}`,
+              isEntrada: true
+            });
+          });
+        }
+
+        // Ordena mais recente primeiro
+        movs.sort((a, b) => (b.dataISO + b.hora).localeCompare(a.dataISO + a.hora));
+        _todasMovs = movs;
+
+        // Atualiza a coluna "última movimentação" da linha do produto na tabela principal
+        if (movs.length > 0) {
+          const ultimaData = movs[0].dataISO + (movs[0].hora ? ' ' + movs[0].hora : '');
+          // Atualizar o campo modificado_em do produto para reflectir a movimentação real
+          const linhas = document.querySelectorAll('#tabela-produtos tbody tr');
+          linhas.forEach(linha => {
+            const nomeTd = linha.querySelector('td:first-child');
+            if (nomeTd && nomeTd.getAttribute('title') === produto.nome) {
+              const dataTd = linha.querySelectorAll('td')[3];
+              if (dataTd) dataTd.innerHTML = formatarData(ultimaData);
+            }
+          });
+        }
+
+        if (movs.length === 0) {
           tbody.innerHTML = `<tr><td colspan="5" class="modal-status">Nenhuma movimentação encontrada.</td></tr>`;
           return;
         }
 
-        // Monta lista de movimentações a partir das vendas
-        const movs = [];
-        const prodIdStr = String(produto.id);
-        json.data.forEach(venda => {
-          // Filtra apenas os itens deste produto dentro da venda
-          const itens = (venda.produtos || []).filter(p =>
-            p.produto && String(p.produto.produto_id) === prodIdStr
-          );
-          if (itens.length === 0) return; // venda não contém este produto
-          const qtdTotal = itens.reduce((s, p) => s + Number(p.produto.quantidade || 1), 0);
-          movs.push({
-            data: venda.cadastrado_em || venda.data || '',
-            cliente: venda.nome_cliente || '—',
-            qtd: qtdTotal,
-            descricao: `Venda nº ${venda.codigo}`,
-            isEntrada: false
-          });
-        });
-
-        // Ordena do mais recente para o mais antigo
-        movs.sort((a, b) => new Date(b.data) - new Date(a.data));
-
-        tbody.innerHTML = '';
-        movs.forEach(mov => {
-          const tipoClass = mov.isEntrada ? 'mov-entrada' : 'mov-saida';
-          const sinal     = mov.isEntrada ? '+' : '−';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${formatarData(mov.data)}</td>
-            <td>${mov.cliente}</td>
-            <td style="text-align:center;"><span class="${tipoClass}">${mov.isEntrada ? 'Entrada' : 'Saída'}</span></td>
-            <td style="text-align:center;" class="${tipoClass}">${sinal}${mov.qtd}</td>
-            <td style="font-size:11px;color:var(--text-secondary)">${mov.descricao}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
+        renderMovs(movs);
       } catch(e) {
-        tbody.innerHTML = `<tr><td colspan="5" class="modal-status erro">Erro ao carregar histórico.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="modal-status erro">Erro ao carregar histórico: ${e.message}</td></tr>`;
       }
     }
 
-    function fecharModal() {
+        function fecharModal() {
       document.getElementById('modal-overlay').classList.remove('visivel');
       document.body.style.overflow = '';
     }
@@ -921,6 +1033,14 @@
     // ── EVENTOS ───────────────────────────────────
 
     document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
+    document.getElementById('btn-filtrar-datas').addEventListener('click', () => renderMovs(_todasMovs));
+    document.getElementById('btn-limpar-datas').addEventListener('click', () => {
+      document.getElementById('filtro-data-ini').value = '';
+      document.getElementById('filtro-data-fim').value = '';
+      renderMovs(_todasMovs);
+    });
+    document.getElementById('filtro-data-ini').addEventListener('keypress', e => { if(e.key==='Enter') renderMovs(_todasMovs); });
+    document.getElementById('filtro-data-fim').addEventListener('keypress', e => { if(e.key==='Enter') renderMovs(_todasMovs); });
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal-overlay')) fecharModal();
     });
