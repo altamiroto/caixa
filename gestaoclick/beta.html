@@ -775,6 +775,7 @@
     async function buscarProdutos(nomeBusca = "", pagina = 1) {
       const url = new URL("https://caixa-three.vercel.app/api/produtos");
       url.searchParams.append("loja_id", lojaIdJeta);
+      url.searchParams.append("limite", "100");
       url.searchParams.append("pagina", pagina);
       if (nomeBusca.trim()) url.searchParams.append("nome", nomeBusca.trim());
       const res = await fetch(url.toString());
@@ -802,8 +803,7 @@
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
-        // Busca modificado_em real em background para todos os produtos (a listagem tem cache)
-        atualizarModificadoEm(todosProdutos);
+
       } catch (err) {
         placeholder.style.display = 'block';
         placeholder.querySelector('td').textContent = err.message;
@@ -822,28 +822,6 @@
       });
     }
 
-    // Busca o modificado_em real de cada produto via endpoint individual (sem cache da listagem)
-    // A API de listagem retorna modificado_em desatualizado; o endpoint individual retorna o valor correto
-    async function atualizarModificadoEm(produtos) {
-      const LOTE = 8;
-      for (let i = 0; i < produtos.length; i += LOTE) {
-        const grupo = produtos.slice(i, i + LOTE);
-        await Promise.all(grupo.map(async (produto) => {
-          try {
-            // Endpoint individual: /api/produtos?loja_id=X&id=Y  (sem proxy, igual ao que você testou)
-            const url = `https://caixa-three.vercel.app/api/produtos?loja_id=${lojaIdJeta}&id=${produto.id}`;
-            const res  = await fetch(url);
-            const json = await res.json();
-            if (!json.data || !json.data[0]) return;
-            const modReal = json.data[0].modificado_em;
-            if (!modReal || modReal === produto.modificado_em) return;
-            produto.modificado_em = modReal; // atualiza em memória
-            atualizarCelulaData(produto.nome, modReal);
-          } catch(_) {}
-        }));
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
 
     // ── TABELA ────────────────────────────────────
 
