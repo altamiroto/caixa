@@ -576,13 +576,14 @@
           <thead>
             <tr>
               <th>Data</th>
+              <th>Cliente</th>
               <th>Tipo</th>
               <th>Qtd</th>
-              <th>Saldo</th>
+              <th>Descrição</th>
             </tr>
           </thead>
           <tbody id="tbody-mov">
-            <tr><td colspan="4" class="modal-status">Carregando...</td></tr>
+            <tr><td colspan="5" class="modal-status">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -841,58 +842,60 @@
     async function abrirHistorico(produto) {
       const overlay = document.getElementById('modal-overlay');
       const tbody   = document.getElementById('tbody-mov');
-      document.getElementById('modal-titulo').textContent   = produto.nome;
+      document.getElementById('modal-titulo').textContent    = produto.nome;
       document.getElementById('modal-subtitulo').textContent = `Estoque atual: ${produto.estoque} un.`;
-      tbody.innerHTML = `<tr><td colspan="4" class="modal-status">Carregando...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="modal-status">Carregando...</td></tr>`;
       overlay.classList.add('visivel');
       document.body.style.overflow = 'hidden';
 
-      // Usa o proxy genérico com rota=produtos/movimentacoes_estoque/{id}
-      const endpoints = [
-        `https://caixa-three.vercel.app/api/proxy?rota=produtos/movimentacoes_estoque/${produto.id}&loja_id=${lojaIdJeta}`,
-        `https://caixa-three.vercel.app/api/proxy?rota=movimentacoes_estoque&produto_id=${produto.id}&loja_id=${lojaIdJeta}`,
-      ];
+      try {
+        // Busca todas as vendas que contêm este produto
+        const url = `https://caixa-three.vercel.app/api/proxy?rota=vendas&produto_id=${produto.id}&loja_id=${lojaIdJeta}&limite=200`;
+        const res  = await fetch(url);
+        const json = await res.json();
 
-      let dados = null;
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url);
-          const json = await res.json();
-          if (json.code === 200 || Array.isArray(json.data) || (json.data && json.data.length >= 0)) { dados = json; break; }
-        } catch { /* tenta próximo */ }
+        if (!json.data || json.data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="modal-status">Nenhuma movimentação encontrada.</td></tr>`;
+          return;
+        }
+
+        // Monta lista de movimentações a partir das vendas
+        const movs = [];
+        json.data.forEach(venda => {
+          // Filtra apenas os itens deste produto dentro da venda
+          const itens = (venda.produtos || []).filter(p => p.produto && p.produto.produto_id === String(produto.id));
+          const qtdTotal = itens.reduce((s, p) => s + Number(p.produto.quantidade || 1), 0);
+          movs.push({
+            data: venda.data || venda.cadastrado_em || '',
+            cliente: venda.nome_cliente || '—',
+            tipo: venda.nome_situacao || 'Venda',
+            qtd: qtdTotal,
+            descricao: `Venda nº ${venda.codigo}`,
+            isEntrada: false
+          });
+        });
+
+        // Ordena do mais recente para o mais antigo
+        movs.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        tbody.innerHTML = '';
+        movs.forEach(mov => {
+          const tipoClass = mov.isEntrada ? 'mov-entrada' : 'mov-saida';
+          const sinal     = mov.isEntrada ? '+' : '−';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${formatarData(mov.data)}</td>
+            <td>${mov.cliente}</td>
+            <td style="text-align:center;"><span class="${tipoClass}">${mov.isEntrada ? 'Entrada' : 'Saída'}</span></td>
+            <td style="text-align:center;" class="${tipoClass}">${sinal}${mov.qtd}</td>
+            <td style="font-size:11px;color:var(--text-secondary)">${mov.descricao}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="modal-status erro">Erro ao carregar histórico.</td></tr>`;
       }
-
-      if (!dados || !dados.data || dados.data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="modal-status ${!dados ? 'erro' : ''}">
-          ${!dados ? 'Endpoint de movimentações não encontrado.' : 'Nenhuma movimentação registada.'}
-        </td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = '';
-      dados.data.forEach(mov => {
-        // Campos: tipo pode vir como 'tipo', 'tipo_movimentacao', 'descricao', 'origem'
-        const tipo = (mov.tipo || mov.tipo_movimentacao || mov.descricao || mov.origem || '').toLowerCase();
-        const qtd  = Math.abs(Number(mov.quantidade ?? mov.qtd ?? mov.valor ?? 0));
-        const saldo = mov.saldo ?? mov.saldo_apos ?? mov.estoque_apos ?? mov.estoque ?? '—';
-        const data  = formatarData(mov.data || mov.criado_em || mov.cadastrado_em || mov.created_at || '');
-
-        // Determina entrada ou saída pelo tipo ou pelo sinal da quantidade original
-        const qtdRaw = Number(mov.quantidade ?? mov.qtd ?? 0);
-        const isEntrada = tipo.includes('entr') || tipo.includes('compra') || tipo.includes('ajuste positivo') || qtdRaw > 0;
-        const tipoLabel = isEntrada ? 'Entrada' : 'Saída';
-        const tipoClass = isEntrada ? 'mov-entrada' : 'mov-saida';
-        const sinal     = isEntrada ? '+' : '−';
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${data}</td>
-          <td style="text-align:center;"><span class="${tipoClass}">${tipoLabel}</span></td>
-          <td style="text-align:center;" class="${tipoClass}">${sinal}${qtd}</td>
-          <td style="text-align:center;">${saldo}</td>
-        `;
-        tbody.appendChild(tr);
-      });
     }
 
     function fecharModal() {
