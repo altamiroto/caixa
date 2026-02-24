@@ -811,33 +811,37 @@
       }
     }
 
-    // Busca o modificado_em real de cada produto via endpoint individual (sem cache)
-    // e atualiza a célula na tabela em tempo real, em lotes para não sobrecarregar
+    // Atualiza a célula de data nas DUAS tabelas (com e sem estoque)
+    function atualizarCelulaData(nomeProduto, dataStr) {
+      document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(linha => {
+        const nomeTd = linha.querySelector('td:first-child');
+        if (nomeTd && nomeTd.getAttribute('title') === nomeProduto) {
+          const celula = linha.querySelectorAll('td')[3];
+          if (celula) celula.innerHTML = formatarData(dataStr);
+        }
+      });
+    }
+
+    // Busca o modificado_em real de cada produto via endpoint individual (sem cache da listagem)
+    // A API de listagem retorna modificado_em desatualizado; o endpoint individual retorna o valor correto
     async function atualizarModificadoEm(produtos) {
       const LOTE = 8;
       for (let i = 0; i < produtos.length; i += LOTE) {
         const grupo = produtos.slice(i, i + LOTE);
         await Promise.all(grupo.map(async (produto) => {
           try {
-            const url = `https://caixa-three.vercel.app/api/proxy?rota=produtos&id=${produto.id}&loja_id=${lojaIdJeta}`;
+            // Endpoint individual: /api/produtos?loja_id=X&id=Y  (sem proxy, igual ao que você testou)
+            const url = `https://caixa-three.vercel.app/api/produtos?loja_id=${lojaIdJeta}&id=${produto.id}`;
             const res  = await fetch(url);
             const json = await res.json();
             if (!json.data || !json.data[0]) return;
             const modReal = json.data[0].modificado_em;
             if (!modReal || modReal === produto.modificado_em) return;
-            // Atualiza o objeto em memória
-            produto.modificado_em = modReal;
-            // Atualiza a célula na tabela (ambos os grupos)
-            document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(linha => {
-              if (linha.querySelector('td')?.getAttribute('title') === produto.nome) {
-                const celula = linha.querySelectorAll('td')[3];
-                if (celula) celula.innerHTML = formatarData(modReal);
-              }
-            });
+            produto.modificado_em = modReal; // atualiza em memória
+            atualizarCelulaData(produto.nome, modReal);
           } catch(_) {}
         }));
-        // Pequena pausa entre lotes para não travar
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 100));
       }
     }
 
@@ -1184,16 +1188,10 @@
         const fim = document.getElementById('filtro-data-fim').value;
         _todasMovs = await buscarMovimentacoesPeriodo(produto, ini, fim);
 
-        // Atualiza coluna última movimentação na tabela principal
+        // Atualiza coluna última movimentação nas DUAS tabelas (com e sem estoque)
         if (_todasMovs.length > 0) {
           const ultimaData = _todasMovs[0].dataISO + (_todasMovs[0].hora ? ' ' + _todasMovs[0].hora : '');
-          document.querySelectorAll('#tabela-produtos tbody tr').forEach(linha => {
-            const nomeTd = linha.querySelector('td:first-child');
-            if (nomeTd && nomeTd.getAttribute('title') === produto.nome) {
-              const dataTd = linha.querySelectorAll('td')[3];
-              if (dataTd) dataTd.innerHTML = formatarData(ultimaData);
-            }
-          });
+          atualizarCelulaData(produto.nome, ultimaData);
         }
 
         renderMovs(_todasMovs);
