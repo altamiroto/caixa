@@ -510,6 +510,28 @@
     .mov-entrada { color: var(--success); font-weight: 600; }
     .mov-saida   { color: var(--danger);  font-weight: 600; }
 
+    /* ── SEÇÕES COM/SEM ESTOQUE ─────────────────── */
+    .secao-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px 8px;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+    }
+    .secao-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .secao-ok   { color: var(--success); }
+    .secao-zero { color: var(--danger); }
+    .secao-count {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
     .modal-status { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 13px; }
     .modal-status.erro { color: var(--danger); }
 
@@ -535,6 +557,14 @@
       #tabela-produtos td:nth-child(3),
       #tabela-produtos th:nth-child(4),
       #tabela-produtos td:nth-child(4) { display: none; }
+      /* Garante que o botão + nunca desapareça */
+      #tabela-produtos th:nth-child(5),
+      #tabela-produtos td:nth-child(5) { display: table-cell !important; width: 36px; }
+      /* Ajusta largura nome no mobile */
+      #tabela-produtos th:nth-child(1),
+      #tabela-produtos td:nth-child(1) { width: auto; }
+      #tabela-produtos th:nth-child(2),
+      #tabela-produtos td:nth-child(2) { width: 56px; }
 
       /* Modal: bottom-sheet */
       #modal-overlay { padding: 0; align-items: flex-end; }
@@ -594,8 +624,13 @@
       </div>
     </div>
 
-    <div class="card table-wrapper">
-      <table id="tabela-produtos">
+    <!-- Produtos COM estoque -->
+    <div class="card table-wrapper" id="card-com-estoque" style="display:none">
+      <div class="secao-header">
+        <span class="secao-label secao-ok">▸ Com estoque</span>
+        <span class="secao-count" id="count-com-estoque"></span>
+      </div>
+      <table id="tabela-produtos" class="tabela-produtos-base">
         <thead>
           <tr>
             <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
@@ -605,10 +640,37 @@
             <th></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="tbody-com-estoque">
           <tr><td colspan="5" class="status-msg">Faça uma busca para ver os produtos.</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Produtos SEM estoque -->
+    <div class="card table-wrapper" id="card-sem-estoque" style="display:none">
+      <div class="secao-header">
+        <span class="secao-label secao-zero">▸ Sem estoque / negativos</span>
+        <span class="secao-count" id="count-sem-estoque"></span>
+      </div>
+      <table id="tabela-produtos-zero" class="tabela-produtos-base">
+        <thead>
+          <tr>
+            <th data-coluna="nome" data-ordem="asc">Nome</th>
+            <th data-coluna="estoque" data-ordem="asc">Estoque</th>
+            <th data-coluna="preco" data-ordem="asc">Preço</th>
+            <th data-coluna="modificado_em" data-ordem="asc">Últ. Movimentação</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-sem-estoque"></tbody>
+      </table>
+    </div>
+
+    <!-- placeholder inicial (antes de buscar) -->
+    <div class="card table-wrapper" id="card-placeholder">
+      <table><tbody>
+        <tr><td colspan="5" class="status-msg">Faça uma busca para ver os produtos.</td></tr>
+      </tbody></table>
     </div>
 
   </div>
@@ -723,8 +785,12 @@
     }
 
     async function carregarProdutos(nomeBusca = "") {
-      const tbody = document.querySelector("#tabela-produtos tbody");
-      tbody.innerHTML = `<tr><td colspan="5" class="status-msg">Carregando...</td></tr>`;
+      // Mostrar loading no placeholder
+      document.getElementById('card-com-estoque').style.display = 'none';
+      document.getElementById('card-sem-estoque').style.display = 'none';
+      const placeholder = document.getElementById('card-placeholder');
+      placeholder.style.display = 'block';
+      placeholder.querySelector('td').textContent = 'Carregando...';
       document.getElementById('container-filtro').style.display = 'none';
       let pagina = 1, totalPaginas = 1;
       todosProdutos = [];
@@ -740,50 +806,85 @@
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" class="status-msg erro">${err.message}</td></tr>`;
+        const placeholder = document.getElementById('card-placeholder');
+        placeholder.style.display = 'block';
+        placeholder.querySelector('td').textContent = err.message;
+        placeholder.querySelector('td').className = 'status-msg erro';
       }
     }
 
     // ── TABELA ────────────────────────────────────
 
+    function criarLinhaProduto(produto) {
+      const id = produto.id || produto.nome;
+      const estoqueClass = produto.estoque > 0 ? 'tag-estoque-ok' : 'tag-estoque-zero';
+      const semEstoque = produto.estoque <= 0;
+      const linha = document.createElement("tr");
+      linha.className = 'clicavel';
+      linha.title = 'Clique para ver o histórico de movimentações';
+      linha.innerHTML = `
+        <td title="${produto.nome}">${produto.nome}</td>
+        <td style="text-align:center;" class="${estoqueClass}">${produto.estoque}</td>
+        <td style="text-align:right;">${formatarPreco(produto.preco)}</td>
+        <td style="text-align:center;" data-ultima-mov="${produto.modificado_em || ''}">${formatarData(produto.modificado_em || produto.cadastrado_em || '')}</td>
+        <td style="text-align:center;">
+          <button class="btn-add" data-id="${id}" title="${semEstoque ? 'Sem estoque' : 'Adicionar ao carrinho'}" ${semEstoque ? 'disabled' : ''}>+</button>
+        </td>
+      `;
+      linha.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-add')) return;
+        abrirHistorico(produto);
+      });
+      linha.querySelector('.btn-add').addEventListener('click', () => {
+        const p = todosProdutos.find(x => (x.id || x.nome) == id);
+        if (p) adicionarAoCarrinho(p);
+      });
+      return linha;
+    }
+
     function renderizarTabela(produtos) {
       produtosFiltrados = produtos;
-      const tbody = document.querySelector("#tabela-produtos tbody");
-      if (!produtos || produtos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="status-msg">Nenhum produto encontrado.</td></tr>`;
+
+      const comEstoque  = produtos.filter(p => p.estoque > 0);
+      const semEstoque  = produtos.filter(p => p.estoque <= 0);
+
+      const placeholder = document.getElementById('card-placeholder');
+      const cardCom     = document.getElementById('card-com-estoque');
+      const cardSem     = document.getElementById('card-sem-estoque');
+      const tbodyCom    = document.getElementById('tbody-com-estoque');
+      const tbodySem    = document.getElementById('tbody-sem-estoque');
+
+      placeholder.style.display = 'none';
+
+      if (produtos.length === 0) {
+        tbodyCom.innerHTML = '';
+        tbodySem.innerHTML = '';
+        cardCom.style.display = 'none';
+        cardSem.style.display = 'none';
+        placeholder.style.display = 'block';
+        placeholder.querySelector('td').textContent = 'Nenhum produto encontrado.';
         return;
       }
-      tbody.innerHTML = "";
-      produtos.forEach(produto => {
-        const id = produto.id || produto.nome;
-        const estoqueClass = produto.estoque > 0 ? 'tag-estoque-ok' : 'tag-estoque-zero';
-        const semEstoque = produto.estoque <= 0;
-        const linha = document.createElement("tr");
-        linha.className = 'clicavel';
-        linha.title = 'Clique para ver o histórico de movimentações';
-        const temMovimentacao = produto.modificado_em && produto.cadastrado_em && produto.modificado_em !== produto.cadastrado_em;
-        linha.innerHTML = `
-          <td title="${produto.nome}">${produto.nome}</td>
-          <td style="text-align:center;" class="${estoqueClass}">${produto.estoque}</td>
-          <td style="text-align:right;">${formatarPreco(produto.preco)}</td>
-          <td style="text-align:center;">${temMovimentacao ? formatarData(produto.modificado_em) : '<span class="sem-registro">—</span>'}</td>
-          <td style="text-align:center;">
-            <button class="btn-add" data-id="${id}" title="${semEstoque ? 'Sem estoque' : 'Adicionar ao carrinho'}" ${semEstoque ? 'disabled' : ''}>+</button>
-          </td>
-        `;
-        // Clique na linha abre histórico (exceto no botão +)
-        linha.addEventListener('click', (e) => {
-          if (e.target.closest('.btn-add')) return;
-          abrirHistorico(produto);
-        });
-        tbody.appendChild(linha);
-      });
-      document.querySelectorAll('.btn-add').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const produto = todosProdutos.find(p => (p.id || p.nome) == btn.dataset.id);
-          if (produto) adicionarAoCarrinho(produto);
-        });
-      });
+
+      // Grupo com estoque
+      tbodyCom.innerHTML = '';
+      if (comEstoque.length > 0) {
+        cardCom.style.display = 'block';
+        document.getElementById('count-com-estoque').textContent = `${comEstoque.length} produto${comEstoque.length !== 1 ? 's' : ''}`;
+        comEstoque.forEach(p => tbodyCom.appendChild(criarLinhaProduto(p)));
+      } else {
+        cardCom.style.display = 'none';
+      }
+
+      // Grupo sem estoque / negativos
+      tbodySem.innerHTML = '';
+      if (semEstoque.length > 0) {
+        cardSem.style.display = 'block';
+        document.getElementById('count-sem-estoque').textContent = `${semEstoque.length} produto${semEstoque.length !== 1 ? 's' : ''}`;
+        semEstoque.forEach(p => tbodySem.appendChild(criarLinhaProduto(p)));
+      } else {
+        cardSem.style.display = 'none';
+      }
     }
 
     function filtrarTabela() {
@@ -799,6 +900,25 @@
         return ordem === 'asc' ? vA.toString().localeCompare(vB.toString()) : vB.toString().localeCompare(vA.toString());
       });
       renderizarTabela(ordenados);
+    }
+
+    // Delegação de ordenação para AMBAS as tabelas
+    function setupOrdenacao(tableEl) {
+      tableEl.querySelectorAll('th[data-coluna]').forEach(th => {
+        th.addEventListener('click', () => {
+          const coluna = th.dataset.coluna;
+          const ordemAtual = th.dataset.ordem || 'asc';
+          const novaOrdem = ordemAtual === 'asc' ? 'desc' : 'asc';
+          // Limpa todas as marcações
+          document.querySelectorAll('.tabela-produtos-base th').forEach(t => {
+            t.classList.remove('ordenado-asc','ordenado-desc');
+            t.dataset.ordem = 'asc';
+          });
+          th.classList.add(novaOrdem === 'asc' ? 'ordenado-asc' : 'ordenado-desc');
+          th.dataset.ordem = novaOrdem;
+          ordenarTabela(coluna, novaOrdem);
+        });
+      });
     }
 
     // ── CARRINHO ──────────────────────────────────
@@ -1090,6 +1210,10 @@
     document.getElementById('btn-filtrar-datas').addEventListener('click', buscarPeriodo);
     document.getElementById('filtro-data-ini').addEventListener('keypress', e => { if(e.key==='Enter') buscarPeriodo(); });
     document.getElementById('filtro-data-fim').addEventListener('keypress', e => { if(e.key==='Enter') buscarPeriodo(); });
+
+    // Setup ordenação para ambas as tabelas
+    setupOrdenacao(document.getElementById('tabela-produtos'));
+    setupOrdenacao(document.getElementById('tabela-produtos-zero'));
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal-overlay')) fecharModal();
     });
