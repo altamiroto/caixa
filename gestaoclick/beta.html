@@ -886,38 +886,60 @@
       }
     }
 
-    // Atualiza coluna "Última Movimentação" com a data real da última venda
-    // Chamado após renderizarTabela, em background, sem bloquear a UI
+    // Atualiza "Última Movimentação" comparando última SAÍDA (venda) e última ENTRADA (modificado_em)
+    // Roda em background em lotes para não travar a UI
     async function atualizarUltimaMovimentacao(produtos) {
-      // Processa em lotes de 5 para não sobrecarregar a API
+      const base = `https://caixa-three.vercel.app/api/proxy`;
       const lote = 5;
+
       for (let i = 0; i < produtos.length; i += lote) {
         const grupo = produtos.slice(i, i + lote);
         await Promise.all(grupo.map(async (produto) => {
           try {
-            const url = `https://caixa-three.vercel.app/api/proxy?rota=vendas&produto_id=${produto.id}&loja_id=${lojaIdJeta}&limite=1`;
-            const res = await fetch(url);
-            const json = await res.json();
-            if (!json.data || json.data.length === 0) return;
-
-            // Pega a data da venda mais recente que contém este produto
             const prodIdStr = String(produto.id);
-            let ultimaVenda = null;
-            for (const venda of json.data) {
-              const temProduto = (venda.produtos || []).some(p =>
-                p.produto && String(p.produto.produto_id) === prodIdStr
-              );
-              if (temProduto) {
-                ultimaVenda = venda.cadastrado_em || venda.data || null;
-                break;
+
+            // Requisição 1: última saída (venda mais recente deste produto)
+            const [resVenda, resCompra] = await Promise.all([
+              fetch(`${base}?rota=vendas&produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=5`)
+                .then(r => r.json()).catch(() => null),
+              fetch(`${base}?rota=compras&produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=5`)
+                .then(r => r.json()).catch(() => null),
+            ]);
+
+            // Data da última saída: primeira venda que realmente contém o produto
+            let dataUltimaSaida = '';
+            if (resVenda && resVenda.data) {
+              for (const venda of resVenda.data) {
+                const temProduto = (venda.produtos || []).some(p =>
+                  p.produto && String(p.produto.produto_id) === prodIdStr
+                );
+                if (temProduto) {
+                  dataUltimaSaida = venda.cadastrado_em || venda.data || '';
+                  break;
+                }
               }
             }
-            if (!ultimaVenda) return;
 
-            // Compara com modificado_em: usa o mais recente dos dois
-            const dataVenda    = ultimaVenda;
-            const dataModif    = produto.modificado_em || '';
-            const ultimaReal   = dataVenda > dataModif ? dataVenda : dataModif;
+            // Data da última entrada: primeira compra que contém o produto
+            let dataUltimaEntrada = produto.modificado_em || ''; // fallback = modificado_em
+            if (resCompra && resCompra.data) {
+              for (const compra of resCompra.data) {
+                const temProduto = (compra.produtos || []).some(p =>
+                  p.produto && String(p.produto.produto_id) === prodIdStr
+                );
+                if (temProduto) {
+                  dataUltimaEntrada = compra.cadastrado_em || compra.data || dataUltimaEntrada;
+                  break;
+                }
+              }
+            }
+
+            // Mais recente entre saída e entrada
+            const ultimaReal = dataUltimaSaida > dataUltimaEntrada
+              ? dataUltimaSaida
+              : dataUltimaEntrada;
+
+            if (!ultimaReal) return;
 
             // Atualiza as células nas duas tabelas
             document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(linha => {
