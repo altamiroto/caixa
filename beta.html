@@ -1101,7 +1101,7 @@ Capa silicone R$ 50,00
                     <div class="historico-titulo">${titulo}</div>
                     <div class="historico-data">${dataStr}</div>
                 </div>
-                ${comentarios ? `<div class="historico-comentarios">💬 ${comentarios}</div>` : ''}
+                ${comentarios ? '<div class="historico-comentarios">💬 ' + comentarios + '</div>' : ''}
                 <div class="historico-dados"><strong>Valor:</strong> ${resumoValor}${detalhesExtras.length ? ' | '+detalhesExtras.join(' | ') : ''}</div>
                 <div class="historico-acoes">
                     <button class="btn btn-primary" onclick="restaurarCalculo(${idStr})">🔄 Restaurar</button>
@@ -1193,8 +1193,9 @@ Capa silicone R$ 50,00
                 const item = historico.find(h => String(h.id) === String(id));
                 if (!item) { alert('Registro não encontrado'); return; }
                 dados = item.dados;
+                dados._tituloFallback = item.titulo; // preserve local storage titulo
             }
-            const item = { titulo: dados.titulo || id };
+            const itemTitulo = dados.titulo || dados._tituloFallback || String(id);
             valorBaseInput.value = dados.valorBase || '';
             parcelaEspecificaInput.value = dados.parcelaEspecifica || '';
             descontoPercentualInput.value = dados.descontoPercentual || '';
@@ -1279,7 +1280,7 @@ Capa silicone R$ 50,00
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            showToast(`✅ Cálculo "${item.titulo}" restaurado!`);
+            showToast(`✅ Cálculo "${itemTitulo}" restaurado!`);
         }
         function copiarResultadoHistorico(id) {
             let resultado, titulo;
@@ -1526,7 +1527,7 @@ Capa silicone R$ 50,00
                     <td><input type="checkbox" class="product-checkbox" value="${i}"></td>
                     <td>${p.produto}${hasAdj ? '<span class="adj-badge">ajuste</span>' : ''}</td>
                     <td>${price}</td>
-                    ${adjMode ? `<td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>` : ''}
+                    ${adjMode ? '<td><button class="' + btnClass + '" id="adjBtn_' + i + '" onclick="toggleAdjPanel(' + i + ')" title="Ajuste individual">✏️</button></td>' : ''}
                     <td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">🔍</a></td>
                 </tr>`;
 
