@@ -146,11 +146,10 @@
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: #fafafa; }
 
-    .tabela-produtos-base th:nth-child(1), .tabela-produtos-base td:nth-child(1) { width: 44%; }
-    .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 13%; text-align: center; }
-    .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 20%; text-align: right; }
-    .tabela-produtos-base th:nth-child(4), .tabela-produtos-base td:nth-child(4) { width: 18%; text-align: center; }
-    .tabela-produtos-base th:nth-child(5), .tabela-produtos-base td:nth-child(5) { width: 5%;  text-align: center; }
+    .tabela-produtos-base th:nth-child(1), .tabela-produtos-base td:nth-child(1) { width: 55%; }
+    .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 15%; text-align: center; }
+    .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 22%; text-align: right; }
+    .tabela-produtos-base th:nth-child(4), .tabela-produtos-base td:nth-child(4) { width: 8%;  text-align: center; }
 
     .sem-registro { color: var(--text-muted); }
     .tag-estoque-ok  { color: var(--success); font-weight: 500; }
@@ -551,11 +550,9 @@
     @media (max-width: 600px) {
       #carrinho-float { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
 
-      /* Tabela de produtos (ambas): esconde col 3 (Preço) e col 4 (Últ. Mov.) */
+      /* Tabela de produtos (ambas): esconde col 3 (Preço) no mobile */
       .tabela-produtos-base th:nth-child(3),
-      .tabela-produtos-base td:nth-child(3),
-      .tabela-produtos-base th:nth-child(4),
-      .tabela-produtos-base td:nth-child(4) { display: none !important; }
+      .tabela-produtos-base td:nth-child(3) { display: none !important; }
 
       /* Col 1 (Nome): ocupa o espaço disponível */
       .tabela-produtos-base th:nth-child(1),
@@ -633,7 +630,7 @@
             <th data-coluna="nome" data-ordem="asc" class="ordenado-asc">Nome</th>
             <th data-coluna="estoque" data-ordem="asc">Estoque</th>
             <th data-coluna="preco" data-ordem="asc">Preço</th>
-            <th data-coluna="modificado_em" data-ordem="asc">Últ. Movimentação</th>
+            
             <th></th>
           </tr>
         </thead>
@@ -655,7 +652,7 @@
             <th data-coluna="nome" data-ordem="asc">Nome</th>
             <th data-coluna="estoque" data-ordem="asc">Estoque</th>
             <th data-coluna="preco" data-ordem="asc">Preço</th>
-            <th data-coluna="modificado_em" data-ordem="asc">Últ. Movimentação</th>
+            
             <th></th>
           </tr>
         </thead>
@@ -782,33 +779,6 @@
       return await res.json();
     }
 
-    // Busca as últimas N páginas de vendas e retorna mapa produto_id → data da última venda
-    async function buscarUltimasVendas(numPaginas = 3) {
-      const mapaUltimaVenda = {}; // produto_id → "YYYY-MM-DD HH:MM:SS"
-      try {
-        const paginas = Array.from({length: numPaginas}, (_, i) => i + 1);
-        const resultados = await Promise.all(paginas.map(p =>
-          fetch(`https://caixa-three.vercel.app/api/proxy?rota=vendas&loja_id=${lojaIdJeta}&limite=100&pagina=${p}`)
-            .then(r => r.json()).catch(() => null)
-        ));
-        resultados.forEach(res => {
-          if (!res || res.code !== 200 || !res.data) return;
-          res.data.forEach(venda => {
-            const dataVenda = venda.cadastrado_em || '';
-            if (!dataVenda) return;
-            (venda.produtos || []).forEach(item => {
-              const pid = item.produto?.produto_id;
-              if (!pid) return;
-              // Guarda a data mais recente para cada produto
-              if (!mapaUltimaVenda[pid] || dataVenda > mapaUltimaVenda[pid]) {
-                mapaUltimaVenda[pid] = dataVenda;
-              }
-            });
-          });
-        });
-      } catch(_) {}
-      return mapaUltimaVenda;
-    }
 
     async function carregarProdutos(nomeBusca = "") {
       document.getElementById('card-com-estoque').style.display = 'none';
@@ -821,29 +791,13 @@
       let pagina = 1, totalPaginas = 1;
       todosProdutos = [];
       try {
-        // Busca produtos e últimas vendas em paralelo
-        const [, mapaVendas] = await Promise.all([
-          (async () => {
-            do {
-              const dados = await buscarProdutos(nomeBusca, pagina);
-              if (dados.code !== 200) throw new Error("Erro ao carregar produtos.");
-              todosProdutos = todosProdutos.concat(dados.data.filter(p => p.nome));
-              totalPaginas = dados.meta.total_paginas;
-              pagina++;
-            } while (pagina <= totalPaginas);
-          })(),
-          buscarUltimasVendas(3)
-        ]);
-
-        // Aplica a data mais recente entre modificado_em e última venda
-        todosProdutos.forEach(produto => {
-          const ultimaVenda = mapaVendas[produto.id] || '';
-          const modEm = produto.modificado_em || '';
-          if (ultimaVenda && ultimaVenda > modEm) {
-            produto.modificado_em = ultimaVenda;
-          }
-        });
-
+        do {
+          const dados = await buscarProdutos(nomeBusca, pagina);
+          if (dados.code !== 200) throw new Error("Erro ao carregar produtos.");
+          todosProdutos = todosProdutos.concat(dados.data.filter(p => p.nome));
+          totalPaginas = dados.meta.total_paginas;
+          pagina++;
+        } while (pagina <= totalPaginas);
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
@@ -880,7 +834,6 @@
         <td title="${produto.nome}">${produto.nome}</td>
         <td style="text-align:center;" class="${estoqueClass}">${produto.estoque}</td>
         <td style="text-align:right;">${formatarPreco(produto.preco)}</td>
-        <td style="text-align:center;" data-ultima-mov="${produto.modificado_em || ''}">${formatarData(produto.modificado_em || produto.cadastrado_em || '')}</td>
         <td style="text-align:center;">
           <button class="btn-add" data-id="${id}" title="${semEstoque ? 'Sem estoque' : 'Adicionar ao carrinho'}" ${semEstoque ? 'disabled' : ''}>+</button>
         </td>
