@@ -309,6 +309,41 @@
         }
         .adj-reset:hover { background: rgba(244,67,54,0.1); }
 
+        .adj-comment-row {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .adj-comment-row label {
+            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.3px; margin: 0;
+        }
+        .adj-comment-input {
+            width: 100%;
+            padding: 7px 10px !important;
+            font-size: 13px;
+            border: 1.5px solid var(--border-color) !important;
+            border-radius: 7px;
+            background: var(--bg-secondary) !important;
+            color: var(--text-primary);
+            resize: none;
+            min-height: 56px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .adj-comment-input:focus { border-color: var(--secondary-color) !important; }
+        .adj-comment-input::placeholder { color: #999; font-style: italic; }
+
+        /* Badge de comentário no nome do produto */
+        .comment-badge {
+            display: inline-block; background: var(--secondary-color); color: white;
+            font-size: 0.65rem; font-weight: 700; padding: 1px 5px;
+            border-radius: 4px; margin-left: 4px; vertical-align: middle;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+
         /* Botão de ajuste na linha do produto */
         .btn-adj {
             background: none; border: 1.5px solid var(--border-color);
@@ -848,7 +883,7 @@ Capa silicone R$ 50,00
         let productAdjustments = {};
 
         function getProductAdj(idx) {
-            return productAdjustments[idx] || { descontoR: '', descontoP: '', acrescimoR: '', acrescimoP: '', comissao: '' };
+            return productAdjustments[idx] || { descontoR: '', descontoP: '', acrescimoR: '', acrescimoP: '', comissao: '', comentario: '' };
         }
 
         function hasProductAdj(idx) {
@@ -1428,6 +1463,13 @@ Capa silicone R$ 50,00
                                         </div>
                                     </div>
                                 </div>
+                                <div class="adj-comment-row">
+                                    <label>💬 Comentário do produto</label>
+                                    <textarea class="adj-comment-input"
+                                        placeholder="Ex: cliente pediu desconto especial, cor diferente, observação de entrega..."
+                                        oninput="saveProductAdj(${i},'comentario',this.value)"
+                                        id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
+                                </div>
                             </div>
                         </td>
                     </tr>`;
@@ -1454,36 +1496,51 @@ Capa silicone R$ 50,00
         }
 
         function saveProductAdj(idx, field, value) {
-            if (!productAdjustments[idx]) productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'' };
+            if (!productAdjustments[idx]) productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'', comentario:'' };
             productAdjustments[idx][field] = value;
-            // Atualiza badge na célula do produto sem re-renderizar toda a tabela
+            // Atualiza badges na célula do produto sem re-renderizar toda a tabela
             const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
             if (row) {
                 const nameCell = row.cells[1];
-                const existingBadge = nameCell.querySelector('.adj-badge');
                 const adjAtivo = hasProductAdj(idx);
+                const hasComment = (productAdjustments[idx].comentario || '').trim() !== '';
                 const btn = document.getElementById(`adjBtn_${idx}`);
+
+                // Badge ajuste
+                let existingBadge = nameCell.querySelector('.adj-badge');
                 if (adjAtivo) {
                     if (!existingBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="adj-badge">ajuste</span>');
-                    if (btn) { btn.classList.add('has-adj'); }
+                    if (btn) btn.classList.add('has-adj');
                 } else {
                     if (existingBadge) existingBadge.remove();
                     if (btn) btn.classList.remove('has-adj');
+                }
+
+                // Badge comentário
+                let existingCommentBadge = nameCell.querySelector('.comment-badge');
+                if (hasComment) {
+                    if (!existingCommentBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="comment-badge">💬</span>');
+                } else {
+                    if (existingCommentBadge) existingCommentBadge.remove();
                 }
             }
             calcularParcelas();
         }
 
         function resetProductAdj(idx) {
-            productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'' };
+            productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'', comentario:'' };
             ['descontoR','descontoP','acrescimoR','acrescimoP','comissao'].forEach(f => {
                 const el = document.getElementById(`adj_${idx}_${f}`);
                 if (el) el.value = '';
             });
+            const commentEl = document.getElementById(`adj_${idx}_comentario`);
+            if (commentEl) commentEl.value = '';
             const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
             if (row) {
                 const badge = row.cells[1].querySelector('.adj-badge');
                 if (badge) badge.remove();
+                const commentBadge = row.cells[1].querySelector('.comment-badge');
+                if (commentBadge) commentBadge.remove();
                 const btn = document.getElementById(`adjBtn_${idx}`);
                 if (btn) btn.classList.remove('has-adj');
             }
@@ -1540,6 +1597,11 @@ Capa silicone R$ 50,00
                         ? getProductAdj(p._idx) : null;
                     let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
                     if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
+                    // Adiciona comentário individual abaixo do nome, se houver
+                    const adjForComment = (perProductAdjustCb.checked && p._idx !== undefined) ? getProductAdj(p._idx) : null;
+                    if (adjForComment && adjForComment.comentario && adjForComment.comentario.trim()) {
+                        name += `\n   📝 ${adjForComment.comentario.trim()}`;
+                    }
                     const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco, overrides);
                     if (r) res.push(r);
                     if (i < selectedProducts.length - 1) res.push('\n' + '━'.repeat(20));
