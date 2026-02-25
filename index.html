@@ -1631,11 +1631,6 @@ Capa silicone R$ 50,00
                         ? getProductAdj(p._idx) : null;
                     let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
                     if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
-                    // Adiciona comentário individual abaixo do nome, se houver
-                    const adjForComment = (perProductAdjustCb.checked && p._idx !== undefined) ? getProductAdj(p._idx) : null;
-                    if (adjForComment && adjForComment.comentario && adjForComment.comentario.trim()) {
-                        name += `\n   📝 ${adjForComment.comentario.trim()}`;
-                    }
                     const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco, overrides);
                     if (r) res.push(r);
                     if (i < selectedProducts.length - 1) res.push('\n' + '━'.repeat(20));
