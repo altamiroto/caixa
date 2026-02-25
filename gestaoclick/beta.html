@@ -782,6 +782,34 @@
       return await res.json();
     }
 
+    // Busca as últimas N páginas de vendas e retorna mapa produto_id → data da última venda
+    async function buscarUltimasVendas(numPaginas = 3) {
+      const mapaUltimaVenda = {}; // produto_id → "YYYY-MM-DD HH:MM:SS"
+      try {
+        const paginas = Array.from({length: numPaginas}, (_, i) => i + 1);
+        const resultados = await Promise.all(paginas.map(p =>
+          fetch(`https://caixa-three.vercel.app/api/proxy?rota=vendas&loja_id=${lojaIdJeta}&limite=100&pagina=${p}`)
+            .then(r => r.json()).catch(() => null)
+        ));
+        resultados.forEach(res => {
+          if (!res || res.code !== 200 || !res.data) return;
+          res.data.forEach(venda => {
+            const dataVenda = venda.cadastrado_em || '';
+            if (!dataVenda) return;
+            (venda.produtos || []).forEach(item => {
+              const pid = item.produto?.produto_id;
+              if (!pid) return;
+              // Guarda a data mais recente para cada produto
+              if (!mapaUltimaVenda[pid] || dataVenda > mapaUltimaVenda[pid]) {
+                mapaUltimaVenda[pid] = dataVenda;
+              }
+            });
+          });
+        });
+      } catch(_) {}
+      return mapaUltimaVenda;
+    }
+
     async function carregarProdutos(nomeBusca = "") {
       document.getElementById('card-com-estoque').style.display = 'none';
       document.getElementById('card-sem-estoque').style.display = 'none';
@@ -793,13 +821,29 @@
       let pagina = 1, totalPaginas = 1;
       todosProdutos = [];
       try {
-        do {
-          const dados = await buscarProdutos(nomeBusca, pagina);
-          if (dados.code !== 200) throw new Error("Erro ao carregar produtos.");
-          todosProdutos = todosProdutos.concat(dados.data.filter(p => p.nome));
-          totalPaginas = dados.meta.total_paginas;
-          pagina++;
-        } while (pagina <= totalPaginas);
+        // Busca produtos e últimas vendas em paralelo
+        const [, mapaVendas] = await Promise.all([
+          (async () => {
+            do {
+              const dados = await buscarProdutos(nomeBusca, pagina);
+              if (dados.code !== 200) throw new Error("Erro ao carregar produtos.");
+              todosProdutos = todosProdutos.concat(dados.data.filter(p => p.nome));
+              totalPaginas = dados.meta.total_paginas;
+              pagina++;
+            } while (pagina <= totalPaginas);
+          })(),
+          buscarUltimasVendas(3)
+        ]);
+
+        // Aplica a data mais recente entre modificado_em e última venda
+        todosProdutos.forEach(produto => {
+          const ultimaVenda = mapaVendas[produto.id] || '';
+          const modEm = produto.modificado_em || '';
+          if (ultimaVenda && ultimaVenda > modEm) {
+            produto.modificado_em = ultimaVenda;
+          }
+        });
+
         todosProdutos.sort((a, b) => a.nome.localeCompare(b.nome));
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
