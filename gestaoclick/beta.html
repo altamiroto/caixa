@@ -1068,17 +1068,35 @@
       });
     }
 
+    // Busca todas as páginas de uma rota no período
+    async function buscarTodasPaginas(rota, dataIni, dataFim) {
+      const base = `https://caixa-three.vercel.app/api/proxy`;
+      const todos = [];
+      let pagina = 1, totalPaginas = 1;
+      do {
+        const params = new URLSearchParams({ rota, loja_id: lojaIdJeta, limite: 100, pagina });
+        if (dataIni) params.append('data_inicio', dataIni);
+        if (dataFim)  params.append('data_fim',    dataFim);
+        const res = await fetch(`${base}?${params}`).then(r => r.json()).catch(() => null);
+        if (!res || res.code !== 200 || !res.data) break;
+        todos.push(...res.data);
+        totalPaginas = res.meta?.total_paginas || 1;
+        pagina++;
+      } while (pagina <= totalPaginas);
+      return todos;
+    }
+
     async function buscarMovimentacoesPeriodo(produto, dataIni, dataFim) {
       const prodIdStr = String(produto.id);
-      const base = `https://caixa-three.vercel.app/api/proxy`;
-      const params = `produto_id=${prodIdStr}&loja_id=${lojaIdJeta}&limite=500` +
-        (dataIni ? `&data_inicio=${dataIni}` : '') +
-        (dataFim ? `&data_fim=${dataFim}` : '');
 
-      const [resVendas, resCompras] = await Promise.all([
-        fetch(`${base}?rota=vendas&${params}`).then(r => r.json()).catch(() => null),
-        fetch(`${base}?rota=compras&${params}`).then(r => r.json()).catch(() => null),
+      // Busca vendas e compras paginando todo o período (API ignora produto_id)
+      const [todasVendas, todasCompras] = await Promise.all([
+        buscarTodasPaginas('vendas', dataIni, dataFim),
+        buscarTodasPaginas('compras', dataIni, dataFim),
       ]);
+
+      const resVendas  = { data: todasVendas };
+      const resCompras = { data: todasCompras };
 
       const movs = [];
 
