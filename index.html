@@ -28,11 +28,7 @@
             --border-color: #444;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -56,11 +52,7 @@
             transition: all 0.3s ease;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
+        .header { text-align: center; margin-bottom: 30px; position: relative; }
 
         h1 {
             background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
@@ -72,786 +64,368 @@
         }
 
         .theme-toggle {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--border-color);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
+            position: absolute; top: 0; right: 0;
+            background: var(--border-color); border: none;
+            padding: 8px 12px; border-radius: 20px; cursor: pointer;
+            font-size: 1.2rem; transition: all 0.3s ease;
         }
+        .theme-toggle:hover { transform: scale(1.1); }
 
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-
-        .quick-links {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
-
-        .quick-links a {
-            color: var(--secondary-color);
-            text-decoration: none;
-            margin: 0 10px;
-            transition: color 0.3s;
-        }
-
-        .quick-links a:hover {
-            color: var(--primary-color);
-            text-decoration: underline;
-        }
+        .quick-links { text-align: center; margin-bottom: 20px; font-size: 0.9rem; }
+        .quick-links a { color: var(--secondary-color); text-decoration: none; margin: 0 10px; transition: color 0.3s; }
+        .quick-links a:hover { color: var(--primary-color); text-decoration: underline; }
 
         .section-card {
             background: var(--bg-secondary);
             border: 2px solid var(--border-color);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 15px; padding: 20px; margin-bottom: 20px;
             transition: all 0.3s ease;
         }
+        .section-card:hover { box-shadow: var(--shadow-hover); }
 
-        .section-card:hover {
-            box-shadow: var(--shadow-hover);
-        }
+        .section-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 
-        .section-title {
-            font-size: 1.1rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .input-with-icon {
-            position: relative;
-        }
-
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-with-icon { position: relative; }
         .input-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            pointer-events: none;
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-secondary); font-size: 1.2rem; pointer-events: none;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 0.95rem; }
+        label small { font-weight: normal; color: var(--text-secondary); font-size: 0.85rem; }
 
-        label small {
-            font-weight: normal;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        input::placeholder {
-            color: #999;
-        }
-
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+        input::placeholder { color: #999; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         input[type="number"], input[type="text"] {
-            width: 100%;
-            padding: 14px 14px 14px 42px;
-            font-size: 16px;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            -moz-appearance: textfield;
-            transition: all 0.3s ease;
+            width: 100%; padding: 14px 14px 14px 42px; font-size: 16px;
+            border: 2px solid var(--border-color); border-radius: 10px;
+            background: var(--bg-secondary); color: var(--text-primary);
+            -moz-appearance: textfield; transition: all 0.3s ease;
         }
-
         input[type="number"]:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
+            outline: none; border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
-
-        input[type="number"].has-value {
-            border-color: var(--success-color);
-        }
-
-        input[type="number"].invalid {
-            border-color: var(--danger-color);
-            background-color: #fff5f5;
-        }
+        input[type="number"].has-value { border-color: var(--success-color); }
+        input[type="number"].invalid { border-color: var(--danger-color); background-color: #fff5f5; }
 
         textarea {
-            width: 100%;
-            min-height: 120px;
-            background-color: var(--bg-primary);
-            padding: 12px;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
+            width: 100%; min-height: 120px; background-color: var(--bg-primary);
+            padding: 12px; border: 2px solid var(--border-color); border-radius: 10px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 14px;
-            color: var(--text-primary);
-            resize: vertical;
-            transition: all 0.3s ease;
+            font-size: 14px; color: var(--text-primary); resize: vertical; transition: all 0.3s ease;
         }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-
+        textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1); }
         textarea#resultado {
             background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
+            font-family: 'Courier New', monospace; font-size: 13px;
         }
-
-        [data-theme="dark"] textarea#resultado {
-            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-        }
+        [data-theme="dark"] textarea#resultado { background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); }
 
         .toggle-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: var(--bg-primary);
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            min-height: 54px;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 15px;
+            padding: 15px; background: var(--bg-primary); border-radius: 10px;
+            transition: all 0.3s ease; cursor: pointer; min-height: 54px;
         }
+        .toggle-section:hover { background: var(--border-color); }
+        .toggle-section input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; flex-shrink: 0; }
+        .toggle-section label { margin: 0; cursor: pointer; flex: 1; user-select: none; font-size: 1rem; }
 
-        .toggle-section:hover {
-            background: var(--border-color);
-        }
-
-        .toggle-section input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .toggle-section label {
-            margin: 0;
-            cursor: pointer;
-            flex: 1;
-            user-select: none;
-            font-size: 1rem;
-        }
-
-        .collapsible-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-out;
-        }
-
-        .collapsible-content.show {
-            max-height: 5000px;
-            transition: max-height 0.5s ease-in;
-        }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
+        .collapsible-content.show { max-height: 5000px; transition: max-height 0.5s ease-in; }
 
         .option-group {
-            border: 2px solid var(--border-color);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            background: var(--bg-primary);
+            border: 2px solid var(--border-color); padding: 15px; border-radius: 10px;
+            margin-top: 15px; background: var(--bg-primary);
         }
+        .option-group h4 { margin: 0 0 15px 0; color: var(--primary-color); display: flex; align-items: center; gap: 8px; }
 
-        .option-group h4 {
-            margin: 0 0 15px 0;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .parcelas-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 
-        .parcelas-checkboxes {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-        }
+        .checkbox-item { display: flex; flex-direction: column; }
+        .parcela-input-group { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 8px; }
+        .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-item label { margin: 0; font-weight: normal; cursor: pointer; flex: 1; }
 
-        .checkbox-item {
-            display: flex;
-            flex-direction: column;
-        }
+        .percent-input-container { display: none; align-items: center; gap: 5px; }
+        .percent-input-container.show { display: flex; }
+        .percent-input-container input { width: 70px; padding: 6px 8px; font-size: 13px; }
 
-        .parcela-input-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .checkbox-item label {
-            margin: 0;
-            font-weight: normal;
-            cursor: pointer;
-            flex: 1;
-        }
-
-        .percent-input-container {
-            display: none;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .percent-input-container.show {
-            display: flex;
-        }
-
-        .percent-input-container input {
-            width: 70px;
-            padding: 6px 8px;
-            font-size: 13px;
-        }
-
-        /* === Mini-opções da parcela específica === */
-        #parcelaEspecificaOpcoes {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 10px;
-        }
-        #parcelaEspecificaOpcoes.show {
-            display: flex;
-        }
+        /* Mini-opções parcela específica */
+        #parcelaEspecificaOpcoes { display: none; flex-direction: column; gap: 6px; margin-top: 10px; }
+        #parcelaEspecificaOpcoes.show { display: flex; }
         .mini-opcao {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 7px 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--text-secondary);
+            display: flex; align-items: center; gap: 6px;
+            background: var(--bg-primary); border: 2px solid var(--border-color);
+            border-radius: 8px; padding: 7px 12px; cursor: pointer;
+            transition: all 0.2s ease; user-select: none;
+            font-size: 0.88rem; font-weight: 600; color: var(--text-secondary);
         }
-        .mini-opcao:hover {
-            border-color: var(--primary-color);
-            background: rgba(76,175,80,0.07);
-        }
-        .mini-opcao input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            accent-color: var(--primary-color);
-            flex-shrink: 0;
-        }
-        .mini-opcao.ativo {
-            border-color: var(--primary-color);
-            background: rgba(76,175,80,0.12);
-            color: var(--primary-color);
-        }
-        /* chip de taxa por parcela */
+        .mini-opcao:hover { border-color: var(--primary-color); background: rgba(76,175,80,0.07); }
+        .mini-opcao input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
+        .mini-opcao.ativo { border-color: var(--primary-color); background: rgba(76,175,80,0.12); color: var(--primary-color); }
+
         .taxa-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            transition: border-color 0.2s;
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--bg-primary); border: 2px solid var(--border-color);
+            border-radius: 8px; padding: 5px 10px; font-size: 0.85rem;
+            font-weight: 600; color: var(--text-secondary); transition: border-color 0.2s;
         }
-        .taxa-chip:focus-within {
-            border-color: var(--secondary-color);
-        }
+        .taxa-chip:focus-within { border-color: var(--secondary-color); }
         .taxa-chip span { white-space: nowrap; }
         .taxa-chip input[type="number"] {
-            width: 58px;
-            padding: 2px 5px;
-            font-size: 13px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            text-align: right;
+            width: 58px; padding: 2px 5px; font-size: 13px;
+            border: 1px solid var(--border-color); border-radius: 5px;
+            background: var(--bg-secondary); color: var(--text-primary); text-align: right;
         }
-        .taxa-chip input[type="number"]:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-        }
-        /* ======================================= */
+        .taxa-chip input[type="number"]:focus { outline: none; border-color: var(--secondary-color); }
 
         .button-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px; margin-top: 15px;
         }
 
         .btn {
-            padding: 14px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 48px;
+            padding: 14px 24px; font-size: 16px; font-weight: 600; border: none;
+            border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
-            color: white;
-        }
-
-        .btn-accent {
-            background: linear-gradient(135deg, var(--accent-color) 0%, #F57C00 100%);
-            color: white;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn-outline:hover {
-            background: var(--border-color);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger-color) 0%, #d32f2f 100%);
-            color: white;
-        }
+        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+        .btn:active { transform: translateY(0); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%); color: white; }
+        .btn-secondary { background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%); color: white; }
+        .btn-accent { background: linear-gradient(135deg, var(--accent-color) 0%, #F57C00 100%); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-primary); }
+        .btn-outline:hover { background: var(--border-color); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger-color) 0%, #d32f2f 100%); color: white; }
 
         .copy-message {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            text-align: center;
-            margin-top: 10px;
+            color: #155724; padding: 15px; border-radius: 10px; font-size: 14px;
+            opacity: 0; transition: opacity 0.5s ease; text-align: center; margin-top: 10px;
         }
+        .copy-message.show { opacity: 1; }
 
-        .copy-message.show {
-            opacity: 1;
-        }
-
-        .info-badge {
-            display: inline-block;
-            background: var(--accent-color);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: 8px;
-        }
+        .info-badge { display: inline-block; background: var(--accent-color); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; margin-left: 8px; }
 
         .discount-summary {
             background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
-            border-left: 4px solid var(--accent-color);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            display: none;
+            border-left: 4px solid var(--accent-color); padding: 15px;
+            border-radius: 10px; margin: 15px 0; display: none;
         }
-
-        [data-theme="dark"] .discount-summary {
-            background: linear-gradient(135deg, #3d3520 0%, #2d2614 100%);
-        }
-
-        .discount-summary.active {
-            display: block;
-        }
-
-        .discount-summary h4 {
-            color: var(--accent-color);
-            margin-bottom: 10px;
-        }
-
-        .discount-summary p {
-            margin: 5px 0;
-            color: var(--text-primary);
-        }
+        [data-theme="dark"] .discount-summary { background: linear-gradient(135deg, #3d3520 0%, #2d2614 100%); }
+        .discount-summary.active { display: block; }
+        .discount-summary h4 { color: var(--accent-color); margin-bottom: 10px; }
+        .discount-summary p { margin: 5px 0; color: var(--text-primary); }
 
         .error-message {
-            color: #d9534f;
-            background: linear-gradient(135deg, #f2dede 0%, #ebcccc 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 10px;
-            border-left: 4px solid #d9534f;
+            color: #d9534f; background: linear-gradient(135deg, #f2dede 0%, #ebcccc 100%);
+            padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #d9534f;
         }
 
+        /* =====================================================
+           TABELA DE PRODUTOS
+        ===================================================== */
         #productListResult table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            border-radius: 10px;
-            overflow: hidden;
+            width: 100%; border-collapse: collapse; margin-top: 15px;
+            border-radius: 10px; overflow: hidden;
         }
-
         #productListResult th, #productListResult td {
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            text-align: center;
+            border: 1px solid var(--border-color); padding: 10px; text-align: center;
         }
-
         #productListResult th {
             background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
-            color: white;
-            font-weight: 600;
+            color: white; font-weight: 600;
         }
+        #productListResult tr:hover { background: var(--bg-primary); }
+        #productListResult a { color: var(--secondary-color); text-decoration: none; font-weight: 600; transition: all 0.3s ease; }
+        #productListResult a:hover { color: var(--primary-color); text-decoration: underline; }
 
-        #productListResult tr:hover {
-            background: var(--bg-primary);
+        /* Linha de ajuste por produto */
+        .product-adj-row td {
+            padding: 0 !important;
+            border-top: none !important;
+            background: transparent !important;
         }
+        .product-adj-row:hover { background: transparent !important; }
 
-        #productListResult a {
-            color: var(--secondary-color);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        #productListResult a:hover {
-            color: var(--primary-color);
-            text-decoration: underline;
-        }
-
-        .loading-spinner {
-            text-align: center;
-            padding: 20px;
+        .adj-panel {
             display: none;
+            background: linear-gradient(135deg, rgba(33,150,243,0.05) 0%, rgba(76,175,80,0.05) 100%);
+            border: 2px dashed var(--secondary-color);
+            border-radius: 10px;
+            margin: 4px 6px 8px 6px;
+            padding: 12px 14px;
+            animation: slideDown 0.25s ease;
+        }
+        .adj-panel.open { display: block; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        .loading-spinner.active {
-            display: block;
+        .adj-panel-title {
+            font-size: 0.78rem; font-weight: 700; color: var(--secondary-color);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
+        .adj-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .adj-field {
+            display: flex; flex-direction: column; gap: 3px;
+        }
+        .adj-field label {
+            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+            margin: 0; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .adj-field-inner {
+            display: flex; align-items: center; gap: 4px;
+            background: var(--bg-secondary); border: 1.5px solid var(--border-color);
+            border-radius: 7px; padding: 5px 8px; transition: border-color 0.2s;
+        }
+        .adj-field-inner:focus-within { border-color: var(--secondary-color); }
+        .adj-field-inner span { font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; }
+        .adj-field-inner input {
+            width: 100%; padding: 0; font-size: 13px; border: none; background: transparent;
+            color: var(--text-primary); outline: none; -moz-appearance: textfield;
+            /* override the global input padding */
+            padding-left: 0 !important;
+        }
+        .adj-field-inner input::-webkit-outer-spin-button,
+        .adj-field-inner input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        .adj-reset {
+            background: none; border: none; color: var(--danger-color);
+            cursor: pointer; font-size: 0.78rem; font-weight: 600;
+            padding: 2px 6px; border-radius: 5px; transition: background 0.2s;
+        }
+        .adj-reset:hover { background: rgba(244,67,54,0.1); }
+
+        /* Botão de ajuste na linha do produto */
+        .btn-adj {
+            background: none; border: 1.5px solid var(--border-color);
+            color: var(--text-secondary); border-radius: 7px;
+            cursor: pointer; padding: 4px 8px; font-size: 1rem;
+            transition: all 0.2s ease; line-height: 1;
+        }
+        .btn-adj:hover { border-color: var(--secondary-color); color: var(--secondary-color); transform: scale(1.1); }
+        .btn-adj.active { border-color: var(--secondary-color); background: rgba(33,150,243,0.12); color: var(--secondary-color); }
+        .btn-adj.has-adj { border-color: var(--accent-color); color: var(--accent-color); }
+        .btn-adj.has-adj.active { background: rgba(255,152,0,0.12); }
+
+        /* Badge de ajuste ativo no nome do produto */
+        .adj-badge {
+            display: inline-block; background: var(--accent-color); color: white;
+            font-size: 0.65rem; font-weight: 700; padding: 1px 5px;
+            border-radius: 4px; margin-left: 5px; vertical-align: middle;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+
+        /* Toggle de ajuste por produto (checkbox global na seção) */
+        .per-product-toggle {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; background: var(--bg-primary);
+            border: 2px solid var(--border-color); border-radius: 10px;
+            cursor: pointer; transition: all 0.2s; margin-top: 15px;
+            user-select: none;
+        }
+        .per-product-toggle:hover { border-color: var(--secondary-color); background: rgba(33,150,243,0.05); }
+        .per-product-toggle.enabled { border-color: var(--secondary-color); background: rgba(33,150,243,0.08); }
+        .per-product-toggle input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary-color); flex-shrink: 0; }
+        .per-product-toggle label { margin: 0; cursor: pointer; font-size: 0.92rem; font-weight: 600; color: var(--text-secondary); }
+        .per-product-toggle.enabled label { color: var(--secondary-color); }
+
+        /* =====================================================
+           RESTO DOS ESTILOS EXISTENTES
+        ===================================================== */
+        .loading-spinner { text-align: center; padding: 20px; display: none; }
+        .loading-spinner.active { display: block; }
         .spinner {
-            border: 4px solid var(--border-color);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            border: 4px solid var(--border-color); border-top: 4px solid var(--primary-color);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 0 auto;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        hr { border: 0; height: 2px; background: var(--border-color); margin: 20px 0; }
 
-        hr {
-            border: 0;
-            height: 2px;
-            background: var(--border-color);
-            margin: 20px 0;
-        }
-
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            cursor: help;
-        }
-
+        .tooltip { position: relative; display: inline-block; cursor: help; }
         .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            z-index: 1000;
+            content: attr(data-tooltip); position: absolute; bottom: 125%; left: 50%;
+            transform: translateX(-50%); background: #333; color: white;
+            padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; white-space: nowrap; z-index: 1000;
         }
 
-        input[type="number"]:not(:placeholder-shown),
-        input[type="text"]:not(:placeholder-shown) {
-            border-color: var(--success-color);
-            background: rgba(76, 175, 80, 0.05);
+        input[type="number"]:not(:placeholder-shown), input[type="text"]:not(:placeholder-shown) {
+            border-color: var(--success-color); background: rgba(76, 175, 80, 0.05);
+        }
+        /* Override for adj-field inputs */
+        .adj-field-inner input:not(:placeholder-shown) {
+            border-color: transparent !important; background: transparent !important;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .discount-summary.active {
-            animation: slideIn 0.3s ease;
-        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .discount-summary.active { animation: slideIn 0.3s ease; }
 
         .product-count-badge {
-            background: var(--secondary-color);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-left: 8px;
+            background: var(--secondary-color); color: white; padding: 4px 10px;
+            border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-left: 8px;
         }
 
-        /* Estilos do Histórico */
-        .historico-item {
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .historico-item:hover {
-            box-shadow: var(--shadow-hover);
-            border-color: var(--primary-color);
-        }
-
-        .historico-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .historico-titulo {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--primary-color);
-        }
-
-        .historico-data {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .historico-comentarios {
-            background: var(--bg-secondary);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-style: italic;
-        }
-
-        .historico-dados {
-            background: var(--bg-secondary);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            margin-top: 10px;
-        }
-
-        .historico-dados strong {
-            color: var(--primary-color);
-        }
-
-        .historico-acoes {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .historico-acoes button {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 0.85rem;
-        }
-
-        .empty-historico {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-        }
-
-        .empty-historico-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
-        }
+        /* Histórico */
+        .historico-item { background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; transition: all 0.3s ease; }
+        .historico-item:hover { box-shadow: var(--shadow-hover); border-color: var(--primary-color); }
+        .historico-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .historico-titulo { font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
+        .historico-data { font-size: 0.85rem; color: var(--text-secondary); }
+        .historico-comentarios { background: var(--bg-secondary); padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic; }
+        .historico-dados { background: var(--bg-secondary); padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
+        .historico-dados strong { color: var(--primary-color); }
+        .historico-acoes { display: flex; gap: 8px; margin-top: 10px; }
+        .historico-acoes button { flex: 1; padding: 8px 12px; font-size: 0.85rem; }
+        .empty-historico { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-historico-icon { font-size: 3rem; margin-bottom: 10px; }
 
         .fab-historico {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
-            color: white;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-            transition: all 0.3s ease;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
+            border-radius: 50%; background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
+            color: white; border: none; font-size: 1.5rem; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4); transition: all 0.3s ease;
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
         }
-
-        .fab-historico:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
-        }
-
-        .fab-historico:active {
-            transform: scale(0.95);
-        }
-
+        .fab-historico:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6); }
+        .fab-historico:active { transform: scale(0.95); }
         .fab-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger-color);
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid var(--bg-secondary);
+            position: absolute; top: -5px; right: -5px; background: var(--danger-color);
+            color: white; border-radius: 50%; width: 24px; height: 24px;
+            font-size: 0.75rem; font-weight: 600; display: flex; align-items: center;
+            justify-content: center; border: 2px solid var(--bg-secondary);
         }
 
         @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .parcelas-checkboxes {
-                grid-template-columns: 1fr;
-            }
-
-            .button-row {
-                grid-template-columns: 1fr;
-            }
-
-            .theme-toggle {
-                position: static;
-                margin-top: 10px;
-            }
-
-            .historico-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-
-            input[type="number"], input[type="text"] {
-                font-size: 16px;
-            }
-
-            textarea {
-                font-size: 16px;
-            }
-
-            .btn {
-                padding: 16px 20px;
-                min-height: 52px;
-            }
-
-            .checkbox-item input[type="checkbox"] {
-                width: 20px;
-                height: 20px;
-            }
-
-            .historico-acoes {
-                flex-direction: column;
-            }
-
-            .historico-acoes button {
-                width: 100%;
-            }
-
-            .section-card {
-                padding: 15px;
-            }
-
-            .quick-access-mobile {
-                display: flex;
-                gap: 8px;
-                margin-bottom: 15px;
-            }
-
-            .quick-access-mobile .btn {
-                flex: 1;
-                font-size: 14px;
-                padding: 12px 8px;
-            }
-
-            #parcelaEspecificaOpcoes {
-                flex-direction: column;
-            }
+            .container { padding: 20px; }
+            h1 { font-size: 1.5rem; }
+            .parcelas-checkboxes { grid-template-columns: 1fr; }
+            .button-row { grid-template-columns: 1fr; }
+            .theme-toggle { position: static; margin-top: 10px; }
+            .historico-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+            input[type="number"], input[type="text"] { font-size: 16px; }
+            textarea { font-size: 16px; }
+            .btn { padding: 16px 20px; min-height: 52px; }
+            .checkbox-item input[type="checkbox"] { width: 20px; height: 20px; }
+            .historico-acoes { flex-direction: column; }
+            .historico-acoes button { width: 100%; }
+            .section-card { padding: 15px; }
+            #parcelaEspecificaOpcoes { flex-direction: column; }
+            .adj-fields { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -893,7 +467,6 @@
 
         <div class="section-card">
             <div class="section-title">💵 Valores Principais</div>
-            
             <div class="input-group">
                 <label for="valorBase">Valor Base (R$):</label>
                 <div class="input-with-icon">
@@ -901,16 +474,13 @@
                     <input type="number" id="valorBase" placeholder="Ex: 500.00" step="0.01">
                 </div>
             </div>
-
             <div class="input-group" style="margin-bottom: 0;">
                 <label for="parcelaEspecifica">Parcelas <small>(opcional — ex: 6 ou 3,6,12)</small>:</label>
                 <div class="input-with-icon">
                     <span class="input-icon">🔢</span>
                     <input type="text" id="parcelaEspecifica" placeholder="Ex: 6  ou  3,6,12" inputmode="numeric">
                 </div>
-                <!-- Mini-opções: aparecem quando parcela específica é preenchida -->
                 <div id="parcelaEspecificaOpcoes">
-                    <!-- linha 1: chips de toggle -->
                     <div id="parcelaChipsRow" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">
                         <label class="mini-opcao" id="labelEspecificaPix">
                             <input type="checkbox" id="especificaMostrarPix" checked onchange="onQuickPixChange()">
@@ -921,7 +491,6 @@
                             🧾 Total
                         </label>
                     </div>
-                    <!-- linha 2: taxa por parcela (gerada dinamicamente) -->
                     <div id="parcelaTaxasRow" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:4px;"></div>
                 </div>
             </div>
@@ -988,6 +557,13 @@
                     <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01" min="0">
                 </div>
             </div>
+
+            <!-- NOVO: Toggle ajuste por produto -->
+            <label class="per-product-toggle" id="perProductToggleLabel" for="perProductAdjust">
+                <input type="checkbox" id="perProductAdjust" onchange="onPerProductAdjustChange()">
+                <span>⚙️ Ajuste individual por produto</span>
+                <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Ativa campos de ajuste na tabela de produtos</small>
+            </label>
 
             <div id="discountSummary" class="discount-summary">
                 <h4>📊 Resumo de Cálculos</h4>
@@ -1061,7 +637,6 @@ Capa silicone R$ 50,00
 
                 <div class="option-group">
                     <h4>禁 Personalizar Texto de Saída</h4>
-                    
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
                             <input type="checkbox" id="hideDinheiroPix">
@@ -1072,7 +647,6 @@ Capa silicone R$ 50,00
                             </div>
                         </div>
                     </div>
-
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
                             <input type="checkbox" id="showDebito">
@@ -1083,28 +657,24 @@ Capa silicone R$ 50,00
                             </div>
                         </div>
                     </div>
-
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
                             <input type="checkbox" id="showComparison">
                             <label for="showComparison">Mostrar comparação (economia vs sem desconto)</label>
                         </div>
                     </div>
-
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
                             <input type="checkbox" id="hideEntradaText">
                             <label for="hideEntradaText">Não mostrar "Entrada"</label>
                         </div>
                     </div>
-
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
                             <input type="checkbox" id="showTotalValue">
                             <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
                         </div>
                     </div>
-
                     <div class="checkbox-item">
                         <div class="parcela-input-group">
                             <input type="checkbox" id="boldProductName" checked>
@@ -1117,7 +687,6 @@ Capa silicone R$ 50,00
 
                 <div class="option-group">
                     <h4>✏️ Textos Personalizados</h4>
-                    
                     <div class="input-group">
                         <label for="produtoPrefix">Prefixo do produto:</label>
                         <input type="text" id="produtoPrefix" placeholder="Ex: 📦, ➡️, ✨" value="➡️ ">
@@ -1125,17 +694,14 @@ Capa silicone R$ 50,00
                             Sugestões: 📱 🍏 🍎 📺 💻 ✳️ 📦 🔌 ⬛ ✨ 🎁
                         </small>
                     </div>
-
                     <div class="input-group">
                         <label for="textoAdicionalLinha">Texto adicional por linha:</label>
                         <input type="text" id="textoAdicionalLinha" placeholder="Ex: 'sem juros no cartão', 'frete grátis'">
                     </div>
-
                     <div class="input-group">
                         <label for="textoCabecalhoMensagem">Mensagem de cabeçalho:</label>
                         <textarea id="textoCabecalhoMensagem" placeholder="Ex: 'Olá! Segue as condições de pagamento:'"></textarea>
                     </div>
-
                     <div class="input-group">
                         <label for="textoFinalMensagem">Texto final da mensagem:</label>
                         <textarea id="textoFinalMensagem" placeholder="Ex: 'Entre em contato para mais informações! 📱'"></textarea>
@@ -1210,89 +776,102 @@ Capa silicone R$ 50,00
     </button>
 
     <script>
-        // Elementos do DOM
-        const valorBaseInput = document.getElementById('valorBase');
-        const parcelaEspecificaInput = document.getElementById('parcelaEspecifica');
-        const descontoPercentualInput = document.getElementById('descontoPercentual');
-        const descontoFixoInput = document.getElementById('descontoFixo');
-        const lucroAdicionalInput = document.getElementById('lucroAdicional');
-        const acrescimoComissaoInput = document.getElementById('acrescimoComissao');
-        const acrescimoPercentualInput = document.getElementById('acrescimoPercentual');
-        const valorEntradaInput = document.getElementById('valorEntrada');
-        const resultadoTextarea = document.getElementById('resultado');
-        const mensagemCopiado = document.getElementById('mensagemCopiado');
-        const discountSummary = document.getElementById('discountSummary');
-        const discountDetails = document.getElementById('discountDetails');
+        // ── DOM refs ──────────────────────────────────────────────────────────
+        const valorBaseInput                  = document.getElementById('valorBase');
+        const parcelaEspecificaInput          = document.getElementById('parcelaEspecifica');
+        const descontoPercentualInput         = document.getElementById('descontoPercentual');
+        const descontoFixoInput               = document.getElementById('descontoFixo');
+        const lucroAdicionalInput             = document.getElementById('lucroAdicional');
+        const acrescimoComissaoInput          = document.getElementById('acrescimoComissao');
+        const acrescimoPercentualInput        = document.getElementById('acrescimoPercentual');
+        const valorEntradaInput               = document.getElementById('valorEntrada');
+        const resultadoTextarea               = document.getElementById('resultado');
+        const mensagemCopiado                 = document.getElementById('mensagemCopiado');
+        const discountSummary                 = document.getElementById('discountSummary');
+        const discountDetails                 = document.getElementById('discountDetails');
+        const toggleAdvancedOptions           = document.getElementById('toggleAdvancedOptions');
+        const advancedOptionsDiv              = document.getElementById('advancedOptions');
+        const hideDinheiroPixCheckbox         = document.getElementById('hideDinheiroPix');
+        const showDebitoCheckbox              = document.getElementById('showDebito');
+        const showComparisonCheckbox          = document.getElementById('showComparison');
+        const hideEntradaTextCheckbox         = document.getElementById('hideEntradaText');
+        const showTotalValueCheckbox          = document.getElementById('showTotalValue');
+        const boldProductNameCheckbox         = document.getElementById('boldProductName');
+        const textoAdicionalLinhaInput        = document.getElementById('textoAdicionalLinha');
+        const produtoPrefixInput              = document.getElementById('produtoPrefix');
+        const textoFinalMensagemTextarea      = document.getElementById('textoFinalMensagem');
+        const parcelasAvancadasDiv            = document.getElementById('parcelasAvancadas');
+        const selectAllButton                 = document.getElementById('selectAll');
+        const deselectAllButton               = document.getElementById('deselectAll');
+        const textoCabecalhoMensagemTextarea  = document.getElementById('textoCabecalhoMensagem');
+        const fatorArredondamentoInput        = document.getElementById('fatorArredondamento');
+        const porcentagemPixInput             = document.getElementById('porcentagemPix');
+        const porcentagemDebitoInput          = document.getElementById('porcentagemDebito');
+        const porcentagemPixContainer         = document.getElementById('porcentagemPixContainer');
+        const porcentagemDebitoContainer      = document.getElementById('porcentagemDebitoContainer');
+        const toggleProductList               = document.getElementById('toggleProductList');
+        const productListSection              = document.getElementById('productListSection');
+        const productListTextarea             = document.getElementById('productList');
+        const productListLoading              = document.getElementById('productListLoading');
+        const productListResult               = document.getElementById('productListResult');
+        const aiPromptTextarea                = document.getElementById('aiPrompt');
+        const useEmoticonsCheckbox            = document.getElementById('useEmoticons');
+        const emoticonDinheiroInput           = document.getElementById('emoticonDinheiro');
+        const emoticonCartaoInput             = document.getElementById('emoticonCartao');
+        const toggleHistorico                 = document.getElementById('toggleHistorico');
+        const historicoSection                = document.getElementById('historicoSection');
+        const historicoTituloInput            = document.getElementById('historicoTitulo');
+        const historicoComentariosTextarea    = document.getElementById('historicoComentarios');
+        const visualizarHistoricoSection      = document.getElementById('visualizarHistoricoSection');
+        const historicoLista                  = document.getElementById('historicoLista');
+        const parcelaEspecificaOpcoes         = document.getElementById('parcelaEspecificaOpcoes');
+        const especificaMostrarPixCb          = document.getElementById('especificaMostrarPix');
+        const especificaMostrarTotalCb        = document.getElementById('especificaMostrarTotal');
+        const parcelaTaxasRow                 = document.getElementById('parcelaTaxasRow');
+        const perProductAdjustCb              = document.getElementById('perProductAdjust');
+        const perProductToggleLabel           = document.getElementById('perProductToggleLabel');
 
-        const toggleAdvancedOptions = document.getElementById('toggleAdvancedOptions');
-        const advancedOptionsDiv = document.getElementById('advancedOptions');
-        const hideDinheiroPixCheckbox = document.getElementById('hideDinheiroPix');
-        const showDebitoCheckbox = document.getElementById('showDebito');
-        const showComparisonCheckbox = document.getElementById('showComparison');
-        const hideEntradaTextCheckbox = document.getElementById('hideEntradaText');
-        const showTotalValueCheckbox = document.getElementById('showTotalValue');
-        const boldProductNameCheckbox = document.getElementById('boldProductName');
-        const textoAdicionalLinhaInput = document.getElementById('textoAdicionalLinha');
-        const produtoPrefixInput = document.getElementById('produtoPrefix');
-        const textoFinalMensagemTextarea = document.getElementById('textoFinalMensagem');
-        const parcelasAvancadasDiv = document.getElementById('parcelasAvancadas');
-        const selectAllButton = document.getElementById('selectAll');
-        const deselectAllButton = document.getElementById('deselectAll');
-        const textoCabecalhoMensagemTextarea = document.getElementById('textoCabecalhoMensagem');
-        const fatorArredondamentoInput = document.getElementById('fatorArredondamento');
-        
-        const porcentagemPixInput = document.getElementById('porcentagemPix');
-        const porcentagemDebitoInput = document.getElementById('porcentagemDebito');
-        const porcentagemPixContainer = document.getElementById('porcentagemPixContainer');
-        const porcentagemDebitoContainer = document.getElementById('porcentagemDebitoContainer');
-
-        const toggleProductList = document.getElementById('toggleProductList');
-        const productListSection = document.getElementById('productListSection');
-        const productListTextarea = document.getElementById('productList');
-        const productListLoading = document.getElementById('productListLoading');
-        const productListResult = document.getElementById('productListResult');
-        const aiPromptTextarea = document.getElementById('aiPrompt');
-
-        const useEmoticonsCheckbox = document.getElementById('useEmoticons');
-        const emoticonDinheiroInput = document.getElementById('emoticonDinheiro');
-        const emoticonCartaoInput = document.getElementById('emoticonCartao');
-
-        // Histórico
-        const toggleHistorico = document.getElementById('toggleHistorico');
-        const historicoSection = document.getElementById('historicoSection');
-        const historicoTituloInput = document.getElementById('historicoTitulo');
-        const historicoComentariosTextarea = document.getElementById('historicoComentarios');
-        const visualizarHistoricoSection = document.getElementById('visualizarHistoricoSection');
-        const historicoLista = document.getElementById('historicoLista');
-
-        // Mini-opções da parcela específica
-        const parcelaEspecificaOpcoes = document.getElementById('parcelaEspecificaOpcoes');
-        const especificaMostrarPixCb  = document.getElementById('especificaMostrarPix');
-        const especificaMostrarTotalCb = document.getElementById('especificaMostrarTotal');
-        const parcelaTaxasRow = document.getElementById('parcelaTaxasRow');
-
+        // ── Taxas e configurações padrão ──────────────────────────────────────
         const taxasDeJurosPadrao = {
-            'pix': 0, 1: 0.045, 2: 0.06, 3: 0.07, 4: 0.075, 5: 0.08, 6: 0.09, 7: 0.095, 8: 0.10,
-            9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125, 13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025
+            'pix': 0, 1: 0.045, 2: 0.06, 3: 0.07, 4: 0.075, 5: 0.08, 6: 0.09,
+            7: 0.095, 8: 0.10, 9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125,
+            13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025
         };
 
-        // Taxas personalizadas para parcelas rapidas: { 6: '9.00', 12: '12.50', ... }
         let taxasRapidas = {};
-
         const parcelasPadrao = [3, 6, 10, 12];
         let products = [];
         let selectedProducts = [];
 
-        // Retorna as parcelas digitadas no campo rapido como array de numeros validos
+        // ── Ajustes individuais por produto ───────────────────────────────────
+        // Estrutura: { prodIndex: { descontoR: '', descontoP: '', acrescimoR: '', acrescimoP: '', comissao: '' } }
+        let productAdjustments = {};
+
+        function getProductAdj(idx) {
+            return productAdjustments[idx] || { descontoR: '', descontoP: '', acrescimoR: '', acrescimoP: '', comissao: '' };
+        }
+
+        function hasProductAdj(idx) {
+            const a = productAdjustments[idx];
+            if (!a) return false;
+            return Object.values(a).some(v => v !== '' && v !== '0' && parseFloat(v) !== 0);
+        }
+
+        function onPerProductAdjustChange() {
+            const enabled = perProductAdjustCb.checked;
+            perProductToggleLabel.classList.toggle('enabled', enabled);
+            // Re-renderiza a tabela para mostrar/ocultar coluna de ajuste
+            if (products.length > 0) displayTable(products);
+            calcularParcelas();
+        }
+
+        // ── Parcelas rápidas ──────────────────────────────────────────────────
         function getParcelas() {
             const raw = parcelaEspecificaInput.value.trim();
             if (!raw) return [];
-            return raw.split(',')
-                .map(s => parseInt(s.trim()))
-                .filter(n => !isNaN(n) && n >= 1 && n <= 18);
+            return raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 18);
         }
 
-        // Sincroniza chip Pix <-> opcao avancada
         function syncChipPix(checked) {
             especificaMostrarPixCb.checked = checked;
             document.getElementById('labelEspecificaPix').classList.toggle('ativo', checked);
@@ -1304,10 +883,9 @@ Capa silicone R$ 50,00
             document.getElementById('labelEspecificaTotal').classList.toggle('ativo', checked);
             showTotalValueCheckbox.checked = checked;
         }
-        function onQuickPixChange()   { syncChipPix(especificaMostrarPixCb.checked);   calcularParcelas(); }
+        function onQuickPixChange()   { syncChipPix(especificaMostrarPixCb.checked);    calcularParcelas(); }
         function onQuickTotalChange() { syncChipTotal(especificaMostrarTotalCb.checked); calcularParcelas(); }
 
-        // Gera chips de taxa para cada parcela digitada
         function gerarChipsTaxa(parcelas) {
             parcelaTaxasRow.innerHTML = '';
             if (parcelas.length === 0) return;
@@ -1329,29 +907,23 @@ Capa silicone R$ 50,00
             });
         }
 
-        // Mostra/oculta mini-opcoes conforme parcelas digitadas
         function atualizarVisibilidadeMiniOpcoes() {
             const parcelas = getParcelas();
-            const visivel = parcelas.length > 0;
-            parcelaEspecificaOpcoes.classList.toggle('show', visivel);
+            parcelaEspecificaOpcoes.classList.toggle('show', parcelas.length > 0);
             gerarChipsTaxa(parcelas);
         }
 
-        // ===== HISTÓRICO =====
+        // ── Histórico ─────────────────────────────────────────────────────────
         function toggleHistoricoSection() {
             historicoSection.classList.toggle('show', toggleHistorico.checked);
         }
-
         function toggleVerHistorico() {
             visualizarHistoricoSection.classList.toggle('show');
             if (visualizarHistoricoSection.classList.contains('show')) {
                 carregarHistorico();
-                setTimeout(() => {
-                    visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
+                setTimeout(() => visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
             }
         }
-
         function abrirHistoricoRapido() {
             if (!visualizarHistoricoSection.classList.contains('show')) {
                 visualizarHistoricoSection.classList.add('show');
@@ -1359,7 +931,6 @@ Capa silicone R$ 50,00
             }
             visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-
         function atualizarBadgeHistorico() {
             const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
             const badge = document.getElementById('fabBadge');
@@ -1370,19 +941,15 @@ Capa silicone R$ 50,00
                 badge.style.display = 'none';
             }
         }
-
         function obterDataFormatada() {
-            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
             const agora = new Date();
-            const diaSemana = diasSemana[agora.getDay()];
-            const dia = String(agora.getDate()).padStart(2, '0');
-            const mes = String(agora.getMonth() + 1).padStart(2, '0');
-            const ano = agora.getFullYear();
-            const hora = String(agora.getHours()).padStart(2, '0');
-            const minuto = String(agora.getMinutes()).padStart(2, '0');
-            return `${diaSemana}, ${dia}/${mes}/${ano} às ${hora}:${minuto}`;
+            const d = String(agora.getDate()).padStart(2,'0');
+            const m = String(agora.getMonth()+1).padStart(2,'0');
+            const h = String(agora.getHours()).padStart(2,'0');
+            const min = String(agora.getMinutes()).padStart(2,'0');
+            return `${dias[agora.getDay()]}, ${d}/${m}/${agora.getFullYear()} às ${h}:${min}`;
         }
-
         function obterDadosCalculadora() {
             const parcelasSelecionadas = [];
             const parcelasTaxas = {};
@@ -1392,7 +959,6 @@ Capa silicone R$ 50,00
                 const taxaInput = document.getElementById(`porcentagem${num}x`);
                 if (taxaInput) parcelasTaxas[num] = taxaInput.value;
             });
-
             return {
                 valorBase: valorBaseInput.value,
                 parcelaEspecifica: parcelaEspecificaInput.value,
@@ -1408,6 +974,8 @@ Capa silicone R$ 50,00
                 listaProdutosTexto: productListTextarea.value,
                 produtosSelecionados: selectedProducts,
                 todosProdutos: products,
+                productAdjustments: productAdjustments,
+                perProductAdjust: perProductAdjustCb.checked,
                 opcoesAvancadasAtivo: toggleAdvancedOptions.checked,
                 opcoes: {
                     hideDinheiroPix: hideDinheiroPixCheckbox.checked,
@@ -1417,7 +985,6 @@ Capa silicone R$ 50,00
                     showTotalValue: showTotalValueCheckbox.checked,
                     boldProductName: boldProductNameCheckbox.checked,
                     useEmoticons: useEmoticonsCheckbox.checked,
-                    // mini-opções
                     especificaMostrarPix: especificaMostrarPixCb.checked,
                     especificaMostrarTotal: especificaMostrarTotalCb.checked
                 },
@@ -1432,64 +999,35 @@ Capa silicone R$ 50,00
                     emoticonDinheiro: emoticonDinheiroInput.value,
                     emoticonCartao: emoticonCartaoInput.value
                 },
-                parcelasSelecionadas: parcelasSelecionadas,
-                parcelasTaxas: parcelasTaxas
+                parcelasSelecionadas, parcelasTaxas
             };
         }
-
         function salvarNoHistorico() {
             const titulo = historicoTituloInput.value.trim();
-            if (!titulo) {
-                alert('⚠️ Por favor, insira um título para o cálculo');
-                historicoTituloInput.focus();
-                return;
-            }
-            if (!resultadoTextarea.value) {
-                alert('⚠️ Não há cálculo para salvar. Preencha os campos e calcule primeiro.');
-                return;
-            }
+            if (!titulo) { alert('⚠️ Por favor, insira um título para o cálculo'); historicoTituloInput.focus(); return; }
+            if (!resultadoTextarea.value) { alert('⚠️ Não há cálculo para salvar.'); return; }
             const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-            const novoRegistro = {
-                id: Date.now(),
-                data: obterDataFormatada(),
-                titulo: titulo,
-                comentarios: historicoComentariosTextarea.value.trim(),
-                dados: obterDadosCalculadora()
-            };
-            historico.unshift(novoRegistro);
+            historico.unshift({ id: Date.now(), data: obterDataFormatada(), titulo, comentarios: historicoComentariosTextarea.value.trim(), dados: obterDadosCalculadora() });
             localStorage.setItem('historicoCalculos', JSON.stringify(historico));
             atualizarBadgeHistorico();
             historicoTituloInput.value = '';
             historicoComentariosTextarea.value = '';
-            mensagemCopiado.textContent = '✅ Cálculo salvo no histórico!';
-            mensagemCopiado.classList.add('show');
-            setTimeout(() => {
-                mensagemCopiado.classList.remove('show');
-                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
-            }, 2000);
+            showToast('✅ Cálculo salvo no histórico!');
         }
-
         function carregarHistorico() {
             const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
             if (historico.length === 0) {
-                historicoLista.innerHTML = `
-                    <div class="empty-historico">
-                        <div class="empty-historico-icon">📭</div>
-                        <p>Nenhum cálculo salvo ainda</p>
-                        <small>Salve seus cálculos para acessá-los depois!</small>
-                    </div>`;
+                historicoLista.innerHTML = `<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum cálculo salvo ainda</p><small>Salve seus cálculos para acessá-los depois!</small></div>`;
                 return;
             }
             let html = '';
             historico.forEach(item => {
                 let resumoValor = '';
-                if (item.dados.usandoListaProdutos && item.dados.produtosSelecionados && item.dados.produtosSelecionados.length > 0) {
-                    resumoValor = `${item.dados.produtosSelecionados.length} produto${item.dados.produtosSelecionados.length > 1 ? 's' : ''} selecionado${item.dados.produtosSelecionados.length > 1 ? 's' : ''}`;
-                } else if (item.dados.valorBase) {
-                    resumoValor = `R$ ${parseFloat(item.dados.valorBase).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                } else {
-                    resumoValor = 'Sem valor';
-                }
+                if (item.dados.usandoListaProdutos && item.dados.produtosSelecionados && item.dados.produtosSelecionados.length > 0)
+                    resumoValor = `${item.dados.produtosSelecionados.length} produto${item.dados.produtosSelecionados.length>1?'s':''} selecionado${item.dados.produtosSelecionados.length>1?'s':''}`;
+                else if (item.dados.valorBase)
+                    resumoValor = `R$ ${parseFloat(item.dados.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                else resumoValor = 'Sem valor';
                 let detalhesExtras = [];
                 if (item.dados.descontoPercentual) detalhesExtras.push(`Desconto: ${item.dados.descontoPercentual}%`);
                 if (item.dados.descontoFixo) detalhesExtras.push(`Desc. fixo: R$ ${parseFloat(item.dados.descontoFixo).toFixed(2)}`);
@@ -1498,27 +1036,22 @@ Capa silicone R$ 50,00
                 if (item.dados.acrescimoComissao) detalhesExtras.push(`Comissão: R$ ${parseFloat(item.dados.acrescimoComissao).toFixed(2)}`);
                 if (item.dados.valorEntrada) detalhesExtras.push(`Entrada: R$ ${parseFloat(item.dados.valorEntrada).toFixed(2)}`);
                 if (item.dados.parcelaEspecifica) detalhesExtras.push(`Parcela: ${item.dados.parcelaEspecifica}x`);
-                const detalhesStr = detalhesExtras.length > 0 ? ' | ' + detalhesExtras.join(' | ') : '';
-                html += `
-                    <div class="historico-item">
-                        <div class="historico-header">
-                            <div class="historico-titulo">${item.titulo}</div>
-                            <div class="historico-data">${item.data}</div>
-                        </div>
-                        ${item.comentarios ? `<div class="historico-comentarios">💬 ${item.comentarios}</div>` : ''}
-                        <div class="historico-dados">
-                            <strong>Valor:</strong> ${resumoValor}${detalhesStr}
-                        </div>
-                        <div class="historico-acoes">
-                            <button class="btn btn-primary" onclick="restaurarCalculo(${item.id})">🔄 Restaurar</button>
-                            <button class="btn btn-secondary" onclick="copiarResultadoHistorico(${item.id})">📋 Copiar</button>
-                            <button class="btn btn-danger" onclick="excluirDoHistorico(${item.id})">🗑️ Excluir</button>
-                        </div>
-                    </div>`;
+                html += `<div class="historico-item">
+                    <div class="historico-header">
+                        <div class="historico-titulo">${item.titulo}</div>
+                        <div class="historico-data">${item.data}</div>
+                    </div>
+                    ${item.comentarios ? `<div class="historico-comentarios">💬 ${item.comentarios}</div>` : ''}
+                    <div class="historico-dados"><strong>Valor:</strong> ${resumoValor}${detalhesExtras.length ? ' | '+detalhesExtras.join(' | ') : ''}</div>
+                    <div class="historico-acoes">
+                        <button class="btn btn-primary" onclick="restaurarCalculo(${item.id})">🔄 Restaurar</button>
+                        <button class="btn btn-secondary" onclick="copiarResultadoHistorico(${item.id})">📋 Copiar</button>
+                        <button class="btn btn-danger" onclick="excluirDoHistorico(${item.id})">🗑️ Excluir</button>
+                    </div>
+                </div>`;
             });
             historicoLista.innerHTML = html;
         }
-
         function restaurarCalculo(id) {
             const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
             const item = historico.find(h => h.id === id);
@@ -1544,6 +1077,10 @@ Capa silicone R$ 50,00
                 emoticonDinheiroInput.value = dados.textos.emoticonDinheiro || '💸 ';
                 emoticonCartaoInput.value = dados.textos.emoticonCartao || '💳 ';
             }
+            // Restaurar ajustes individuais
+            productAdjustments = dados.productAdjustments || {};
+            perProductAdjustCb.checked = dados.perProductAdjust || false;
+            perProductToggleLabel.classList.toggle('enabled', perProductAdjustCb.checked);
             if (dados.usandoListaProdutos) {
                 toggleProductList.checked = true;
                 productListTextarea.value = dados.listaProdutosTexto || '';
@@ -1553,11 +1090,11 @@ Capa silicone R$ 50,00
                     if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
                         selectedProducts = dados.produtosSelecionados;
                         setTimeout(() => {
-                            dados.produtosSelecionados.forEach(prodSelecionado => {
-                                const index = products.findIndex(p => p.produto === prodSelecionado.produto && p.preco === prodSelecionado.preco);
-                                if (index !== -1) {
-                                    const checkbox = document.querySelector(`.product-checkbox[value="${index}"]`);
-                                    if (checkbox) checkbox.checked = true;
+                            dados.produtosSelecionados.forEach(ps => {
+                                const idx = products.findIndex(p => p.produto === ps.produto && p.preco === ps.preco);
+                                if (idx !== -1) {
+                                    const cb = document.querySelector(`.product-checkbox[value="${idx}"]`);
+                                    if (cb) cb.checked = true;
                                 }
                             });
                         }, 100);
@@ -1576,33 +1113,22 @@ Capa silicone R$ 50,00
                 showTotalValueCheckbox.checked = dados.opcoes.showTotalValue || false;
                 boldProductNameCheckbox.checked = dados.opcoes.boldProductName !== undefined ? dados.opcoes.boldProductName : true;
                 useEmoticonsCheckbox.checked = dados.opcoes.useEmoticons || false;
-                // restaurar mini-opções
-                if (dados.opcoes.especificaMostrarPix !== undefined) {
-                    especificaMostrarPixCb.checked = dados.opcoes.especificaMostrarPix;
-                    syncChipPix(especificaMostrarPixCb.checked);
-                }
-                if (dados.opcoes.especificaMostrarTotal !== undefined) {
-                    especificaMostrarTotalCb.checked = dados.opcoes.especificaMostrarTotal;
-                    syncChipTotal(especificaMostrarTotalCb.checked);
-                }
+                if (dados.opcoes.especificaMostrarPix !== undefined) syncChipPix(dados.opcoes.especificaMostrarPix);
+                if (dados.opcoes.especificaMostrarTotal !== undefined) syncChipTotal(dados.opcoes.especificaMostrarTotal);
             }
             if (dados.opcoesAvancadasAtivo) {
                 toggleAdvancedOptions.checked = true;
                 toggleAdvancedSection();
                 document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
-                    cb.checked = false;
-                    togglePorcentagemInput(parseInt(cb.value), false);
+                    cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false);
                 });
-                if (dados.parcelasSelecionadas && dados.parcelasSelecionadas.length > 0) {
-                    dados.parcelasSelecionadas.forEach(numParcela => {
-                        const checkbox = document.getElementById(`parcela${numParcela}x`);
-                        if (checkbox) {
-                            checkbox.checked = true;
-                            togglePorcentagemInput(numParcela, true);
-                            if (dados.parcelasTaxas && dados.parcelasTaxas[numParcela]) {
-                                const taxaInput = document.getElementById(`porcentagem${numParcela}x`);
-                                if (taxaInput) taxaInput.value = dados.parcelasTaxas[numParcela];
-                            }
+                if (dados.parcelasSelecionadas) {
+                    dados.parcelasSelecionadas.forEach(n => {
+                        const cb = document.getElementById(`parcela${n}x`);
+                        if (cb) { cb.checked = true; togglePorcentagemInput(n, true); }
+                        if (dados.parcelasTaxas && dados.parcelasTaxas[n]) {
+                            const ti = document.getElementById(`porcentagem${n}x`);
+                            if (ti) ti.value = dados.parcelasTaxas[n];
                         }
                     });
                 }
@@ -1615,88 +1141,55 @@ Capa silicone R$ 50,00
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            mensagemCopiado.textContent = `✅ Cálculo "${item.titulo}" restaurado!`;
-            mensagemCopiado.classList.add('show');
-            setTimeout(() => {
-                mensagemCopiado.classList.remove('show');
-                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
-            }, 2000);
+            showToast(`✅ Cálculo "${item.titulo}" restaurado!`);
         }
-
         function copiarResultadoHistorico(id) {
             const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
             const item = historico.find(h => h.id === id);
             if (!item || !item.dados.resultado) { alert('Resultado não encontrado'); return; }
-            navigator.clipboard.writeText(item.dados.resultado).then(() => {
-                mensagemCopiado.textContent = `✅ Resultado de "${item.titulo}" copiado!`;
-                mensagemCopiado.classList.add('show');
-                setTimeout(() => {
-                    mensagemCopiado.classList.remove('show');
-                    mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
-                }, 2000);
-            });
+            navigator.clipboard.writeText(item.dados.resultado).then(() => showToast(`✅ Resultado de "${item.titulo}" copiado!`));
         }
-
         function excluirDoHistorico(id) {
-            if (!confirm('⚠️ Deseja realmente excluir este registro do histórico?')) return;
+            if (!confirm('⚠️ Deseja realmente excluir este registro?')) return;
             let historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
             historico = historico.filter(h => h.id !== id);
             localStorage.setItem('historicoCalculos', JSON.stringify(historico));
-            atualizarBadgeHistorico();
-            carregarHistorico();
-            mensagemCopiado.textContent = '✅ Registro excluído do histórico!';
-            mensagemCopiado.classList.add('show');
-            setTimeout(() => {
-                mensagemCopiado.classList.remove('show');
-                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
-            }, 2000);
+            atualizarBadgeHistorico(); carregarHistorico();
+            showToast('✅ Registro excluído!');
         }
-
         function limparHistoricoCompleto() {
-            if (!confirm('⚠️ ATENÇÃO: Isso irá excluir TODOS os registros do histórico permanentemente. Deseja continuar?')) return;
+            if (!confirm('⚠️ Isso irá excluir TODOS os registros. Deseja continuar?')) return;
             localStorage.removeItem('historicoCalculos');
-            atualizarBadgeHistorico();
-            carregarHistorico();
-            mensagemCopiado.textContent = '✅ Histórico completamente limpo!';
+            atualizarBadgeHistorico(); carregarHistorico();
+            showToast('✅ Histórico limpo!');
+        }
+        function showToast(msg) {
+            const orig = mensagemCopiado.textContent;
+            mensagemCopiado.textContent = msg;
             mensagemCopiado.classList.add('show');
-            setTimeout(() => {
-                mensagemCopiado.classList.remove('show');
-                mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!';
-            }, 2000);
+            setTimeout(() => { mensagemCopiado.classList.remove('show'); mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!'; }, 2500);
         }
 
-        // Tema
+        // ── Tema ──────────────────────────────────────────────────────────────
         function toggleTheme() {
-            const body = document.body;
-            const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            body.setAttribute('data-theme', newTheme);
+            const newTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
         }
-
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 
+        // ── Seções collapsible ────────────────────────────────────────────────
         function toggleProductListSection() {
-            const checkbox = toggleProductList;
-            const section = productListSection;
-            section.classList.toggle('show', checkbox.checked);
-            valorBaseInput.disabled = checkbox.checked;
-            if (!checkbox.checked) {
-                products = [];
-                selectedProducts = [];
-                productListResult.innerHTML = '';
-            }
+            productListSection.classList.toggle('show', toggleProductList.checked);
+            valorBaseInput.disabled = toggleProductList.checked;
+            if (!toggleProductList.checked) { products = []; selectedProducts = []; productListResult.innerHTML = ''; productAdjustments = {}; }
             calcularParcelas();
         }
-
         function toggleAdvancedSection() {
-            const checkbox = toggleAdvancedOptions;
-            const section = advancedOptionsDiv;
-            section.classList.toggle('show', checkbox.checked);
+            advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
             toggleDebitoPixPorcentagemInputs();
-            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => 
-                togglePorcentagemInput(parseInt(cb.value), cb.checked)
-            );
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => togglePorcentagemInput(parseInt(cb.value), cb.checked));
             calcularParcelas();
         }
 
@@ -1704,62 +1197,47 @@ Capa silicone R$ 50,00
             document.querySelectorAll('.toggle-section').forEach(section => {
                 section.addEventListener('click', function(e) {
                     if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        if (checkbox) {
-                            checkbox.checked = !checkbox.checked;
-                            checkbox.dispatchEvent(new Event('change'));
-                        }
+                        const cb = this.querySelector('input[type="checkbox"]');
+                        if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
                     }
                 });
             });
-            // Inicializar estado visual das mini-opções
             syncChipPix(especificaMostrarPixCb.checked);
             syncChipTotal(especificaMostrarTotalCb.checked);
         });
 
+        // ── Checkboxes avançadas ──────────────────────────────────────────────
         function gerarCheckboxesAvancadas() {
             parcelasAvancadasDiv.innerHTML = '';
             for (let i = 1; i <= 18; i++) {
                 const div = document.createElement('div');
                 div.className = 'checkbox-item';
-                const parcelaGroup = document.createElement('div');
-                parcelaGroup.className = 'parcela-input-group';
+                const pg = document.createElement('div');
+                pg.className = 'parcela-input-group';
                 const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.id = `parcela${i}x`;
-                input.value = i;
+                input.type = 'checkbox'; input.id = `parcela${i}x`; input.value = i;
                 input.checked = parcelasPadrao.includes(i);
-                input.addEventListener('change', () => {
-                    togglePorcentagemInput(i, input.checked);
-                    calcularParcelas();
-                });
+                input.addEventListener('change', () => { togglePorcentagemInput(i, input.checked); calcularParcelas(); });
                 const label = document.createElement('label');
-                label.htmlFor = `parcela${i}x`;
-                label.textContent = `${i}x`;
-                parcelaGroup.appendChild(input);
-                parcelaGroup.appendChild(label);
-                const percentContainer = document.createElement('div');
-                percentContainer.className = 'percent-input-container';
-                percentContainer.id = `porcentagem${i}xContainer`;
-                if (input.checked) percentContainer.classList.add('show');
-                const percentInput = document.createElement('input');
-                percentInput.type = 'number';
-                percentInput.id = `porcentagem${i}x`;
-                percentInput.value = (taxasDeJurosPadrao[i] * 100).toFixed(2);
-                percentInput.addEventListener('input', calcularParcelas);
-                percentContainer.appendChild(percentInput);
-                percentContainer.appendChild(document.createTextNode('%'));
-                parcelaGroup.appendChild(percentContainer);
-                div.appendChild(parcelaGroup);
-                parcelasAvancadasDiv.appendChild(div);
+                label.htmlFor = `parcela${i}x`; label.textContent = `${i}x`;
+                pg.appendChild(input); pg.appendChild(label);
+                const pc = document.createElement('div');
+                pc.className = 'percent-input-container'; pc.id = `porcentagem${i}xContainer`;
+                if (input.checked) pc.classList.add('show');
+                const pi = document.createElement('input');
+                pi.type = 'number'; pi.id = `porcentagem${i}x`;
+                pi.value = (taxasDeJurosPadrao[i] * 100).toFixed(2);
+                pi.addEventListener('input', calcularParcelas);
+                pc.appendChild(pi); pc.appendChild(document.createTextNode('%'));
+                pg.appendChild(pc); div.appendChild(pg); parcelasAvancadasDiv.appendChild(div);
             }
         }
 
+        // ── IA / processamento de lista ───────────────────────────────────────
         async function processWithAI() {
             const rawText = productListTextarea.value;
             if (!rawText) { displayErrorList('Por favor, cole o texto para a IA processar.'); return; }
-            productListLoading.classList.add('active');
-            productListResult.innerHTML = '';
+            productListLoading.classList.add('active'); productListResult.innerHTML = '';
             try {
                 const response = await fetch("https://caixa-kal3.vercel.app/api/groq", {
                     method: "POST",
@@ -1768,24 +1246,16 @@ Capa silicone R$ 50,00
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || data.message || "Erro na requisição");
-                if (data.choices && data.choices[0]) {
-                    productListTextarea.value = data.choices[0].message.content;
-                    processList();
-                } else {
-                    throw new Error("Resposta da IA inválida");
-                }
-            } catch (error) {
-                displayErrorList(`❌ Erro na IA: ${error.message}`);
-            } finally {
-                productListLoading.classList.remove('active');
-            }
+                if (data.choices && data.choices[0]) { productListTextarea.value = data.choices[0].message.content; processList(); }
+                else throw new Error("Resposta da IA inválida");
+            } catch (error) { displayErrorList(`❌ Erro na IA: ${error.message}`); }
+            finally { productListLoading.classList.remove('active'); }
         }
 
         function togglePorcentagemInput(parcelas, isChecked) {
             const container = document.getElementById(`porcentagem${parcelas}xContainer`);
             if (container) container.classList.toggle('show', isChecked && toggleAdvancedOptions.checked);
         }
-
         function toggleDebitoPixPorcentagemInputs() {
             porcentagemPixContainer.classList.toggle('show', !hideDinheiroPixCheckbox.checked && toggleAdvancedOptions.checked);
             porcentagemDebitoContainer.classList.toggle('show', showDebitoCheckbox.checked && toggleAdvancedOptions.checked);
@@ -1796,22 +1266,20 @@ Capa silicone R$ 50,00
             return Math.ceil(valor / fator) * fator;
         }
 
-        function calcularValorComDesconto(valorBase) {
+        // Calcula valor com desconto/acréscimo — agora aceita overrides individuais
+        function calcularValorComDesconto(valorBase, overrides) {
             let valor = valorBase;
-            const acrescimoPerc = parseFloat(acrescimoPercentualInput.value) || 0;
-            const lucroFixo     = parseFloat(lucroAdicionalInput.value) || 0;
-            const acrescimoFix  = parseFloat(acrescimoComissaoInput.value) || 0;
-            const descontoPerc  = parseFloat(descontoPercentualInput.value) || 0;
-            const descontoFix   = parseFloat(descontoFixoInput.value) || 0;
-            // Acréscimo % sobre o base
-            if (acrescimoPerc > 0) valor = valor * (1 + acrescimoPerc / 100);
-            // Acréscimo R$ fixo (lucro/custo)
-            if (lucroFixo > 0) valor = valor + lucroFixo;
-            // Comissão R$ (aplicada sobre o valor já acrescido)
-            if (acrescimoFix > 0) valor = valor + acrescimoFix;
-            // Descontos
-            if (descontoPerc > 0) valor = valor * (1 - descontoPerc / 100);
-            if (descontoFix  > 0) valor = valor - descontoFix;
+            const ov = overrides || {};
+            const acrescimoPerc = parseFloat(ov.acrescimoP !== undefined && ov.acrescimoP !== '' ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
+            const lucroFixo     = parseFloat(ov.acrescimoR !== undefined && ov.acrescimoR !== '' ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
+            const acrescimoFix  = parseFloat(ov.comissao   !== undefined && ov.comissao   !== '' ? ov.comissao   : acrescimoComissaoInput.value) || 0;
+            const descontoPerc  = parseFloat(ov.descontoP  !== undefined && ov.descontoP  !== '' ? ov.descontoP  : descontoPercentualInput.value) || 0;
+            const descontoFix   = parseFloat(ov.descontoR  !== undefined && ov.descontoR  !== '' ? ov.descontoR  : descontoFixoInput.value) || 0;
+            if (acrescimoPerc > 0) valor *= (1 + acrescimoPerc / 100);
+            if (lucroFixo     > 0) valor += lucroFixo;
+            if (acrescimoFix  > 0) valor += acrescimoFix;
+            if (descontoPerc  > 0) valor *= (1 - descontoPerc / 100);
+            if (descontoFix   > 0) valor -= descontoFix;
             return Math.max(0, valor);
         }
 
@@ -1823,45 +1291,19 @@ Capa silicone R$ 50,00
             const acrescimoFix  = parseFloat(acrescimoComissaoInput.value) || 0;
             const descontoPerc  = parseFloat(descontoPercentualInput.value) || 0;
             const descontoFix   = parseFloat(descontoFixoInput.value) || 0;
-            if (acrescimoPerc === 0 && lucroFixo === 0 && acrescimoFix === 0 && descontoPerc === 0 && descontoFix === 0) {
-                discountSummary.classList.remove('active'); return;
-            }
-            let detalhes = [];
-            let valorFinal = base;
-            detalhes.push(`💵 Valor inicial: R$ ${base.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-            if (acrescimoPerc > 0) {
-                const v = base * (acrescimoPerc / 100);
-                valorFinal += v;
-                detalhes.push(`📈 Acréscimo ${acrescimoPerc}%: +R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-            }
-            if (lucroFixo > 0) {
-                valorFinal += lucroFixo;
-                detalhes.push(`💰 Acréscimo R$: +R$ ${lucroFixo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-            }
-            if (acrescimoFix > 0) {
-                valorFinal += acrescimoFix;
-                detalhes.push(`🤝 Comissão: +R$ ${acrescimoFix.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-            }
-            if (descontoPerc > 0) {
-                const valorDesc = valorFinal * (descontoPerc / 100);
-                valorFinal -= valorDesc;
-                detalhes.push(`📉 Desconto ${descontoPerc}%: -R$ ${valorDesc.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-            }
-            if (descontoFix > 0) {
-                valorFinal -= descontoFix;
-                detalhes.push(`💸 Desconto fixo: -R$ ${descontoFix.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`);
-            }
-            detalhes.push(`<strong>💰 Valor base final: R$ ${valorFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>`);
-            if (Math.abs(valorFinal - base) > 0.001) {
-                const diferenca = valorFinal - base;
-                if (diferenca < 0) {
-                    const economia = Math.abs(diferenca);
-                    const percEconomia = ((economia / base) * 100).toFixed(1);
-                    detalhes.push(`<strong style="color: var(--success-color);">💚 Economia total: R$ ${economia.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${percEconomia}%)</strong>`);
-                } else {
-                    const percAcrescimo = ((diferenca / base) * 100).toFixed(1);
-                    detalhes.push(`<strong style="color: var(--accent-color);">📊 Acréscimo total: R$ ${diferenca.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (+${percAcrescimo}%)</strong>`);
-                }
+            if (!acrescimoPerc && !lucroFixo && !acrescimoFix && !descontoPerc && !descontoFix) { discountSummary.classList.remove('active'); return; }
+            let detalhes = [], valorFinal = base;
+            detalhes.push(`💵 Valor inicial: R$ ${base.toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
+            if (acrescimoPerc > 0) { const v = base*(acrescimoPerc/100); valorFinal+=v; detalhes.push(`📈 Acréscimo ${acrescimoPerc}%: +R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (lucroFixo     > 0) { valorFinal+=lucroFixo; detalhes.push(`💰 Acréscimo R$: +R$ ${lucroFixo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (acrescimoFix  > 0) { valorFinal+=acrescimoFix; detalhes.push(`🤝 Comissão: +R$ ${acrescimoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (descontoPerc  > 0) { const vd=valorFinal*(descontoPerc/100); valorFinal-=vd; detalhes.push(`📉 Desconto ${descontoPerc}%: -R$ ${vd.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (descontoFix   > 0) { valorFinal-=descontoFix; detalhes.push(`💸 Desconto fixo: -R$ ${descontoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            detalhes.push(`<strong>💰 Valor base final: R$ ${valorFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`);
+            const diferenca = valorFinal - base;
+            if (Math.abs(diferenca) > 0.001) {
+                if (diferenca < 0) detalhes.push(`<strong style="color:var(--success-color)">💚 Economia: R$ ${Math.abs(diferenca).toLocaleString('pt-BR',{minimumFractionDigits:2})} (${((Math.abs(diferenca)/base)*100).toFixed(1)}%)</strong>`);
+                else detalhes.push(`<strong style="color:var(--accent-color)">📊 Acréscimo total: R$ ${diferenca.toLocaleString('pt-BR',{minimumFractionDigits:2})} (+${((diferenca/base)*100).toFixed(1)}%)</strong>`);
             }
             discountDetails.innerHTML = detalhes.join('<br>');
             discountSummary.classList.add('active');
@@ -1869,90 +1311,19 @@ Capa silicone R$ 50,00
 
         gerarCheckboxesAvancadas();
 
-        // Event Listeners
-        valorBaseInput.addEventListener('input', () => {
-            valorBaseInput.classList.toggle('has-value', !!valorBaseInput.value);
-            atualizarResumoDescontos();
-            calcularParcelas();
-        });
-        descontoPercentualInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
-        descontoFixoInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
-        lucroAdicionalInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
-        acrescimoComissaoInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
-        acrescimoPercentualInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
-        valorEntradaInput.addEventListener('input', calcularParcelas);
-        fatorArredondamentoInput.addEventListener('input', calcularParcelas);
-        hideDinheiroPixCheckbox.addEventListener('change', () => {
-            // Sync chip Pix (chip mostra "mostrar", avancado mostra "ocultar")
-            syncChipPix(!hideDinheiroPixCheckbox.checked);
-            toggleDebitoPixPorcentagemInputs();
-            calcularParcelas();
-        });
-        showDebitoCheckbox.addEventListener('change', () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        showComparisonCheckbox.addEventListener('change', calcularParcelas);
-        porcentagemPixInput.addEventListener('input', calcularParcelas);
-        porcentagemDebitoInput.addEventListener('input', calcularParcelas);
-        hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
-        showTotalValueCheckbox.addEventListener('change', () => {
-            syncChipTotal(showTotalValueCheckbox.checked);
-            calcularParcelas();
-        });
-        boldProductNameCheckbox.addEventListener('change', calcularParcelas);
-        textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
-        produtoPrefixInput.addEventListener('input', calcularParcelas);
-        textoFinalMensagemTextarea.addEventListener('input', calcularParcelas);
-        textoCabecalhoMensagemTextarea.addEventListener('input', calcularParcelas);
-        emoticonDinheiroInput.addEventListener('input', calcularParcelas);
-        emoticonCartaoInput.addEventListener('input', calcularParcelas);
-
-        parcelaEspecificaInput.addEventListener('input', function() {
-            // Validate: all tokens must be numbers 1-18
-            const parcelas = getParcelas();
-            const raw = this.value.trim();
-            const allValid = raw === '' || (parcelas.length > 0 &&
-                raw.split(',').every(s => {
-                    const n = parseInt(s.trim());
-                    return !isNaN(n) && n >= 1 && n <= 18;
-                }));
-            this.classList.toggle('invalid', raw !== '' && !allValid);
-            // Reset taxas customizadas apenas para parcelas que foram removidas
-            const current = new Set(parcelas.map(String));
-            Object.keys(taxasRapidas).forEach(k => { if (!current.has(k)) delete taxasRapidas[k]; });
-            atualizarVisibilidadeMiniOpcoes();
-            calcularParcelas();
-        });
-
-        selectAllButton.addEventListener('click', () => {
-            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
-                cb.checked = true;
-                togglePorcentagemInput(parseInt(cb.value), true);
-            });
-            calcularParcelas();
-        });
-
-        deselectAllButton.addEventListener('click', () => {
-            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
-                cb.checked = false;
-                togglePorcentagemInput(parseInt(cb.value), false);
-            });
-            calcularParcelas();
-        });
-
+        // ── Tabela de produtos ─────────────────────────────────────────────────
         function processList() {
             const list = productListTextarea.value;
             if (!list) { displayErrorList('Por favor, cole a lista de produtos.'); return; }
-            productListLoading.classList.add('active');
-            productListResult.innerHTML = '';
+            productListLoading.classList.add('active'); productListResult.innerHTML = '';
             try {
                 products = parseProducts(list);
+                productAdjustments = {}; // reset ao processar nova lista
                 displayTable(products);
                 selectedProducts = [];
                 handleProductSelection();
-            } catch (error) {
-                displayErrorList(`❌ Erro: ${error.message}`);
-            } finally {
-                productListLoading.classList.remove('active');
-            }
+            } catch (error) { displayErrorList(`❌ Erro: ${error.message}`); }
+            finally { productListLoading.classList.remove('active'); }
         }
 
         function parseProducts(text) {
@@ -1965,8 +1336,8 @@ Capa silicone R$ 50,00
                 if (trimmed.length === 0 || trimmed.match(/^[📌📢Ⓜ️✳️❇☑️📺]/)) return;
                 const match = trimmed.match(priceRegex);
                 if (match) {
-                    const price = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
-                    const name = trimmed.substring(0, match.index).replace(/`|\*|\-/g, '').trim();
+                    const price = parseFloat(match[1].replace(/\./g,'').replace(',','.'));
+                    const name = trimmed.substring(0, match.index).replace(/`|\*|\-/g,'').trim();
                     if (name && !isNaN(price)) prods.push({ produto: name, preco: price });
                 }
             });
@@ -1975,41 +1346,163 @@ Capa silicone R$ 50,00
         }
 
         function displayTable(prods) {
-            let html = '<table><thead><tr><th><input type="checkbox" id="selectAllProducts"></th><th>Produto</th><th>Preço</th><th>Imagem</th></tr></thead><tbody>';
+            const adjMode = perProductAdjustCb.checked;
+            let html = `<table><thead><tr>
+                <th><input type="checkbox" id="selectAllProducts"></th>
+                <th>Produto</th><th>Preço</th>
+                ${adjMode ? '<th title="Ajuste individual">⚙️</th>' : ''}
+                <th>Imagem</th>
+            </tr></thead><tbody>`;
+
             prods.forEach((p, i) => {
-                const price = `R$ ${p.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                html += `<tr>
+                const price = `R$ ${p.preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                const adj = getProductAdj(i);
+                const hasAdj = hasProductAdj(i);
+                const btnClass = `btn-adj${hasAdj ? ' has-adj' : ''}`;
+
+                html += `<tr data-prod-idx="${i}">
                     <td><input type="checkbox" class="product-checkbox" value="${i}"></td>
-                    <td>${p.produto}</td>
+                    <td>${p.produto}${hasAdj ? '<span class="adj-badge">ajuste</span>' : ''}</td>
                     <td>${price}</td>
-                    <td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">Pesquisar</a></td>
+                    ${adjMode ? `<td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>` : ''}
+                    <td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">🔍</a></td>
                 </tr>`;
+
+                if (adjMode) {
+                    html += `<tr class="product-adj-row" id="adjRow_${i}">
+                        <td colspan="${5}">
+                            <div class="adj-panel${false ? ' open' : ''}" id="adjPanel_${i}">
+                                <div class="adj-panel-title">
+                                    <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
+                                    <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
+                                </div>
+                                <div class="adj-fields">
+                                    <div class="adj-field">
+                                        <label>Desconto R$</label>
+                                        <div class="adj-field-inner">
+                                            <span>R$</span>
+                                            <input type="number" step="0.01" min="0" placeholder="0"
+                                                value="${adj.descontoR}"
+                                                oninput="saveProductAdj(${i},'descontoR',this.value)"
+                                                id="adj_${i}_descontoR">
+                                        </div>
+                                    </div>
+                                    <div class="adj-field">
+                                        <label>Desconto %</label>
+                                        <div class="adj-field-inner">
+                                            <input type="number" step="0.01" min="0" max="100" placeholder="0"
+                                                value="${adj.descontoP}"
+                                                oninput="saveProductAdj(${i},'descontoP',this.value)"
+                                                id="adj_${i}_descontoP">
+                                            <span>%</span>
+                                        </div>
+                                    </div>
+                                    <div class="adj-field">
+                                        <label>Acréscimo R$</label>
+                                        <div class="adj-field-inner">
+                                            <span>R$</span>
+                                            <input type="number" step="0.01" min="0" placeholder="0"
+                                                value="${adj.acrescimoR}"
+                                                oninput="saveProductAdj(${i},'acrescimoR',this.value)"
+                                                id="adj_${i}_acrescimoR">
+                                        </div>
+                                    </div>
+                                    <div class="adj-field">
+                                        <label>Acréscimo %</label>
+                                        <div class="adj-field-inner">
+                                            <input type="number" step="0.01" min="0" placeholder="0"
+                                                value="${adj.acrescimoP}"
+                                                oninput="saveProductAdj(${i},'acrescimoP',this.value)"
+                                                id="adj_${i}_acrescimoP">
+                                            <span>%</span>
+                                        </div>
+                                    </div>
+                                    <div class="adj-field">
+                                        <label>Comissão R$</label>
+                                        <div class="adj-field-inner">
+                                            <span>R$</span>
+                                            <input type="number" step="0.01" min="0" placeholder="0"
+                                                value="${adj.comissao}"
+                                                oninput="saveProductAdj(${i},'comissao',this.value)"
+                                                id="adj_${i}_comissao">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
             });
+
             html += '</tbody></table>';
-            const badge = `<span class="product-count-badge">${prods.length} produto${prods.length > 1 ? 's' : ''} encontrado${prods.length > 1 ? 's' : ''}</span>`;
+            const badge = `<span class="product-count-badge">${prods.length} produto${prods.length>1?'s':''} encontrado${prods.length>1?'s':''}</span>`;
             productListResult.innerHTML = badge + html;
-            document.getElementById('selectAllProducts').addEventListener('change', (e) => {
+
+            document.getElementById('selectAllProducts').addEventListener('change', e => {
                 document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = e.target.checked);
                 handleProductSelection();
             });
             document.querySelectorAll('.product-checkbox').forEach(cb => cb.addEventListener('change', handleProductSelection));
         }
 
+        function toggleAdjPanel(idx) {
+            const panel = document.getElementById(`adjPanel_${idx}`);
+            const btn   = document.getElementById(`adjBtn_${idx}`);
+            if (!panel) return;
+            const isOpen = panel.classList.toggle('open');
+            btn.classList.toggle('active', isOpen);
+        }
+
+        function saveProductAdj(idx, field, value) {
+            if (!productAdjustments[idx]) productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'' };
+            productAdjustments[idx][field] = value;
+            // Atualiza badge na célula do produto sem re-renderizar toda a tabela
+            const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
+            if (row) {
+                const nameCell = row.cells[1];
+                const existingBadge = nameCell.querySelector('.adj-badge');
+                const adjAtivo = hasProductAdj(idx);
+                const btn = document.getElementById(`adjBtn_${idx}`);
+                if (adjAtivo) {
+                    if (!existingBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="adj-badge">ajuste</span>');
+                    if (btn) { btn.classList.add('has-adj'); }
+                } else {
+                    if (existingBadge) existingBadge.remove();
+                    if (btn) btn.classList.remove('has-adj');
+                }
+            }
+            calcularParcelas();
+        }
+
+        function resetProductAdj(idx) {
+            productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'' };
+            ['descontoR','descontoP','acrescimoR','acrescimoP','comissao'].forEach(f => {
+                const el = document.getElementById(`adj_${idx}_${f}`);
+                if (el) el.value = '';
+            });
+            const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
+            if (row) {
+                const badge = row.cells[1].querySelector('.adj-badge');
+                if (badge) badge.remove();
+                const btn = document.getElementById(`adjBtn_${idx}`);
+                if (btn) btn.classList.remove('has-adj');
+            }
+            calcularParcelas();
+        }
+
         function handleProductSelection() {
             selectedProducts = [];
             document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
                 const p = products[parseInt(cb.value)];
-                if (p) selectedProducts.push(p);
+                if (p) selectedProducts.push({ ...p, _idx: parseInt(cb.value) });
             });
             calcularParcelas();
         }
 
-        function displayErrorList(msg) {
-            productListResult.innerHTML = `<div class="error-message">${msg}</div>`;
-        }
+        function displayErrorList(msg) { productListResult.innerHTML = `<div class="error-message">${msg}</div>`; }
 
+        // ── Cálculo de parcelas ───────────────────────────────────────────────
         function getTaxa(parcelas) {
-            // Se campo rapido tem parcelas, usa taxasRapidas primeiro
             const parcelasRapidas = getParcelas();
             if (parcelasRapidas.length > 0 && parcelas !== 'pix' && parcelas !== 'debito') {
                 if (taxasRapidas[parcelas] !== undefined) return parseFloat(taxasRapidas[parcelas]) / 100;
@@ -2025,16 +1518,11 @@ Capa silicone R$ 50,00
         }
 
         function getParcelasSelecionadas() {
-            // Campo rapido tem prioridade
             const parcelas = getParcelas();
-            if (parcelas.length > 0) {
-                return { especifica: true, parcelas: parcelas };
-            }
+            if (parcelas.length > 0) return { especifica: true, parcelas };
             if (toggleAdvancedOptions.checked) {
                 const sel = [];
-                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => {
-                    sel.push(parseInt(cb.value));
-                });
+                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => sel.push(parseInt(cb.value)));
                 return { especifica: false, parcelas: sel.sort((a,b) => a-b) };
             }
             return { especifica: false, parcelas: [...parcelasPadrao] };
@@ -2047,16 +1535,19 @@ Capa silicone R$ 50,00
 
             if (selectedProducts.length > 0) {
                 selectedProducts.forEach((p, i) => {
+                    // Pega ajustes individuais se o modo estiver ativo
+                    const overrides = (perProductAdjustCb.checked && p._idx !== undefined)
+                        ? getProductAdj(p._idx) : null;
                     let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
                     if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
-                    const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco);
+                    const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco, overrides);
                     if (r) res.push(r);
                     if (i < selectedProducts.length - 1) res.push('\n' + '━'.repeat(20));
                 });
             } else {
                 const base = parseFloat(valorBaseInput.value);
                 if (!isNaN(base) && base > 0) {
-                    const r = calcularParcelasParaUmProduto(base, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, "", config, base);
+                    const r = calcularParcelasParaUmProduto(base, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, "", config, base, null);
                     if (r) res.push(r);
                 }
             }
@@ -2067,110 +1558,120 @@ Capa silicone R$ 50,00
             resultadoTextarea.value = final.join('\n');
         }
 
-        function calcularParcelasParaUmProduto(valorBase, ent, txtAdd, showTot, nome, config, valorOriginal) {
+        function calcularParcelasParaUmProduto(valorBase, ent, txtAdd, showTot, nome, config, valorOriginal, overrides) {
             let res = [];
             let fator = parseFloat(fatorArredondamentoInput.value) || 1;
             const emoAtivo = useEmoticonsCheckbox.checked;
             const emoDinheiro = emoAtivo ? emoticonDinheiroInput.value : "";
-            const emoCartao = emoAtivo ? emoticonCartaoInput.value : "";
+            const emoCartao   = emoAtivo ? emoticonCartaoInput.value   : "";
 
-            let valLiq = calcularValorComDesconto(valorBase);
+            let valLiq = calcularValorComDesconto(valorBase, overrides);
 
             if (nome) res.push(`${nome}`);
 
             const showEnt = !hideEntradaTextCheckbox.checked && ent > 0;
-            const txtEnt = showEnt ? `Entrada de R$ ${ent.toLocaleString('pt-BR', {minimumFractionDigits:2})} + ` : '';
-            const aParc = valLiq - ent;
+            const txtEnt  = showEnt ? `Entrada de R$ ${ent.toLocaleString('pt-BR',{minimumFractionDigits:2})} + ` : '';
+            const aParc   = valLiq - ent;
 
-            // Determinar se mostra Pix neste contexto
-            // Se parcela específica: usar a mini-opção local
-            // Se modo normal: usar a opção global (hideDinheiroPixCheckbox)
-            const mostrarPix = config.especifica
-                ? especificaMostrarPixCb.checked
-                : !hideDinheiroPixCheckbox.checked;
-
-            // Determinar se mostra total neste contexto
-            // Se parcela específica: usar a mini-opção local
-            // Se modo normal: usar a opção global (showTotalValue)
-            const mostrarTotal = config.especifica
-                ? especificaMostrarTotalCb.checked
-                : showTot;
+            const mostrarPix   = config.especifica ? especificaMostrarPixCb.checked   : !hideDinheiroPixCheckbox.checked;
+            const mostrarTotal = config.especifica ? especificaMostrarTotalCb.checked : showTot;
 
             if (valLiq >= ent) {
-                // Dinheiro/Pix
                 if (mostrarPix) {
-                    const valorPix = valLiq;
-                    const v = arredondarParaMultiplo(valorPix / (1 - getTaxa('pix')), fator);
-                    let linhaPix = `${emoDinheiro}Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                    const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('pix')), fator);
+                    let linhaPix = `${emoDinheiro}Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
                     if (showComparisonCheckbox.checked && valorOriginal !== valLiq) {
-                        const economia = valorOriginal - v;
-                        linhaPix += ` (economize R$ ${economia.toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
+                        const eco = valorOriginal - v;
+                        linhaPix += ` (economize R$ ${eco.toLocaleString('pt-BR',{minimumFractionDigits:2})})`;
                     }
                     res.push(linhaPix);
                 }
-
-                // Débito
                 if (!config.especifica && showDebitoCheckbox.checked && ent === 0) {
                     const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('debito')), fator);
-                    res.push(`${emoCartao}Débito: R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}`);
+                    res.push(`${emoCartao}Débito: R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
                 }
-
-                // Parcelas
                 config.parcelas.forEach(p => {
                     const vParc = arredondarParaMultiplo((aParc / (1 - getTaxa(p))) / p, fator);
-                    let linha = `${emoCartao}${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-                    if (mostrarTotal) {
-                        linha += ` (R$ ${(ent + (vParc * p)).toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
-                    }
+                    let linha = `${emoCartao}${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                    if (mostrarTotal) linha += ` (R$ ${(ent + (vParc*p)).toLocaleString('pt-BR',{minimumFractionDigits:2})})`;
                     if (txtAdd) linha += ` ${txtAdd}`;
                     res.push(linha);
                 });
             }
-
             return res.join('\n');
         }
 
+        // ── Copiar / limpar ───────────────────────────────────────────────────
         function copiarTexto() {
             const txt = resultadoTextarea.value;
             if (!txt) return;
-            navigator.clipboard.writeText(txt).then(() => {
-                mensagemCopiado.classList.add('show');
-                setTimeout(() => mensagemCopiado.classList.remove('show'), 2000);
-            });
+            navigator.clipboard.writeText(txt).then(() => showToast('✅ Texto copiado!'));
         }
 
         function limparCampos() {
             if (!confirm('⚠️ Deseja realmente limpar todos os campos?')) return;
-            valorBaseInput.value = '';
-            parcelaEspecificaInput.value = '';
-            descontoPercentualInput.value = '';
-            descontoFixoInput.value = '';
-            lucroAdicionalInput.value = '';
-            acrescimoComissaoInput.value = '';
-            acrescimoPercentualInput.value = '';
-            valorEntradaInput.value = '';
-            productListTextarea.value = '';
-            textoAdicionalLinhaInput.value = '';
-            textoCabecalhoMensagemTextarea.value = '';
-            textoFinalMensagemTextarea.value = '';
+            valorBaseInput.value = ''; parcelaEspecificaInput.value = '';
+            descontoPercentualInput.value = ''; descontoFixoInput.value = '';
+            lucroAdicionalInput.value = ''; acrescimoComissaoInput.value = '';
+            acrescimoPercentualInput.value = ''; valorEntradaInput.value = '';
+            productListTextarea.value = ''; textoAdicionalLinhaInput.value = '';
+            textoCabecalhoMensagemTextarea.value = ''; textoFinalMensagemTextarea.value = '';
             resultadoTextarea.value = '';
-            products = [];
-            selectedProducts = [];
+            products = []; selectedProducts = []; productAdjustments = {};
             productListResult.innerHTML = '';
             discountSummary.classList.remove('active');
             valorBaseInput.classList.remove('has-value');
             parcelaEspecificaInput.classList.remove('invalid');
             taxasRapidas = {};
-            // resetar mini-opções
+            perProductAdjustCb.checked = false;
+            perProductToggleLabel.classList.remove('enabled');
             especificaMostrarPixCb.checked = true;
             especificaMostrarTotalCb.checked = false;
-            syncChipPix(true);  // Pix visivel por padrao
-            syncChipTotal(false);
+            syncChipPix(true); syncChipTotal(false);
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
         }
 
-        // Inicializar
+        // ── Event listeners ───────────────────────────────────────────────────
+        valorBaseInput.addEventListener('input',          () => { valorBaseInput.classList.toggle('has-value', !!valorBaseInput.value); atualizarResumoDescontos(); calcularParcelas(); });
+        descontoPercentualInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
+        descontoFixoInput.addEventListener('input',       () => { atualizarResumoDescontos(); calcularParcelas(); });
+        lucroAdicionalInput.addEventListener('input',     () => { atualizarResumoDescontos(); calcularParcelas(); });
+        acrescimoComissaoInput.addEventListener('input',  () => { atualizarResumoDescontos(); calcularParcelas(); });
+        acrescimoPercentualInput.addEventListener('input',() => { atualizarResumoDescontos(); calcularParcelas(); });
+        valorEntradaInput.addEventListener('input',       calcularParcelas);
+        fatorArredondamentoInput.addEventListener('input',calcularParcelas);
+
+        hideDinheiroPixCheckbox.addEventListener('change', () => { syncChipPix(!hideDinheiroPixCheckbox.checked); toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
+        showDebitoCheckbox.addEventListener('change',      () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
+        showComparisonCheckbox.addEventListener('change',  calcularParcelas);
+        porcentagemPixInput.addEventListener('input',      calcularParcelas);
+        porcentagemDebitoInput.addEventListener('input',   calcularParcelas);
+        hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
+        showTotalValueCheckbox.addEventListener('change',  () => { syncChipTotal(showTotalValueCheckbox.checked); calcularParcelas(); });
+        boldProductNameCheckbox.addEventListener('change', calcularParcelas);
+        textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
+        produtoPrefixInput.addEventListener('input',       calcularParcelas);
+        textoFinalMensagemTextarea.addEventListener('input',calcularParcelas);
+        textoCabecalhoMensagemTextarea.addEventListener('input',calcularParcelas);
+        emoticonDinheiroInput.addEventListener('input',    calcularParcelas);
+        emoticonCartaoInput.addEventListener('input',      calcularParcelas);
+
+        parcelaEspecificaInput.addEventListener('input', function() {
+            const parcelas = getParcelas();
+            const raw = this.value.trim();
+            const allValid = raw === '' || (parcelas.length > 0 && raw.split(',').every(s => { const n = parseInt(s.trim()); return !isNaN(n) && n >= 1 && n <= 18; }));
+            this.classList.toggle('invalid', raw !== '' && !allValid);
+            const current = new Set(parcelas.map(String));
+            Object.keys(taxasRapidas).forEach(k => { if (!current.has(k)) delete taxasRapidas[k]; });
+            atualizarVisibilidadeMiniOpcoes();
+            calcularParcelas();
+        });
+
+        selectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); }); calcularParcelas(); });
+        deselectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); }); calcularParcelas(); });
+
+        // ── Init ──────────────────────────────────────────────────────────────
         calcularParcelas();
         atualizarBadgeHistorico();
     </script>
