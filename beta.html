@@ -861,8 +861,8 @@ Capa silicone R$ 50,00
             if (dados.acrescimoComissao) extras.push(`Comissão: R$ ${parseFloat(dados.acrescimoComissao).toFixed(2)}`);
             if (dados.valorEntrada) extras.push(`Entrada: R$ ${parseFloat(dados.valorEntrada).toFixed(2)}`);
             if (dados.parcelaEspecifica) extras.push(`Parcela: ${dados.parcelaEspecifica}x`);
-            // id como string para funcionar com IDs numéricos do localStorage e IDs do Sheets
-            const sid = JSON.stringify(String(id));
+            // Usa aspas simples no onclick para não quebrar o atributo HTML
+            const sid = "'" + String(id).replace(/'/g, "\\'") + "'";
             return `<div class="historico-item">
                 <div class="historico-header">
                     <div class="historico-titulo">${titulo}</div>
