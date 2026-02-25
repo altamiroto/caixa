@@ -845,15 +845,20 @@ function onSheetsToggleChange() {
     const fonteEl = document.getElementById('historicoFonte');
     if (fonteEl) fonteEl.textContent = enabled ? '☁️ Google Sheets' : '💾 Local';
 }
-async function salvarNoSheets(dados) {
+async function sheetsPost(body) {
+    // Apps Script exige Content-Type text/plain para evitar preflight CORS
     const resp = await fetch(SHEETS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: new Date().toISOString(), titulo: dados.titulo || 'Sem título', payload: dados })
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(body)
     });
+    if (!resp.ok) throw new Error('Erro HTTP: ' + resp.status);
     const json = await resp.json();
     if (json.error) throw new Error(json.error);
     return json;
+}
+async function salvarNoSheets(dados) {
+    return sheetsPost({ date: new Date().toISOString(), titulo: dados.titulo || 'Sem título', payload: dados });
 }
 async function carregarDoSheets() {
     const resp = await fetch(SHEETS_URL);
@@ -863,13 +868,7 @@ async function carregarDoSheets() {
     return json;
 }
 async function excluirDoSheets(id) {
-    const resp = await fetch(SHEETS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', id: String(id) })
-    });
-    const json = await resp.json();
-    if (json.error) throw new Error(json.error);
+    return sheetsPost({ action: 'delete', id: String(id) });
 }
 
 // ── Histórico ─────────────────────────────────────────────────────────────
