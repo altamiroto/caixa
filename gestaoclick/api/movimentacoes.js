@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   // Monta a URL no formato que a API Betel espera:
   // /produtos/movimentacoes_estoque/{id}?cadastrado_inicio=...&cadastrado_fim=...
-  const urlApi = new URL(`https://api.beteltecnologia.com/produtos/movimentacoes_estoque/${id}`);
+  const urlApi = new URL(`https://app.api.click.app/produtos/movimentacoes_estoque/${id}`);
 
   Object.entries(params).forEach(([key, value]) => {
     urlApi.searchParams.append(key, value);
