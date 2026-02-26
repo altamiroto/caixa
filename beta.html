@@ -360,42 +360,45 @@
             animation: spin 0.75s linear infinite; margin: 0 auto 14px auto;
         }
 
-        /* ── Auth / Login ── */
+        /* ── Auth overlay (modal sobre tudo) ── */
         .auth-wall {
             position: fixed; inset: 0; z-index: 10000;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
-            flex-direction: column; gap: 0;
+            padding: 20px;
         }
         .auth-card {
-            background: rgba(255,255,255,0.07); backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 24px; padding: 44px 48px; text-align: center;
-            max-width: 380px; width: 90%; box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 20px; padding: 36px 32px; text-align: center;
+            max-width: 360px; width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: authPop 0.3s cubic-bezier(.34,1.4,.64,1);
         }
-        .auth-logo { font-size: 3.5rem; margin-bottom: 16px; }
-        .auth-title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
-        .auth-subtitle { font-size: 0.92rem; color: rgba(255,255,255,0.6); margin-bottom: 32px; line-height: 1.5; }
-        .auth-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
-        .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.15); }
-        .auth-divider span { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-        /* Barra de usuário logado */
+        @keyframes authPop { from { opacity:0; transform:scale(0.88) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .auth-logo  { font-size: 3rem; margin-bottom: 12px; line-height: 1; }
+        .auth-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+        .auth-sub   { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; }
+        .auth-note  { font-size: 0.72rem; color: var(--text-secondary); margin-top: 18px; line-height: 1.7; opacity: 0.7; }
+        /* User bar — dentro do .container */
         .user-bar {
             display: none; align-items: center; gap: 10px;
             background: var(--bg-primary); border: 2px solid var(--border-color);
-            border-radius: 12px; padding: 10px 16px; margin-bottom: 20px;
+            border-radius: 12px; padding: 10px 14px; margin-bottom: 16px;
+            width: 100%;
         }
-        .user-bar.visible { display: flex; }
-        .user-bar img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-        .user-bar-info { flex: 1; }
-        .user-bar-name { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
-        .user-bar-email { font-size: 0.75rem; color: var(--text-secondary); }
+        .user-bar img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); flex-shrink: 0; }
+        .user-bar-info { flex: 1; min-width: 0; overflow: hidden; }
+        .user-bar-name  { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-bar-email { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-bar-logout {
             background: none; border: 1.5px solid var(--border-color);
             color: var(--text-secondary); border-radius: 8px; padding: 5px 10px;
-            font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+            font-size: 0.76rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; flex-shrink: 0; white-space: nowrap;
         }
-        .user-bar-logout:hover { border-color: var(--danger-color); color: var(--danger-color); }
+        .user-bar-logout:hover { border-color: var(--danger-color); color: var(--danger-color); background: rgba(244,67,54,0.07); }
 
         @media (max-width: 600px) {
             .container { padding: 20px; }
@@ -417,33 +420,21 @@
     </style>
 </head>
 <body>
-    <!-- Auth Wall (shown when not logged in) -->
-    <div class="auth-wall" id="authWall">
+    <!-- Auth Wall (overlay — aparece sobre tudo) -->
+    <div class="auth-wall" id="authWall" style="display:none;">
         <div class="auth-card">
             <div class="auth-logo">💰</div>
             <div class="auth-title">Calculadora de Parcelas Pro</div>
-            <div class="auth-subtitle">Entre com sua conta Google para acessar seus cálculos salvos na nuvem</div>
-            <!-- Google One Tap button will be rendered here -->
-            <div id="googleSignInBtn"></div>
-            <div class="auth-divider"><span>acesso seguro via Google</span></div>
-            <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6;">
-                Seus dados ficam na sua própria planilha Google Sheets.<br>
-                Nenhuma informação é compartilhada.
-            </div>
+            <div class="auth-sub">Entre com sua conta Google para sincronizar seus cálculos com a nuvem</div>
+            <div id="googleSignInBtn" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
+            <button class="btn btn-outline" onclick="usarSemLogin()" style="width:100%;margin-top:4px;font-size:0.9rem;">
+                Continuar sem login
+            </button>
+            <div class="auth-note">Seus dados ficam na sua própria planilha.<br>Nenhuma informação é compartilhada.</div>
         </div>
     </div>
 
-    <!-- User bar -->
-    <div id="userBar" class="user-bar">
-        <img id="userAvatar" src="" alt="">
-        <div class="user-bar-info">
-            <div class="user-bar-name" id="userBarName"></div>
-            <div class="user-bar-email" id="userBarEmail"></div>
-        </div>
-        <button class="user-bar-logout" onclick="logoutGoogle()">Sair</button>
-    </div>
-
-        <div class="container">
+    <div class="container">
         <div class="header">
             <h1>💰 Calculadora de Parcelas Pro</h1>
             <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌓</button>
@@ -451,6 +442,31 @@
         <div class="quick-links">
             <a href="https://calculadoracaixa.netlify.app/listas/" target="_blank">📋 Processamento de Lista</a>
             | <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
+        </div>
+
+        <!-- Barra de conta — sempre visível no topo -->
+        <div id="accountBar" style="margin-bottom:16px;">
+            <!-- Estado: não logado -->
+            <div id="accountBarGuest" style="display:none;">
+                <button onclick="pedirLogin()" style="
+                    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+                    padding:11px 16px; border-radius:12px; cursor:pointer;
+                    background:var(--bg-primary); border:2px dashed var(--border-color);
+                    color:var(--text-secondary); font-size:0.9rem; font-weight:600;
+                    transition:all 0.2s;">
+                    <img src="https://www.google.com/favicon.ico" width="16" height="16" style="border-radius:2px;">
+                    Entrar com Google para sincronizar na nuvem ☁️
+                </button>
+            </div>
+            <!-- Estado: logado -->
+            <div id="userBar" class="user-bar" style="display:none;">
+                <img id="userAvatar" src="" alt="" onerror="this.style.display='none'">
+                <div class="user-bar-info">
+                    <div class="user-bar-name"  id="userBarName"></div>
+                    <div class="user-bar-email" id="userBarEmail"></div>
+                </div>
+                <button class="user-bar-logout" onclick="logoutGoogle()">Sair</button>
+            </div>
         </div>
 
         <div class="toggle-section">
@@ -688,11 +704,18 @@ Capa silicone R$ 50,00
                     <label for="historicoComentarios">Comentários (opcional):</label>
                     <textarea id="historicoComentarios" placeholder="Observações sobre este cálculo..." style="min-height: 80px;"></textarea>
                 </div>
-                <!-- SHEETS TOGGLE -->
-                <div class="per-product-toggle" id="sheetsToggleWrap" style="margin-bottom:15px;">
-                    <input type="checkbox" id="toggleSheets" onchange="onSheetsToggleChange()" style="accent-color:var(--secondary-color);">
-                    <label for="toggleSheets">☁️ Sincronizar com Google Sheets</label>
-                    <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Padrão: local</small>
+                <!-- SHEETS TOGGLE — só aparece se logado -->
+                <div id="sheetsLoginPrompt" style="display:none;margin-bottom:15px;">
+                    <button class="btn btn-outline" onclick="pedirLogin()" style="width:100%;font-size:0.88rem;border-color:var(--secondary-color);color:var(--secondary-color);">
+                        🔑 Entrar com Google para sincronizar com Sheets
+                    </button>
+                </div>
+                <div id="sheetsToggleArea" style="display:none;">
+                    <div class="per-product-toggle" id="sheetsToggleWrap" style="margin-bottom:15px;">
+                        <input type="checkbox" id="toggleSheets" onchange="onSheetsToggleChange()" style="accent-color:var(--secondary-color);">
+                        <label for="toggleSheets">☁️ Sincronizar com Google Sheets</label>
+                        <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Padrão: local</small>
+                    </div>
                 </div>
                 <div class="button-row">
                     <button class="btn btn-primary" onclick="salvarNoHistorico()">💾 Salvar Agora</button>
@@ -765,7 +788,13 @@ Capa silicone R$ 50,00
             if (!confirm('Deseja sair da sua conta Google?')) return;
             localStorage.removeItem(SESSION_KEY);
             _currentUser = null;
-            location.reload();
+            document.getElementById('userBar').style.display        = 'none';
+            document.getElementById('accountBarGuest').style.display = 'block';
+            document.getElementById('sheetsToggleArea').style.display  = 'none';
+            document.getElementById('sheetsLoginPrompt').style.display = 'none';
+            const cb = document.getElementById('toggleSheets');
+            if (cb) cb.checked = false;
+            onSheetsToggleChange();
         }
         function _onGoogleCredential(response) {
             const payload = _decodeJwt(response.credential);
@@ -777,31 +806,54 @@ Capa silicone R$ 50,00
             _showApp();
         }
         function _showApp() {
-            document.getElementById('authWall').style.display = 'none';
-            const bar = document.getElementById('userBar');
-            bar.classList.add('visible');
-            document.getElementById('userAvatar').src           = _currentUser.picture || '';
-            document.getElementById('userBarName').textContent  = _currentUser.name    || '';
-            document.getElementById('userBarEmail').textContent = _currentUser.email   || '';
+            document.getElementById('authWall').style.display      = 'none';
+            document.getElementById('accountBarGuest').style.display = 'none';
+            document.getElementById('userBar').style.display       = 'flex';
+            document.getElementById('userAvatar').src              = _currentUser.picture || '';
+            document.getElementById('userBarName').textContent     = _currentUser.name    || '';
+            document.getElementById('userBarEmail').textContent    = _currentUser.email   || '';
+            document.getElementById('sheetsLoginPrompt').style.display = 'none';
+            document.getElementById('sheetsToggleArea').style.display  = 'block';
             atualizarBadgeHistorico();
         }
-        function _showAuthWall() {
+        function _showGuestMode() {
+            document.getElementById('authWall').style.display       = 'none';
+            document.getElementById('accountBarGuest').style.display = 'block';
+            document.getElementById('userBar').style.display        = 'none';
+            document.getElementById('sheetsLoginPrompt').style.display = 'none';
+            document.getElementById('sheetsToggleArea').style.display  = 'none';
+            atualizarBadgeHistorico();
+        }
+        function usarSemLogin() { _showGuestMode(); }
+        function pedirLogin() {
             document.getElementById('authWall').style.display = 'flex';
+            _renderGoogleButton();
+        }
+        function _renderGoogleButton() {
             if (!window.google || !window.google.accounts) return;
             window.google.accounts.id.initialize({
                 client_id:   GOOGLE_CLIENT_ID,
                 callback:    _onGoogleCredential,
-                auto_select: true,
+                auto_select: false,
             });
             window.google.accounts.id.renderButton(
                 document.getElementById('googleSignInBtn'),
-                { theme: 'outline', size: 'large', text: 'signin_with', width: 280, logo_alignment: 'center' }
+                { theme: 'outline', size: 'large', text: 'signin_with', width: 260, logo_alignment: 'center' }
             );
-            window.google.accounts.id.prompt();
+        }
+        function _showAuthWall() {
+            document.getElementById('authWall').style.display = 'flex';
+            (function _tryRender() {
+                if (window.google && window.google.accounts) {
+                    _renderGoogleButton();
+                    window.google.accounts.id.prompt();
+                } else { setTimeout(_tryRender, 80); }
+            })();
         }
         function _initAuth() {
             _currentUser = _loadSession();
             if (_currentUser) { _showApp(); return; }
+            // Não obriga login — mostra a tela de login como modal
             _showAuthWall();
         }
         // Aguarda o script GSI do Google carregar antes de inicializar
@@ -811,13 +863,15 @@ Capa silicone R$ 50,00
         })();
 
         // ── Sheets ────────────────────────────────────────────────────────────
-        function isSheetsEnabled() { return document.getElementById('toggleSheets').checked; }
+        function isSheetsEnabled() { return !!(document.getElementById('toggleSheets') && document.getElementById('toggleSheets').checked); }
         function onSheetsToggleChange() {
             const on = isSheetsEnabled();
-            document.getElementById('sheetsToggleWrap').classList.toggle('enabled', on);
+            const wrap = document.getElementById('sheetsToggleWrap');
+            if (wrap) wrap.classList.toggle('enabled', on);
             const btnLimpar = document.getElementById('btnLimparHistorico');
             if (btnLimpar) btnLimpar.style.display = on ? 'none' : '';
-            document.getElementById('historicoFonte').textContent = on ? '☁️ Google Sheets' : '💾 Local';
+            const fonteEl = document.getElementById('historicoFonte');
+            if (fonteEl) fonteEl.textContent = on ? '☁️ Google Sheets' : '💾 Local';
         }
         async function sheetsPost(body) {
             if (_currentUser) body.user_email = _currentUser.email;
