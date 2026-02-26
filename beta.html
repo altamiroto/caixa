@@ -867,12 +867,10 @@ Capa silicone R$ 50,00
         }
         async function sheetsPost(body) {
             if (!_currentUser || !_currentUser.token) throw new Error('Não autenticado');
+            body._token = _currentUser.token; // token no body — headers customizados não funcionam no Apps Script
             const resp = await fetch(SHEETS_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type':  'text/plain;charset=utf-8',
-                    'Authorization': 'Bearer ' + _currentUser.token  // JWT validado pelo servidor
-                },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(body)
             });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -1139,9 +1137,7 @@ Capa silicone R$ 50,00
                 showModal('loading', 'Carregando...', 'Buscando registros no Google Sheets');
                 try {
                     if (!_currentUser || !_currentUser.token) throw new Error('Não autenticado');
-                    const resp = await fetch(SHEETS_URL, {
-                        headers: { 'Authorization': 'Bearer ' + _currentUser.token }
-                    });
+                    const resp = await fetch(SHEETS_URL + '?token=' + encodeURIComponent(_currentUser.token));
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const registros = await resp.json();
                     if (registros.error) throw new Error(registros.error);
