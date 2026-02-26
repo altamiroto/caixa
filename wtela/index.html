@@ -19,11 +19,7 @@
             --shadow-hover: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -41,16 +37,8 @@
             box-shadow: var(--shadow);
         }
 
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 5px;
-            font-size: 1.5rem;
-        }
-
-        .header p {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
+        h1 { color: var(--primary-color); margin-bottom: 5px; font-size: 1.5rem; }
+        .header p { color: var(--text-secondary); font-size: 0.85rem; }
 
         .controls {
             background: var(--bg-secondary);
@@ -67,20 +55,21 @@
             margin-bottom: 10px;
         }
 
-        .control-group {
+        .control-group { display: flex; flex-direction: column; }
+        .control-group label { font-weight: 600; margin-bottom: 5px; color: var(--text-primary); font-size: 0.8rem; }
+
+        /* ===== NOVO: input numérico para quantidade de fornecedores ===== */
+        .supplier-count-row {
             display: flex;
-            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 10px;
         }
+        .supplier-count-row .control-group { flex: 0 0 180px; }
+        .supplier-count-row .btn { height: 36px; padding: 0 16px; font-size: 13px; flex-shrink: 0; }
 
-        .control-group label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: var(--text-primary);
-            font-size: 0.8rem;
-        }
-
-        input[type="text"], 
-        input[type="number"], 
+        input[type="text"],
+        input[type="number"],
         select {
             width: 100%;
             padding: 8px 10px;
@@ -91,19 +80,15 @@
             background: var(--bg-secondary);
         }
 
-        input[type="text"]:focus, 
-        input[type="number"]:focus, 
+        input[type="text"]:focus,
+        input[type="number"]:focus,
         select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
         }
 
-        .container {
-            display: grid;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
+        .container { display: grid; gap: 12px; margin-bottom: 15px; }
 
         .text-area-wrapper {
             background: var(--bg-secondary);
@@ -113,14 +98,9 @@
             transition: all 0.3s ease;
         }
 
-        .text-area-wrapper:hover {
-            box-shadow: var(--shadow-hover);
-        }
+        .text-area-wrapper:hover { box-shadow: var(--shadow-hover); }
 
-        .supplier-header {
-            margin-bottom: 8px;
-        }
-
+        .supplier-header { margin-bottom: 8px; }
         .supplier-header input {
             font-weight: 600;
             background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
@@ -144,7 +124,7 @@
         textarea:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
         }
 
         .filtered-output {
@@ -163,44 +143,13 @@
             line-height: 1.4;
         }
 
-        .highlight {
-            background-color: #ffeb3b;
-            font-weight: bold;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
+        .highlight { background-color: #ffeb3b; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
+        .highlight-sub { background-color: #80deea; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
 
-        .highlight-sub {
-            background-color: #80deea;
-            font-weight: bold;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        .search-legend {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 6px;
-            display: none;
-        }
-
-        .search-legend.show {
-            display: block;
-        }
-
-        .search-legend span {
-            display: inline-block;
-            margin-right: 12px;
-        }
-
-        .legend-color {
-            display: inline-block;
-            width: 18px;
-            height: 10px;
-            border-radius: 3px;
-            margin-right: 4px;
-            vertical-align: middle;
-        }
+        .search-legend { font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; display: none; }
+        .search-legend.show { display: block; }
+        .search-legend span { display: inline-block; margin-right: 12px; }
+        .legend-color { display: inline-block; width: 18px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
 
         .btn {
             padding: 10px 18px;
@@ -217,41 +166,13 @@
             gap: 6px;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
-            color: white;
-        }
-
-        .btn-accent {
-            background: linear-gradient(135deg, var(--accent-color) 0%, #f57c00 100%);
-            color: white;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+        .btn:active { transform: translateY(0); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%); color: white; }
+        .btn-secondary { background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%); color: white; }
+        .btn-accent { background: linear-gradient(135deg, var(--accent-color) 0%, #f57c00 100%); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-primary); }
+        .btn:disabled { background: #cccccc; cursor: not-allowed; transform: none; }
 
         .action-buttons {
             background: var(--bg-secondary);
@@ -262,21 +183,11 @@
             text-align: center;
         }
 
-        .action-buttons .control-group {
-            margin-bottom: 10px;
-        }
+        .action-buttons .control-group { margin-bottom: 10px; }
 
-        .button-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+        .button-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
-        #historicoSelect {
-            margin-top: 8px;
-            display: none;
-        }
+        #historicoSelect { margin-top: 8px; display: none; }
 
         .advanced-section {
             background: var(--bg-secondary);
@@ -299,27 +210,12 @@
             font-size: 14px;
         }
 
-        .advanced-header:hover {
-            background: linear-gradient(135deg, #45a049 0%, var(--primary-color) 100%);
-        }
+        .advanced-header:hover { background: linear-gradient(135deg, #45a049 0%, var(--primary-color) 100%); }
 
-        .toggle-icon {
-            font-size: 18px;
-            transition: transform 0.3s;
-        }
-
-        .toggle-icon.rotated {
-            transform: rotate(180deg);
-        }
-
-        .advanced-content {
-            padding: 15px;
-            display: none;
-        }
-
-        .advanced-content.active {
-            display: block;
-        }
+        .toggle-icon { font-size: 18px; transition: transform 0.3s; }
+        .toggle-icon.rotated { transform: rotate(180deg); }
+        .advanced-content { padding: 15px; display: none; }
+        .advanced-content.active { display: block; }
 
         .api-info {
             background: #e3f2fd;
@@ -356,22 +252,10 @@
             font-size: 12px;
         }
 
-        .ai-result.show {
-            display: block;
-        }
+        .ai-result.show { display: block; }
 
-        .loading {
-            display: none;
-            color: var(--primary-color);
-            font-weight: bold;
-            margin-top: 8px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .loading.show {
-            display: block;
-        }
+        .loading { display: none; color: var(--primary-color); font-weight: bold; margin-top: 8px; text-align: center; font-size: 13px; }
+        .loading.show { display: block; }
 
         .fab {
             position: fixed;
@@ -385,7 +269,7 @@
             border: none;
             font-size: 1.4rem;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            box-shadow: 0 4px 12px rgba(33,150,243,0.4);
             transition: all 0.3s ease;
             z-index: 1000;
             display: flex;
@@ -393,14 +277,8 @@
             justify-content: center;
         }
 
-        .fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
-        }
-
-        .fab:active {
-            transform: scale(0.95);
-        }
+        .fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(33,150,243,0.6); }
+        .fab:active { transform: scale(0.95); }
 
         @media (max-width: 768px) {
             h1 { font-size: 1.3rem; }
@@ -412,25 +290,20 @@
             .btn { width: 100%; padding: 14px 18px; }
             .filtered-output { font-size: 12px; }
             .ai-prompt-area { min-height: 130px; }
+            .supplier-count-row { flex-wrap: wrap; }
+            .supplier-count-row .control-group { flex: 1 1 120px; }
         }
 
         @media (min-width: 769px) {
-            .container.grid-1 { grid-template-columns: 1fr; }
-            .container.grid-2 { grid-template-columns: repeat(2, 1fr); }
-            .container.grid-3 { grid-template-columns: repeat(3, 1fr); }
-            .container.grid-4 { grid-template-columns: repeat(4, 1fr); }
-            .container.grid-5 { grid-template-columns: repeat(5, 1fr); }
-            .container.grid-6 { grid-template-columns: repeat(6, 1fr); }
-            .container.grid-7 { grid-template-columns: repeat(7, 1fr); }
-            .container.grid-8,
-            .container.grid-9,
-            .container.grid-10,
-            .container.grid-11,
-            .container.grid-12,
-            .container.grid-13,
-            .container.grid-14,
-            .container.grid-15,
-            .container.grid-16 { grid-template-columns: repeat(8, 1fr); }
+            .container.grid-1  { grid-template-columns: repeat(1, 1fr); }
+            .container.grid-2  { grid-template-columns: repeat(2, 1fr); }
+            .container.grid-3  { grid-template-columns: repeat(3, 1fr); }
+            .container.grid-4  { grid-template-columns: repeat(4, 1fr); }
+            .container.grid-5  { grid-template-columns: repeat(5, 1fr); }
+            .container.grid-6  { grid-template-columns: repeat(6, 1fr); }
+            .container.grid-7  { grid-template-columns: repeat(7, 1fr); }
+            /* acima de 7, limita em 8 colunas para não quebrar layout */
+            .container.grid-many { grid-template-columns: repeat(8, 1fr); }
         }
 
         @keyframes slideIn {
@@ -469,29 +342,18 @@
     </div>
 
     <div class="controls">
-        <div class="control-row">
+        <!-- ===== ALTERAÇÃO: substituído <select> por input number + botão ===== -->
+        <div class="supplier-count-row">
             <div class="control-group">
-                <label for="telaSelector">📱 Número de Fornecedores (1-16):</label>
-                <select id="telaSelector" onchange="updateLayout()">
-                    <option value="1">1 Fornecedor</option>
-                    <option value="2">2 Fornecedores</option>
-                    <option value="3">3 Fornecedores</option>
-                    <option value="4" selected>4 Fornecedores</option>
-                    <option value="5">5 Fornecedores</option>
-                    <option value="6">6 Fornecedores</option>
-                    <option value="7">7 Fornecedores</option>
-                    <option value="8">8 Fornecedores</option>
-                    <option value="9">9 Fornecedores</option>
-                    <option value="10">10 Fornecedores</option>
-                    <option value="11">11 Fornecedores</option>
-                    <option value="12">12 Fornecedores</option>
-                    <option value="13">13 Fornecedores</option>
-                    <option value="14">14 Fornecedores</option>
-                    <option value="15">15 Fornecedores</option>
-                    <option value="16">16 Fornecedores</option>
-                </select>
+                <label for="numFornecedores">📱 Número de Fornecedores:</label>
+                <input type="number" id="numFornecedores" value="4" min="1" max="999" step="1">
             </div>
-            
+            <button class="btn btn-primary" onclick="aplicarQuantidade()">✔ Aplicar</button>
+            <button class="btn btn-outline" onclick="adicionarFornecedor()">➕ Adicionar</button>
+            <button class="btn btn-outline" onclick="removerFornecedor()">➖ Remover</button>
+        </div>
+
+        <div class="control-row">
             <div class="control-group">
                 <label for="contextLines">📝 Linhas de contexto:</label>
                 <input type="number" id="contextLines" value="2" min="0" max="10" onchange="applyFilter()">
@@ -548,7 +410,7 @@
                 <label for="productSearchAI">🔍 Produto(s) para buscar (separados por vírgula):</label>
                 <input type="text" id="productSearchAI" placeholder="Ex: Arroz, Feijão, Óleo de soja">
             </div>
-            
+
             <div class="control-group">
                 <label for="aiPrompt">✏️ Prompt personalizado para IA:</label>
                 <textarea id="aiPrompt" class="ai-prompt-area">Você é um assistente especializado em análise de preços de produtos. 
@@ -588,237 +450,126 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             </div>
 
             <div class="loading" id="loadingIndicator">⏳ Analisando os melhores preços...</div>
-            
             <div class="ai-result" id="aiResult"></div>
         </div>
     </div>
 
     <!-- FAB -->
     <button class="fab" onclick="scrollToTop()" title="Voltar ao topo">↑</button>
-
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
         const container = document.getElementById('container-listas');
-        const select = document.getElementById('telaSelector');
+        const numFornecedoresInput = document.getElementById('numFornecedores');
         const searchInput = document.getElementById('searchInput');
         const subSearchInput = document.getElementById('subSearchInput');
         const contextLinesInput = document.getElementById('contextLines');
         const DEFAULT_PROMPT = document.getElementById('aiPrompt').value;
+
+        // ===== URL do Google Apps Script — SUBSTITUA pela sua nova URL =====
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
 
         // ============================================================
         // NORMALIZAÇÃO UNICODE ROBUSTA
-        // Converte caracteres Unicode especiais (bold, italic, fraktur,
-        // matemáticos, etc.) para seus equivalentes ASCII básicos,
-        // depois remove acentos e converte para minúsculas.
-        // Isso garante que "X7", "x7", "𝗫𝟳", "Ｘ７" sejam iguais na busca.
         // ============================================================
         const unicodeMap = (() => {
             const map = {};
-
-            // Blocos de letras Unicode mapeados para ASCII
-            // Cada entrada: [codigoInicial, 'abcde...'] ou ranges numéricos
             const ranges = [
-                // Mathematical Bold
-                [0x1D400, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D41A, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Italic
-                [0x1D434, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D44E, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Bold Italic
-                [0x1D468, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D482, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Script
-                [0x1D49C, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D4B6, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Bold Script
-                [0x1D4D0, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D4EA, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Fraktur
-                [0x1D504, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D51E, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Double-struck
-                [0x1D538, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D552, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Bold Fraktur
-                [0x1D56C, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D586, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Sans-Serif
-                [0x1D5A0, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D5BA, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Sans-Serif Bold (𝗔-𝗭, 𝗮-𝘇)
-                [0x1D5D4, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D5EE, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Sans-Serif Italic
-                [0x1D608, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D622, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Sans-Serif Bold Italic
-                [0x1D63C, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D656, 'abcdefghijklmnopqrstuvwxyz'],
-                // Mathematical Monospace
-                [0x1D670, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0x1D68A, 'abcdefghijklmnopqrstuvwxyz'],
-                // Fullwidth Latin (Ａ-Ｚ, ａ-ｚ)
-                [0xFF21, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-                [0xFF41, 'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D400,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D41A,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D434,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D44E,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D468,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D482,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D49C,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D4B6,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D4D0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D4EA,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D504,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D51E,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D538,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D552,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D56C,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D586,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D5A0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D5BA,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D5D4,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D5EE,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D608,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D622,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D63C,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D656,'abcdefghijklmnopqrstuvwxyz'],
+                [0x1D670,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D68A,'abcdefghijklmnopqrstuvwxyz'],
+                [0xFF21,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0xFF41,'abcdefghijklmnopqrstuvwxyz'],
             ];
-
             ranges.forEach(([start, chars]) => {
-                for (let i = 0; i < chars.length; i++) {
-                    map[start + i] = chars[i];
-                }
+                for (let i = 0; i < chars.length; i++) map[start + i] = chars[i];
             });
-
-            // Dígitos matemáticos Bold (𝟎-𝟗)
-            [0x1D7CE, 0x1D7D8, 0x1D7E2, 0x1D7EC, 0x1D7F6].forEach(start => {
+            [0x1D7CE,0x1D7D8,0x1D7E2,0x1D7EC,0x1D7F6].forEach(start => {
                 for (let i = 0; i <= 9; i++) map[start + i] = String(i);
             });
-
-            // Fullwidth digits (０-９)
             for (let i = 0; i <= 9; i++) map[0xFF10 + i] = String(i);
-
-            // Casos individuais comuns
-            const individual = {
-                0x1D49: 'e', // ℰ script
-                0x210A: 'g', 0x210B: 'H', 0x210C: 'H', 0x210D: 'H',
-                0x2110: 'I', 0x2111: 'I', 0x2112: 'L', 0x2113: 'l',
-                0x211B: 'R', 0x211C: 'R', 0x211D: 'R',
-                0x2124: 'Z', 0x2128: 'Z',
-                0x212C: 'B', 0x212D: 'C', 0x212F: 'e', 0x2130: 'E',
-                0x2131: 'F', 0x2133: 'M', 0x2134: 'o',
-            };
-            Object.assign(map, individual);
-
             return map;
         })();
 
-        /**
-         * Normaliza um texto para busca insensível a:
-         * - maiúsculas/minúsculas
-         * - acentos e diacríticos
-         * - caracteres Unicode especiais (bold, italic, fullwidth, etc.)
-         */
         function normalizeForSearch(str) {
             if (!str) return '';
-            
-            // 1. Converte caracteres Unicode especiais via mapa
             let result = '';
             for (let i = 0; i < str.length; i++) {
                 const cp = str.codePointAt(i);
-                if (cp > 0xFFFF) i++; // Avança 2 posições para surrogate pairs
-                
-                if (unicodeMap[cp] !== undefined) {
-                    result += unicodeMap[cp];
-                } else {
-                    result += str[i];
-                    if (cp > 0xFFFF && str[i + 1]) {
-                        // já avançamos o índice, não precisamos adicionar o surrogate pair
-                    }
-                }
+                if (cp > 0xFFFF) i++;
+                result += (unicodeMap[cp] !== undefined) ? unicodeMap[cp] : str[i];
             }
-
-            // 2. Normaliza NFD (decompõe caracteres acentuados)
-            // 3. Remove diacríticos (acentos, cedilhas derivados)
-            // 4. Converte para minúsculas
-            return result
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase();
+            return result.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         }
 
-        /**
-         * Escapa caracteres especiais de RegExp para uso seguro em new RegExp()
-         */
-        function escapeRegExp(str) {
-            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
+        function escapeRegExp(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-        /**
-         * Destaca ocorrências de 'term' em 'text' (comparação normalizada),
-         * retornando HTML com <span class="highlight"> ao redor dos trechos.
-         * styleAttr permite sobrescrever o estilo (para sub-busca).
-         */
-        function highlightTerm(text, term, styleAttr = '') {
-            if (!term) return text;
-            
-            const normTerm = normalizeForSearch(term);
-            const normText = normalizeForSearch(text);
-            const escapedTerm = escapeRegExp(normTerm);
-            const regex = new RegExp(escapedTerm, 'g');
-
-            let result = '';
-            let lastIndex = 0;
-            let match;
-
-            // Itera sobre o texto NORMALIZADO para encontrar posições,
-            // mas extrai trechos do texto ORIGINAL (para preservar formatação original).
-            // Como normalização pode mudar comprimento (surrogate pairs),
-            // precisamos mapear índices normalizados → originais.
-            
-            // Mapeamento de índice normalizado → índice original
-            const indexMap = buildIndexMap(text);
-
-            while ((match = regex.exec(normText)) !== null) {
-                const normStart = match.index;
-                const normEnd = match.index + match[0].length;
-
-                // Obtém índices no texto original
-                const origStart = indexMap[normStart] !== undefined ? indexMap[normStart] : normStart;
-                const origEnd = indexMap[normEnd] !== undefined ? indexMap[normEnd] : normEnd;
-
-                // Texto antes do match
-                result += escapeHtml(text.slice(lastIndex, origStart));
-                // Texto do match com highlight
-                const style = styleAttr ? ` style="${styleAttr}"` : '';
-                result += `<span class="highlight"${style}>${escapeHtml(text.slice(origStart, origEnd))}</span>`;
-                lastIndex = origEnd;
-            }
-
-            result += escapeHtml(text.slice(lastIndex));
-            return result;
-        }
-
-        /**
-         * Constrói mapa: índice no texto normalizado → índice no texto original.
-         * Necessário porque normalização de caracteres pode mudar comprimentos.
-         */
         function buildIndexMap(originalText) {
             const map = {};
             let normIdx = 0;
-
             for (let i = 0; i < originalText.length; i++) {
                 const cp = originalText.codePointAt(i);
                 const isSurrogate = cp > 0xFFFF;
-
-                // Obtém o caractere original (1 ou 2 unidades UTF-16)
-                const origChar = isSurrogate
-                    ? originalText.slice(i, i + 2)
-                    : originalText[i];
-
-                // Normaliza o caractere individualmente
+                const origChar = isSurrogate ? originalText.slice(i, i + 2) : originalText[i];
                 const normChar = normalizeForSearch(origChar);
-
                 map[normIdx] = i;
                 normIdx += normChar.length;
-
-                if (isSurrogate) i++; // Pula surrogate pair
+                if (isSurrogate) i++;
             }
-
-            map[normIdx] = originalText.length; // Sentinela final
+            map[normIdx] = originalText.length;
             return map;
         }
 
         function escapeHtml(str) {
-            return str
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
-        // Toast notifications
+        function highlightBoth(text, mainTerm, normMain, subTerm, normSub) {
+            const normText = normalizeForSearch(text);
+            const indexMap = buildIndexMap(text);
+            const mainRegex = new RegExp(escapeRegExp(normMain), 'g');
+            const subRegex  = new RegExp(escapeRegExp(normSub), 'g');
+            const marks = new Array(text.length).fill(0);
+            let match;
+            while ((match = mainRegex.exec(normText)) !== null) {
+                const origStart = indexMap[match.index] ?? match.index;
+                const origEnd   = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
+                for (let i = origStart; i < origEnd; i++) marks[i] = 1;
+            }
+            while ((match = subRegex.exec(normText)) !== null) {
+                const origStart = indexMap[match.index] ?? match.index;
+                const origEnd   = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
+                for (let i = origStart; i < origEnd; i++) marks[i] = 2;
+            }
+            let html = '', i = 0;
+            while (i < text.length) {
+                const mark = marks[i];
+                let j = i;
+                while (j < text.length && marks[j] === mark) j++;
+                const chunk = escapeHtml(text.slice(i, j));
+                if      (mark === 1) html += `<span class="highlight">${chunk}</span>`;
+                else if (mark === 2) html += `<span class="highlight" style="background-color:#80deea;">${chunk}</span>`;
+                else html += chunk;
+                i = j;
+            }
+            return html;
+        }
+
+        function highlightTerm(text, term) {
+            if (!term) return escapeHtml(text);
+            return highlightBoth(text, term, normalizeForSearch(term), '', '');
+        }
+
+        // Toast
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -826,15 +577,11 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
         function toggleAdvanced() {
-            const content = document.getElementById('advancedContent');
-            const icon = document.getElementById('toggleIcon');
-            content.classList.toggle('active');
-            icon.classList.toggle('rotated');
+            document.getElementById('advancedContent').classList.toggle('active');
+            document.getElementById('toggleIcon').classList.toggle('rotated');
         }
 
         function resetPrompt() {
@@ -842,80 +589,318 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             showToast('✅ Prompt restaurado para o padrão');
         }
 
+        // ============================================================
+        // LAYOUT — agora sem limite de 16
+        // ============================================================
+
+        /** Retorna a classe CSS de grid para N colunas */
+        function getGridClass(n) {
+            if (n <= 7) return `grid-${n}`;
+            return 'grid-many'; // 8 colunas para telas grandes
+        }
+
+        /** Cria um bloco de fornecedor e retorna o elemento */
+        function criarBloco(index) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'text-area-wrapper';
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'supplier-header';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = `Fornecedor ${index}`;
+            input.placeholder = `Nome do fornecedor ${index}`;
+
+            const textarea = document.createElement('textarea');
+            textarea.id = `fornecedor${index}`;
+            textarea.dataset.originalContent = '';
+            textarea.placeholder = `Cole a lista do fornecedor ${index} aqui...\n\nEx:\nArroz 5kg - R$ 25,00\nFeijão 1kg - R$ 8,50\nÓleo 900ml - R$ 7,20`;
+
+            const resultDiv = document.createElement('div');
+            resultDiv.id = `resultado${index}`;
+            resultDiv.className = 'filtered-output';
+            resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+
+            headerDiv.appendChild(input);
+            wrapper.appendChild(headerDiv);
+            wrapper.appendChild(textarea);
+            wrapper.appendChild(resultDiv);
+
+            textarea.addEventListener('input', (e) => {
+                e.target.dataset.originalContent = e.target.value;
+                applyFilter();
+            });
+
+            return wrapper;
+        }
+
+        /** Aplica a quantidade digitada no input */
+        function aplicarQuantidade() {
+            let n = parseInt(numFornecedoresInput.value) || 1;
+            n = Math.max(1, n);
+            numFornecedoresInput.value = n;
+            setNumFornecedores(n);
+        }
+
+        function adicionarFornecedor() {
+            const atual = container.children.length;
+            const novo = atual + 1;
+            numFornecedoresInput.value = novo;
+            container.className = 'container ' + getGridClass(novo);
+            container.appendChild(criarBloco(novo));
+            applyFilter();
+        }
+
+        function removerFornecedor() {
+            if (container.children.length <= 1) { showToast('⚠️ Mínimo de 1 fornecedor', 'error'); return; }
+            container.removeChild(container.lastChild);
+            const novo = container.children.length;
+            numFornecedoresInput.value = novo;
+            container.className = 'container ' + getGridClass(novo);
+            applyFilter();
+        }
+
+        function setNumFornecedores(n) {
+            const atual = container.children.length;
+            if (n > atual) {
+                for (let i = atual + 1; i <= n; i++) container.appendChild(criarBloco(i));
+            } else if (n < atual) {
+                while (container.children.length > n) container.removeChild(container.lastChild);
+            }
+            container.className = 'container ' + getGridClass(n);
+            applyFilter();
+        }
+
+        // ============================================================
+        // FILTRO PRINCIPAL
+        // ============================================================
+        function applyFilter() {
+            const searchTerm    = searchInput.value.trim();
+            const subSearchTerm = subSearchInput.value.trim();
+            const contextLines  = Math.max(0, parseInt(contextLinesInput.value) || 0);
+            const normSearch    = normalizeForSearch(searchTerm);
+            const normSubSearch = normalizeForSearch(subSearchTerm);
+
+            const searchLegend = document.getElementById('searchLegend');
+            searchLegend.classList.toggle('show', normSearch.length > 0 && normSubSearch.length > 0);
+
+            const textareas = container.querySelectorAll('textarea');
+
+            textareas.forEach(textarea => {
+                const idx = textarea.id.replace('fornecedor', '');
+                const resultDiv = document.getElementById(`resultado${idx}`);
+                const originalContent = textarea.dataset.originalContent || textarea.value;
+                if (!textarea.dataset.originalContent) textarea.dataset.originalContent = originalContent;
+
+                const lines = originalContent.split('\n');
+
+                if (normSearch.length === 0) {
+                    resultDiv.style.display = 'none';
+                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
+                    return;
+                }
+
+                resultDiv.style.display = 'block';
+                const normLines = lines.map(l => normalizeForSearch(l));
+                let filteredLinesWithHighlight = [];
+                let lineAdded = new Array(lines.length).fill(false);
+
+                lines.forEach((line, index) => {
+                    if (!normLines[index].includes(normSearch)) return;
+                    const start = Math.max(0, index - contextLines);
+                    const end   = Math.min(lines.length - 1, index + contextLines);
+                    const blocoNorm = normLines.slice(start, end + 1).join(' ');
+                    if (normSubSearch && !blocoNorm.includes(normSubSearch)) return;
+
+                    for (let i = start; i <= end; i++) {
+                        if (lineAdded[i]) continue;
+                        const html = normSubSearch
+                            ? highlightBoth(lines[i], searchTerm, normSearch, subSearchTerm, normSubSearch)
+                            : highlightTerm(lines[i], searchTerm);
+                        filteredLinesWithHighlight.push(html);
+                        lineAdded[i] = true;
+                    }
+                });
+
+                if (filteredLinesWithHighlight.length === 0) {
+                    const subText = normSubSearch ? ` com "${subSearchInput.value}"` : '';
+                    resultDiv.innerHTML = `<span style="color:var(--danger-color);">❌ Nenhum resultado para "${searchInput.value}"${subText}</span>`;
+                } else {
+                    resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
+                }
+            });
+        }
+
+        // ============================================================
+        // PERSISTÊNCIA — agora usa JSON compacto (coluna única)
+        // ============================================================
+
+        /** Serializa todos os fornecedores em JSON */
+        function coletarDados() {
+            const textareas = container.querySelectorAll('textarea');
+            const inputs    = container.querySelectorAll('.supplier-header input[type=text]');
+            const suppliers = [];
+            for (let i = 0; i < textareas.length; i++) {
+                suppliers.push({
+                    name: inputs[i]?.value || `Fornecedor ${i + 1}`,
+                    text: textareas[i]?.value || ''
+                });
+            }
+            return suppliers;
+        }
+
+        async function salvarDados() {
+            const tag       = document.getElementById('tagInput').value || '';
+            const suppliers = coletarDados();
+            const payload   = { tag, suppliers: JSON.stringify(suppliers) };
+
+            try {
+                showToast('⏳ Salvando dados...');
+                const res  = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast('✅ Dados salvos com sucesso!');
+                    document.getElementById('tagInput').value = '';
+                } else {
+                    throw new Error(JSON.stringify(json));
+                }
+            } catch (err) {
+                showToast('❌ Erro ao salvar: ' + err.message, 'error');
+            }
+        }
+
+        async function carregarHistorico() {
+            try {
+                showToast('⏳ Carregando histórico...');
+                const res = await fetch(SCRIPT_URL);
+                if (!res.ok) throw new Error('Erro HTTP: ' + res.status);
+                const data = await res.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    showToast('⚠️ Nenhum registro encontrado', 'error');
+                    return;
+                }
+
+                const selectHistorico = document.getElementById('historicoSelect');
+                selectHistorico.innerHTML = '<option value="">Selecione um histórico...</option>';
+                data.forEach((item, index) => {
+                    const opt = document.createElement('option');
+                    const dataLocal = new Date(item.date).toLocaleString('pt-BR');
+                    const tagText   = item.tag ? ` (${item.tag})` : '';
+                    // conta fornecedores
+                    let count = '';
+                    try {
+                        const s = JSON.parse(item.suppliers);
+                        count = ` [${s.length} forn.]`;
+                    } catch(e) {}
+                    opt.value = index;
+                    opt.textContent = `${index + 1} - ${dataLocal}${tagText}${count}`;
+                    selectHistorico.appendChild(opt);
+                });
+
+                selectHistorico.style.display = 'block';
+                selectHistorico.dataset.registros = JSON.stringify(data);
+                showToast('✅ Histórico carregado!');
+            } catch (err) {
+                showToast('❌ Erro ao carregar histórico: ' + err.message, 'error');
+            }
+        }
+
+        function aplicarHistorico() {
+            const selectHistorico = document.getElementById('historicoSelect');
+            const index = parseInt(selectHistorico.value);
+            if (isNaN(index)) return;
+
+            const data     = JSON.parse(selectHistorico.dataset.registros);
+            const registro = data[index];
+
+            let suppliers = [];
+            try { suppliers = JSON.parse(registro.suppliers); } catch(e) {}
+
+            if (suppliers.length === 0) {
+                showToast('⚠️ Registro sem fornecedores', 'error');
+                return;
+            }
+
+            numFornecedoresInput.value = suppliers.length;
+            setNumFornecedores(suppliers.length);
+
+            setTimeout(() => {
+                const textareas = container.querySelectorAll('textarea');
+                const inputs    = container.querySelectorAll('.supplier-header input[type=text]');
+                const tagInput  = document.getElementById('tagInput');
+
+                if (tagInput) tagInput.value = registro.tag || '';
+
+                suppliers.forEach((s, i) => {
+                    if (inputs[i])    inputs[i].value = s.name || '';
+                    if (textareas[i]) {
+                        textareas[i].value = s.text || '';
+                        textareas[i].dataset.originalContent = textareas[i].value;
+                    }
+                });
+
+                showToast(`✅ Registro carregado com ${suppliers.length} fornecedor(es)!`);
+                applyFilter();
+            }, 100);
+        }
+
+        // ============================================================
+        // IA
+        // ============================================================
         async function listModels() {
             const resultDiv = document.getElementById('aiResult');
             const loadingIndicator = document.getElementById('loadingIndicator');
-            const listModelsBtn = document.getElementById('listModelsBtn');
-
+            const btn = document.getElementById('listModelsBtn');
             loadingIndicator.classList.add('show');
-            listModelsBtn.disabled = true;
+            btn.disabled = true;
             resultDiv.classList.remove('show');
-
             try {
                 const response = await fetch("https://caixa-kal3.vercel.app/api/gemini", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        systemPrompt: "Liste os modelos disponíveis.",
-                        messages: "Quais modelos estão disponíveis?"
-                    })
+                    body: JSON.stringify({ systemPrompt: "Liste os modelos disponíveis.", messages: "Quais modelos estão disponíveis?" })
                 });
-
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Erro na API");
-
-                let modelsList = "📋 ANÁLISE DE MODELOS DISPONÍVEIS:\n\n";
-                if (data.choices && data.choices[0]?.message?.content) {
-                    modelsList += data.choices[0].message.content;
-                } else {
-                    modelsList = "⚠️ Resposta inesperada da API.";
-                }
-
-                resultDiv.textContent = modelsList;
+                resultDiv.textContent = data.choices?.[0]?.message?.content || "⚠️ Resposta inesperada.";
                 resultDiv.classList.add('show');
-                showToast('✅ Modelos listados com sucesso');
+                showToast('✅ Modelos listados');
             } catch (error) {
-                resultDiv.textContent = `❌ Erro ao listar modelos:\n\n${error.message}`;
+                resultDiv.textContent = `❌ Erro:\n${error.message}`;
                 resultDiv.classList.add('show');
-                showToast('❌ Erro ao listar modelos', 'error');
+                showToast('❌ Erro', 'error');
             } finally {
                 loadingIndicator.classList.remove('show');
-                listModelsBtn.disabled = false;
+                btn.disabled = false;
             }
         }
 
         async function analyzeWithAI() {
-            const productInput = document.getElementById('productSearchAI').value.trim();
-            const promptTemplate = document.getElementById('aiPrompt').value;
-            const resultDiv = document.getElementById('aiResult');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const analyzeBtn = document.getElementById('analyzeBtn');
+            const productInput    = document.getElementById('productSearchAI').value.trim();
+            const promptTemplate  = document.getElementById('aiPrompt').value;
+            const resultDiv       = document.getElementById('aiResult');
+            const loadingIndicator= document.getElementById('loadingIndicator');
+            const analyzeBtn      = document.getElementById('analyzeBtn');
 
-            if (!productInput) {
-                showToast('⚠️ Digite ao menos um produto', 'error');
-                return;
-            }
+            if (!productInput) { showToast('⚠️ Digite ao menos um produto', 'error'); return; }
 
             const textareas = container.querySelectorAll('textarea');
-            const inputs = container.querySelectorAll('.supplier-header input[type=text]');
-            
+            const inputs    = container.querySelectorAll('.supplier-header input[type=text]');
             let supplierData = '';
             for (let i = 0; i < textareas.length; i++) {
-                const supplierName = inputs[i]?.value || `Fornecedor ${i + 1}`;
-                const supplierList = textareas[i]?.value || '';
-                if (supplierList.trim()) {
-                    supplierData += `\n\n=== ${supplierName} ===\n${supplierList}`;
-                }
+                const name = inputs[i]?.value || `Fornecedor ${i+1}`;
+                const list = textareas[i]?.value || '';
+                if (list.trim()) supplierData += `\n\n=== ${name} ===\n${list}`;
             }
+            if (!supplierData.trim()) { showToast('⚠️ Nenhuma lista encontrada', 'error'); return; }
 
-            if (!supplierData.trim()) {
-                showToast('⚠️ Nenhuma lista encontrada', 'error');
-                return;
-            }
-
-            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) +
-                               '\n\nLISTAS DE FORNECEDORES:' + supplierData;
-
+            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) + '\n\nLISTAS DE FORNECEDORES:' + supplierData;
             loadingIndicator.classList.add('show');
             analyzeBtn.disabled = true;
             resultDiv.classList.remove('show');
@@ -929,11 +914,9 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                         messages: finalPrompt
                     })
                 });
-
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Erro na API");
-
-                if (data.choices && data.choices[0]?.message?.content) {
+                if (data.choices?.[0]?.message?.content) {
                     resultDiv.textContent = data.choices[0].message.content;
                     resultDiv.classList.add('show');
                     showToast('✅ Análise concluída!');
@@ -942,7 +925,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                     throw new Error('Resposta em formato inesperado.');
                 }
             } catch (error) {
-                resultDiv.textContent = `❌ Erro ao analisar:\n\n${error.message}`;
+                resultDiv.textContent = `❌ Erro:\n${error.message}`;
                 resultDiv.classList.add('show');
                 showToast('❌ Erro na análise', 'error');
             } finally {
@@ -951,325 +934,19 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             }
         }
 
-        function setupListeners() {
-            const textareas = container.querySelectorAll('textarea');
-            textareas.forEach(textarea => {
-                textarea.removeEventListener('input', saveOriginalContent);
-                textarea.addEventListener('input', saveOriginalContent);
-            });
-        }
-
-        function saveOriginalContent(event) {
-            const textarea = event.target;
-            textarea.dataset.originalContent = textarea.value;
-            applyFilter();
-        }
-
-        function updateLayout() {
-            const numTelas = parseInt(select.value);
-            const currentNumTelas = container.children.length;
-
-            container.className = 'container';
-            if (window.innerWidth > 768) {
-                container.classList.add(`grid-${numTelas}`);
-            }
-
-            if (numTelas > currentNumTelas) {
-                for (let i = currentNumTelas + 1; i <= numTelas; i++) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'text-area-wrapper';
-
-                    const headerDiv = document.createElement('div');
-                    headerDiv.className = 'supplier-header';
-
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = `Fornecedor ${i}`;
-                    input.placeholder = `Nome do fornecedor ${i}`;
-
-                    const textarea = document.createElement('textarea');
-                    textarea.id = `fornecedor${i}`;
-                    textarea.dataset.originalContent = "";
-                    textarea.placeholder = `Cole a lista do fornecedor ${i} aqui...\n\nEx:\nArroz 5kg - R$ 25,00\nFeijão 1kg - R$ 8,50\nÓleo 900ml - R$ 7,20`;
-                    
-                    const resultDiv = document.createElement('div');
-                    resultDiv.id = `resultado${i}`;
-                    resultDiv.className = 'filtered-output';
-                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-
-                    headerDiv.appendChild(input);
-                    wrapper.appendChild(headerDiv);
-                    wrapper.appendChild(textarea);
-                    wrapper.appendChild(resultDiv);
-                    container.appendChild(wrapper);
-                }
-            } else if (numTelas < currentNumTelas) {
-                while (container.children.length > numTelas) {
-                    container.removeChild(container.lastChild);
-                }
-            }
-            setupListeners();
-            applyFilter();
-        }
-
         // ============================================================
-        // FILTRO PRINCIPAL — usa normalizeForSearch em tudo
+        // INICIALIZAÇÃO
         // ============================================================
-        function applyFilter() {
-            const searchTerm = searchInput.value.trim();
-            const subSearchTerm = subSearchInput.value.trim();
-            const contextLines = Math.max(0, parseInt(contextLinesInput.value) || 0);
+        setNumFornecedores(4);
 
-            // Termos normalizados para comparação
-            const normSearch = normalizeForSearch(searchTerm);
-            const normSubSearch = normalizeForSearch(subSearchTerm);
-
-            // Mostrar/ocultar legenda
-            const searchLegend = document.getElementById('searchLegend');
-            if (normSearch.length > 0 && normSubSearch.length > 0) {
-                searchLegend.classList.add('show');
-            } else {
-                searchLegend.classList.remove('show');
-            }
-
-            const textareas = container.querySelectorAll('textarea');
-
-            textareas.forEach(textarea => {
-                const resultDivId = `resultado${textarea.id.replace('fornecedor', '')}`;
-                const resultDiv = document.getElementById(resultDivId);
-
-                const originalContent = textarea.dataset.originalContent || textarea.value;
-                if (!textarea.dataset.originalContent) {
-                    textarea.dataset.originalContent = originalContent;
-                }
-
-                const lines = originalContent.split('\n');
-
-                if (normSearch.length === 0) {
-                    resultDiv.style.display = 'none';
-                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-                    return;
-                }
-
-                resultDiv.style.display = 'block';
-
-                // Pré-normaliza todas as linhas para evitar recalcular
-                const normLines = lines.map(l => normalizeForSearch(l));
-
-                let filteredLinesWithHighlight = [];
-                let lineAdded = new Array(lines.length).fill(false);
-                const escapedSearch = escapeRegExp(normSearch);
-                const escapedSubSearch = normSubSearch ? escapeRegExp(normSubSearch) : '';
-
-                lines.forEach((line, index) => {
-                    // Verifica se a linha contém o termo principal
-                    if (!normLines[index].includes(normSearch)) return;
-
-                    // Define intervalo de contexto
-                    const start = Math.max(0, index - contextLines);
-                    const end = Math.min(lines.length - 1, index + contextLines);
-
-                    // Texto do bloco normalizado (para verificar sub-busca)
-                    const blocoNorm = normLines.slice(start, end + 1).join(' ');
-
-                    // Verifica sub-busca no bloco
-                    if (normSubSearch && !blocoNorm.includes(normSubSearch)) return;
-
-                    // Adiciona linhas do bloco com highlight
-                    for (let i = start; i <= end; i++) {
-                        if (lineAdded[i]) continue;
-
-                        let html = highlightTerm(lines[i], searchTerm);
-                        if (normSubSearch) {
-                            // Re-aplica highlight de sub-busca por cima, no HTML resultante
-                            // Como highlightTerm retorna HTML, precisamos aplicar no texto original
-                            // Estratégia: aplicar ambos highlights ao mesmo tempo no texto original
-                            html = highlightBoth(lines[i], searchTerm, normSearch, subSearchTerm, normSubSearch);
-                        }
-
-                        filteredLinesWithHighlight.push(html);
-                        lineAdded[i] = true;
-                    }
-                });
-
-                if (filteredLinesWithHighlight.length === 0) {
-                    const subText = normSubSearch ? ` com "${subSearchInput.value}"` : '';
-                    resultDiv.innerHTML = `<span style="color: var(--danger-color);">❌ Nenhum resultado para "${searchInput.value}"${subText}</span>`;
-                } else {
-                    resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
-                }
-            });
-        }
-
-        /**
-         * Aplica highlight de AMBOS os termos (principal e sub-busca) em uma linha,
-         * usando o texto original e comparação normalizada.
-         * O highlight principal é amarelo; o sub-busca é ciano.
-         * Quando há sobreposição, prevalece o sub-busca.
-         */
-        function highlightBoth(text, mainTerm, normMain, subTerm, normSub) {
-            const normText = normalizeForSearch(text);
-            const indexMap = buildIndexMap(text);
-            
-            // Encontra todos os matches para cada termo
-            const mainRegex = new RegExp(escapeRegExp(normMain), 'g');
-            const subRegex = new RegExp(escapeRegExp(normSub), 'g');
-
-            // Cria array de marcações: 0=nenhum, 1=principal, 2=sub
-            const marks = new Array(text.length).fill(0);
-
-            let match;
-            // Marca main
-            while ((match = mainRegex.exec(normText)) !== null) {
-                const origStart = indexMap[match.index] ?? match.index;
-                const origEnd = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
-                for (let i = origStart; i < origEnd; i++) marks[i] = 1;
-            }
-            // Marca sub (sobrescreve main onde há sobreposição)
-            while ((match = subRegex.exec(normText)) !== null) {
-                const origStart = indexMap[match.index] ?? match.index;
-                const origEnd = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
-                for (let i = origStart; i < origEnd; i++) marks[i] = 2;
-            }
-
-            // Constrói HTML agrupando runs consecutivos do mesmo tipo
-            let html = '';
-            let i = 0;
-            while (i < text.length) {
-                const mark = marks[i];
-                let j = i;
-                while (j < text.length && marks[j] === mark) j++;
-                const chunk = escapeHtml(text.slice(i, j));
-                if (mark === 1) {
-                    html += `<span class="highlight">${chunk}</span>`;
-                } else if (mark === 2) {
-                    html += `<span class="highlight" style="background-color: #80deea;">${chunk}</span>`;
-                } else {
-                    html += chunk;
-                }
-                i = j;
-            }
-            return html;
-        }
-
-        function initializeContent() {
-            container.querySelectorAll('textarea').forEach(textarea => {
-                textarea.dataset.originalContent = textarea.value;
-            });
-        }
-
-        updateLayout();
-        initializeContent();
-
-        container.addEventListener('change', (event) => {
-            if (event.target.tagName === 'TEXTAREA') {
-                event.target.dataset.originalContent = event.target.value;
-                applyFilter();
-            }
+        numFornecedoresInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') aplicarQuantidade();
         });
 
-        window.addEventListener('resize', () => updateLayout());
-
-        // Save data
-        async function salvarDados() {
-            const textareas = container.querySelectorAll('textarea');
-            const inputs = container.querySelectorAll('.supplier-header input[type=text]');
-            const tagInput = document.getElementById('tagInput');
-            
-            const params = new URLSearchParams();
-            params.append('tag', tagInput.value || '');
-            
-            for (let i = 0; i < 16; i++) {
-                params.append(`name${i+1}`, inputs[i]?.value || '');
-                params.append(`text${i+1}`, textareas[i]?.value || '');
-            }
-
-            try {
-                showToast('⏳ Salvando dados...');
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-                const json = await res.json();
-                if (json.status === 'success') {
-                    showToast('✅ Dados salvos com sucesso!');
-                    tagInput.value = '';
-                } else {
-                    throw new Error(JSON.stringify(json));
-                }
-            } catch (err) {
-                showToast('❌ Erro ao salvar: ' + err.message, 'error');
-            }
-        }
-
-        async function carregarHistorico() {
-            try {
-                showToast('⏳ Carregando histórico...');
-                const res = await fetch(SCRIPT_URL);
-                if (!res.ok) throw new Error("Erro HTTP: " + res.status);
-                const data = await res.json();
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    showToast('⚠️ Nenhum registro encontrado', 'error');
-                    return;
-                }
-
-                const selectHistorico = document.getElementById("historicoSelect");
-                selectHistorico.innerHTML = '<option value="">Selecione um histórico...</option>';
-                data.forEach((item, index) => {
-                    const opt = document.createElement("option");
-                    const dataLocal = new Date(item.date).toLocaleString("pt-BR");
-                    const tagText = item.tag ? ` (${item.tag})` : '';
-                    opt.value = index;
-                    opt.textContent = `${index + 1} - ${dataLocal}${tagText}`;
-                    selectHistorico.appendChild(opt);
-                });
-
-                selectHistorico.style.display = "block";
-                selectHistorico.dataset.registros = JSON.stringify(data);
-                showToast('✅ Histórico carregado!');
-            } catch (err) {
-                showToast('❌ Erro ao carregar histórico: ' + err.message, 'error');
-            }
-        }
-
-        function aplicarHistorico() {
-            const selectHistorico = document.getElementById("historicoSelect");
-            const index = parseInt(selectHistorico.value);
-            if (isNaN(index)) return;
-
-            const data = JSON.parse(selectHistorico.dataset.registros);
-            const tagInput = document.getElementById("tagInput");
-            const registro = data[index];
-
-            let numFornecedoresComDados = 0;
-            for (let i = 0; i < 16; i++) {
-                if (registro[`name${i+1}`] || registro[`text${i+1}`]) {
-                    numFornecedoresComDados = i + 1;
-                }
-            }
-
-            if (numFornecedoresComDados > 0) {
-                select.value = numFornecedoresComDados;
-                updateLayout();
-            }
-
-            setTimeout(() => {
-                const textareas = container.querySelectorAll('textarea');
-                const inputs = container.querySelectorAll('.supplier-header input[type=text]');
-                
-                if (tagInput) tagInput.value = registro['tag'] || '';
-
-                for (let i = 0; i < numFornecedoresComDados; i++) {
-                    if (inputs[i]) inputs[i].value = registro[`name${i+1}`] || '';
-                    if (textareas[i]) {
-                        textareas[i].value = registro[`text${i+1}`] || '';
-                        textareas[i].dataset.originalContent = textareas[i].value;
-                    }
-                }
-
-                showToast('✅ Registro carregado com ' + numFornecedoresComDados + ' fornecedor(es)!');
-                applyFilter();
-            }, 100);
-        }
+        window.addEventListener('resize', () => {
+            const n = container.children.length;
+            container.className = 'container ' + getGridClass(n);
+        });
     </script>
-
 </body>
 </html>
