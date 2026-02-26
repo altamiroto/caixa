@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Parcelas Pro</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -358,6 +359,44 @@
             border: 5px solid var(--border-color); border-top-color: var(--secondary-color);
             animation: spin 0.75s linear infinite; margin: 0 auto 14px auto;
         }
+
+        /* ── Auth / Login ── */
+        .auth-wall {
+            position: fixed; inset: 0; z-index: 10000;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 0;
+        }
+        .auth-card {
+            background: rgba(255,255,255,0.07); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 24px; padding: 44px 48px; text-align: center;
+            max-width: 380px; width: 90%; box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        }
+        .auth-logo { font-size: 3.5rem; margin-bottom: 16px; }
+        .auth-title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .auth-subtitle { font-size: 0.92rem; color: rgba(255,255,255,0.6); margin-bottom: 32px; line-height: 1.5; }
+        .auth-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+        .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.15); }
+        .auth-divider span { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+        /* Barra de usuário logado */
+        .user-bar {
+            display: none; align-items: center; gap: 10px;
+            background: var(--bg-primary); border: 2px solid var(--border-color);
+            border-radius: 12px; padding: 10px 16px; margin-bottom: 20px;
+        }
+        .user-bar.visible { display: flex; }
+        .user-bar img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+        .user-bar-info { flex: 1; }
+        .user-bar-name { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+        .user-bar-email { font-size: 0.75rem; color: var(--text-secondary); }
+        .user-bar-logout {
+            background: none; border: 1.5px solid var(--border-color);
+            color: var(--text-secondary); border-radius: 8px; padding: 5px 10px;
+            font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+        }
+        .user-bar-logout:hover { border-color: var(--danger-color); color: var(--danger-color); }
+
         @media (max-width: 600px) {
             .container { padding: 20px; }
             h1 { font-size: 1.5rem; }
@@ -378,7 +417,33 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Auth Wall (shown when not logged in) -->
+    <div class="auth-wall" id="authWall">
+        <div class="auth-card">
+            <div class="auth-logo">💰</div>
+            <div class="auth-title">Calculadora de Parcelas Pro</div>
+            <div class="auth-subtitle">Entre com sua conta Google para acessar seus cálculos salvos na nuvem</div>
+            <!-- Google One Tap button will be rendered here -->
+            <div id="googleSignInBtn"></div>
+            <div class="auth-divider"><span>acesso seguro via Google</span></div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6;">
+                Seus dados ficam na sua própria planilha Google Sheets.<br>
+                Nenhuma informação é compartilhada.
+            </div>
+        </div>
+    </div>
+
+    <!-- User bar -->
+    <div id="userBar" class="user-bar">
+        <img id="userAvatar" src="" alt="">
+        <div class="user-bar-info">
+            <div class="user-bar-name" id="userBarName"></div>
+            <div class="user-bar-email" id="userBarEmail"></div>
+        </div>
+        <button class="user-bar-logout" onclick="logoutGoogle()">Sair</button>
+    </div>
+
+        <div class="container">
         <div class="header">
             <h1>💰 Calculadora de Parcelas Pro</h1>
             <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌓</button>
@@ -666,22 +731,96 @@ Capa silicone R$ 50,00
     </button>
 
     <script>
-        // ── Sheets config ─────────────────────────────────────────────────────
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwSXYcTYjsW4SjHf6s7zgD_0gjxnLfq23fPTsERsVNI2DTU2Nq81XZe34WlhvGiq2tI/exec';
-        let _sheetsCache = [];
+        // ── Config ───────────────────────────────────────────────────────────
+        const SHEETS_URL       = 'https://script.google.com/macros/s/AKfycbwSXYcTYjsW4SjHf6s7zgD_0gjxnLfq23fPTsERsVNI2DTU2Nq81XZe34WlhvGiq2tI/exec';
+        const GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com'; // ← cole seu Client ID aqui
+        const SESSION_KEY      = 'calc_gsession_v1';
+        const SESSION_DAYS     = 90;
+        let _sheetsCache       = [];
+        let _currentUser       = null; // { email, name, picture, expires }
 
+        // ── Auth ──────────────────────────────────────────────────────────────
+        function _decodeJwt(token) {
+            try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
+            catch(e) { return null; }
+        }
+        function _saveSession(payload) {
+            const s = {
+                email:   payload.email,
+                name:    payload.name   || '',
+                picture: payload.picture || '',
+                expires: Date.now() + SESSION_DAYS * 86400000
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+            return s;
+        }
+        function _loadSession() {
+            try {
+                const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+                if (!s || Date.now() > s.expires) { localStorage.removeItem(SESSION_KEY); return null; }
+                return s;
+            } catch(e) { return null; }
+        }
+        function logoutGoogle() {
+            if (!confirm('Deseja sair da sua conta Google?')) return;
+            localStorage.removeItem(SESSION_KEY);
+            _currentUser = null;
+            location.reload();
+        }
+        function _onGoogleCredential(response) {
+            const payload = _decodeJwt(response.credential);
+            if (!payload || !payload.email) {
+                showModal('error', 'Erro de login', 'Não foi possível autenticar com o Google.', 3500);
+                return;
+            }
+            _currentUser = _saveSession(payload);
+            _showApp();
+        }
+        function _showApp() {
+            document.getElementById('authWall').style.display = 'none';
+            const bar = document.getElementById('userBar');
+            bar.classList.add('visible');
+            document.getElementById('userAvatar').src           = _currentUser.picture || '';
+            document.getElementById('userBarName').textContent  = _currentUser.name    || '';
+            document.getElementById('userBarEmail').textContent = _currentUser.email   || '';
+            atualizarBadgeHistorico();
+        }
+        function _showAuthWall() {
+            document.getElementById('authWall').style.display = 'flex';
+            if (!window.google || !window.google.accounts) return;
+            window.google.accounts.id.initialize({
+                client_id:   GOOGLE_CLIENT_ID,
+                callback:    _onGoogleCredential,
+                auto_select: true,
+            });
+            window.google.accounts.id.renderButton(
+                document.getElementById('googleSignInBtn'),
+                { theme: 'outline', size: 'large', text: 'signin_with', width: 280, logo_alignment: 'center' }
+            );
+            window.google.accounts.id.prompt();
+        }
+        function _initAuth() {
+            _currentUser = _loadSession();
+            if (_currentUser) { _showApp(); return; }
+            _showAuthWall();
+        }
+        // Aguarda o script GSI do Google carregar antes de inicializar
+        (function _waitGSI() {
+            if (window.google && window.google.accounts) { _initAuth(); }
+            else { setTimeout(_waitGSI, 80); }
+        })();
+
+        // ── Sheets ────────────────────────────────────────────────────────────
         function isSheetsEnabled() { return document.getElementById('toggleSheets').checked; }
-
         function onSheetsToggleChange() {
             const on = isSheetsEnabled();
-            const wrap = document.getElementById('sheetsToggleWrap');
-            wrap.classList.toggle('enabled', on);
+            document.getElementById('sheetsToggleWrap').classList.toggle('enabled', on);
             const btnLimpar = document.getElementById('btnLimparHistorico');
             if (btnLimpar) btnLimpar.style.display = on ? 'none' : '';
             document.getElementById('historicoFonte').textContent = on ? '☁️ Google Sheets' : '💾 Local';
         }
-
         async function sheetsPost(body) {
+            if (_currentUser) body.user_email = _currentUser.email;
             const resp = await fetch(SHEETS_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -925,7 +1064,7 @@ Capa silicone R$ 50,00
             if (isSheetsEnabled()) {
                 showModal('loading', 'Salvando...', 'Enviando para o Google Sheets');
                 try {
-                    await sheetsPost({ date: new Date().toISOString(), titulo: titulo, payload: dados });
+                    await sheetsPost({ date: new Date().toISOString(), titulo: titulo, user_email: (_currentUser ? _currentUser.email : ''), payload: dados });
                     showModal('success', 'Salvo!', 'Registro enviado para o<br><strong>Google Sheets</strong> com sucesso ☁️', 2200);
                 } catch(e) {
                     showModal('error', 'Erro ao salvar', e.message, 3500);
@@ -950,7 +1089,8 @@ Capa silicone R$ 50,00
                 historicoLista.innerHTML = '';
                 showModal('loading', 'Carregando...', 'Buscando registros no Google Sheets');
                 try {
-                    const resp = await fetch(SHEETS_URL);
+                    const _ep = _currentUser ? '?email=' + encodeURIComponent(_currentUser.email) : '';
+                    const resp = await fetch(SHEETS_URL + _ep);
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const registros = await resp.json();
                     if (registros.error) throw new Error(registros.error);
@@ -1574,7 +1714,7 @@ Capa silicone R$ 50,00
 
         // ── Init ──────────────────────────────────────────────────────────────
         calcularParcelas();
-        atualizarBadgeHistorico();
+        // atualizarBadgeHistorico() é chamado automaticamente em _showApp() após login
     </script>
 </body>
 </html>
