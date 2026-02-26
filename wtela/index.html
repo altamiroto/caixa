@@ -824,11 +824,12 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
                 const selectHistorico = document.getElementById('historicoSelect');
                 selectHistorico.innerHTML = '<option value="">Selecione um histórico...</option>';
-                data.forEach((item, index) => {
+                // Exibe do mais recente para o mais antigo
+                const dataInvertida = [...data].reverse();
+                dataInvertida.forEach((item, index) => {
                     const opt = document.createElement('option');
                     const dataLocal = new Date(item.date).toLocaleString('pt-BR');
                     const tagText   = item.tag ? ` (${item.tag})` : '';
-                    // conta fornecedores
                     let count = '';
                     try {
                         const s = JSON.parse(item.suppliers);
@@ -840,7 +841,8 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                 });
 
                 selectHistorico.style.display = 'block';
-                selectHistorico.dataset.registros = JSON.stringify(data);
+                // Salva o array já invertido para o aplicarHistorico usar diretamente
+                selectHistorico.dataset.registros = JSON.stringify(dataInvertida);
                 showToast('✅ Histórico carregado!');
             } catch (err) {
                 showToast('❌ Erro ao carregar histórico: ' + err.message, 'error');
