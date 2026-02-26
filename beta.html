@@ -841,20 +841,11 @@ Capa silicone R$ 50,00
                 { theme: 'outline', size: 'large', text: 'signin_with', width: 260, logo_alignment: 'center' }
             );
         }
-        function _showAuthWall() {
-            document.getElementById('authWall').style.display = 'flex';
-            (function _tryRender() {
-                if (window.google && window.google.accounts) {
-                    _renderGoogleButton();
-                    window.google.accounts.id.prompt();
-                } else { setTimeout(_tryRender, 80); }
-            })();
-        }
         function _initAuth() {
             _currentUser = _loadSession();
             if (_currentUser) { _showApp(); return; }
-            // Não obriga login — mostra a tela de login como modal
-            _showAuthWall();
+            // Sem sessão → modo guest direto, sem popup
+            _showGuestMode();
         }
         // Aguarda o script GSI do Google carregar antes de inicializar
         (function _waitGSI() {
