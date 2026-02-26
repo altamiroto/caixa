@@ -756,23 +756,22 @@ Capa silicone R$ 50,00
     <script>
         // ── Config ───────────────────────────────────────────────────────────
         const SHEETS_URL       = 'https://script.google.com/macros/s/AKfycbwSXYcTYjsW4SjHf6s7zgD_0gjxnLfq23fPTsERsVNI2DTU2Nq81XZe34WlhvGiq2tI/exec';
-        const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
-        const SESSION_KEY      = 'calc_gsession_v2'; // v2 — armazena token JWT
+        const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com'; // ← cole seu Client ID aqui
+        const SESSION_KEY      = 'calc_gsession_v1';
         const SESSION_DAYS     = 90;
         let _sheetsCache       = [];
-        let _currentUser       = null; // { email, name, picture, expires, token }
+        let _currentUser       = null; // { email, name, picture, expires }
 
         // ── Auth ──────────────────────────────────────────────────────────────
         function _decodeJwt(token) {
             try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
             catch(e) { return null; }
         }
-        function _saveSession(payload, rawToken) {
+        function _saveSession(payload) {
             const s = {
                 email:   payload.email,
-                name:    payload.name    || '',
+                name:    payload.name   || '',
                 picture: payload.picture || '',
-                token:   rawToken,                              // JWT original para validar no servidor
                 expires: Date.now() + SESSION_DAYS * 86400000
             };
             localStorage.setItem(SESSION_KEY, JSON.stringify(s));
@@ -781,7 +780,7 @@ Capa silicone R$ 50,00
         function _loadSession() {
             try {
                 const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-                if (!s || !s.token || Date.now() > s.expires) { localStorage.removeItem(SESSION_KEY); return null; }
+                if (!s || Date.now() > s.expires) { localStorage.removeItem(SESSION_KEY); return null; }
                 return s;
             } catch(e) { return null; }
         }
@@ -803,7 +802,7 @@ Capa silicone R$ 50,00
                 showModal('error', 'Erro de login', 'Não foi possível autenticar com o Google.', 3500);
                 return;
             }
-            _currentUser = _saveSession(payload, response.credential); // salva JWT bruto
+            _currentUser = _saveSession(payload);
             _showApp();
         }
         function _showApp() {
@@ -842,11 +841,20 @@ Capa silicone R$ 50,00
                 { theme: 'outline', size: 'large', text: 'signin_with', width: 260, logo_alignment: 'center' }
             );
         }
+        function _showAuthWall() {
+            document.getElementById('authWall').style.display = 'flex';
+            (function _tryRender() {
+                if (window.google && window.google.accounts) {
+                    _renderGoogleButton();
+                    window.google.accounts.id.prompt();
+                } else { setTimeout(_tryRender, 80); }
+            })();
+        }
         function _initAuth() {
             _currentUser = _loadSession();
             if (_currentUser) { _showApp(); return; }
-            // Sem sessão → modo guest direto, sem popup
-            _showGuestMode();
+            // Não obriga login — mostra a tela de login como modal
+            _showAuthWall();
         }
         // Aguarda o script GSI do Google carregar antes de inicializar
         (function _waitGSI() {
@@ -866,8 +874,7 @@ Capa silicone R$ 50,00
             if (fonteEl) fonteEl.textContent = on ? '☁️ Google Sheets' : '💾 Local';
         }
         async function sheetsPost(body) {
-            if (!_currentUser || !_currentUser.token) throw new Error('Não autenticado');
-            body._token = _currentUser.token; // token no body — headers customizados não funcionam no Apps Script
+            if (_currentUser) body.user_email = _currentUser.email;
             const resp = await fetch(SHEETS_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1111,7 +1118,7 @@ Capa silicone R$ 50,00
             if (isSheetsEnabled()) {
                 showModal('loading', 'Salvando...', 'Enviando para o Google Sheets');
                 try {
-                    await sheetsPost({ date: new Date().toISOString(), titulo: titulo, payload: dados });
+                    await sheetsPost({ date: new Date().toISOString(), titulo: titulo, user_email: (_currentUser ? _currentUser.email : ''), payload: dados });
                     showModal('success', 'Salvo!', 'Registro enviado para o<br><strong>Google Sheets</strong> com sucesso ☁️', 2200);
                 } catch(e) {
                     showModal('error', 'Erro ao salvar', e.message, 3500);
@@ -1136,8 +1143,8 @@ Capa silicone R$ 50,00
                 historicoLista.innerHTML = '';
                 showModal('loading', 'Carregando...', 'Buscando registros no Google Sheets');
                 try {
-                    if (!_currentUser || !_currentUser.token) throw new Error('Não autenticado');
-                    const resp = await fetch(SHEETS_URL + '?token=' + encodeURIComponent(_currentUser.token));
+                    const _ep = _currentUser ? '?email=' + encodeURIComponent(_currentUser.email) : '';
+                    const resp = await fetch(SHEETS_URL + _ep);
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const registros = await resp.json();
                     if (registros.error) throw new Error(registros.error);
