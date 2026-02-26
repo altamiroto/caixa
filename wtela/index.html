@@ -599,8 +599,12 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             return 'grid-many'; // 8 colunas para telas grandes
         }
 
+        // Cache que guarda dados dos blocos removidos por índice (1-based)
+        // Estrutura: { [index]: { name, text } }
+        const removedCache = {};
+
         /** Cria um bloco de fornecedor e retorna o elemento */
-        function criarBloco(index) {
+        function criarBloco(index, dadosIniciais) {
             const wrapper = document.createElement('div');
             wrapper.className = 'text-area-wrapper';
 
@@ -609,12 +613,15 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
             const input = document.createElement('input');
             input.type = 'text';
-            input.value = `Fornecedor ${index}`;
+            // Restaura do cache se existir, senão usa padrão
+            input.value = dadosIniciais?.name ?? `Fornecedor ${index}`;
             input.placeholder = `Nome do fornecedor ${index}`;
 
             const textarea = document.createElement('textarea');
             textarea.id = `fornecedor${index}`;
-            textarea.dataset.originalContent = '';
+            const textoInicial = dadosIniciais?.text ?? '';
+            textarea.dataset.originalContent = textoInicial;
+            textarea.value = textoInicial;
             textarea.placeholder = `Cole a lista do fornecedor ${index} aqui...\n\nEx:\nArroz 5kg - R$ 25,00\nFeijão 1kg - R$ 8,50\nÓleo 900ml - R$ 7,20`;
 
             const resultDiv = document.createElement('div');
@@ -648,25 +655,47 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             const novo = atual + 1;
             numFornecedoresInput.value = novo;
             container.className = 'container ' + getGridClass(novo);
-            container.appendChild(criarBloco(novo));
+            // Restaura do cache se existir dados anteriores para esse índice
+            container.appendChild(criarBloco(novo, removedCache[novo] || null));
             applyFilter();
         }
 
         function removerFornecedor() {
             if (container.children.length <= 1) { showToast('⚠️ Mínimo de 1 fornecedor', 'error'); return; }
-            container.removeChild(container.lastChild);
+            const ultimo = container.lastChild;
+            const idx = container.children.length; // índice 1-based do último bloco
+            // Salva no cache antes de remover
+            const ta   = ultimo.querySelector('textarea');
+            const inp  = ultimo.querySelector('.supplier-header input[type=text]');
+            removedCache[idx] = {
+                name: inp?.value || `Fornecedor ${idx}`,
+                text: ta?.value || ''
+            };
+            container.removeChild(ultimo);
             const novo = container.children.length;
             numFornecedoresInput.value = novo;
             container.className = 'container ' + getGridClass(novo);
+            showToast(`↩ Fornecedor ${idx} guardado — clique ➕ para restaurar`);
             applyFilter();
         }
 
         function setNumFornecedores(n) {
             const atual = container.children.length;
             if (n > atual) {
-                for (let i = atual + 1; i <= n; i++) container.appendChild(criarBloco(i));
+                for (let i = atual + 1; i <= n; i++) {
+                    container.appendChild(criarBloco(i, removedCache[i] || null));
+                }
             } else if (n < atual) {
-                while (container.children.length > n) container.removeChild(container.lastChild);
+                for (let i = atual; i > n; i--) {
+                    const ultimo = container.lastChild;
+                    const ta  = ultimo.querySelector('textarea');
+                    const inp = ultimo.querySelector('.supplier-header input[type=text]');
+                    // Só salva no cache se tiver conteúdo
+                    if (ta?.value || (inp?.value && inp.value !== `Fornecedor ${i}`)) {
+                        removedCache[i] = { name: inp?.value || `Fornecedor ${i}`, text: ta?.value || '' };
+                    }
+                    container.removeChild(ultimo);
+                }
             }
             container.className = 'container ' + getGridClass(n);
             applyFilter();
@@ -753,16 +782,23 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
         async function salvarDados() {
             const tag       = document.getElementById('tagInput').value || '';
             const suppliers = coletarDados();
-            const payload   = { tag, suppliers: JSON.stringify(suppliers) };
+
+            // Google Apps Script exige form-urlencoded para evitar CORS preflight
+            const params = new URLSearchParams();
+            params.append('tag', tag);
+            params.append('suppliers', JSON.stringify(suppliers));
 
             try {
                 showToast('⏳ Salvando dados...');
-                const res  = await fetch(SCRIPT_URL, {
+                const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: params
+                    // sem Content-Type header: o fetch define automaticamente como
+                    // application/x-www-form-urlencoded, que o GAS aceita sem preflight
                 });
-                const json = await res.json();
+                const text = await res.text();
+                let json;
+                try { json = JSON.parse(text); } catch(e) { throw new Error('Resposta inválida: ' + text.slice(0, 200)); }
                 if (json.status === 'success') {
                     showToast('✅ Dados salvos com sucesso!');
                     document.getElementById('tagInput').value = '';
@@ -828,6 +864,8 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             }
 
             numFornecedoresInput.value = suppliers.length;
+            // Limpa cache para não misturar com dados do histórico
+            Object.keys(removedCache).forEach(k => delete removedCache[k]);
             setNumFornecedores(suppliers.length);
 
             setTimeout(() => {
