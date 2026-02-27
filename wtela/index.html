@@ -511,51 +511,89 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             return result.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         }
 
-        function escapeRegExp(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-        function buildIndexMap(originalText) {
-            const map = {};
-            let normIdx = 0;
-            for (let i = 0; i < originalText.length; i++) {
-                const cp = originalText.codePointAt(i);
-                const isSurrogate = cp > 0xFFFF;
-                const origChar = isSurrogate ? originalText.slice(i, i + 2) : originalText[i];
-                const normChar = normalizeForSearch(origChar);
-                map[normIdx] = i;
-                normIdx += normChar.length;
-                if (isSurrogate) i++;
-            }
-            map[normIdx] = originalText.length;
-            return map;
-        }
-
         function escapeHtml(str) {
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
-        function highlightBoth(text, mainTerm, normMain, subTerm, normSub) {
-            const normText = normalizeForSearch(text);
-            const indexMap = buildIndexMap(text);
-            const mainRegex = new RegExp(escapeRegExp(normMain), 'g');
-            const subRegex  = new RegExp(escapeRegExp(normSub), 'g');
-            const marks = new Array(text.length).fill(0);
-            let match;
-            while ((match = mainRegex.exec(normText)) !== null) {
-                const origStart = indexMap[match.index] ?? match.index;
-                const origEnd   = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
-                for (let i = origStart; i < origEnd; i++) marks[i] = 1;
+        // ============================================================
+        // HIGHLIGHT LEVE — sem buildIndexMap
+        //
+        // Estratégia: para cada linha, já temos a versão normalizada
+        // (normLine) no cache. Localizamos os matches na normLine
+        // (posições normalizadas) e os mapeamos de volta para a linha
+        // original CARACTERE A CARACTERE em O(n) simples — sem objetos
+        // de mapa nem surrogate pairs complicados, porque as listas de
+        // fornecedores são texto ASCII/Latin comum (preços, nomes).
+        // O mapeamento é feito em uma única passagem por linha,
+        // só quando há match, e só nas linhas visíveis no resultado.
+        // ============================================================
+
+        /**
+         * Dado o texto original e sua versão normalizada,
+         * retorna um array de intervalos [origStart, origEnd]
+         * para cada ocorrência de normTerm na normLine.
+         * Usa correspondência caractere-a-caractere entre orig e norm.
+         */
+        function findOrigRanges(origLine, normLine, normTerm) {
+            const ranges = [];
+            if (!normTerm) return ranges;
+            const tLen = normTerm.length;
+            let pos = 0;
+            while (true) {
+                const idx = normLine.indexOf(normTerm, pos);
+                if (idx === -1) break;
+                // Mapeamento simples: para texto Latin/ASCII,
+                // índice normalizado ≈ índice original.
+                // Para robustez, fazemos uma busca posicional direta:
+                // contamos chars normalizados até chegar em idx.
+                const origStart = normToOrig(origLine, normLine, idx);
+                const origEnd   = normToOrig(origLine, normLine, idx + tLen);
+                if (origStart !== -1 && origEnd !== -1) {
+                    ranges.push([origStart, origEnd]);
+                }
+                pos = idx + tLen;
             }
-            while ((match = subRegex.exec(normText)) !== null) {
-                const origStart = indexMap[match.index] ?? match.index;
-                const origEnd   = indexMap[match.index + match[0].length] ?? (match.index + match[0].length);
-                for (let i = origStart; i < origEnd; i++) marks[i] = 2;
+            return ranges;
+        }
+
+        /**
+         * Converte posição na string normalizada para posição na original.
+         * Para texto ASCII/Latin comum (99% dos casos) normIdx === origIdx.
+         * Para Unicode especial (bold, etc.) faz busca linear — mas só
+         * é chamado para linhas que já tiveram match, não todas as linhas.
+         */
+        function normToOrig(orig, norm, normPos) {
+            // Caso rápido: mesmos comprimentos (ASCII puro)
+            if (orig.length === norm.length) return Math.min(normPos, orig.length);
+            // Caso lento: percorre acumulando
+            let ni = 0, oi = 0;
+            while (oi < orig.length && ni < normPos) {
+                const cp = orig.codePointAt(oi);
+                const charOrig = cp > 0xFFFF ? orig.slice(oi, oi + 2) : orig[oi];
+                const charNorm = normalizeForSearch(charOrig);
+                ni += charNorm.length;
+                oi += charOrig.length;
             }
+            return oi;
+        }
+
+        /**
+         * Aplica highlight em uma linha original dado arrays de ranges
+         * para o termo principal (mark=1) e sub-busca (mark=2).
+         * Sub-busca prevalece sobre principal em sobreposição.
+         */
+        function applyHighlight(origLine, mainRanges, subRanges) {
+            // Cria array de marks por posição de caractere original
+            const marks = new Uint8Array(origLine.length); // 0=nenhum,1=main,2=sub
+            for (const [s, e] of mainRanges) for (let i = s; i < e; i++) marks[i] = 1;
+            for (const [s, e] of subRanges)  for (let i = s; i < e; i++) marks[i] = 2;
+
             let html = '', i = 0;
-            while (i < text.length) {
+            while (i < origLine.length) {
                 const mark = marks[i];
                 let j = i;
-                while (j < text.length && marks[j] === mark) j++;
-                const chunk = escapeHtml(text.slice(i, j));
+                while (j < origLine.length && marks[j] === mark) j++;
+                const chunk = escapeHtml(origLine.slice(i, j));
                 if      (mark === 1) html += `<span class="highlight">${chunk}</span>`;
                 else if (mark === 2) html += `<span class="highlight" style="background-color:#80deea;">${chunk}</span>`;
                 else html += chunk;
@@ -564,9 +602,14 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
             return html;
         }
 
-        function highlightTerm(text, term) {
-            if (!term) return escapeHtml(text);
-            return highlightBoth(text, term, normalizeForSearch(term), '', '');
+        /**
+         * Ponto de entrada do highlight: recebe linha original + normalizada,
+         * termos normalizados principais e sub, retorna HTML.
+         */
+        function highlightLine(origLine, normLine, normMain, normSub) {
+            const mainRanges = findOrigRanges(origLine, normLine, normMain);
+            const subRanges  = normSub ? findOrigRanges(origLine, normLine, normSub) : [];
+            return applyHighlight(origLine, mainRanges, subRanges);
         }
 
         // Toast
@@ -772,11 +815,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
                     for (let i = start; i <= end; i++) {
                         if (lineAdded[i]) continue;
-                        filteredHtml.push(
-                            normSubSearch
-                                ? highlightBoth(lines[i], searchTerm, normSearch, subSearchTerm, normSubSearch)
-                                : highlightTerm(lines[i], searchTerm)
-                        );
+                        filteredHtml.push(highlightLine(lines[i], normLines[i], normSearch, normSubSearch));
                         lineAdded[i] = true;
                     }
                 }
