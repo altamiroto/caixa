@@ -356,18 +356,18 @@
         <div class="control-row">
             <div class="control-group">
                 <label for="contextLines">📝 Linhas de contexto:</label>
-                <input type="number" id="contextLines" value="2" min="0" max="10" onchange="applyFilter()">
+                <input type="number" id="contextLines" value="2" min="0" max="10">
             </div>
         </div>
 
         <div class="control-group">
             <label for="searchInput">🔍 Buscar produto:</label>
-            <input type="text" id="searchInput" placeholder="Digite o nome do produto..." oninput="applyFilter()">
+            <input type="text" id="searchInput" placeholder="Digite o nome do produto...">
         </div>
 
         <div class="control-group">
             <label for="subSearchInput">🔎 Refinar busca (sub-busca):</label>
-            <input type="text" id="subSearchInput" placeholder="Ex: 256gb, vermelho, 1kg..." oninput="applyFilter()">
+            <input type="text" id="subSearchInput" placeholder="Ex: 256gb, vermelho, 1kg...">
             <div class="search-legend" id="searchLegend">
                 <span><span class="legend-color" style="background-color: #ffeb3b;"></span>Busca principal</span>
                 <span><span class="legend-color" style="background-color: #80deea;"></span>Sub-busca</span>
@@ -636,6 +636,7 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
 
             textarea.addEventListener('input', (e) => {
                 e.target.dataset.originalContent = e.target.value;
+                delete lineCache[e.target.id]; // invalida cache desta textarea
                 applyFilter();
             });
 
@@ -702,27 +703,48 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
         }
 
         // ============================================================
-        // FILTRO PRINCIPAL
+        // CACHE DE LINHAS NORMALIZADAS
+        // Evita recalcular normalização de cada linha a cada keystroke.
+        // Chave: textarea.id → { content, lines, normLines }
+        // Invalidado quando o conteúdo da textarea muda.
         // ============================================================
+        const lineCache = {};
+
+        function getLinesCache(textarea) {
+            const content = textarea.dataset.originalContent || textarea.value;
+            const cached  = lineCache[textarea.id];
+            if (cached && cached.content === content) return cached;
+            const lines     = content.split('\n');
+            const normLines = lines.map(l => normalizeForSearch(l));
+            lineCache[textarea.id] = { content, lines, normLines };
+            return lineCache[textarea.id];
+        }
+
+        // ============================================================
+        // FILTRO PRINCIPAL — com debounce para não travar com muitos fornecedores
+        // ============================================================
+        let filterTimer = null;
+
         function applyFilter() {
+            clearTimeout(filterTimer);
+            filterTimer = setTimeout(_doFilter, 120); // 120ms de debounce
+        }
+
+        function _doFilter() {
             const searchTerm    = searchInput.value.trim();
             const subSearchTerm = subSearchInput.value.trim();
             const contextLines  = Math.max(0, parseInt(contextLinesInput.value) || 0);
             const normSearch    = normalizeForSearch(searchTerm);
             const normSubSearch = normalizeForSearch(subSearchTerm);
 
-            const searchLegend = document.getElementById('searchLegend');
-            searchLegend.classList.toggle('show', normSearch.length > 0 && normSubSearch.length > 0);
+            document.getElementById('searchLegend')
+                .classList.toggle('show', normSearch.length > 0 && normSubSearch.length > 0);
 
             const textareas = container.querySelectorAll('textarea');
 
             textareas.forEach(textarea => {
-                const idx = textarea.id.replace('fornecedor', '');
+                const idx       = textarea.id.replace('fornecedor', '');
                 const resultDiv = document.getElementById(`resultado${idx}`);
-                const originalContent = textarea.dataset.originalContent || textarea.value;
-                if (!textarea.dataset.originalContent) textarea.dataset.originalContent = originalContent;
-
-                const lines = originalContent.split('\n');
 
                 if (normSearch.length === 0) {
                     resultDiv.style.display = 'none';
@@ -730,33 +752,40 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
                     return;
                 }
 
+                const { lines, normLines } = getLinesCache(textarea);
                 resultDiv.style.display = 'block';
-                const normLines = lines.map(l => normalizeForSearch(l));
-                let filteredLinesWithHighlight = [];
-                let lineAdded = new Array(lines.length).fill(false);
 
-                lines.forEach((line, index) => {
-                    if (!normLines[index].includes(normSearch)) return;
+                const filteredHtml = [];
+                const lineAdded    = new Array(lines.length).fill(false);
+
+                for (let index = 0; index < lines.length; index++) {
+                    if (!normLines[index].includes(normSearch)) continue;
+
                     const start = Math.max(0, index - contextLines);
                     const end   = Math.min(lines.length - 1, index + contextLines);
-                    const blocoNorm = normLines.slice(start, end + 1).join(' ');
-                    if (normSubSearch && !blocoNorm.includes(normSubSearch)) return;
+
+                    if (normSubSearch) {
+                        let blocoNorm = '';
+                        for (let k = start; k <= end; k++) blocoNorm += normLines[k] + ' ';
+                        if (!blocoNorm.includes(normSubSearch)) continue;
+                    }
 
                     for (let i = start; i <= end; i++) {
                         if (lineAdded[i]) continue;
-                        const html = normSubSearch
-                            ? highlightBoth(lines[i], searchTerm, normSearch, subSearchTerm, normSubSearch)
-                            : highlightTerm(lines[i], searchTerm);
-                        filteredLinesWithHighlight.push(html);
+                        filteredHtml.push(
+                            normSubSearch
+                                ? highlightBoth(lines[i], searchTerm, normSearch, subSearchTerm, normSubSearch)
+                                : highlightTerm(lines[i], searchTerm)
+                        );
                         lineAdded[i] = true;
                     }
-                });
+                }
 
-                if (filteredLinesWithHighlight.length === 0) {
+                if (filteredHtml.length === 0) {
                     const subText = normSubSearch ? ` com "${subSearchInput.value}"` : '';
                     resultDiv.innerHTML = `<span style="color:var(--danger-color);">❌ Nenhum resultado para "${searchInput.value}"${subText}</span>`;
                 } else {
-                    resultDiv.innerHTML = filteredLinesWithHighlight.join('<br>');
+                    resultDiv.innerHTML = filteredHtml.join('<br>');
                 }
             });
         }
@@ -978,6 +1007,11 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
         // INICIALIZAÇÃO
         // ============================================================
         setNumFornecedores(4);
+
+        // Inputs de busca usam debounce via applyFilter (já tem setTimeout interno)
+        searchInput.addEventListener('input', applyFilter);
+        subSearchInput.addEventListener('input', applyFilter);
+        contextLinesInput.addEventListener('change', applyFilter);
 
         numFornecedoresInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') aplicarQuantidade();
