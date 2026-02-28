@@ -916,14 +916,20 @@ Capa silicone R$ 50,00
 
         async function flushLog() {
             const estado = _coletarEstado();
-            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) return;
+            console.log('[LOG] Estado coletado:', JSON.stringify(estado));
+            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) {
+                console.log('[LOG] Nada para enviar, abortando.');
+                return;
+            }
             try {
-                await fetch(SHEETS_URL, {
+                const resp = await fetch(SHEETS_URL, {
                     method:  'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body:    JSON.stringify(estado)
                 });
-            } catch(e) { console.warn('Log falhou:', e.message); }
+                const json = await resp.json();
+                console.log('[LOG] Resposta do Sheets:', JSON.stringify(json));
+            } catch(e) { console.warn('[LOG] Erro:', e.message); }
         }
 
         // Ao fechar a aba envia imediatamente via sendBeacon
