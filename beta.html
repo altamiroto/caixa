@@ -794,7 +794,7 @@ Capa silicone R$ 50,00
             _currentUser = _saveSession(payload);
             _showApp();
             // Log de acesso ao fazer login
-            enviarLog('login', 'Google Auth', '', _currentUser.email);
+            enviarLog('login');
         }
         function _showApp() {
             document.getElementById('authWall').style.display      = 'none';
@@ -815,7 +815,7 @@ Capa silicone R$ 50,00
             document.getElementById('sheetsToggleArea').style.display  = 'none';
             atualizarBadgeHistorico();
             // Log acesso anônimo
-            enviarLog('acesso_anonimo', 'Sem login', '', 'anônimo');
+            enviarLog('acesso_anonimo');
         }
         function usarSemLogin() { _showGuestMode(); }
         function pedirLogin() {
@@ -877,46 +877,73 @@ Capa silicone R$ 50,00
             return json;
         }
 
-        // ── LOG AUTOMÁTICO ────────────────────────────────────────────────────
-        const _logBuffer = [];
+        // ── LOG AUTOMÁTICO — UMA LINHA POR SESSÃO ─────────────────────────────
+        // Gera um ID único para esta sessão (tab aberta)
+        const _sessaoId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const _sessaoInicio = new Date().toISOString();
         let _logTimer = null;
+        let _logEnviado = false; // controla se já foi enviada ao menos uma vez
 
-        function enviarLog(evento, campo, valorAntes, valorDepois, extras) {
-            const resultado = resultadoTextarea ? resultadoTextarea.value : '';
-            _logBuffer.push({
-                type:        'log',
-                email:       _currentUser ? _currentUser.email : 'anônimo',
-                nome:        _currentUser ? _currentUser.name  : 'anônimo',
-                evento:      evento,
-                campo:       campo       || '',
-                valorAntes:  String(valorAntes  || ''),
-                valorDepois: String(valorDepois || ''),
-                produto:     extras && extras.produto ? extras.produto : '',
-                resultado:   resultado ? resultado.substring(0, 500) : '',
-                userAgent:   navigator.userAgent.substring(0, 120)
-            });
-            clearTimeout(_logTimer);
-            _logTimer = setTimeout(flushLogs, 5000);
+        // Estado consolidado da sessão — só isso vai para a planilha
+        function _coletarEstadoSessao() {
+            return {
+                type:          'log',
+                sessao_id:     _sessaoId,
+                email:         _currentUser ? _currentUser.email : 'anônimo',
+                nome:          _currentUser ? _currentUser.name  : 'anônimo',
+                inicio:        _sessaoInicio,
+                ultima_acao:   new Date().toISOString(),
+                valor_base:    valorBaseInput       ? valorBaseInput.value          : '',
+                desconto_perc: descontoPercentualInput ? descontoPercentualInput.value : '',
+                desconto_fixo: descontoFixoInput    ? descontoFixoInput.value       : '',
+                acrescimo_r:   lucroAdicionalInput  ? lucroAdicionalInput.value     : '',
+                acrescimo_p:   acrescimoPercentualInput ? acrescimoPercentualInput.value : '',
+                comissao:      acrescimoComissaoInput ? acrescimoComissaoInput.value : '',
+                entrada:       valorEntradaInput    ? valorEntradaInput.value       : '',
+                parcelas:      parcelaEspecificaInput ? parcelaEspecificaInput.value : '',
+                num_produtos:  selectedProducts     ? selectedProducts.length       : 0,
+                resultado:     resultadoTextarea    ? resultadoTextarea.value.substring(0, 800) : '',
+                acoes:         _acoesLog.join(', '),
+                userAgent:     navigator.userAgent.substring(0, 120)
+            };
         }
 
-        async function flushLogs() {
-            if (_logBuffer.length === 0) return;
-            const lote = _logBuffer.splice(0, _logBuffer.length);
+        // Lista de ações realizadas na sessão (ex: "copiou, salvou histórico")
+        const _acoesLog = [];
+        function _registrarAcao(acao) {
+            if (!_acoesLog.includes(acao)) _acoesLog.push(acao);
+        }
+
+        // Agenda envio com debounce de 8s — cancela e reagenda a cada interação
+        function enviarLog(acao) {
+            if (acao) _registrarAcao(acao);
+            clearTimeout(_logTimer);
+            _logTimer = setTimeout(flushLog, 8000);
+        }
+
+        async function flushLog() {
+            const estado = _coletarEstadoSessao();
+            // Só envia se tiver algo relevante
+            if (!estado.valor_base && !estado.num_produtos && !estado.resultado) return;
             try {
-                for (const log of lote) {
-                    await fetch(SHEETS_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(log)
-                    });
-                }
+                await fetch(SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(estado)
+                });
+                _logEnviado = true;
             } catch(e) {
                 console.warn('Log falhou silenciosamente:', e.message);
             }
         }
 
+        // Ao fechar/sair da aba, tenta enviar o estado final com sendBeacon
         window.addEventListener('beforeunload', () => {
-            if (_logBuffer.length > 0) flushLogs();
+            clearTimeout(_logTimer);
+            const estado = _coletarEstadoSessao();
+            if (!estado.valor_base && !estado.num_produtos && !estado.resultado) return;
+            const blob = new Blob([JSON.stringify(estado)], { type: 'text/plain;charset=utf-8' });
+            navigator.sendBeacon(SHEETS_URL, blob);
         });
 
         // ── DOM refs ──────────────────────────────────────────────────────────
@@ -1149,7 +1176,7 @@ Capa silicone R$ 50,00
                 showModal('loading', 'Salvando...', 'Enviando para o Google Sheets');
                 try {
                     await sheetsPost({ date: new Date().toISOString(), titulo: titulo, user_email: (_currentUser ? _currentUser.email : ''), payload: dados });
-                    enviarLog('historico_salvo', 'Salvar Histórico', '', titulo);
+                    enviarLog('salvou_historico');
                     showModal('success', 'Salvo!', 'Registro enviado para o<br><strong>Google Sheets</strong> com sucesso ☁️', 2200);
                 } catch(e) {
                     showModal('error', 'Erro ao salvar', e.message, 3500);
@@ -1160,7 +1187,7 @@ Capa silicone R$ 50,00
                 historico.unshift({ id: Date.now(), data: obterDataFormatada(), titulo, comentarios: dados.comentarios, dados });
                 localStorage.setItem('historicoCalculos', JSON.stringify(historico));
                 atualizarBadgeHistorico();
-                enviarLog('historico_salvo_local', 'Salvar Local', '', titulo);
+                enviarLog('salvou_historico_local');
                 showModal('success', 'Salvo!', `<strong>${titulo}</strong><br>salvo no histórico local 💾`, 2000);
             }
             historicoTituloInput.value = '';
@@ -1289,7 +1316,7 @@ Capa silicone R$ 50,00
                 toggleAdvancedOptions.checked = false;
                 if (advancedOptionsDiv.classList.contains('show')) toggleAdvancedSection();
             }
-            enviarLog('historico_restaurado', 'Restaurar Cálculo', '', tituloItem);
+            enviarLog('restaurou_calculo');
             toggleVerHistorico();
             atualizarResumoDescontos();
             atualizarVisibilidadeMiniOpcoes();
@@ -1507,7 +1534,7 @@ Capa silicone R$ 50,00
                 displayTable(products);
                 selectedProducts = [];
                 handleProductSelection();
-                enviarLog('lista_processada', 'Lista de Produtos', '', `${products.length} produtos`);
+                enviarLog('processou_lista');
             } catch (error) { displayErrorList(`❌ Erro: ${error.message}`); }
             finally { productListLoading.classList.remove('active'); }
         }
@@ -1718,7 +1745,7 @@ Capa silicone R$ 50,00
             if (!txt) return;
             navigator.clipboard.writeText(txt).then(() => {
                 showToast('✅ Texto copiado!');
-                enviarLog('resultado_copiado', 'Copiar Texto', '', '');
+                enviarLog('copiou_resultado');
             });
         }
         function limparCampos() {
@@ -1741,7 +1768,7 @@ Capa silicone R$ 50,00
             syncChipPix(true); syncChipTotal(false);
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
-            enviarLog('campos_limpos', 'Limpar Tudo', '', '');
+            enviarLog('limpou_campos');
         }
 
         // ── Event listeners com log ───────────────────────────────────────────
@@ -1749,36 +1776,36 @@ Capa silicone R$ 50,00
             valorBaseInput.classList.toggle('has-value', !!valorBaseInput.value);
             atualizarResumoDescontos();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Valor Base', '', valorBaseInput.value);
+            enviarLog();
         });
         descontoPercentualInput.addEventListener('input', () => {
             atualizarResumoDescontos();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Desconto %', '', descontoPercentualInput.value);
+            enviarLog();
         });
         descontoFixoInput.addEventListener('input', () => {
             atualizarResumoDescontos();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Desconto R$', '', descontoFixoInput.value);
+            enviarLog();
         });
         lucroAdicionalInput.addEventListener('input', () => {
             atualizarResumoDescontos();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Acréscimo R$', '', lucroAdicionalInput.value);
+            enviarLog();
         });
         acrescimoComissaoInput.addEventListener('input', () => {
             atualizarResumoDescontos();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Comissão R$', '', acrescimoComissaoInput.value);
+            enviarLog();
         });
         acrescimoPercentualInput.addEventListener('input', () => {
             atualizarResumoDescontos();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Acréscimo %', '', acrescimoPercentualInput.value);
+            enviarLog();
         });
         valorEntradaInput.addEventListener('input', () => {
             calcularParcelas();
-            enviarLog('campo_alterado', 'Valor Entrada', '', valorEntradaInput.value);
+            enviarLog();
         });
         fatorArredondamentoInput.addEventListener('input', calcularParcelas);
         hideDinheiroPixCheckbox.addEventListener('change', () => { syncChipPix(!hideDinheiroPixCheckbox.checked); toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
@@ -1804,7 +1831,7 @@ Capa silicone R$ 50,00
             Object.keys(taxasRapidas).forEach(k => { if (!current.has(k)) delete taxasRapidas[k]; });
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
-            enviarLog('campo_alterado', 'Parcelas', '', this.value);
+            enviarLog();
         });
         selectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); }); calcularParcelas(); });
         deselectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); }); calcularParcelas(); });
