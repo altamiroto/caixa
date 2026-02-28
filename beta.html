@@ -1242,7 +1242,7 @@ Capa silicone R$ 50,00
 
         function restaurarCalculo(id) {
             let dados, tituloItem;
-            if (isSheetsEnabled()) {
+            if (_currentUser && _sheetsCache && _sheetsCache.length) {
                 const reg = _sheetsCache.find(r => String(r.id) === String(id));
                 if (!reg) { alert('Registro não encontrado'); return; }
                 dados = typeof reg.payload === 'string' ? JSON.parse(reg.payload) : (reg.payload || {});
