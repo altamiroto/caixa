@@ -700,10 +700,16 @@ Capa silicone R$ 50,00
                         <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Padrão: local</small>
                     </div>
                 </div>
+                <div class="input-group" id="tituloAutoWrap" style="display:none;">
+                    <label for="historicoTitulo">🏷️ Título do acesso (opcional):</label>
+                    <div class="input-with-icon"><span class="input-icon">📝</span>
+                    <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13 — deixe vazio para usar data/hora"></div>
+                    <small style="color:var(--text-secondary);font-size:0.8rem;">Será salvo automaticamente após 10s de inatividade</small>
+                </div>
             </div>
         </div>
 
-        <div id="visualizarHistoricoSection" class="collapsible-content">
+        <div id="visualizarHistoricoSection" class="collapsible-content" style="display:none;">
             <div class="section-card">
                 <div class="section-title">
                     🕓 Meus Acessos Anteriores
@@ -716,8 +722,6 @@ Capa silicone R$ 50,00
             </div>
         </div>
 
-        <!-- inputs ocultos mantidos para compatibilidade com código JS -->
-        <input type="hidden" id="historicoTitulo">
         <textarea id="historicoComentarios" style="display:none;"></textarea>
     </div>
 
@@ -919,12 +923,15 @@ Capa silicone R$ 50,00
 
                 // Só salva histórico recuperável se usuário estiver logado
                 if (_currentUser) {
-                    const agora    = new Date();
-                    const dataStr  = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
-                    const titulo   = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
-                    const dados    = obterDadosCalculadora();
-                    dados.titulo   = titulo;
-                    dados.auto     = true;
+                    const agora     = new Date();
+                    const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
+                    const inputTit  = document.getElementById('historicoTitulo');
+                    const tituloMan = inputTit ? inputTit.value.trim() : '';
+                    const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
+                    const titulo    = tituloMan || tituloAuto;
+                    const dados     = obterDadosCalculadora();
+                    dados.titulo    = titulo;
+                    dados.auto      = true;
                     await sheetsPost({
                         date:       agora.toISOString(),
                         titulo:     titulo,
@@ -1073,8 +1080,37 @@ Capa silicone R$ 50,00
 
         // ── Histórico ─────────────────────────────────────────────────────────
         function toggleHistoricoSection() {
-            if (document.getElementById('toggleHistorico').checked) {
-                toggleVerHistorico();
+            const checked = document.getElementById('toggleHistorico').checked;
+            const section = document.getElementById('historicoSection');
+            const tituloWrap = document.getElementById('tituloAutoWrap');
+            if (checked) {
+                section.classList.add('show');
+                // Mostra campo de título só para usuários logados
+                if (_currentUser && tituloWrap) tituloWrap.style.display = 'block';
+            } else {
+                section.classList.remove('show');
+                if (tituloWrap) tituloWrap.style.display = 'none';
+                // Fecha a lista se estiver aberta
+                const lista = document.getElementById('visualizarHistoricoSection');
+                if (lista) lista.style.display = 'none';
+            }
+        }
+
+        function toggleVerHistorico() {
+            const lista = document.getElementById('visualizarHistoricoSection');
+            const cb    = document.getElementById('toggleHistorico');
+            if (!lista) return;
+            const abrindo = lista.style.display === 'none' || lista.style.display === '';
+            if (abrindo) {
+                lista.style.display = 'block';
+                carregarHistorico();
+                lista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                lista.style.display = 'none';
+                if (cb) cb.checked = false;
+                document.getElementById('historicoSection').classList.remove('show');
+                const tituloWrap = document.getElementById('tituloAutoWrap');
+                if (tituloWrap) tituloWrap.style.display = 'none';
             }
         }
         function abrirHistoricoRapido() {
