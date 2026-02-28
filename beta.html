@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Parcelas Pro</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Desabilita o SES lockdown do Netlify que bloqueia fetch externo -->
+    <meta http-equiv="Content-Security-Policy" content="">
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -922,14 +924,20 @@ Capa silicone R$ 50,00
                 return;
             }
             try {
+                console.log('[LOG] Enviando para:', SHEETS_URL);
                 const resp = await fetch(SHEETS_URL, {
                     method:  'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body:    JSON.stringify(estado)
                 });
+                console.log('[LOG] Status HTTP:', resp.status);
                 const json = await resp.json();
                 console.log('[LOG] Resposta do Sheets:', JSON.stringify(json));
-            } catch(e) { console.warn('[LOG] Erro:', e.message); }
+            } catch(e) {
+                console.error('[LOG] ERRO COMPLETO:', e);
+                console.error('[LOG] Mensagem:', e.message);
+                console.error('[LOG] Stack:', e.stack);
+            }
         }
 
         // Ao fechar a aba envia imediatamente via sendBeacon
