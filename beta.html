@@ -793,8 +793,6 @@ Capa silicone R$ 50,00
             }
             _currentUser = _saveSession(payload);
             _showApp();
-            // Log de acesso ao fazer login
-            enviarLog('login');
         }
         function _showApp() {
             document.getElementById('authWall').style.display      = 'none';
@@ -814,8 +812,6 @@ Capa silicone R$ 50,00
             document.getElementById('sheetsLoginPrompt').style.display = 'none';
             document.getElementById('sheetsToggleArea').style.display  = 'none';
             atualizarBadgeHistorico();
-            // Log acesso anônimo
-            enviarLog('acesso_anonimo');
         }
         function usarSemLogin() { _showGuestMode(); }
         function pedirLogin() {
@@ -878,75 +874,66 @@ Capa silicone R$ 50,00
         }
 
         // ── LOG AUTOMÁTICO — UMA LINHA POR SESSÃO ─────────────────────────────
-        // Gera um ID único para esta sessão (tab aberta)
-        const _sessaoId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const _sessaoId     = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const _sessaoInicio = new Date().toISOString();
-        let _logTimer = null;
-        let _logEnviado = false; // controla se já foi enviada ao menos uma vez
+        const _acoesLog     = [];
+        let   _logTimer     = null;
 
-        // Estado consolidado da sessão — só isso vai para a planilha
-        function _coletarEstadoSessao() {
+        function _registrarAcao(acao) {
+            if (acao && !_acoesLog.includes(acao)) _acoesLog.push(acao);
+        }
+
+        // Lê os campos diretamente do DOM no momento do envio
+        function _coletarEstado() {
             return {
                 type:          'log',
                 sessao_id:     _sessaoId,
-                email:         _currentUser ? _currentUser.email : 'anônimo',
-                nome:          _currentUser ? _currentUser.name  : 'anônimo',
+                email:         _currentUser ? _currentUser.email : 'anonimo',
+                nome:          _currentUser ? _currentUser.name  : 'anonimo',
                 inicio:        _sessaoInicio,
                 ultima_acao:   new Date().toISOString(),
-                valor_base:    valorBaseInput       ? valorBaseInput.value          : '',
-                desconto_perc: descontoPercentualInput ? descontoPercentualInput.value : '',
-                desconto_fixo: descontoFixoInput    ? descontoFixoInput.value       : '',
-                acrescimo_r:   lucroAdicionalInput  ? lucroAdicionalInput.value     : '',
-                acrescimo_p:   acrescimoPercentualInput ? acrescimoPercentualInput.value : '',
-                comissao:      acrescimoComissaoInput ? acrescimoComissaoInput.value : '',
-                entrada:       valorEntradaInput    ? valorEntradaInput.value       : '',
-                parcelas:      parcelaEspecificaInput ? parcelaEspecificaInput.value : '',
-                num_produtos:  selectedProducts     ? selectedProducts.length       : 0,
-                resultado:     resultadoTextarea    ? resultadoTextarea.value.substring(0, 800) : '',
+                valor_base:    document.getElementById('valorBase')            ? document.getElementById('valorBase').value            : '',
+                desconto_perc: document.getElementById('descontoPercentual')   ? document.getElementById('descontoPercentual').value   : '',
+                desconto_fixo: document.getElementById('descontoFixo')         ? document.getElementById('descontoFixo').value         : '',
+                acrescimo_r:   document.getElementById('lucroAdicional')       ? document.getElementById('lucroAdicional').value       : '',
+                acrescimo_p:   document.getElementById('acrescimoPercentual')  ? document.getElementById('acrescimoPercentual').value  : '',
+                comissao:      document.getElementById('acrescimoComissao')    ? document.getElementById('acrescimoComissao').value    : '',
+                entrada:       document.getElementById('valorEntrada')         ? document.getElementById('valorEntrada').value         : '',
+                parcelas:      document.getElementById('parcelaEspecifica')    ? document.getElementById('parcelaEspecifica').value    : '',
+                num_produtos:  (typeof selectedProducts !== 'undefined')       ? selectedProducts.length                               : 0,
+                resultado:     document.getElementById('resultado')            ? document.getElementById('resultado').value.substring(0, 800) : '',
                 acoes:         _acoesLog.join(', '),
                 userAgent:     navigator.userAgent.substring(0, 120)
             };
         }
 
-        // Lista de ações realizadas na sessão (ex: "copiou, salvou histórico")
-        const _acoesLog = [];
-        function _registrarAcao(acao) {
-            if (!_acoesLog.includes(acao)) _acoesLog.push(acao);
-        }
-
-        // Agenda envio com debounce de 8s — cancela e reagenda a cada interação
+        // Agenda envio após 10s de inatividade
         function enviarLog(acao) {
-            if (acao) _registrarAcao(acao);
+            _registrarAcao(acao);
             clearTimeout(_logTimer);
-            _logTimer = setTimeout(flushLog, 8000);
+            _logTimer = setTimeout(flushLog, 10000);
         }
 
         async function flushLog() {
-            const estado = _coletarEstadoSessao();
-            // Só envia se tiver algo relevante
-            if (!estado.valor_base && !estado.num_produtos && !estado.resultado) return;
+            const estado = _coletarEstado();
+            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) return;
             try {
                 await fetch(SHEETS_URL, {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(estado)
+                    body:    JSON.stringify(estado)
                 });
-                _logEnviado = true;
-            } catch(e) {
-                console.warn('Log falhou silenciosamente:', e.message);
-            }
+            } catch(e) { console.warn('Log falhou:', e.message); }
         }
 
-        // Ao fechar/sair da aba, tenta enviar o estado final com sendBeacon
+        // Ao fechar a aba envia imediatamente via sendBeacon
         window.addEventListener('beforeunload', () => {
             clearTimeout(_logTimer);
-            const estado = _coletarEstadoSessao();
-            if (!estado.valor_base && !estado.num_produtos && !estado.resultado) return;
-            const blob = new Blob([JSON.stringify(estado)], { type: 'text/plain;charset=utf-8' });
-            navigator.sendBeacon(SHEETS_URL, blob);
+            const estado   = _coletarEstado();
+            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) return;
+            navigator.sendBeacon(SHEETS_URL, new Blob([JSON.stringify(estado)], { type: 'text/plain;charset=utf-8' }));
         });
 
-        // ── DOM refs ──────────────────────────────────────────────────────────
         const valorBaseInput                  = document.getElementById('valorBase');
         const parcelaEspecificaInput          = document.getElementById('parcelaEspecifica');
         const descontoPercentualInput         = document.getElementById('descontoPercentual');
