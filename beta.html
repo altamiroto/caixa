@@ -684,22 +684,13 @@ Capa silicone R$ 50,00
 
         <div class="toggle-section">
             <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
-            <label for="toggleHistorico">📚 Salvar no Histórico</label>
+            <label for="toggleHistorico">📚 Meus Acessos Anteriores</label>
         </div>
         <div id="historicoSection" class="collapsible-content">
             <div class="section-card">
-                <div class="input-group">
-                    <label for="historicoTitulo">Título do cálculo:</label>
-                    <div class="input-with-icon"><span class="input-icon">📝</span>
-                    <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13"></div>
-                </div>
-                <div class="input-group">
-                    <label for="historicoComentarios">Comentários (opcional):</label>
-                    <textarea id="historicoComentarios" placeholder="Observações sobre este cálculo..." style="min-height: 80px;"></textarea>
-                </div>
                 <div id="sheetsLoginPrompt" style="display:none;margin-bottom:15px;">
                     <button class="btn btn-outline" onclick="pedirLogin()" style="width:100%;font-size:0.88rem;border-color:var(--secondary-color);color:var(--secondary-color);">
-                        🔑 Entrar com Google para sincronizar com Sheets
+                        🔑 Entre com Google para ver seu histórico automático
                     </button>
                 </div>
                 <div id="sheetsToggleArea" style="display:none;">
@@ -709,26 +700,25 @@ Capa silicone R$ 50,00
                         <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Padrão: local</small>
                     </div>
                 </div>
-                <div class="button-row">
-                    <button class="btn btn-primary" onclick="salvarNoHistorico()">💾 Salvar Agora</button>
-                    <button class="btn btn-secondary" onclick="toggleVerHistorico()">📋 Ver Histórico</button>
-                </div>
             </div>
         </div>
 
         <div id="visualizarHistoricoSection" class="collapsible-content">
             <div class="section-card">
                 <div class="section-title">
-                    📖 Histórico de Cálculos
-                    <span id="historicoFonte" style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);margin-left:8px;">💾 Local</span>
+                    🕓 Meus Acessos Anteriores
+                    <span id="historicoFonte" style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);margin-left:8px;">☁️ Google Sheets</span>
                 </div>
                 <div id="historicoLista"></div>
                 <div class="button-row" style="margin-top: 15px;">
                     <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
-                    <button class="btn btn-danger" id="btnLimparHistorico" onclick="limparHistoricoCompleto()">🗑️ Limpar Histórico</button>
                 </div>
             </div>
         </div>
+
+        <!-- inputs ocultos mantidos para compatibilidade com código JS -->
+        <input type="hidden" id="historicoTitulo">
+        <textarea id="historicoComentarios" style="display:none;"></textarea>
     </div>
 
     <div class="feedback-overlay" id="feedbackOverlay">
@@ -918,25 +908,33 @@ Capa silicone R$ 50,00
 
         async function flushLog() {
             const estado = _coletarEstado();
-            console.log('[LOG] Estado coletado:', JSON.stringify(estado));
-            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) {
-                console.log('[LOG] Nada para enviar, abortando.');
-                return;
-            }
+            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) return;
             try {
-                console.log('[LOG] Enviando para:', SHEETS_URL);
-                const resp = await fetch(SHEETS_URL, {
+                // Envia o log de sessão
+                await fetch(SHEETS_URL, {
                     method:  'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body:    JSON.stringify(estado)
                 });
-                console.log('[LOG] Status HTTP:', resp.status);
-                const json = await resp.json();
-                console.log('[LOG] Resposta do Sheets:', JSON.stringify(json));
+
+                // Só salva histórico recuperável se usuário estiver logado
+                if (_currentUser) {
+                    const agora    = new Date();
+                    const dataStr  = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
+                    const titulo   = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
+                    const dados    = obterDadosCalculadora();
+                    dados.titulo   = titulo;
+                    dados.auto     = true;
+                    await sheetsPost({
+                        date:       agora.toISOString(),
+                        titulo:     titulo,
+                        user_email: _currentUser.email,
+                        payload:    dados,
+                        auto:       true
+                    });
+                }
             } catch(e) {
-                console.error('[LOG] ERRO COMPLETO:', e);
-                console.error('[LOG] Mensagem:', e.message);
-                console.error('[LOG] Stack:', e.stack);
+                console.warn('Log/auto-save falhou:', e.message);
             }
         }
 
@@ -1074,12 +1072,9 @@ Capa silicone R$ 50,00
         }
 
         // ── Histórico ─────────────────────────────────────────────────────────
-        function toggleHistoricoSection() { historicoSection.classList.toggle('show', toggleHistorico.checked); }
-        function toggleVerHistorico() {
-            visualizarHistoricoSection.classList.toggle('show');
-            if (visualizarHistoricoSection.classList.contains('show')) {
-                carregarHistorico();
-                setTimeout(() => visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        function toggleHistoricoSection() {
+            if (document.getElementById('toggleHistorico').checked) {
+                toggleVerHistorico();
             }
         }
         function abrirHistoricoRapido() {
@@ -1134,7 +1129,7 @@ Capa silicone R$ 50,00
             };
         }
 
-        function buildItemHistoricoHtml(id, titulo, dataStr, comentarios, dados) {
+        function buildItemHistoricoHtml(id, titulo, dataStr, comentarios, dados, isAuto) {
             let resumoValor = '';
             if (dados.usandoListaProdutos && dados.produtosSelecionados && dados.produtosSelecionados.length > 0)
                 resumoValor = `${dados.produtosSelecionados.length} produto${dados.produtosSelecionados.length>1?'s':''} selecionado${dados.produtosSelecionados.length>1?'s':''}`;
@@ -1160,39 +1155,13 @@ Capa silicone R$ 50,00
                 <div class="historico-acoes">
                     <button class="btn btn-primary" onclick="restaurarCalculo(${sid})">🔄 Restaurar</button>
                     <button class="btn btn-secondary" onclick="copiarResultadoHistorico(${sid})">📋 Copiar</button>
-                    <button class="btn btn-danger" onclick="excluirDoHistorico(${sid})">🗑️ Excluir</button>
+                    ${isAuto ? '' : `<button class="btn btn-danger" onclick="excluirDoHistorico(${sid})">🗑️ Excluir</button>`}
                 </div>
             </div>`;
         }
 
         async function salvarNoHistorico() {
-            const titulo = historicoTituloInput.value.trim();
-            if (!titulo) { alert('⚠️ Por favor, insira um título para o cálculo'); historicoTituloInput.focus(); return; }
-            if (!resultadoTextarea.value) { alert('⚠️ Não há cálculo para salvar.'); return; }
-            const dados = obterDadosCalculadora();
-            dados.titulo = titulo;
-            dados.comentarios = historicoComentariosTextarea.value.trim();
-
-            if (isSheetsEnabled()) {
-                showModal('loading', 'Salvando...', 'Enviando para o Google Sheets');
-                try {
-                    await sheetsPost({ date: new Date().toISOString(), titulo: titulo, user_email: (_currentUser ? _currentUser.email : ''), payload: dados });
-                    enviarLog('salvou_historico');
-                    showModal('success', 'Salvo!', 'Registro enviado para o<br><strong>Google Sheets</strong> com sucesso ☁️', 2200);
-                } catch(e) {
-                    showModal('error', 'Erro ao salvar', e.message, 3500);
-                    return;
-                }
-            } else {
-                const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-                historico.unshift({ id: Date.now(), data: obterDataFormatada(), titulo, comentarios: dados.comentarios, dados });
-                localStorage.setItem('historicoCalculos', JSON.stringify(historico));
-                atualizarBadgeHistorico();
-                enviarLog('salvou_historico_local');
-                showModal('success', 'Salvo!', `<strong>${titulo}</strong><br>salvo no histórico local 💾`, 2000);
-            }
-            historicoTituloInput.value = '';
-            historicoComentariosTextarea.value = '';
+            // Salvamento agora é automático — esta função é mantida por compatibilidade
         }
 
         async function carregarHistorico() {
@@ -1215,7 +1184,7 @@ Capa silicone R$ 50,00
                     }
                     historicoLista.innerHTML = registros.map(r => {
                         const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
-                        return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados);
+                        return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, dados.auto);
                     }).join('');
                 } catch(e) {
                     hideModal();
