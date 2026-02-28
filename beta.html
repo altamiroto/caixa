@@ -686,42 +686,44 @@ Capa silicone R$ 50,00
             <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
             <label for="toggleHistorico">📚 Meus Acessos Anteriores</label>
         </div>
+
+        <!-- Painel principal: título opcional + botão ver histórico -->
         <div id="historicoSection" class="collapsible-content">
             <div class="section-card">
                 <div id="sheetsLoginPrompt" style="display:none;margin-bottom:15px;">
+                    <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:8px;">🔒 Entre com Google para salvar e recuperar seus acessos automaticamente.</p>
                     <button class="btn btn-outline" onclick="pedirLogin()" style="width:100%;font-size:0.88rem;border-color:var(--secondary-color);color:var(--secondary-color);">
-                        🔑 Entre com Google para ver seu histórico automático
+                        🔑 Entrar com Google
                     </button>
                 </div>
-                <div id="sheetsToggleArea" style="display:none;">
-                    <div class="per-product-toggle" id="sheetsToggleWrap" style="margin-bottom:15px;">
-                        <input type="checkbox" id="toggleSheets" onchange="onSheetsToggleChange()" style="accent-color:var(--secondary-color);">
-                        <label for="toggleSheets">☁️ Sincronizar com Google Sheets</label>
-                        <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Padrão: local</small>
+                <div id="tituloAutoWrap" style="display:none;">
+                    <div class="input-group" style="margin-bottom:12px;">
+                        <label for="historicoTitulo">🏷️ Título do acesso (opcional):</label>
+                        <div class="input-with-icon"><span class="input-icon">📝</span>
+                        <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13 — deixe vazio para usar data/hora"></div>
+                        <small style="color:var(--text-secondary);font-size:0.8rem;">Salvo automaticamente após 10s de inatividade</small>
                     </div>
-                </div>
-                <div class="input-group" id="tituloAutoWrap" style="display:none;">
-                    <label for="historicoTitulo">🏷️ Título do acesso (opcional):</label>
-                    <div class="input-with-icon"><span class="input-icon">📝</span>
-                    <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13 — deixe vazio para usar data/hora"></div>
-                    <small style="color:var(--text-secondary);font-size:0.8rem;">Será salvo automaticamente após 10s de inatividade</small>
+                    <button class="btn btn-secondary" onclick="toggleVerHistorico()" style="width:100%;">📋 Ver Meus Acessos Anteriores</button>
                 </div>
             </div>
         </div>
 
-        <div id="visualizarHistoricoSection" class="collapsible-content" style="display:none;">
+        <!-- Lista de acessos anteriores -->
+        <div id="visualizarHistoricoSection" style="display:none;">
             <div class="section-card">
-                <div class="section-title">
-                    🕓 Meus Acessos Anteriores
-                    <span id="historicoFonte" style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);margin-left:8px;">☁️ Google Sheets</span>
-                </div>
+                <div class="section-title">🕓 Meus Acessos Anteriores</div>
                 <div id="historicoLista"></div>
-                <div class="button-row" style="margin-top: 15px;">
+                <div class="button-row" style="margin-top:15px;">
                     <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
                 </div>
             </div>
         </div>
 
+        <!-- hidden inputs para compatibilidade -->
+        <input type="hidden" id="toggleSheets">
+        <div id="sheetsToggleArea" style="display:none;"></div>
+        <div id="sheetsToggleWrap" style="display:none;"></div>
+        <span id="historicoFonte" style="display:none;"></span>
         <textarea id="historicoComentarios" style="display:none;"></textarea>
     </div>
 
@@ -1081,18 +1083,22 @@ Capa silicone R$ 50,00
         // ── Histórico ─────────────────────────────────────────────────────────
         function toggleHistoricoSection() {
             const checked = document.getElementById('toggleHistorico').checked;
-            const section = document.getElementById('historicoSection');
-            const tituloWrap = document.getElementById('tituloAutoWrap');
             if (checked) {
-                section.classList.add('show');
-                // Mostra campo de título só para usuários logados
+                // Abre direto a lista de acessos
+                const lista = document.getElementById('visualizarHistoricoSection');
+                if (lista) {
+                    lista.style.display = 'block';
+                    carregarHistorico();
+                    setTimeout(() => lista.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                }
+                // Mostra campo de título se logado
+                const tituloWrap = document.getElementById('tituloAutoWrap');
                 if (_currentUser && tituloWrap) tituloWrap.style.display = 'block';
             } else {
-                section.classList.remove('show');
-                if (tituloWrap) tituloWrap.style.display = 'none';
-                // Fecha a lista se estiver aberta
                 const lista = document.getElementById('visualizarHistoricoSection');
                 if (lista) lista.style.display = 'none';
+                const tituloWrap = document.getElementById('tituloAutoWrap');
+                if (tituloWrap) tituloWrap.style.display = 'none';
             }
         }
 
@@ -1202,40 +1208,35 @@ Capa silicone R$ 50,00
 
         async function carregarHistorico() {
             const fonteEl = document.getElementById('historicoFonte');
-            if (isSheetsEnabled()) {
+
+            // Se o usuário está logado, SEMPRE busca do Sheets (histórico automático)
+            if (_currentUser) {
                 fonteEl.textContent = '☁️ Google Sheets';
                 historicoLista.innerHTML = '';
-                showModal('loading', 'Carregando...', 'Buscando registros no Google Sheets');
+                showModal('loading', 'Carregando...', 'Buscando seus acessos anteriores...');
                 try {
-                    const _ep = _currentUser ? '?email=' + encodeURIComponent(_currentUser.email) : '';
-                    const resp = await fetch(SHEETS_URL + _ep);
+                    const resp = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email));
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const registros = await resp.json();
                     if (registros.error) throw new Error(registros.error);
                     _sheetsCache = registros;
                     hideModal();
                     if (!registros.length) {
-                        historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum registro no Sheets</p></div>';
+                        historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso anterior encontrado</p><small>Use a calculadora e aguarde 10s para salvar automaticamente</small></div>';
                         return;
                     }
                     historicoLista.innerHTML = registros.map(r => {
                         const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
-                        return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, dados.auto);
+                        return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, r.auto || dados.auto);
                     }).join('');
                 } catch(e) {
                     hideModal();
-                    historicoLista.innerHTML = `<div class="error-message">❌ Erro ao carregar do Sheets: ${e.message}</div>`;
+                    historicoLista.innerHTML = `<div class="error-message">❌ Erro ao carregar: ${e.message}</div>`;
                 }
             } else {
-                fonteEl.textContent = '💾 Local';
-                const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-                if (!historico.length) {
-                    historicoLista.innerHTML = `<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum cálculo salvo ainda</p><small>Salve seus cálculos para acessá-los depois!</small></div>`;
-                    return;
-                }
-                historicoLista.innerHTML = historico.map(item =>
-                    buildItemHistoricoHtml(item.id, item.titulo, item.data, item.comentarios, item.dados)
-                ).join('');
+                // Usuário não logado — mostra prompt para login
+                fonteEl.textContent = '';
+                historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">🔑</div><p>Entre com Google para ver seu histórico</p><button class="btn btn-primary" onclick="pedirLogin()" style="margin-top:12px;">Entrar com Google</button></div>';
             }
         }
 
