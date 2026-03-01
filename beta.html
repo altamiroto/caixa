@@ -922,7 +922,8 @@ Capa silicone R$ 50,00
 
         async function flushLog() {
             const estado = _coletarEstado();
-            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) return;
+            const temDados = estado.valor_base || estado.num_produtos > 0 || estado.resultado || estado.acoes || _tituloSessao || _comentarioSessao;
+            if (!temDados) return;
             try {
                 // Envia o log de sessão
                 await fetch(SHEETS_URL, {
@@ -960,7 +961,8 @@ Capa silicone R$ 50,00
         window.addEventListener('beforeunload', () => {
             clearTimeout(_logTimer);
             const estado   = _coletarEstado();
-            if (!estado.valor_base && estado.num_produtos === 0 && !estado.resultado && !estado.acoes) return;
+            const temDados = estado.valor_base || estado.num_produtos > 0 || estado.resultado || estado.acoes || _tituloSessao || _comentarioSessao;
+            if (!temDados) return;
             navigator.sendBeacon(SHEETS_URL, new Blob([JSON.stringify(estado)], { type: 'text/plain;charset=utf-8' }));
         });
 
@@ -1023,13 +1025,15 @@ Capa silicone R$ 50,00
         if (historicoTituloInput) {
             historicoTituloInput.addEventListener('input', () => {
                 _tituloSessao = historicoTituloInput.value.trim();
-                enviarLog();
+                clearTimeout(_logTimer);
+                _logTimer = setTimeout(flushLog, 2000);
             });
         }
         if (historicoComentariosTextarea) {
             historicoComentariosTextarea.addEventListener('input', () => {
                 _comentarioSessao = historicoComentariosTextarea.value.trim();
-                enviarLog();
+                clearTimeout(_logTimer);
+                _logTimer = setTimeout(flushLog, 2000);
             });
         }
         const visualizarHistoricoSection      = document.getElementById('visualizarHistoricoSection');
