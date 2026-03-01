@@ -698,12 +698,16 @@ Capa silicone R$ 50,00
                     </button>
                 </div>
                 <div id="tituloAutoWrap" style="display:none;">
-                    <div class="input-group" style="margin-bottom:12px;">
-                        <label for="historicoTitulo">🏷️ Título do acesso (opcional):</label>
+                    <div class="input-group" style="margin-bottom:8px;">
+                        <label for="historicoTitulo">🏷️ Título (opcional):</label>
                         <div class="input-with-icon"><span class="input-icon">📝</span>
                         <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13 — deixe vazio para usar data/hora"></div>
-                        <small style="color:var(--text-secondary);font-size:0.8rem;">Salvo automaticamente após 10s de inatividade</small>
                     </div>
+                    <div class="input-group" style="margin-bottom:12px;">
+                        <label for="historicoComentarios">💬 Comentário (opcional):</label>
+                        <textarea id="historicoComentarios" placeholder="Observações sobre este acesso..." style="min-height:60px;display:block;"></textarea>
+                    </div>
+                    <small style="color:var(--text-secondary);font-size:0.8rem;display:block;margin-bottom:10px;">Salvo automaticamente após 2s de inatividade</small>
                     <button class="btn btn-secondary" onclick="toggleVerHistorico()" style="width:100%;">📋 Ver Meus Acessos Anteriores</button>
                 </div>
             </div>
@@ -933,11 +937,14 @@ Capa silicone R$ 50,00
                     const tituloMan = inputTit ? inputTit.value.trim() : '';
                     const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
                     const titulo    = tituloMan || tituloAuto;
+                    const inputCom  = document.getElementById('historicoComentarios');
+                    const comentario = inputCom ? inputCom.value.trim() : '';
                     const dados     = obterDadosCalculadora();
                     dados.titulo    = titulo;
+                    dados.comentarios = comentario;
                     dados.auto      = true;
                     await sheetsPost({
-                        id:         _historicoId,    // mesmo ID toda sessão → atualiza a linha
+                        id:         _historicoId,
                         date:       agora.toISOString(),
                         titulo:     titulo,
                         user_email: _currentUser.email,
