@@ -848,7 +848,8 @@ Capa silicone R$ 50,00
         function _initAuth() {
             _currentUser = _loadSession();
             if (_currentUser) { _showApp(); return; }
-            _showAuthWall();
+            // Modo anônimo: abre direto sem pedir login
+            _showGuestMode();
         }
         (function _waitGSI() {
             if (window.google && window.google.accounts) { _initAuth(); }
