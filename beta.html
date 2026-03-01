@@ -971,10 +971,6 @@ Capa silicone R$ 50,00
             resultadoTextarea.style.height = 'auto';
             resultadoTextarea.style.height = Math.max(120, resultadoTextarea.scrollHeight) + 'px';
         }
-        if (resultadoTextarea) {
-            resultadoTextarea.addEventListener('input', autoResizeResultado);
-            new MutationObserver(autoResizeResultado).observe(resultadoTextarea, { attributes: true, childList: true, subtree: true });
-        }
         const mensagemCopiado                 = document.getElementById('mensagemCopiado');
         const discountSummary                 = document.getElementById('discountSummary');
         const discountDetails                 = document.getElementById('discountDetails');
