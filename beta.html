@@ -99,6 +99,7 @@
         textarea#resultado {
             background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
             font-family: 'Courier New', monospace; font-size: 13px;
+            min-height: 120px; height: auto; overflow-y: visible; resize: vertical;
         }
         [data-theme="dark"] textarea#resultado { background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); }
         .toggle-section {
@@ -909,7 +910,7 @@ Capa silicone R$ 50,00
         function enviarLog(acao) {
             _registrarAcao(acao);
             clearTimeout(_logTimer);
-            _logTimer = setTimeout(flushLog, 10000);
+            _logTimer = setTimeout(flushLog, 2000);
         }
 
         async function flushLog() {
@@ -964,6 +965,16 @@ Capa silicone R$ 50,00
         const acrescimoPercentualInput        = document.getElementById('acrescimoPercentual');
         const valorEntradaInput               = document.getElementById('valorEntrada');
         const resultadoTextarea               = document.getElementById('resultado');
+        // Auto-resize resultado textarea conforme conteúdo cresce
+        function autoResizeResultado() {
+            if (!resultadoTextarea) return;
+            resultadoTextarea.style.height = 'auto';
+            resultadoTextarea.style.height = Math.max(120, resultadoTextarea.scrollHeight) + 'px';
+        }
+        if (resultadoTextarea) {
+            resultadoTextarea.addEventListener('input', autoResizeResultado);
+            new MutationObserver(autoResizeResultado).observe(resultadoTextarea, { attributes: true, childList: true, subtree: true });
+        }
         const mensagemCopiado                 = document.getElementById('mensagemCopiado');
         const discountSummary                 = document.getElementById('discountSummary');
         const discountDetails                 = document.getElementById('discountDetails');
@@ -1126,11 +1137,18 @@ Capa silicone R$ 50,00
             }
         }
         function abrirHistoricoRapido() {
-            if (!visualizarHistoricoSection.classList.contains('show')) {
-                visualizarHistoricoSection.classList.add('show');
-                carregarHistorico();
+            const cb = document.getElementById('toggleHistorico');
+            if (cb && !cb.checked) {
+                cb.checked = true;
+                toggleHistoricoSection();
+            } else {
+                const lista = document.getElementById('visualizarHistoricoSection');
+                if (lista) {
+                    lista.style.display = 'block';
+                    carregarHistorico();
+                    lista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
-            visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         function atualizarBadgeHistorico() {
             const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
@@ -1713,6 +1731,7 @@ Capa silicone R$ 50,00
             if (textoCabecalhoMensagemTextarea.value) final = [`${textoCabecalhoMensagemTextarea.value}\n`, ...res];
             if (textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
             resultadoTextarea.value = final.join('\n');
+                if (typeof autoResizeResultado === 'function') autoResizeResultado();
         }
         function calcularParcelasParaUmProduto(valorBase, ent, txtAdd, showTot, nome, config, valorOriginal, overrides) {
             let res = [];
@@ -1766,6 +1785,7 @@ Capa silicone R$ 50,00
             productListTextarea.value = ''; textoAdicionalLinhaInput.value = '';
             textoCabecalhoMensagemTextarea.value = ''; textoFinalMensagemTextarea.value = '';
             resultadoTextarea.value = '';
+            if (typeof autoResizeResultado === 'function') autoResizeResultado();
             products = []; selectedProducts = []; productAdjustments = {};
             productListResult.innerHTML = '';
             discountSummary.classList.remove('active');
