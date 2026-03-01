@@ -316,6 +316,8 @@
         .historico-titulo { font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
         .historico-data { font-size: 0.85rem; color: var(--text-secondary); }
         .historico-comentarios { background: var(--bg-secondary); padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic; }
+        .historico-secao-titulo { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); padding: 8px 4px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+        .historico-secao-titulo { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); padding: 8px 4px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
         .historico-dados { background: var(--bg-secondary); padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
         .historico-dados strong { color: var(--primary-color); }
         .historico-acoes { display: flex; gap: 8px; margin-top: 10px; }
@@ -838,7 +840,7 @@ Capa silicone R$ 50,00
             (function _tryRender() {
                 if (window.google && window.google.accounts) {
                     _renderGoogleButton();
-                    window.google.accounts.id.prompt();
+                    // popup automático removido — usuário escolhe quando fazer login
                 } else { setTimeout(_tryRender, 80); }
             })();
         }
@@ -1234,32 +1236,80 @@ Capa silicone R$ 50,00
             // Salvamento agora é automático — esta função é mantida por compatibilidade
         }
 
+        const HIST_PAGE_SIZE = 20;
+        let _autoVisivel = HIST_PAGE_SIZE; // quantos automáticos estão visíveis
+
+        function renderizarHistorico() {
+            if (!_sheetsCache || !_sheetsCache.length) {
+                historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso anterior encontrado</p><small>Use a calculadora e aguarde 2s para salvar automaticamente</small></div>';
+                return;
+            }
+
+            // Separa com título e automáticos (sem título ou título = só data/hora)
+            const comTitulo = _sheetsCache.filter(r => {
+                const t = (r.titulo || '').trim();
+                // Título automático tem formato "dd/mm/yyyy, hh:mm:ss — ..."
+                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+            const automaticos = _sheetsCache.filter(r => {
+                const t = (r.titulo || '').trim();
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+
+            let html = '';
+
+            // Seção: Com título
+            if (comTitulo.length) {
+                html += `<div class="historico-secao-titulo">📌 Com título (${comTitulo.length})</div>`;
+                html += comTitulo.map(r => {
+                    const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
+                    return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, false);
+                }).join('');
+            }
+
+            // Seção: Automáticos
+            if (automaticos.length) {
+                const visiveis  = automaticos.slice(0, _autoVisivel);
+                const temMais   = automaticos.length > _autoVisivel;
+                html += `<div class="historico-secao-titulo" style="margin-top:${comTitulo.length ? '20px' : '0'};">🕓 Automáticos (${automaticos.length})</div>`;
+                html += visiveis.map(r => {
+                    const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
+                    return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, true);
+                }).join('');
+                if (temMais) {
+                    html += `<button class="btn btn-outline" onclick="carregarMaisAuto()" style="width:100%;margin-top:10px;">
+                        ⬇️ Carregar mais (${automaticos.length - _autoVisivel} restantes)
+                    </button>`;
+                }
+            }
+
+            if (!comTitulo.length && !automaticos.length) {
+                html = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso encontrado</p></div>';
+            }
+
+            historicoLista.innerHTML = html;
+        }
+
+        function carregarMaisAuto() {
+            _autoVisivel += HIST_PAGE_SIZE;
+            renderizarHistorico();
+        }
+
         async function carregarHistorico() {
             if (!_currentUser) {
                 historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">🔑</div><p>Entre com Google para ver seu histórico</p><button class="btn btn-primary" onclick="pedirLogin()" style="margin-top:12px;">Entrar com Google</button></div>';
                 return;
             }
+            _autoVisivel = HIST_PAGE_SIZE; // reset paginação ao recarregar
             historicoLista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">⏳ Carregando...</div>';
             try {
                 const url  = SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email);
-                console.log('[HIST] Buscando:', url);
-                const resp = await fetch(url);
-                const text = await resp.text();
-                console.log('[HIST] Resposta raw:', text.substring(0, 300));
+                const text = await (await fetch(url)).text();
                 const registros = JSON.parse(text);
                 if (registros.error) throw new Error(registros.error);
                 _sheetsCache = registros;
-                console.log('[HIST] Total registros:', registros.length);
-                if (!registros.length) {
-                    historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso anterior encontrado</p><small>Use a calculadora e aguarde 10s para salvar automaticamente</small></div>';
-                    return;
-                }
-                historicoLista.innerHTML = registros.map(r => {
-                    const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
-                    return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, r.auto || dados.auto);
-                }).join('');
+                renderizarHistorico();
             } catch(e) {
-                console.error('[HIST] Erro:', e);
                 historicoLista.innerHTML = `<div class="error-message">❌ Erro ao carregar: ${e.message}</div>`;
             }
         }
