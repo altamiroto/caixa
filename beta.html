@@ -873,8 +873,9 @@ Capa silicone R$ 50,00
         }
 
         // ── LOG AUTOMÁTICO — UMA LINHA POR SESSÃO ─────────────────────────────
-        const _sessaoId     = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        const _sessaoInicio = new Date().toISOString();
+        const _sessaoId        = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const _historicoId     = Date.now().toString(); // ID fixo para o registro de histórico desta sessão
+        const _sessaoInicio    = new Date().toISOString();
         const _acoesLog     = [];
         let   _logTimer     = null;
 
@@ -936,6 +937,7 @@ Capa silicone R$ 50,00
                     dados.titulo    = titulo;
                     dados.auto      = true;
                     await sheetsPost({
+                        id:         _historicoId,    // mesmo ID toda sessão → atualiza a linha
                         date:       agora.toISOString(),
                         titulo:     titulo,
                         user_email: _currentUser.email,
@@ -1147,10 +1149,9 @@ Capa silicone R$ 50,00
             }
         }
         function atualizarBadgeHistorico() {
-            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+            // Badge removido — histórico agora é automático no Sheets
             const badge = document.getElementById('fabBadge');
-            if (historico.length > 0) { badge.textContent = historico.length > 99 ? '99+' : historico.length; badge.style.display = 'flex'; }
-            else badge.style.display = 'none';
+            if (badge) badge.style.display = 'none';
         }
         function obterDataFormatada() {
             const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
