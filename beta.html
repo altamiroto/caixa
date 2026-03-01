@@ -731,7 +731,7 @@ Capa silicone R$ 50,00
         <div id="sheetsToggleArea" style="display:none;"></div>
         <div id="sheetsToggleWrap" style="display:none;"></div>
         <span id="historicoFonte" style="display:none;"></span>
-        <textarea id="historicoComentarios" style="display:none;"></textarea>
+
     </div>
 
     <div class="feedback-overlay" id="feedbackOverlay">
@@ -935,12 +935,9 @@ Capa silicone R$ 50,00
                 if (_currentUser) {
                     const agora     = new Date();
                     const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
-                    const inputTit  = document.getElementById('historicoTitulo');
-                    const tituloMan = inputTit ? inputTit.value.trim() : '';
                     const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
-                    const titulo    = tituloMan || tituloAuto;
-                    const inputCom  = document.getElementById('historicoComentarios');
-                    const comentario = inputCom ? inputCom.value.trim() : '';
+                    const titulo    = _tituloSessao || tituloAuto;
+                    const comentario = _comentarioSessao;
                     const dados     = obterDadosCalculadora();
                     dados.titulo    = titulo;
                     dados.comentarios = comentario;
@@ -1018,6 +1015,23 @@ Capa silicone R$ 50,00
         const historicoSection                = document.getElementById('historicoSection');
         const historicoTituloInput            = document.getElementById('historicoTitulo');
         const historicoComentariosTextarea    = document.getElementById('historicoComentarios');
+
+        // Guarda título e comentário em variáveis para não perder quando seção fecha
+        let _tituloSessao    = '';
+        let _comentarioSessao = '';
+
+        if (historicoTituloInput) {
+            historicoTituloInput.addEventListener('input', () => {
+                _tituloSessao = historicoTituloInput.value.trim();
+                enviarLog();
+            });
+        }
+        if (historicoComentariosTextarea) {
+            historicoComentariosTextarea.addEventListener('input', () => {
+                _comentarioSessao = historicoComentariosTextarea.value.trim();
+                enviarLog();
+            });
+        }
         const visualizarHistoricoSection      = document.getElementById('visualizarHistoricoSection');
         const historicoLista                  = document.getElementById('historicoLista');
         const parcelaEspecificaOpcoes         = document.getElementById('parcelaEspecificaOpcoes');
