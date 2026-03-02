@@ -233,7 +233,6 @@
         }
         .adj-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
         .adj-field { display: flex; flex-direction: column; gap: 3px; }
-        .adj-field label { font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.3px; }
         .adj-field-inner {
             display: flex; align-items: center; gap: 4px;
             background: var(--bg-secondary); border: 1.5px solid var(--border-color);
@@ -316,7 +315,6 @@
         .historico-titulo { font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
         .historico-data { font-size: 0.85rem; color: var(--text-secondary); }
         .historico-comentarios { background: var(--bg-secondary); padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic; }
-        .historico-secao-titulo { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); padding: 8px 4px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
         .historico-secao-titulo { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); padding: 8px 4px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
         .historico-dados { background: var(--bg-secondary); padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
         .historico-dados strong { color: var(--primary-color); }
@@ -581,7 +579,7 @@ Capa silicone R$ 50,00
                 <div class="option-group">
                     <h4>✨ Emoticons nos Valores</h4>
                     <div class="checkbox-item"><div class="parcela-input-group">
-                        <input type="checkbox" id="useEmoticons" onchange="calcularParcelas()">
+                        <input type="checkbox" id="useEmoticons" onchange="calcularParcelas(); enviarLog('alterou_emoticons');">
                         <label for="useEmoticons">Ativar emoticons no texto de saída</label>
                     </div></div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
@@ -691,7 +689,6 @@ Capa silicone R$ 50,00
             <label for="toggleHistorico">📚 Meus Acessos Anteriores</label>
         </div>
 
-        <!-- Painel principal: título opcional + botão ver histórico -->
         <div id="historicoSection" class="collapsible-content">
             <div class="section-card">
                 <div id="sheetsLoginPrompt" style="display:none;margin-bottom:15px;">
@@ -716,7 +713,6 @@ Capa silicone R$ 50,00
             </div>
         </div>
 
-        <!-- Lista de acessos anteriores -->
         <div id="visualizarHistoricoSection" style="display:none;">
             <div class="section-card">
                 <div class="section-title">🕓 Meus Acessos Anteriores</div>
@@ -727,7 +723,6 @@ Capa silicone R$ 50,00
             </div>
         </div>
 
-        <!-- hidden inputs para compatibilidade -->
         <input type="hidden" id="toggleSheets">
         <div id="sheetsToggleArea" style="display:none;"></div>
         <div id="sheetsToggleWrap" style="display:none;"></div>
@@ -841,14 +836,12 @@ Capa silicone R$ 50,00
             (function _tryRender() {
                 if (window.google && window.google.accounts) {
                     _renderGoogleButton();
-                    // popup automático removido — usuário escolhe quando fazer login
                 } else { setTimeout(_tryRender, 80); }
             })();
         }
         function _initAuth() {
             _currentUser = _loadSession();
             if (_currentUser) { _showApp(); return; }
-            // Modo anônimo: abre direto sem pedir login
             _showGuestMode();
         }
         (function _waitGSI() {
@@ -882,7 +875,7 @@ Capa silicone R$ 50,00
 
         // ── LOG AUTOMÁTICO — UMA LINHA POR SESSÃO ─────────────────────────────
         const _sessaoId        = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        const _historicoId     = Date.now().toString(); // ID fixo para o registro de histórico desta sessão
+        const _historicoId     = Date.now().toString();
         const _sessaoInicio    = new Date().toISOString();
         const _acoesLog     = [];
         let   _logTimer     = null;
@@ -891,7 +884,6 @@ Capa silicone R$ 50,00
             if (acao && !_acoesLog.includes(acao)) _acoesLog.push(acao);
         }
 
-        // Lê os campos diretamente do DOM no momento do envio
         function _coletarEstado() {
             return {
                 type:          'log',
@@ -915,7 +907,6 @@ Capa silicone R$ 50,00
             };
         }
 
-        // Agenda envio após 10s de inatividade
         function enviarLog(acao) {
             _registrarAcao(acao);
             clearTimeout(_logTimer);
@@ -938,14 +929,12 @@ Capa silicone R$ 50,00
             if (!temDados) return;
             setSaveStatus('⏳ Salvando...', 'var(--text-secondary)');
             try {
-                // Envia o log de sessão
                 await fetch(SHEETS_URL, {
                     method:  'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body:    JSON.stringify(estado)
                 });
 
-                // Só salva histórico recuperável se usuário estiver logado
                 if (_currentUser) {
                     const agora     = new Date();
                     const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
@@ -972,7 +961,6 @@ Capa silicone R$ 50,00
             }
         }
 
-        // Ao fechar a aba envia imediatamente via sendBeacon
         window.addEventListener('beforeunload', () => {
             clearTimeout(_logTimer);
             const estado   = _coletarEstado();
@@ -990,7 +978,6 @@ Capa silicone R$ 50,00
         const acrescimoPercentualInput        = document.getElementById('acrescimoPercentual');
         const valorEntradaInput               = document.getElementById('valorEntrada');
         const resultadoTextarea               = document.getElementById('resultado');
-        // Auto-resize resultado textarea conforme conteúdo cresce
         function autoResizeResultado() {
             if (!resultadoTextarea) return;
             resultadoTextarea.style.height = 'auto';
@@ -1033,7 +1020,6 @@ Capa silicone R$ 50,00
         const historicoTituloInput            = document.getElementById('historicoTitulo');
         const historicoComentariosTextarea    = document.getElementById('historicoComentarios');
 
-        // Guarda título e comentário em variáveis para não perder quando seção fecha
         let _tituloSessao    = '';
         let _comentarioSessao = '';
 
@@ -1086,6 +1072,7 @@ Capa silicone R$ 50,00
             perProductToggleLabel.classList.toggle('enabled', enabled);
             if (products.length > 0) displayTable(products);
             calcularParcelas();
+            enviarLog('alterou_ajuste_por_produto');
         }
 
         // ── Parcelas rápidas ──────────────────────────────────────────────────
@@ -1105,8 +1092,16 @@ Capa silicone R$ 50,00
             document.getElementById('labelEspecificaTotal').classList.toggle('ativo', checked);
             showTotalValueCheckbox.checked = checked;
         }
-        function onQuickPixChange()   { syncChipPix(especificaMostrarPixCb.checked);    calcularParcelas(); }
-        function onQuickTotalChange() { syncChipTotal(especificaMostrarTotalCb.checked); calcularParcelas(); }
+        function onQuickPixChange()   {
+            syncChipPix(especificaMostrarPixCb.checked);
+            calcularParcelas();
+            enviarLog('alterou_opcao_pix');
+        }
+        function onQuickTotalChange() {
+            syncChipTotal(especificaMostrarTotalCb.checked);
+            calcularParcelas();
+            enviarLog('alterou_opcao_total');
+        }
         function gerarChipsTaxa(parcelas) {
             parcelaTaxasRow.innerHTML = '';
             if (parcelas.length === 0) return;
@@ -1121,6 +1116,7 @@ Capa silicone R$ 50,00
                     const avInput = document.getElementById('porcentagem' + this.dataset.parcela + 'x');
                     if (avInput) avInput.value = this.value;
                     calcularParcelas();
+                    enviarLog('alterou_taxa_parcela');
                 });
                 parcelaTaxasRow.appendChild(chip);
             });
@@ -1141,11 +1137,8 @@ Capa silicone R$ 50,00
 
             if (checked) {
                 section.classList.add('show');
-                // Mostra campo título sempre (independe do timing do login)
                 if (tituloWrap) tituloWrap.style.display = 'block';
-                // Se não logado, mostra prompt de login
                 if (!_currentUser && loginPrompt) loginPrompt.style.display = 'block';
-                // Abre lista
                 if (lista) {
                     lista.style.display = 'block';
                     carregarHistorico();
@@ -1191,7 +1184,6 @@ Capa silicone R$ 50,00
             }
         }
         function atualizarBadgeHistorico() {
-            // Badge removido — histórico agora é automático no Sheets
             const badge = document.getElementById('fabBadge');
             if (badge) badge.style.display = 'none';
         }
@@ -1266,11 +1258,11 @@ Capa silicone R$ 50,00
         }
 
         async function salvarNoHistorico() {
-            // Salvamento agora é automático — esta função é mantida por compatibilidade
+            // Salvamento agora é automático — mantido por compatibilidade
         }
 
         const HIST_PAGE_SIZE = 20;
-        let _autoVisivel = HIST_PAGE_SIZE; // quantos automáticos estão visíveis
+        let _autoVisivel = HIST_PAGE_SIZE;
 
         function renderizarHistorico() {
             if (!_sheetsCache || !_sheetsCache.length) {
@@ -1278,10 +1270,8 @@ Capa silicone R$ 50,00
                 return;
             }
 
-            // Separa com título e automáticos (sem título ou título = só data/hora)
             const comTitulo = _sheetsCache.filter(r => {
                 const t = (r.titulo || '').trim();
-                // Título automático tem formato "dd/mm/yyyy, hh:mm:ss — ..."
                 return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
             });
             const automaticos = _sheetsCache.filter(r => {
@@ -1291,7 +1281,6 @@ Capa silicone R$ 50,00
 
             let html = '';
 
-            // Seção: Com título
             if (comTitulo.length) {
                 html += `<div class="historico-secao-titulo">📌 Com título (${comTitulo.length})</div>`;
                 html += comTitulo.map(r => {
@@ -1300,7 +1289,6 @@ Capa silicone R$ 50,00
                 }).join('');
             }
 
-            // Seção: Automáticos
             if (automaticos.length) {
                 const visiveis  = automaticos.slice(0, _autoVisivel);
                 const temMais   = automaticos.length > _autoVisivel;
@@ -1333,7 +1321,7 @@ Capa silicone R$ 50,00
                 historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">🔑</div><p>Entre com Google para ver seu histórico</p><button class="btn btn-primary" onclick="pedirLogin()" style="margin-top:12px;">Entrar com Google</button></div>';
                 return;
             }
-            _autoVisivel = HIST_PAGE_SIZE; // reset paginação ao recarregar
+            _autoVisivel = HIST_PAGE_SIZE;
             historicoLista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">⏳ Carregando...</div>';
             try {
                 const url  = SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email);
@@ -1529,12 +1517,14 @@ Capa silicone R$ 50,00
             valorBaseInput.disabled = toggleProductList.checked;
             if (!toggleProductList.checked) { products = []; selectedProducts = []; productListResult.innerHTML = ''; productAdjustments = {}; }
             calcularParcelas();
+            enviarLog('alterou_lista_produtos');
         }
         function toggleAdvancedSection() {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
             toggleDebitoPixPorcentagemInputs();
             document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => togglePorcentagemInput(parseInt(cb.value), cb.checked));
             calcularParcelas();
+            enviarLog('alterou_opcoes_avancadas');
         }
         window.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.toggle-section').forEach(section => {
@@ -1557,14 +1547,21 @@ Capa silicone R$ 50,00
                 const input = document.createElement('input');
                 input.type = 'checkbox'; input.id = `parcela${i}x`; input.value = i;
                 input.checked = parcelasPadrao.includes(i);
-                input.addEventListener('change', () => { togglePorcentagemInput(i, input.checked); calcularParcelas(); });
+                input.addEventListener('change', () => {
+                    togglePorcentagemInput(i, input.checked);
+                    calcularParcelas();
+                    enviarLog('alterou_selecao_parcelas');
+                });
                 const label = document.createElement('label'); label.htmlFor = `parcela${i}x`; label.textContent = `${i}x`;
                 pg.appendChild(input); pg.appendChild(label);
                 const pc = document.createElement('div'); pc.className = 'percent-input-container'; pc.id = `porcentagem${i}xContainer`;
                 if (input.checked) pc.classList.add('show');
                 const pi = document.createElement('input'); pi.type = 'number'; pi.id = `porcentagem${i}x`;
                 pi.value = (taxasDeJurosPadrao[i] * 100).toFixed(2);
-                pi.addEventListener('input', calcularParcelas);
+                pi.addEventListener('input', () => {
+                    calcularParcelas();
+                    enviarLog('alterou_taxa_avancada');
+                });
                 pc.appendChild(pi); pc.appendChild(document.createTextNode('%'));
                 pg.appendChild(pc); div.appendChild(pg); parcelasAvancadasDiv.appendChild(div);
             }
@@ -1581,7 +1578,10 @@ Capa silicone R$ 50,00
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || data.message || "Erro na requisição");
-                if (data.choices && data.choices[0]) { productListTextarea.value = data.choices[0].message.content; processList(); }
+                if (data.choices && data.choices[0]) {
+                    productListTextarea.value = data.choices[0].message.content;
+                    processList();
+                }
                 else throw new Error("Resposta da IA inválida");
             } catch (error) { displayErrorList(`❌ Erro na IA: ${error.message}`); }
             finally { productListLoading.classList.remove('active'); }
@@ -1599,20 +1599,18 @@ Capa silicone R$ 50,00
             if (fator <= 0) fator = 1;
             return Math.ceil(valor / fator) * fator;
         }
-function calcularValorComDesconto(valorBase, overrides) {
-    const ov = overrides || {};
-    const acrescimoPerc = parseFloat(ov.acrescimoP !== undefined && ov.acrescimoP !== '' ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
-    const lucroFixo     = parseFloat(ov.acrescimoR !== undefined && ov.acrescimoR !== '' ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
-    const acrescimoFix  = parseFloat(ov.comissao   !== undefined && ov.comissao   !== '' ? ov.comissao   : acrescimoComissaoInput.value) || 0;
-    const descontoPerc  = parseFloat(ov.descontoP  !== undefined && ov.descontoP  !== '' ? ov.descontoP  : descontoPercentualInput.value) || 0;
-    const descontoFix   = parseFloat(ov.descontoR  !== undefined && ov.descontoR  !== '' ? ov.descontoR  : descontoFixoInput.value) || 0;
-    // Percentuais sempre calculados sobre o valorBase original
-    const valorAcrescimoPerc = valorBase * (acrescimoPerc / 100);
-    const valorDescontoPerc  = valorBase * (descontoPerc  / 100);
-    // Soma e subtrai tudo sobre o valor base
-    const valor = valorBase + valorAcrescimoPerc + lucroFixo + acrescimoFix - valorDescontoPerc - descontoFix;
-    return Math.max(0, valor);
-}
+        function calcularValorComDesconto(valorBase, overrides) {
+            const ov = overrides || {};
+            const acrescimoPerc = parseFloat(ov.acrescimoP !== undefined && ov.acrescimoP !== '' ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
+            const lucroFixo     = parseFloat(ov.acrescimoR !== undefined && ov.acrescimoR !== '' ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
+            const acrescimoFix  = parseFloat(ov.comissao   !== undefined && ov.comissao   !== '' ? ov.comissao   : acrescimoComissaoInput.value) || 0;
+            const descontoPerc  = parseFloat(ov.descontoP  !== undefined && ov.descontoP  !== '' ? ov.descontoP  : descontoPercentualInput.value) || 0;
+            const descontoFix   = parseFloat(ov.descontoR  !== undefined && ov.descontoR  !== '' ? ov.descontoR  : descontoFixoInput.value) || 0;
+            const valorAcrescimoPerc = valorBase * (acrescimoPerc / 100);
+            const valorDescontoPerc  = valorBase * (descontoPerc  / 100);
+            const valor = valorBase + valorAcrescimoPerc + lucroFixo + acrescimoFix - valorDescontoPerc - descontoFix;
+            return Math.max(0, valor);
+        }
         function atualizarResumoDescontos() {
             const base = parseFloat(valorBaseInput.value) || 0;
             if (base === 0) { discountSummary.classList.remove('active'); return; }
@@ -1750,6 +1748,8 @@ function calcularValorComDesconto(valorBase, overrides) {
                 else { if (existingCommentBadge) existingCommentBadge.remove(); }
             }
             calcularParcelas();
+            // ── CORRIGIDO: agenda auto-save ao alterar ajuste individual ──
+            enviarLog('ajuste_individual_produto');
         }
         function resetProductAdj(idx) {
             productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'', comentario:'' };
@@ -1762,6 +1762,8 @@ function calcularValorComDesconto(valorBase, overrides) {
                 const btn = document.getElementById(`adjBtn_${idx}`); if (btn) btn.classList.remove('has-adj');
             }
             calcularParcelas();
+            // ── CORRIGIDO: agenda auto-save ao limpar ajuste individual ──
+            enviarLog('resetou_ajuste_individual');
         }
         function handleProductSelection() {
             selectedProducts = [];
@@ -1770,6 +1772,8 @@ function calcularValorComDesconto(valorBase, overrides) {
                 if (p) selectedProducts.push({ ...p, _idx: parseInt(cb.value) });
             });
             calcularParcelas();
+            // ── CORRIGIDO: agenda auto-save ao selecionar/desselecionar produtos ──
+            enviarLog('selecionou_produtos');
         }
         function displayErrorList(msg) { productListResult.innerHTML = `<div class="error-message">${msg}</div>`; }
 
@@ -1821,7 +1825,7 @@ function calcularValorComDesconto(valorBase, overrides) {
             if (textoCabecalhoMensagemTextarea.value) final = [`${textoCabecalhoMensagemTextarea.value}\n`, ...res];
             if (textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
             resultadoTextarea.value = final.join('\n');
-                if (typeof autoResizeResultado === 'function') autoResizeResultado();
+            if (typeof autoResizeResultado === 'function') autoResizeResultado();
         }
         function calcularParcelasParaUmProduto(valorBase, ent, txtAdd, showTot, nome, config, valorOriginal, overrides) {
             let res = [];
@@ -1890,7 +1894,7 @@ function calcularValorComDesconto(valorBase, overrides) {
             enviarLog('limpou_campos');
         }
 
-        // ── Event listeners com log ───────────────────────────────────────────
+        // ── Event listeners ───────────────────────────────────────────────────
         valorBaseInput.addEventListener('input', () => {
             valorBaseInput.classList.toggle('has-value', !!valorBaseInput.value);
             atualizarResumoDescontos();
@@ -1926,21 +1930,82 @@ function calcularValorComDesconto(valorBase, overrides) {
             calcularParcelas();
             enviarLog();
         });
-        fatorArredondamentoInput.addEventListener('input', calcularParcelas);
-        hideDinheiroPixCheckbox.addEventListener('change', () => { syncChipPix(!hideDinheiroPixCheckbox.checked); toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        showDebitoCheckbox.addEventListener('change',      () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        showComparisonCheckbox.addEventListener('change',  calcularParcelas);
-        porcentagemPixInput.addEventListener('input',      calcularParcelas);
-        porcentagemDebitoInput.addEventListener('input',   calcularParcelas);
-        hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
-        showTotalValueCheckbox.addEventListener('change',  () => { syncChipTotal(showTotalValueCheckbox.checked); calcularParcelas(); });
-        boldProductNameCheckbox.addEventListener('change', calcularParcelas);
-        textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
-        produtoPrefixInput.addEventListener('input',       calcularParcelas);
-        textoFinalMensagemTextarea.addEventListener('input',calcularParcelas);
-        textoCabecalhoMensagemTextarea.addEventListener('input',calcularParcelas);
-        emoticonDinheiroInput.addEventListener('input',    calcularParcelas);
-        emoticonCartaoInput.addEventListener('input',      calcularParcelas);
+        // ── CORRIGIDO: fator de arredondamento agenda auto-save ──
+        fatorArredondamentoInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_arredondamento');
+        });
+        // ── CORRIGIDO: lista de produtos (textarea) agenda auto-save ao digitar ──
+        productListTextarea.addEventListener('input', () => {
+            enviarLog('editou_lista_produtos');
+        });
+        // ── CORRIGIDO: prompt da IA agenda auto-save ──
+        aiPromptTextarea.addEventListener('input', () => {
+            enviarLog('editou_prompt_ia');
+        });
+        hideDinheiroPixCheckbox.addEventListener('change', () => {
+            syncChipPix(!hideDinheiroPixCheckbox.checked);
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
+            enviarLog('alterou_opcao_pix');
+        });
+        showDebitoCheckbox.addEventListener('change', () => {
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
+            enviarLog('alterou_opcao_debito');
+        });
+        showComparisonCheckbox.addEventListener('change', () => {
+            calcularParcelas();
+            enviarLog('alterou_opcao_comparacao');
+        });
+        // ── CORRIGIDO: taxas Pix e Débito agendas auto-save ──
+        porcentagemPixInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_taxa_pix');
+        });
+        porcentagemDebitoInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_taxa_debito');
+        });
+        hideEntradaTextCheckbox.addEventListener('change', () => {
+            calcularParcelas();
+            enviarLog('alterou_opcao_entrada');
+        });
+        showTotalValueCheckbox.addEventListener('change', () => {
+            syncChipTotal(showTotalValueCheckbox.checked);
+            calcularParcelas();
+            enviarLog('alterou_opcao_total');
+        });
+        boldProductNameCheckbox.addEventListener('change', () => {
+            calcularParcelas();
+            enviarLog('alterou_negrito_produto');
+        });
+        // ── CORRIGIDO: textos personalizados agendas auto-save ──
+        textoAdicionalLinhaInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_texto_adicional');
+        });
+        produtoPrefixInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_prefixo');
+        });
+        textoFinalMensagemTextarea.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_texto_final');
+        });
+        textoCabecalhoMensagemTextarea.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_cabecalho');
+        });
+        // ── CORRIGIDO: emoticons agendas auto-save ──
+        emoticonDinheiroInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_emoticon');
+        });
+        emoticonCartaoInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_emoticon');
+        });
         parcelaEspecificaInput.addEventListener('input', function() {
             const parcelas = getParcelas();
             const raw = this.value.trim();
@@ -1952,8 +2017,16 @@ function calcularValorComDesconto(valorBase, overrides) {
             calcularParcelas();
             enviarLog();
         });
-        selectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); }); calcularParcelas(); });
-        deselectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); }); calcularParcelas(); });
+        selectAllButton.addEventListener('click', () => {
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); });
+            calcularParcelas();
+            enviarLog('marcou_todas_parcelas');
+        });
+        deselectAllButton.addEventListener('click', () => {
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); });
+            calcularParcelas();
+            enviarLog('desmarcou_todas_parcelas');
+        });
 
         calcularParcelas();
     </script>
