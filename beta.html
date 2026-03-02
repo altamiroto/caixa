@@ -1599,21 +1599,20 @@ Capa silicone R$ 50,00
             if (fator <= 0) fator = 1;
             return Math.ceil(valor / fator) * fator;
         }
-        function calcularValorComDesconto(valorBase, overrides) {
-            let valor = valorBase;
-            const ov = overrides || {};
-            const acrescimoPerc = parseFloat(ov.acrescimoP !== undefined && ov.acrescimoP !== '' ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
-            const lucroFixo     = parseFloat(ov.acrescimoR !== undefined && ov.acrescimoR !== '' ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
-            const acrescimoFix  = parseFloat(ov.comissao   !== undefined && ov.comissao   !== '' ? ov.comissao   : acrescimoComissaoInput.value) || 0;
-            const descontoPerc  = parseFloat(ov.descontoP  !== undefined && ov.descontoP  !== '' ? ov.descontoP  : descontoPercentualInput.value) || 0;
-            const descontoFix   = parseFloat(ov.descontoR  !== undefined && ov.descontoR  !== '' ? ov.descontoR  : descontoFixoInput.value) || 0;
-            if (acrescimoPerc > 0) valor *= (1 + acrescimoPerc / 100);
-            if (lucroFixo     > 0) valor += lucroFixo;
-            if (acrescimoFix  > 0) valor += acrescimoFix;
-            if (descontoPerc  > 0) valor *= (1 - descontoPerc / 100);
-            if (descontoFix   > 0) valor -= descontoFix;
-            return Math.max(0, valor);
-        }
+function calcularValorComDesconto(valorBase, overrides) {
+    const ov = overrides || {};
+    const acrescimoPerc = parseFloat(ov.acrescimoP !== undefined && ov.acrescimoP !== '' ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
+    const lucroFixo     = parseFloat(ov.acrescimoR !== undefined && ov.acrescimoR !== '' ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
+    const acrescimoFix  = parseFloat(ov.comissao   !== undefined && ov.comissao   !== '' ? ov.comissao   : acrescimoComissaoInput.value) || 0;
+    const descontoPerc  = parseFloat(ov.descontoP  !== undefined && ov.descontoP  !== '' ? ov.descontoP  : descontoPercentualInput.value) || 0;
+    const descontoFix   = parseFloat(ov.descontoR  !== undefined && ov.descontoR  !== '' ? ov.descontoR  : descontoFixoInput.value) || 0;
+    // Percentuais sempre calculados sobre o valorBase original
+    const valorAcrescimoPerc = valorBase * (acrescimoPerc / 100);
+    const valorDescontoPerc  = valorBase * (descontoPerc  / 100);
+    // Soma e subtrai tudo sobre o valor base
+    const valor = valorBase + valorAcrescimoPerc + lucroFixo + acrescimoFix - valorDescontoPerc - descontoFix;
+    return Math.max(0, valor);
+}
         function atualizarResumoDescontos() {
             const base = parseFloat(valorBaseInput.value) || 0;
             if (base === 0) { discountSummary.classList.remove('active'); return; }
