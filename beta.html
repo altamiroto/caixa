@@ -1496,22 +1496,20 @@ Capa silicone R$ 50,00
                 productListSection.classList.remove('show');
                 valorBaseInput.disabled = false;
             }
-            // Restaura tabela de produtos independentemente do toggle
+            // Restaura tabela de produtos (fora do collapsible, sempre visível)
             if (dados.todosProdutos && dados.todosProdutos.length > 0) {
                 products = dados.todosProdutos;
                 displayTable(products);
+                // Marca checkboxes e recalcula já sincronamente
                 if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
+                    document.querySelectorAll('.product-checkbox').forEach(cb => {
+                        const idx = parseInt(cb.value);
+                        const p   = products[idx];
+                        if (p && dados.produtosSelecionados.some(ps => ps.produto === p.produto && ps.preco === p.preco)) {
+                            cb.checked = true;
+                        }
+                    });
                     selectedProducts = dados.produtosSelecionados;
-                    setTimeout(() => {
-                        document.querySelectorAll('.product-checkbox').forEach(cb => {
-                            const idx = parseInt(cb.value);
-                            const p   = products[idx];
-                            if (p && dados.produtosSelecionados.some(ps => ps.produto === p.produto && ps.preco === p.preco)) {
-                                cb.checked = true;
-                            }
-                        });
-                        handleProductSelection();
-                    }, 100);
                 }
             } else {
                 products = [];
