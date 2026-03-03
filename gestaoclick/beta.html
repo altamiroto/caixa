@@ -147,9 +147,11 @@
     tbody tr:hover { background: #fafafa; }
 
     /* Colunas: Nome | Estoque | Botão+ */
-    .tabela-produtos-base th:nth-child(1), .tabela-produtos-base td:nth-child(1) { width: 75%; }
-    .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 17%; text-align: center; }
-    .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 8%;  text-align: center; }
+    .tabela-produtos-base th:nth-child(1), .tabela-produtos-base td:nth-child(1) { width: 70%; }
+    .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 20%; text-align: center; }
+    .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 10%; text-align: center; }
+    /* Garante truncamento com ellipsis em todas as células */
+    .tabela-produtos-base th, .tabela-produtos-base td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .sem-registro { color: var(--text-muted); }
     .tag-estoque-ok  { color: var(--success); font-weight: 500; }
@@ -532,20 +534,14 @@
     @media (max-width: 600px) {
       #carrinho-float { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
 
-      /* table-layout fixed para controle preciso de larguras */
+      /* table-layout fixed: larguras somam 100% */
       .tabela-produtos-base { table-layout: fixed; width: 100%; }
-
-      /* Col 1 (Nome): ocupa todo o espaço restante */
       .tabela-produtos-base th:nth-child(1),
-      .tabela-produtos-base td:nth-child(1) { width: calc(100% - 92px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-      /* Col 2 (Estoque): largura fixa */
+      .tabela-produtos-base td:nth-child(1) { width: 68%; }
       .tabela-produtos-base th:nth-child(2),
-      .tabela-produtos-base td:nth-child(2) { width: 52px; text-align: center; }
-
-      /* Col 3 (botão +): largura fixa */
+      .tabela-produtos-base td:nth-child(2) { width: 20%; text-align: center; }
       .tabela-produtos-base th:nth-child(3),
-      .tabela-produtos-base td:nth-child(3) { width: 40px; padding: 6px 8px; text-align: center; }
+      .tabela-produtos-base td:nth-child(3) { width: 12%; text-align: center; padding: 6px 4px; }
 
       /* Modal: bottom-sheet */
       #modal-overlay { padding: 0; align-items: flex-end; }
