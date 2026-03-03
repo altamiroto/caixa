@@ -1056,19 +1056,20 @@ Capa silicone R$ 50,00
                     const agora     = new Date();
                     const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
                     const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
+                    const temTituloUsuario = !!_tituloSessao;
                     const titulo    = _tituloSessao || tituloAuto;
                     const comentario = _comentarioSessao;
                     const dados     = obterDadosCalculadora();
                     dados.titulo    = titulo;
                     dados.comentarios = comentario;
-                    dados.auto      = true;
+                    dados.auto      = !temTituloUsuario;
                     await sheetsPost({
                         id:         _historicoId,
                         date:       agora.toISOString(),
                         titulo:     titulo,
                         user_email: _currentUser.email,
                         payload:    dados,
-                        auto:       true
+                        auto:       !temTituloUsuario
                     });
                 }
                 setSaveStatus('✅ Salvo ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), '#4CAF50');
