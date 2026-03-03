@@ -413,28 +413,42 @@
 
             <div class="control-group">
                 <label for="aiPrompt">✏️ Prompt personalizado para IA:</label>
-                <textarea id="aiPrompt" class="ai-prompt-area">Você é um assistente especializado em análise de preços de produtos. 
-
+                <textarea id="aiPrompt" class="ai-prompt-area">Você é um assistente especializado em análise de preços de produtos.
 Analise as listas de fornecedores fornecidas e identifique os MELHORES PREÇOS para os seguintes produtos: {PRODUTOS}
 
 Para cada produto solicitado:
-1. Identifique TODAS as ocorrências do produto em TODAS as listas de fornecedores
-2. Compare os preços encontrados
-3. Indique qual fornecedor oferece o MENOR PREÇO
-4. Mostre o preço mais barato encontrado
-5. Se houver variações de marca ou embalagem, especifique
-6. Mostre outras opções que atendem parcialmente a busca
+1. Identifique TODAS as ocorrências do produto em TODAS as listas de fornecedores (considere até 3 fornecedores)
+2. Liste **sempre as 3 opções encontradas**, mesmo que mais caras — não exiba apenas o menor preço
+3. Se houver menos de 3 opções disponíveis, liste todas as que existirem e informe quantas foram encontradas
+4. Se houver variações de marca ou embalagem, especifique
+5. Mostre outras opções que atendem parcialmente a busca
+
+**REGRA DE EXIBIÇÃO DE OPÇÕES:**
+Sempre exiba **até 3 fornecedores por produto**, em ordem crescente de preço (do mais barato ao mais caro). O objetivo é oferecer alternativas caso o fornecedor mais barato não tenha disponibilidade.
+
+**REGRA DE LOCALIDADE — SP e BH:**
+Quando identificar que há fornecedores de **São Paulo (SP)** e **Belo Horizonte (BH)**, exiba obrigatoriamente a mesma quantidade de opções de cada localidade — mesmo que as opções de uma cidade sejam mais caras que as da outra. Deixe claro a origem de cada opção.
+- Se forem exibidas 3 opções de SP, exiba também 3 opções de BH.
+- Se não houver opções suficientes em uma das cidades para igualar, informe quantas foram encontradas e liste todas disponíveis.
+- Quando a localidade **não for identificada**, siga o fluxo normal sem separação por cidade.
 
 FORMATO DA RESPOSTA:
-Para cada produto, forneça:
-- Nome do Produto
-- Menor Preço: R$ X,XX
-- Fornecedor: [Nome do Fornecedor]
-- Detalhes: [marca, quantidade, embalagem, etc]
 
-Se um produto tiver múltiplas opções (marcas/tamanhos diferentes), liste as 3 melhores opções.
+Para cada produto, forneça as opções em ordem crescente de preço:
 
-Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
+**[Nome do Produto]**
+
+Nome do Produto
+Menor Preço: R$ X,XX
+Fornecedor: [Nome do Fornecedor]
+Localidade: [SP / BH / Não identificada]
+Detalhes: [marca, quantidade, embalagem, etc.]
+
+Quando localidades SP e BH forem identificadas, separe a tabela em duas seções: uma para SP e outra para BH, cada uma com até 3 opções em ordem crescente.
+
+Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para facilitar a substituição de fornecedor quando necessário.
+
+</textarea>
             </div>
 
             <div class="button-group">
@@ -1063,3 +1077,4 @@ Seja objetivo, claro e preciso. Foque apenas nos preços mais baixos.</textarea>
     </script>
 </body>
 </html>
+
