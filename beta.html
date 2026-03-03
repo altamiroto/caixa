@@ -205,14 +205,15 @@
         #productListResult a:hover { color: var(--primary-color); text-decoration: underline; }
         #productListResult th:nth-child(1), #productListResult td:nth-child(1) { width: 36px; padding: 8px 4px; }
         #productListResult th:nth-child(3), #productListResult td:nth-child(3) { width: 90px; font-size: 0.85rem; white-space: nowrap; }
-        #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 36px; padding: 8px 4px; }
+        #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 28px; padding: 6px 2px; }
+        #productListResult th:nth-child(5), #productListResult td:nth-child(5) { width: 28px; padding: 6px 2px; }
         #productListResult td:nth-child(2) { text-align: left; font-size: 0.88rem; }
-        #productListResult th:nth-child(4):not(:last-child), #productListResult td:nth-child(4):not(:last-child) { width: 36px; padding: 8px 4px; overflow: hidden; }
         @media (max-width: 600px) {
-            #productListResult th, #productListResult td { padding: 7px 5px; font-size: 0.78rem; }
+            #productListResult th, #productListResult td { padding: 7px 4px; font-size: 0.78rem; }
             #productListResult th:nth-child(3), #productListResult td:nth-child(3) { width: 80px; font-size: 0.75rem; }
             #productListResult td:nth-child(2) { font-size: 0.78rem; }
-            #productListResult th:nth-child(4):not(:last-child), #productListResult td:nth-child(4):not(:last-child) { width: 30px; padding: 4px 2px; }
+            #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 24px; padding: 4px 2px; }
+            #productListResult th:nth-child(5), #productListResult td:nth-child(5) { width: 24px; padding: 4px 2px; }
             .btn-adj { padding: 3px 4px; font-size: 0.78rem; }
         }
         .product-adj-row td { padding: 0 !important; border-top: none !important; background: transparent !important; }
@@ -360,7 +361,7 @@
         .add-product-form .adj-field-inner input { padding-left: 0 !important; }
         .add-product-form .adj-fields { margin-top: 4px; }
         /* Placeholder "global" itálico nos campos de ajuste */
-        .add-product-form .adj-field-inner input::placeholder { color: #aaa; font-style: italic; font-size: 0.78rem; }
+        .adj-field-inner input::placeholder { color: #bbb; font-style: italic; font-size: 0.78rem; }
         .add-product-form .adj-comment-input { background: var(--bg-primary) !important; }
         .btn-add-product {
             display: inline-flex; align-items: center; gap: 6px;
@@ -542,65 +543,64 @@
                     <button class="btn btn-accent" onclick="processWithAI()">✨ Processar com IA</button>
                 </div>
                 <div id="productListLoading" class="loading-spinner"><div class="spinner"></div><p>Processando...</p></div>
-                <div id="productListResult"></div>
+            </div>
+        </div>
 
-                <!-- Botão e formulário de adicionar produto manualmente -->
-                <button class="btn-add-product" id="btnToggleAddProduct" onclick="toggleAddProductForm()">
-                    ➕ Adicionar produto manualmente
-                </button>
-                <div class="add-product-form" id="addProductForm">
-                    <div class="add-product-form-title">📦 Novo Produto</div>
-                    <div class="add-product-fields">
-                        <div class="add-product-name-wrap">
-                            <label for="addProdNome">Nome do produto *</label>
-                            <input type="text" id="addProdNome" placeholder="Ex: iPhone 15 Pro Max 256GB"
-                                oninput="clearAddFieldError('addProdNome')"
-                                onkeydown="if(event.key==='Enter') confirmarAddProduto()">
-                            <span class="add-field-error-msg" id="addProdNomeErr"></span>
-                        </div>
-                        <div class="add-product-price-wrap">
-                            <label for="addProdPreco">Preço (R$) *</label>
-                            <input type="number" id="addProdPreco" placeholder="Ex: 1299.90" step="0.01" min="0.01"
-                                oninput="clearAddFieldError('addProdPreco')"
-                                onkeydown="if(event.key==='Enter') confirmarAddProduto()">
-                            <span class="add-field-error-msg" id="addProdPrecoErr"></span>
-                        </div>
-                    </div>
-                    <!-- Ajustes individuais opcionais — sobrescrevem os globais se preenchidos -->
-                    <div class="add-product-form-title" style="margin-top:10px;font-size:0.75rem;opacity:0.8;">
-                        ⚙️ Ajustes individuais <small style="font-weight:400;text-transform:none;">(opcionais — sobrescrevem os campos globais)</small>
-                    </div>
-                    <div class="adj-fields" style="margin-top:4px;">
-                        <div class="adj-field">
-                            <label>Desconto R$</label>
-                            <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdDescontoR" step="0.01" min="0" placeholder="global"></div>
-                        </div>
-                        <div class="adj-field">
-                            <label>Desconto %</label>
-                            <div class="adj-field-inner"><input type="number" id="addProdDescontoP" step="0.01" min="0" max="100" placeholder="global"><span>%</span></div>
-                        </div>
-                        <div class="adj-field">
-                            <label>Acréscimo R$</label>
-                            <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdAcrescimoR" step="0.01" min="0" placeholder="global"></div>
-                        </div>
-                        <div class="adj-field">
-                            <label>Acréscimo %</label>
-                            <div class="adj-field-inner"><input type="number" id="addProdAcrescimoP" step="0.01" min="0" placeholder="global"><span>%</span></div>
-                        </div>
-                        <div class="adj-field">
-                            <label>Comissão R$</label>
-                            <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdComissao" step="0.01" min="0" placeholder="global"></div>
-                        </div>
-                    </div>
-                    <div class="adj-comment-row" style="margin-top:8px;">
-                        <label>💬 Comentário</label>
-                        <textarea class="adj-comment-input" id="addProdComentario" placeholder="Observação opcional para este produto..."></textarea>
-                    </div>
-                    <div class="add-product-form-actions">
-                        <button class="btn-add-confirm" onclick="confirmarAddProduto()">✅ Adicionar</button>
-                        <button class="btn-add-cancel" onclick="toggleAddProductForm()">Cancelar</button>
-                    </div>
+        <!-- Tabela e botão de adicionar — FORA da seção colapsável, sempre visíveis -->
+        <div id="productListResult"></div>
+        <button class="btn-add-product" id="btnToggleAddProduct" onclick="toggleAddProductForm()">
+            ➕ Adicionar produto manualmente
+        </button>
+        <div class="add-product-form" id="addProductForm">
+            <div class="add-product-form-title">📦 Novo Produto</div>
+            <div class="add-product-fields">
+                <div class="add-product-name-wrap">
+                    <label for="addProdNome">Nome do produto *</label>
+                    <input type="text" id="addProdNome" placeholder="Ex: iPhone 15 Pro Max 256GB"
+                        oninput="clearAddFieldError('addProdNome')"
+                        onkeydown="if(event.key==='Enter') confirmarAddProduto()">
+                    <span class="add-field-error-msg" id="addProdNomeErr"></span>
                 </div>
+                <div class="add-product-price-wrap">
+                    <label for="addProdPreco">Preço (R$) *</label>
+                    <input type="number" id="addProdPreco" placeholder="Ex: 1299.90" step="0.01" min="0.01"
+                        oninput="clearAddFieldError('addProdPreco')"
+                        onkeydown="if(event.key==='Enter') confirmarAddProduto()">
+                    <span class="add-field-error-msg" id="addProdPrecoErr"></span>
+                </div>
+            </div>
+            <div class="add-product-form-title" style="margin-top:10px;font-size:0.75rem;opacity:0.8;">
+                ⚙️ Ajustes individuais <small style="font-weight:400;text-transform:none;">(opcionais — sobrescrevem os campos globais)</small>
+            </div>
+            <div class="adj-fields" style="margin-top:4px;">
+                <div class="adj-field">
+                    <label>Desconto R$</label>
+                    <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdDescontoR" step="0.01" min="0" placeholder="global"></div>
+                </div>
+                <div class="adj-field">
+                    <label>Desconto %</label>
+                    <div class="adj-field-inner"><input type="number" id="addProdDescontoP" step="0.01" min="0" max="100" placeholder="global"><span>%</span></div>
+                </div>
+                <div class="adj-field">
+                    <label>Acréscimo R$</label>
+                    <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdAcrescimoR" step="0.01" min="0" placeholder="global"></div>
+                </div>
+                <div class="adj-field">
+                    <label>Acréscimo %</label>
+                    <div class="adj-field-inner"><input type="number" id="addProdAcrescimoP" step="0.01" min="0" placeholder="global"><span>%</span></div>
+                </div>
+                <div class="adj-field">
+                    <label>Comissão R$</label>
+                    <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdComissao" step="0.01" min="0" placeholder="global"></div>
+                </div>
+            </div>
+            <div class="adj-comment-row" style="margin-top:8px;">
+                <label>💬 Comentário</label>
+                <textarea class="adj-comment-input" id="addProdComentario" placeholder="Observação opcional para este produto..."></textarea>
+            </div>
+            <div class="add-product-form-actions">
+                <button class="btn-add-confirm" onclick="confirmarAddProduto()">✅ Adicionar</button>
+                <button class="btn-add-cancel" onclick="toggleAddProductForm()">Cancelar</button>
             </div>
         </div>
 
@@ -665,11 +665,7 @@
                 <div class="input-with-icon"><span class="input-icon">🏦</span>
                 <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01" min="0"></div>
             </div>
-            <label class="per-product-toggle" id="perProductToggleLabel" for="perProductAdjust">
-                <input type="checkbox" id="perProductAdjust" onchange="onPerProductAdjustChange()">
-                <span>⚙️ Ajuste individual por produto</span>
-                <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Ativa campos de ajuste na tabela de produtos</small>
-            </label>
+
             <div id="discountSummary" class="discount-summary">
                 <h4>📊 Resumo de Cálculos</h4>
                 <p id="discountDetails"></p>
@@ -1060,19 +1056,20 @@ Capa silicone R$ 50,00
                     const agora     = new Date();
                     const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
                     const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
+                    const temTituloUsuario = !!_tituloSessao;
                     const titulo    = _tituloSessao || tituloAuto;
                     const comentario = _comentarioSessao;
                     const dados     = obterDadosCalculadora();
                     dados.titulo    = titulo;
                     dados.comentarios = comentario;
-                    dados.auto      = true;
+                    dados.auto      = !temTituloUsuario;
                     await sheetsPost({
                         id:         _historicoId,
                         date:       agora.toISOString(),
                         titulo:     titulo,
                         user_email: _currentUser.email,
                         payload:    dados,
-                        auto:       true
+                        auto:       !temTituloUsuario
                     });
                 }
                 setSaveStatus('✅ Salvo ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), '#4CAF50');
@@ -1164,8 +1161,6 @@ Capa silicone R$ 50,00
         const especificaMostrarPixCb          = document.getElementById('especificaMostrarPix');
         const especificaMostrarTotalCb        = document.getElementById('especificaMostrarTotal');
         const parcelaTaxasRow                 = document.getElementById('parcelaTaxasRow');
-        const perProductAdjustCb              = document.getElementById('perProductAdjust');
-        const perProductToggleLabel           = document.getElementById('perProductToggleLabel');
 
         // ── Taxas e configurações padrão ──────────────────────────────────────
         const taxasDeJurosPadrao = {
@@ -1186,16 +1181,9 @@ Capa silicone R$ 50,00
         function hasProductAdj(idx) {
             const a = productAdjustments[idx];
             if (!a) return false;
-            return Object.values(a).some(v => v !== '' && v !== '0' && parseFloat(v) !== 0);
+            // Considera preenchido se não for string vazia (0 é um valor válido intencional)
+            return Object.values(a).some(v => v !== '' && v !== null && v !== undefined);
         }
-        function onPerProductAdjustChange() {
-            const enabled = perProductAdjustCb.checked;
-            perProductToggleLabel.classList.toggle('enabled', enabled);
-            if (products.length > 0) displayTable(products);
-            calcularParcelas();
-            enviarLog('alterou_ajuste_por_produto');
-        }
-
         // ── Parcelas rápidas ──────────────────────────────────────────────────
         function getParcelas() {
             const raw = parcelaEspecificaInput.value.trim();
@@ -1328,7 +1316,7 @@ Capa silicone R$ 50,00
                 fatorArredondamento: fatorArredondamentoInput.value, resultado: resultadoTextarea.value,
                 usandoListaProdutos: toggleProductList.checked, listaProdutosTexto: productListTextarea.value,
                 produtosSelecionados: selectedProducts, todosProdutos: products,
-                productAdjustments: productAdjustments, perProductAdjust: perProductAdjustCb.checked,
+                productAdjustments: productAdjustments, perProductAdjust: true,
                 opcoesAvancadasAtivo: toggleAdvancedOptions.checked,
                 opcoes: {
                     hideDinheiroPix: hideDinheiroPixCheckbox.checked, showDebito: showDebitoCheckbox.checked,
@@ -1391,14 +1379,21 @@ Capa silicone R$ 50,00
                 return;
             }
 
-            const comTitulo = _sheetsCache.filter(r => {
+            // Detecta título automático: começa com data (dd/mm/yyyy) OU
+            // com abreviação de dia seguida de data ("Seg, dd/mm/yyyy") ou
+            // com data em formato ISO, ou registro marcado como auto
+            const _isAutoTitulo = (r) => {
                 const t = (r.titulo || '').trim();
-                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
-            });
-            const automaticos = _sheetsCache.filter(r => {
-                const t = (r.titulo || '').trim();
-                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
-            });
+                if (!t) return true;  // sem título = automático
+                if (r.auto === true) return true;  // marcado explicitamente como auto
+                // "03/03/2025, ..." ou "03/03/2025 às ..."
+                if (/^\d{2}\/\d{2}\/\d{4}/.test(t)) return true;
+                // "Seg, 03/03/2025 ..." — dia abreviado + data
+                if (/^[A-ZÁÉÍÓÚa-záéíóú]{3},?\s*\d{2}\/\d{2}\/\d{4}/.test(t)) return true;
+                return false;
+            };
+            const comTitulo  = _sheetsCache.filter(r => !_isAutoTitulo(r));
+            const automaticos = _sheetsCache.filter(r =>  _isAutoTitulo(r));
 
             let html = '';
 
@@ -1491,28 +1486,36 @@ Capa silicone R$ 50,00
                 emoticonCartaoInput.value = dados.textos.emoticonCartao || '💳 ';
             }
             productAdjustments = dados.productAdjustments || {};
-            perProductAdjustCb.checked = dados.perProductAdjust || false;
-            perProductToggleLabel.classList.toggle('enabled', perProductAdjustCb.checked);
+            // Restaura lista de produtos (tabela fica fora do collapsible, sempre visível)
+            productListTextarea.value = dados.listaProdutosTexto || '';
             if (dados.usandoListaProdutos) {
                 toggleProductList.checked = true;
-                productListTextarea.value = dados.listaProdutosTexto || '';
-                if (dados.todosProdutos && dados.todosProdutos.length > 0) {
-                    products = dados.todosProdutos;
-                    displayTable(products);
-                    if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
-                        selectedProducts = dados.produtosSelecionados;
-                        setTimeout(() => {
-                            dados.produtosSelecionados.forEach(ps => {
-                                const idx = products.findIndex(p => p.produto === ps.produto && p.preco === ps.preco);
-                                if (idx !== -1) { const cb = document.querySelector(`.product-checkbox[value="${idx}"]`); if (cb) cb.checked = true; }
-                            });
-                        }, 100);
-                    }
-                }
-                toggleProductListSection();
+                productListSection.classList.add('show');
+                valorBaseInput.disabled = true;
             } else {
                 toggleProductList.checked = false;
-                if (productListSection.classList.contains('show')) toggleProductListSection();
+                productListSection.classList.remove('show');
+                valorBaseInput.disabled = false;
+            }
+            // Restaura tabela de produtos (fora do collapsible, sempre visível)
+            if (dados.todosProdutos && dados.todosProdutos.length > 0) {
+                products = dados.todosProdutos;
+                displayTable(products);
+                // Marca checkboxes e recalcula já sincronamente
+                if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
+                    document.querySelectorAll('.product-checkbox').forEach(cb => {
+                        const idx = parseInt(cb.value);
+                        const p   = products[idx];
+                        if (p && dados.produtosSelecionados.some(ps => ps.produto === p.produto && ps.preco === p.preco)) {
+                            cb.checked = true;
+                        }
+                    });
+                    selectedProducts = dados.produtosSelecionados;
+                }
+            } else {
+                products = [];
+                selectedProducts = [];
+                productListResult.innerHTML = '';
             }
             if (dados.opcoes) {
                 hideDinheiroPixCheckbox.checked = dados.opcoes.hideDinheiroPix || false;
@@ -1636,7 +1639,15 @@ Capa silicone R$ 50,00
         function toggleProductListSection() {
             productListSection.classList.toggle('show', toggleProductList.checked);
             valorBaseInput.disabled = toggleProductList.checked;
-            if (!toggleProductList.checked) { products = []; selectedProducts = []; productListResult.innerHTML = ''; productAdjustments = {}; }
+            // Ao desmarcar: só limpa se não houver produtos (manual ou processados)
+            // para não perder dados digitados manualmente
+            if (!toggleProductList.checked) {
+                if (products.length === 0) {
+                    productListResult.innerHTML = '';
+                }
+                // Mantém products, selectedProducts e productAdjustments intactos
+                // para não perder dados ao desmarcar/remarcar acidentalmente
+            }
             calcularParcelas();
             enviarLog('alterou_lista_produtos');
         }
@@ -1724,7 +1735,7 @@ Capa silicone R$ 50,00
             const ov = overrides || {};
             // Cada campo individual só sobrescreve o global se estiver preenchido com valor > 0
             // Caso contrário, herda o valor global (campo da seção Acréscimos e Descontos)
-            const _hasVal = (v) => v !== undefined && v !== '' && v !== null && parseFloat(v) > 0;
+            const _hasVal = (v) => v !== undefined && v !== '' && v !== null;
             const acrescimoPerc = parseFloat(_hasVal(ov.acrescimoP) ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
             const lucroFixo     = parseFloat(_hasVal(ov.acrescimoR) ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
             const acrescimoFix  = parseFloat(_hasVal(ov.comissao)   ? ov.comissao   : acrescimoComissaoInput.value) || 0;
@@ -1776,6 +1787,12 @@ Capa silicone R$ 50,00
                     toggleProductList.checked = true;
                     toggleProductListSection();
                 }
+                // Atualiza placeholders dos campos de ajuste com valores globais atuais
+                document.getElementById('addProdDescontoR').placeholder  = parseFloat(descontoFixoInput.value)        || 0;
+                document.getElementById('addProdDescontoP').placeholder  = parseFloat(descontoPercentualInput.value)   || 0;
+                document.getElementById('addProdAcrescimoR').placeholder = parseFloat(lucroAdicionalInput.value)       || 0;
+                document.getElementById('addProdAcrescimoP').placeholder = parseFloat(acrescimoPercentualInput.value)  || 0;
+                document.getElementById('addProdComissao').placeholder   = parseFloat(acrescimoComissaoInput.value)    || 0;
                 setTimeout(() => document.getElementById('addProdNome').focus(), 80);
             } else {
                 // Limpa todos os campos ao fechar
@@ -1853,11 +1870,7 @@ Capa silicone R$ 50,00
                     comissao:   adjComissao,
                     comentario: adjComentario
                 };
-                // Ativa automaticamente o modo de ajuste individual por produto
-                if (!perProductAdjustCb.checked) {
-                    perProductAdjustCb.checked = true;
-                    perProductToggleLabel.classList.add('enabled');
-                }
+
             }
 
             // Reconstrói a tabela mantendo seleções e ajustes existentes
@@ -1937,12 +1950,12 @@ Capa silicone R$ 50,00
             return prods;
         }
         function displayTable(prods) {
-            const adjMode = perProductAdjustCb.checked;
+            // Coluna ✏️ sempre visível — fixo
             let html = `<table><thead><tr>
                 <th><input type="checkbox" id="selectAllProducts"></th>
                 <th>Produto</th><th>Preço</th>
-                ${adjMode ? '<th title="Ajuste individual">⚙️</th>' : ''}
-                <th>Imagem</th>
+                <th title="Ajuste individual">✏️</th>
+                <th>🔍</th>
             </tr></thead><tbody>`;
             prods.forEach((p, i) => {
                 const price = `R$ ${p.preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
@@ -1953,32 +1966,30 @@ Capa silicone R$ 50,00
                     <td><input type="checkbox" class="product-checkbox" value="${i}"></td>
                     <td>${p.produto}${hasAdj ? '<span class="adj-badge">ajuste</span>' : ''}</td>
                     <td>${price}</td>
-                    ${adjMode ? `<td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>` : ''}
+                    <td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>
                     <td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">🔍</a></td>
                 </tr>`;
-                if (adjMode) {
-                    html += `<tr class="product-adj-row" id="adjRow_${i}">
-                        <td colspan="5">
-                            <div class="adj-panel" id="adjPanel_${i}">
-                                <div class="adj-panel-title">
-                                    <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
-                                    <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
-                                </div>
-                                <div class="adj-fields">
-                                    <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
-                                    <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="0" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
-                                    <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
-                                    <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
-                                    <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
-                                </div>
-                                <div class="adj-comment-row">
-                                    <label>💬 Comentário do produto</label>
-                                    <textarea class="adj-comment-input" placeholder="Ex: cliente pediu desconto especial..." oninput="saveProductAdj(${i},'comentario',this.value)" id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
-                                </div>
+                html += `<tr class="product-adj-row" id="adjRow_${i}">
+                    <td colspan="5">
+                        <div class="adj-panel" id="adjPanel_${i}">
+                            <div class="adj-panel-title">
+                                <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
+                                <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
                             </div>
-                        </td>
-                    </tr>`;
-                }
+                            <div class="adj-fields">
+                                <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(descontoFixoInput.value)||0}" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
+                                <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="${parseFloat(descontoPercentualInput.value)||0}" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(lucroAdicionalInput.value)||0}" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
+                                <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="${parseFloat(acrescimoPercentualInput.value)||0}" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(acrescimoComissaoInput.value)||0}" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
+                            </div>
+                            <div class="adj-comment-row">
+                                <label>💬 Comentário do produto</label>
+                                <textarea class="adj-comment-input" placeholder="Ex: cliente pediu desconto especial..." oninput="saveProductAdj(${i},'comentario',this.value)" id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
             });
             html += '</tbody></table>';
             const badge = `<span class="product-count-badge">${prods.length} produto${prods.length>1?'s':''} encontrado${prods.length>1?'s':''}</span>`;
@@ -2072,7 +2083,7 @@ Capa silicone R$ 50,00
             const config = getParcelasSelecionadas();
             if (selectedProducts.length > 0) {
                 selectedProducts.forEach((p, i) => {
-                    const overrides = (perProductAdjustCb.checked && p._idx !== undefined) ? getProductAdj(p._idx) : null;
+                    const overrides = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
                     let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
                     if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
                     const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco, overrides);
@@ -2151,7 +2162,6 @@ Capa silicone R$ 50,00
             valorBaseInput.classList.remove('has-value');
             parcelaEspecificaInput.classList.remove('invalid');
             taxasRapidas = {};
-            perProductAdjustCb.checked = false; perProductToggleLabel.classList.remove('enabled');
             especificaMostrarPixCb.checked = true; especificaMostrarTotalCb.checked = false;
             syncChipPix(true); syncChipTotal(false);
             atualizarVisibilidadeMiniOpcoes();
