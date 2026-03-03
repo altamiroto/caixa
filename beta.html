@@ -309,6 +309,63 @@
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .discount-summary.active { animation: slideIn 0.3s ease; }
         .product-count-badge { background: var(--secondary-color); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-left: 8px; }
+
+        /* ── Adicionar produto manualmente ── */
+        .add-product-bar {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 14px; flex-wrap: wrap;
+        }
+        .add-product-form {
+            display: none; flex-direction: column; gap: 10px;
+            background: linear-gradient(135deg, rgba(76,175,80,0.06) 0%, rgba(33,150,243,0.06) 100%);
+            border: 2px dashed var(--primary-color); border-radius: 12px;
+            padding: 14px 16px; margin-top: 12px;
+            animation: slideDown 0.25s ease;
+        }
+        .add-product-form.open { display: flex; }
+        .add-product-form-title {
+            font-size: 0.82rem; font-weight: 700; color: var(--primary-color);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
+        }
+        .add-product-fields { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+        @media (max-width: 480px) { .add-product-fields { grid-template-columns: 1fr; } }
+        .add-product-name-wrap { display: flex; flex-direction: column; gap: 4px; }
+        .add-product-price-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+        .add-product-form label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin: 0; }
+        .add-product-form input {
+            padding: 9px 12px 9px 12px !important;
+            font-size: 14px; border: 2px solid var(--border-color);
+            border-radius: 8px; background: var(--bg-secondary);
+            color: var(--text-primary); transition: border-color 0.2s; width: 100%;
+        }
+        .add-product-form input:focus { outline: none; border-color: var(--primary-color); }
+        .add-product-form input.field-error { border-color: var(--danger-color) !important; background: rgba(244,67,54,0.05) !important; }
+        .add-product-form-actions { display: flex; gap: 8px; margin-top: 4px; }
+        .btn-add-confirm {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
+            color: white; border: none; border-radius: 8px; padding: 9px 18px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-add-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,175,80,0.35); }
+        .btn-add-cancel {
+            background: transparent; color: var(--text-secondary);
+            border: 2px solid var(--border-color); border-radius: 8px;
+            padding: 9px 14px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-add-cancel:hover { border-color: var(--danger-color); color: var(--danger-color); }
+        .add-field-error-msg { font-size: 0.72rem; color: var(--danger-color); font-weight: 600; min-height: 14px; }
+        .btn-add-product {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: transparent; border: 2px dashed var(--primary-color);
+            color: var(--primary-color); border-radius: 10px;
+            padding: 8px 14px; font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; margin-top: 12px; width: 100%;
+            justify-content: center;
+        }
+        .btn-add-product:hover { background: rgba(76,175,80,0.08); transform: translateY(-1px); }
+        .btn-add-product.open { background: rgba(76,175,80,0.1); border-style: solid; }
         .historico-item { background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; transition: all 0.3s ease; }
         .historico-item:hover { box-shadow: var(--shadow-hover); border-color: var(--primary-color); }
         .historico-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -480,6 +537,34 @@
                 </div>
                 <div id="productListLoading" class="loading-spinner"><div class="spinner"></div><p>Processando...</p></div>
                 <div id="productListResult"></div>
+
+                <!-- Botão e formulário de adicionar produto manualmente -->
+                <button class="btn-add-product" id="btnToggleAddProduct" onclick="toggleAddProductForm()">
+                    ➕ Adicionar produto manualmente
+                </button>
+                <div class="add-product-form" id="addProductForm">
+                    <div class="add-product-form-title">📦 Novo Produto</div>
+                    <div class="add-product-fields">
+                        <div class="add-product-name-wrap">
+                            <label for="addProdNome">Nome do produto *</label>
+                            <input type="text" id="addProdNome" placeholder="Ex: iPhone 15 Pro Max 256GB"
+                                oninput="clearAddFieldError('addProdNome')"
+                                onkeydown="if(event.key==='Enter') confirmarAddProduto()">
+                            <span class="add-field-error-msg" id="addProdNomeErr"></span>
+                        </div>
+                        <div class="add-product-price-wrap">
+                            <label for="addProdPreco">Preço (R$) *</label>
+                            <input type="number" id="addProdPreco" placeholder="Ex: 1299.90" step="0.01" min="0.01"
+                                oninput="clearAddFieldError('addProdPreco')"
+                                onkeydown="if(event.key==='Enter') confirmarAddProduto()">
+                            <span class="add-field-error-msg" id="addProdPrecoErr"></span>
+                        </div>
+                    </div>
+                    <div class="add-product-form-actions">
+                        <button class="btn-add-confirm" onclick="confirmarAddProduto()">✅ Adicionar</button>
+                        <button class="btn-add-cancel" onclick="toggleAddProductForm()">Cancelar</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1638,6 +1723,109 @@ Capa silicone R$ 50,00
         }
 
         gerarCheckboxesAvancadas();
+
+        // ── Adicionar produto manualmente ──────────────────────────────────────
+        function toggleAddProductForm() {
+            const form = document.getElementById('addProductForm');
+            const btn  = document.getElementById('btnToggleAddProduct');
+            const isOpen = form.classList.toggle('open');
+            btn.classList.toggle('open', isOpen);
+            btn.innerHTML = isOpen ? '✖ Fechar' : '➕ Adicionar produto manualmente';
+            if (isOpen) {
+                // Se abriu, garante que a seção de lista está visível
+                if (!toggleProductList.checked) {
+                    toggleProductList.checked = true;
+                    toggleProductListSection();
+                }
+                setTimeout(() => document.getElementById('addProdNome').focus(), 80);
+            } else {
+                // Limpa ao fechar
+                document.getElementById('addProdNome').value = '';
+                document.getElementById('addProdPreco').value = '';
+                clearAddFieldError('addProdNome');
+                clearAddFieldError('addProdPreco');
+            }
+        }
+        function clearAddFieldError(fieldId) {
+            const el = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + 'Err');
+            if (el) el.classList.remove('field-error');
+            if (errEl) errEl.textContent = '';
+        }
+        function confirmarAddProduto() {
+            const nomeInput  = document.getElementById('addProdNome');
+            const precoInput = document.getElementById('addProdPreco');
+            const nomeErr    = document.getElementById('addProdNomeErr');
+            const precoErr   = document.getElementById('addProdPrecoErr');
+            let valid = true;
+
+            const nome = nomeInput.value.trim();
+            const preco = parseFloat(precoInput.value);
+
+            // Validação nome
+            if (!nome) {
+                nomeInput.classList.add('field-error');
+                nomeErr.textContent = '⚠️ Nome obrigatório';
+                nomeInput.focus();
+                valid = false;
+            } else if (nome.length < 2) {
+                nomeInput.classList.add('field-error');
+                nomeErr.textContent = '⚠️ Nome muito curto';
+                nomeInput.focus();
+                valid = false;
+            }
+
+            // Validação preço
+            if (!precoInput.value || isNaN(preco) || preco <= 0) {
+                precoInput.classList.add('field-error');
+                precoErr.textContent = '⚠️ Preço inválido (deve ser > 0)';
+                if (valid) precoInput.focus();
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            // Adiciona ao array de produtos
+            products.push({ produto: nome, preco: preco });
+
+            // Reconstrói a tabela mantendo seleções e ajustes existentes
+            const selectedIdxs = new Set(selectedProducts.map(p => p._idx));
+            displayTable(products);
+
+            // Restaura checkboxes que já estavam marcados
+            document.querySelectorAll('.product-checkbox').forEach(cb => {
+                const idx = parseInt(cb.value);
+                if (selectedIdxs.has(idx)) cb.checked = true;
+            });
+
+            // Seleciona automaticamente o novo produto recém-adicionado
+            const newIdx = products.length - 1;
+            const newCb = document.querySelector(`.product-checkbox[value="${newIdx}"]`);
+            if (newCb) newCb.checked = true;
+
+            handleProductSelection();
+            enviarLog('adicionou_produto_manual');
+
+            // Feedback visual
+            showToast(`✅ "${nome}" adicionado!`);
+
+            // Limpa campos mas mantém form aberto para adicionar mais
+            nomeInput.value = '';
+            precoInput.value = '';
+            nomeInput.focus();
+
+            // Garante que a seção processada está visível
+            if (!toggleProductList.checked) {
+                toggleProductList.checked = true;
+                toggleProductListSection();
+            }
+
+            // Scroll suave para a tabela
+            setTimeout(() => {
+                const result = document.getElementById('productListResult');
+                if (result) result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
 
         function processList() {
             const list = productListTextarea.value;
