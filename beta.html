@@ -205,14 +205,15 @@
         #productListResult a:hover { color: var(--primary-color); text-decoration: underline; }
         #productListResult th:nth-child(1), #productListResult td:nth-child(1) { width: 36px; padding: 8px 4px; }
         #productListResult th:nth-child(3), #productListResult td:nth-child(3) { width: 90px; font-size: 0.85rem; white-space: nowrap; }
-        #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 36px; padding: 8px 4px; }
+        #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 28px; padding: 6px 2px; }
+        #productListResult th:nth-child(5), #productListResult td:nth-child(5) { width: 28px; padding: 6px 2px; }
         #productListResult td:nth-child(2) { text-align: left; font-size: 0.88rem; }
-        #productListResult th:nth-child(4):not(:last-child), #productListResult td:nth-child(4):not(:last-child) { width: 36px; padding: 8px 4px; overflow: hidden; }
         @media (max-width: 600px) {
-            #productListResult th, #productListResult td { padding: 7px 5px; font-size: 0.78rem; }
+            #productListResult th, #productListResult td { padding: 7px 4px; font-size: 0.78rem; }
             #productListResult th:nth-child(3), #productListResult td:nth-child(3) { width: 80px; font-size: 0.75rem; }
             #productListResult td:nth-child(2) { font-size: 0.78rem; }
-            #productListResult th:nth-child(4):not(:last-child), #productListResult td:nth-child(4):not(:last-child) { width: 30px; padding: 4px 2px; }
+            #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 24px; padding: 4px 2px; }
+            #productListResult th:nth-child(5), #productListResult td:nth-child(5) { width: 24px; padding: 4px 2px; }
             .btn-adj { padding: 3px 4px; font-size: 0.78rem; }
         }
         .product-adj-row td { padding: 0 !important; border-top: none !important; background: transparent !important; }
@@ -665,11 +666,7 @@
                 <div class="input-with-icon"><span class="input-icon">🏦</span>
                 <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01" min="0"></div>
             </div>
-            <label class="per-product-toggle" id="perProductToggleLabel" for="perProductAdjust">
-                <input type="checkbox" id="perProductAdjust" onchange="onPerProductAdjustChange()">
-                <span>⚙️ Ajuste individual por produto</span>
-                <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Ativa campos de ajuste na tabela de produtos</small>
-            </label>
+
             <div id="discountSummary" class="discount-summary">
                 <h4>📊 Resumo de Cálculos</h4>
                 <p id="discountDetails"></p>
@@ -1164,8 +1161,6 @@ Capa silicone R$ 50,00
         const especificaMostrarPixCb          = document.getElementById('especificaMostrarPix');
         const especificaMostrarTotalCb        = document.getElementById('especificaMostrarTotal');
         const parcelaTaxasRow                 = document.getElementById('parcelaTaxasRow');
-        const perProductAdjustCb              = document.getElementById('perProductAdjust');
-        const perProductToggleLabel           = document.getElementById('perProductToggleLabel');
 
         // ── Taxas e configurações padrão ──────────────────────────────────────
         const taxasDeJurosPadrao = {
@@ -1188,14 +1183,6 @@ Capa silicone R$ 50,00
             if (!a) return false;
             return Object.values(a).some(v => v !== '' && v !== '0' && parseFloat(v) !== 0);
         }
-        function onPerProductAdjustChange() {
-            const enabled = perProductAdjustCb.checked;
-            perProductToggleLabel.classList.toggle('enabled', enabled);
-            if (products.length > 0) displayTable(products);
-            calcularParcelas();
-            enviarLog('alterou_ajuste_por_produto');
-        }
-
         // ── Parcelas rápidas ──────────────────────────────────────────────────
         function getParcelas() {
             const raw = parcelaEspecificaInput.value.trim();
@@ -1328,7 +1315,7 @@ Capa silicone R$ 50,00
                 fatorArredondamento: fatorArredondamentoInput.value, resultado: resultadoTextarea.value,
                 usandoListaProdutos: toggleProductList.checked, listaProdutosTexto: productListTextarea.value,
                 produtosSelecionados: selectedProducts, todosProdutos: products,
-                productAdjustments: productAdjustments, perProductAdjust: perProductAdjustCb.checked,
+                productAdjustments: productAdjustments, perProductAdjust: true,
                 opcoesAvancadasAtivo: toggleAdvancedOptions.checked,
                 opcoes: {
                     hideDinheiroPix: hideDinheiroPixCheckbox.checked, showDebito: showDebitoCheckbox.checked,
@@ -1491,8 +1478,7 @@ Capa silicone R$ 50,00
                 emoticonCartaoInput.value = dados.textos.emoticonCartao || '💳 ';
             }
             productAdjustments = dados.productAdjustments || {};
-            perProductAdjustCb.checked = dados.perProductAdjust || false;
-            perProductToggleLabel.classList.toggle('enabled', perProductAdjustCb.checked);
+            // perProductAdjust always enabled — nothing to restore
             if (dados.usandoListaProdutos) {
                 toggleProductList.checked = true;
                 productListTextarea.value = dados.listaProdutosTexto || '';
@@ -1853,11 +1839,7 @@ Capa silicone R$ 50,00
                     comissao:   adjComissao,
                     comentario: adjComentario
                 };
-                // Ativa automaticamente o modo de ajuste individual por produto
-                if (!perProductAdjustCb.checked) {
-                    perProductAdjustCb.checked = true;
-                    perProductToggleLabel.classList.add('enabled');
-                }
+
             }
 
             // Reconstrói a tabela mantendo seleções e ajustes existentes
@@ -1937,12 +1919,12 @@ Capa silicone R$ 50,00
             return prods;
         }
         function displayTable(prods) {
-            const adjMode = perProductAdjustCb.checked;
+            // Coluna ✏️ sempre visível — fixo
             let html = `<table><thead><tr>
                 <th><input type="checkbox" id="selectAllProducts"></th>
                 <th>Produto</th><th>Preço</th>
-                ${adjMode ? '<th title="Ajuste individual">⚙️</th>' : ''}
-                <th>Imagem</th>
+                <th title="Ajuste individual">✏️</th>
+                <th>🔍</th>
             </tr></thead><tbody>`;
             prods.forEach((p, i) => {
                 const price = `R$ ${p.preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
@@ -1953,32 +1935,30 @@ Capa silicone R$ 50,00
                     <td><input type="checkbox" class="product-checkbox" value="${i}"></td>
                     <td>${p.produto}${hasAdj ? '<span class="adj-badge">ajuste</span>' : ''}</td>
                     <td>${price}</td>
-                    ${adjMode ? `<td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>` : ''}
+                    <td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>
                     <td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">🔍</a></td>
                 </tr>`;
-                if (adjMode) {
-                    html += `<tr class="product-adj-row" id="adjRow_${i}">
-                        <td colspan="5">
-                            <div class="adj-panel" id="adjPanel_${i}">
-                                <div class="adj-panel-title">
-                                    <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
-                                    <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
-                                </div>
-                                <div class="adj-fields">
-                                    <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
-                                    <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="0" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
-                                    <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
-                                    <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
-                                    <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
-                                </div>
-                                <div class="adj-comment-row">
-                                    <label>💬 Comentário do produto</label>
-                                    <textarea class="adj-comment-input" placeholder="Ex: cliente pediu desconto especial..." oninput="saveProductAdj(${i},'comentario',this.value)" id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
-                                </div>
+                html += `<tr class="product-adj-row" id="adjRow_${i}">
+                    <td colspan="5">
+                        <div class="adj-panel" id="adjPanel_${i}">
+                            <div class="adj-panel-title">
+                                <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
+                                <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
                             </div>
-                        </td>
-                    </tr>`;
-                }
+                            <div class="adj-fields">
+                                <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
+                                <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="0" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
+                                <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
+                            </div>
+                            <div class="adj-comment-row">
+                                <label>💬 Comentário do produto</label>
+                                <textarea class="adj-comment-input" placeholder="Ex: cliente pediu desconto especial..." oninput="saveProductAdj(${i},'comentario',this.value)" id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
             });
             html += '</tbody></table>';
             const badge = `<span class="product-count-badge">${prods.length} produto${prods.length>1?'s':''} encontrado${prods.length>1?'s':''}</span>`;
@@ -2072,7 +2052,7 @@ Capa silicone R$ 50,00
             const config = getParcelasSelecionadas();
             if (selectedProducts.length > 0) {
                 selectedProducts.forEach((p, i) => {
-                    const overrides = (perProductAdjustCb.checked && p._idx !== undefined) ? getProductAdj(p._idx) : null;
+                    const overrides = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
                     let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
                     if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
                     const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco, overrides);
@@ -2151,7 +2131,6 @@ Capa silicone R$ 50,00
             valorBaseInput.classList.remove('has-value');
             parcelaEspecificaInput.classList.remove('invalid');
             taxasRapidas = {};
-            perProductAdjustCb.checked = false; perProductToggleLabel.classList.remove('enabled');
             especificaMostrarPixCb.checked = true; especificaMostrarTotalCb.checked = false;
             syncChipPix(true); syncChipTotal(false);
             atualizarVisibilidadeMiniOpcoes();
