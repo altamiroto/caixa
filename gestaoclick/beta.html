@@ -303,13 +303,6 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .item-preco {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-    }
-
     .qty-control { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
     .qty-btn {
       width: 20px; height: 20px;
@@ -338,16 +331,6 @@
 
     /* Rodapé */
     .carrinho-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
-    .total-row {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 10px;
-    }
-    .total-label {
-      font-size: 11px; color: var(--text-secondary);
-      font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    .total-valor { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 600; }
-
     .acoes-carrinho { display: flex; flex-direction: column; gap: 6px; }
 
     #btn-copiar {
@@ -707,10 +690,6 @@
       </div>
       <div id="lista-carrinho"></div>
       <div class="carrinho-footer">
-        <div class="total-row">
-          <span class="total-label">Total</span>
-          <span class="total-valor" id="total-valor">R$ 0,00</span>
-        </div>
         <div class="acoes-carrinho">
           <button id="btn-copiar">📋 Copiar pedido</button>
           <button id="btn-limpar">Limpar carrinho</button>
@@ -746,11 +725,6 @@
         const hora = partes[1] ? partes[1].substring(0, 5) : '';
         return `${dp[2]}/${dp[1]}/${dp[0]}${hora ? ' ' + hora : ''}`;
       } catch { return dataString; }
-    }
-
-    function formatarPrecoTexto(valor) {
-      if (valor == null || valor === '' || isNaN(Number(valor))) return 'R$ 0,00';
-      return `R$ ${Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 
     // ── API ───────────────────────────────────────
@@ -964,12 +938,10 @@
 
       lista.innerHTML = '';
       itens.forEach(([id, { produto, qty }]) => {
-        const subtotal = Number(produto.preco) * qty;
         const div = document.createElement('div');
         div.className = 'item-carrinho';
         div.innerHTML = `
           <div class="item-nome" title="${produto.nome}">${produto.nome}</div>
-          <div class="item-preco">${formatarPrecoTexto(subtotal)}</div>
           <div class="qty-control">
             <button class="qty-btn" data-id="${id}" data-delta="-1">−</button>
             <span class="qty-num">${qty}</span>
@@ -987,8 +959,6 @@
         btn.addEventListener('click', () => removerItem(btn.dataset.id))
       );
 
-      const total = itens.reduce((acc, [, { produto, qty }]) => acc + Number(produto.preco) * qty, 0);
-      document.getElementById('total-valor').textContent = formatarPrecoTexto(total);
     }
 
     // ── COPIAR PEDIDO ─────────────────────────────
@@ -996,13 +966,9 @@
     function copiarPedido() {
       const itens = Object.values(carrinho);
       if (!itens.length) { mostrarToast('O carrinho está vazio'); return; }
-      const linhas = itens.map(({ produto, qty }) => {
-        const sub = Number(produto.preco) * qty;
-        return `• ${produto.nome} — ${qty}x ${formatarPrecoTexto(produto.preco)} = ${formatarPrecoTexto(sub)}`;
-      });
-      const total = itens.reduce((acc, { produto, qty }) => acc + Number(produto.preco) * qty, 0);
+      const linhas = itens.map(({ produto, qty }) => `• ${produto.nome} — ${qty}x`);
       const data = new Date().toLocaleDateString('pt-BR');
-      const texto = `PEDIDO — ${data}\n${'─'.repeat(40)}\n${linhas.join('\n')}\n${'─'.repeat(40)}\nTOTAL: ${formatarPrecoTexto(total)}`;
+      const texto = `PEDIDO — ${data}\n${'─'.repeat(40)}\n${linhas.join('\n')}`;
       navigator.clipboard.writeText(texto).then(() => {
         const btn = document.getElementById('btn-copiar');
         btn.textContent = '✅ Copiado!';
