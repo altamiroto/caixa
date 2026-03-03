@@ -1378,21 +1378,14 @@ Capa silicone R$ 50,00
                 return;
             }
 
-            // Detecta título automático: começa com data (dd/mm/yyyy) OU
-            // com abreviação de dia seguida de data ("Seg, dd/mm/yyyy") ou
-            // com data em formato ISO, ou registro marcado como auto
-            const _isAutoTitulo = (r) => {
+            const comTitulo = _sheetsCache.filter(r => {
                 const t = (r.titulo || '').trim();
-                if (!t) return true;  // sem título = automático
-                if (r.auto === true) return true;  // marcado explicitamente como auto
-                // "03/03/2025, ..." ou "03/03/2025 às ..."
-                if (/^\d{2}\/\d{2}\/\d{4}/.test(t)) return true;
-                // "Seg, 03/03/2025 ..." — dia abreviado + data
-                if (/^[A-ZÁÉÍÓÚa-záéíóú]{3},?\s*\d{2}\/\d{2}\/\d{4}/.test(t)) return true;
-                return false;
-            };
-            const comTitulo  = _sheetsCache.filter(r => !_isAutoTitulo(r));
-            const automaticos = _sheetsCache.filter(r =>  _isAutoTitulo(r));
+                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+            const automaticos = _sheetsCache.filter(r => {
+                const t = (r.titulo || '').trim();
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
 
             let html = '';
 
@@ -1485,38 +1478,27 @@ Capa silicone R$ 50,00
                 emoticonCartaoInput.value = dados.textos.emoticonCartao || '💳 ';
             }
             productAdjustments = dados.productAdjustments || {};
-            // Restaura lista de produtos (tabela fica fora do collapsible, sempre visível)
-            productListTextarea.value = dados.listaProdutosTexto || '';
+            // perProductAdjust always enabled — nothing to restore
             if (dados.usandoListaProdutos) {
                 toggleProductList.checked = true;
-                productListSection.classList.add('show');
-                valorBaseInput.disabled = true;
+                productListTextarea.value = dados.listaProdutosTexto || '';
+                if (dados.todosProdutos && dados.todosProdutos.length > 0) {
+                    products = dados.todosProdutos;
+                    displayTable(products);
+                    if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
+                        selectedProducts = dados.produtosSelecionados;
+                        setTimeout(() => {
+                            dados.produtosSelecionados.forEach(ps => {
+                                const idx = products.findIndex(p => p.produto === ps.produto && p.preco === ps.preco);
+                                if (idx !== -1) { const cb = document.querySelector(`.product-checkbox[value="${idx}"]`); if (cb) cb.checked = true; }
+                            });
+                        }, 100);
+                    }
+                }
+                toggleProductListSection();
             } else {
                 toggleProductList.checked = false;
-                productListSection.classList.remove('show');
-                valorBaseInput.disabled = false;
-            }
-            // Restaura tabela de produtos independentemente do toggle
-            if (dados.todosProdutos && dados.todosProdutos.length > 0) {
-                products = dados.todosProdutos;
-                displayTable(products);
-                if (dados.produtosSelecionados && dados.produtosSelecionados.length > 0) {
-                    selectedProducts = dados.produtosSelecionados;
-                    setTimeout(() => {
-                        document.querySelectorAll('.product-checkbox').forEach(cb => {
-                            const idx = parseInt(cb.value);
-                            const p   = products[idx];
-                            if (p && dados.produtosSelecionados.some(ps => ps.produto === p.produto && ps.preco === p.preco)) {
-                                cb.checked = true;
-                            }
-                        });
-                        handleProductSelection();
-                    }, 100);
-                }
-            } else {
-                products = [];
-                selectedProducts = [];
-                productListResult.innerHTML = '';
+                if (productListSection.classList.contains('show')) toggleProductListSection();
             }
             if (dados.opcoes) {
                 hideDinheiroPixCheckbox.checked = dados.opcoes.hideDinheiroPix || false;
