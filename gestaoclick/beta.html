@@ -532,28 +532,20 @@
     @media (max-width: 600px) {
       #carrinho-float { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
 
-      /* Col 1 (Nome): ocupa o espaço disponível */
-      .tabela-produtos-base th:nth-child(1),
-      .tabela-produtos-base td:nth-child(1) { width: auto; min-width: 0; }
-
-      /* Col 2 (Estoque): largura fixa pequena */
-      .tabela-produtos-base th:nth-child(2),
-      .tabela-produtos-base td:nth-child(2) { width: 52px; flex-shrink: 0; }
-
-      /* Col 3 (botão +): sempre visível, tamanho fixo */
-      .tabela-produtos-base th:nth-child(3),
-      .tabela-produtos-base td:nth-child(3) { display: table-cell !important; width: 40px; padding: 6px 8px; }
-
-      /* Previne overflow no nome */
-      .tabela-produtos-base td:nth-child(1) {
-        max-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      /* table-layout fixed para controle preciso */
+      /* table-layout fixed para controle preciso de larguras */
       .tabela-produtos-base { table-layout: fixed; width: 100%; }
+
+      /* Col 1 (Nome): ocupa todo o espaço restante */
+      .tabela-produtos-base th:nth-child(1),
+      .tabela-produtos-base td:nth-child(1) { width: calc(100% - 92px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      /* Col 2 (Estoque): largura fixa */
+      .tabela-produtos-base th:nth-child(2),
+      .tabela-produtos-base td:nth-child(2) { width: 52px; text-align: center; }
+
+      /* Col 3 (botão +): largura fixa */
+      .tabela-produtos-base th:nth-child(3),
+      .tabela-produtos-base td:nth-child(3) { width: 40px; padding: 6px 8px; text-align: center; }
 
       /* Modal: bottom-sheet */
       #modal-overlay { padding: 0; align-items: flex-end; }
