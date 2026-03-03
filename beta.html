@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1181,7 +1182,8 @@ Capa silicone R$ 50,00
         function hasProductAdj(idx) {
             const a = productAdjustments[idx];
             if (!a) return false;
-            return Object.values(a).some(v => v !== '' && v !== '0' && parseFloat(v) !== 0);
+            // Considera preenchido se não for string vazia (0 é um valor válido intencional)
+            return Object.values(a).some(v => v !== '' && v !== null && v !== undefined);
         }
         // ── Parcelas rápidas ──────────────────────────────────────────────────
         function getParcelas() {
@@ -1710,7 +1712,7 @@ Capa silicone R$ 50,00
             const ov = overrides || {};
             // Cada campo individual só sobrescreve o global se estiver preenchido com valor > 0
             // Caso contrário, herda o valor global (campo da seção Acréscimos e Descontos)
-            const _hasVal = (v) => v !== undefined && v !== '' && v !== null && parseFloat(v) > 0;
+            const _hasVal = (v) => v !== undefined && v !== '' && v !== null;
             const acrescimoPerc = parseFloat(_hasVal(ov.acrescimoP) ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
             const lucroFixo     = parseFloat(_hasVal(ov.acrescimoR) ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
             const acrescimoFix  = parseFloat(_hasVal(ov.comissao)   ? ov.comissao   : acrescimoComissaoInput.value) || 0;
@@ -1762,6 +1764,12 @@ Capa silicone R$ 50,00
                     toggleProductList.checked = true;
                     toggleProductListSection();
                 }
+                // Atualiza placeholders dos campos de ajuste com valores globais atuais
+                document.getElementById('addProdDescontoR').placeholder  = parseFloat(descontoFixoInput.value)        || 0;
+                document.getElementById('addProdDescontoP').placeholder  = parseFloat(descontoPercentualInput.value)   || 0;
+                document.getElementById('addProdAcrescimoR').placeholder = parseFloat(lucroAdicionalInput.value)       || 0;
+                document.getElementById('addProdAcrescimoP').placeholder = parseFloat(acrescimoPercentualInput.value)  || 0;
+                document.getElementById('addProdComissao').placeholder   = parseFloat(acrescimoComissaoInput.value)    || 0;
                 setTimeout(() => document.getElementById('addProdNome').focus(), 80);
             } else {
                 // Limpa todos os campos ao fechar
@@ -1946,11 +1954,11 @@ Capa silicone R$ 50,00
                                 <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
                             </div>
                             <div class="adj-fields">
-                                <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
-                                <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="0" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
-                                <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
-                                <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="0" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
-                                <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="0" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
+                                <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(descontoFixoInput.value)||0}" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
+                                <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="${parseFloat(descontoPercentualInput.value)||0}" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(lucroAdicionalInput.value)||0}" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
+                                <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="${parseFloat(acrescimoPercentualInput.value)||0}" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(acrescimoComissaoInput.value)||0}" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
                             </div>
                             <div class="adj-comment-row">
                                 <label>💬 Comentário do produto</label>
