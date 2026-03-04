@@ -508,7 +508,7 @@
         }
         /* Painel genérico */
         .float-panel {
-            position: fixed; bottom: 80px; right: 20px;
+            position: fixed; bottom: 130px; right: 20px;
             width: 370px; max-width: calc(100vw - 24px);
             background: var(--bg-secondary); border: 2px solid var(--border-color);
             border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.22);
@@ -576,9 +576,12 @@
         .ftaxa-lbl { font-size: 0.56rem; font-weight: 700; color: var(--text-secondary); }
         .ftaxa-row { display: flex; align-items: center; gap: 1px; }
         .ftaxa-inp {
-            width: 30px; font-size: 0.6rem; border: none; border-bottom: 1px solid var(--border-color);
-            background: transparent; color: var(--text-primary); text-align: center;
-            outline: none; -moz-appearance: textfield;
+            width: 44px !important; padding: 2px 3px !important; font-size: 0.72rem !important;
+            border: none !important; border-bottom: 1px solid var(--border-color) !important;
+            border-radius: 0 !important; background: transparent !important;
+            color: var(--text-primary) !important; text-align: center !important;
+            outline: none !important; -moz-appearance: textfield !important;
+            box-shadow: none !important; min-height: unset !important;
         }
         .ftaxa-inp::-webkit-outer-spin-button,.ftaxa-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
         .ftaxa-inp:focus { border-bottom-color: var(--primary-color); }
@@ -2509,7 +2512,7 @@ Capa silicone R$ 50,00
         calcularParcelas = function() {
             _fpOrigCalc.apply(this, arguments);
             if (_fpAberto === 'resultado') {
-                if (_fpChipsParcs.size === 0 && !_fpPixOn) { _fpSincResultado(); }
+                if (_fpChipsParcs.size === 0 && !_fpPixOn && !_fpTotalOn) { _fpSincResultado(); }
                 else { _fpRecalc(); }
             }
         };
@@ -2552,6 +2555,17 @@ Capa silicone R$ 50,00
                 }
                 parcEl.innerHTML = h;
             }
+            /* Sempre inicia com tudo desmarcado — painel começa "neutro" */
+            _fpChipsParcs.clear();
+            _fpPixOn = false;
+            _fpTotalOn = false;
+            document.querySelectorAll('.fchip[id^="fpChipParc"]').forEach(function(el) {
+                el.classList.remove('ativo-parc');
+            });
+            var chipPix = document.getElementById('fpChipPix');
+            var chipTot = document.getElementById('fpChipTotal');
+            if (chipPix) chipPix.classList.remove('ativo-esp');
+            if (chipTot) chipTot.classList.remove('ativo-esp');
             _fpRenderTaxas();
         }
 
@@ -2559,9 +2573,19 @@ Capa silicone R$ 50,00
             if (qual === 'pix') {
                 _fpPixOn = !_fpPixOn;
                 document.getElementById('fpChipPix').classList.toggle('ativo-esp', _fpPixOn);
+                /* Sincroniza com checkbox fixo hideDinheiroPix */
+                hideDinheiroPixCheckbox.checked = !_fpPixOn;
+                especificaMostrarPixCb.checked = _fpPixOn;
+                document.getElementById('labelEspecificaPix') &&
+                    document.getElementById('labelEspecificaPix').classList.toggle('ativo', _fpPixOn);
             } else {
                 _fpTotalOn = !_fpTotalOn;
                 document.getElementById('fpChipTotal').classList.toggle('ativo-esp', _fpTotalOn);
+                /* Sincroniza com checkbox fixo showTotalValue */
+                showTotalValueCheckbox.checked = _fpTotalOn;
+                especificaMostrarTotalCb.checked = _fpTotalOn;
+                document.getElementById('labelEspecificaTotal') &&
+                    document.getElementById('labelEspecificaTotal').classList.toggle('ativo', _fpTotalOn);
             }
             _fpRenderTaxas();
             _fpRecalc();
@@ -2575,8 +2599,19 @@ Capa silicone R$ 50,00
                 _fpChipsParcs.add(n);
                 document.getElementById('fpChipParc' + n).classList.add('ativo-parc');
             }
+            _fpSincCampoFixo();
             _fpRenderTaxas();
             _fpRecalc();
+        }
+
+        /* Sincroniza chips do painel com o campo "Parcelas" fixo da página */
+        function _fpSincCampoFixo() {
+            var sorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
+            var campo = document.getElementById('parcelaEspecifica');
+            if (!campo) return;
+            campo.value = sorted.join(',');
+            /* Dispara o evento input para que o campo fixo atualize chips de taxa e recalc */
+            campo.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         function _fpRenderTaxas() {
@@ -2605,12 +2640,23 @@ Capa silicone R$ 50,00
 
         function _fpOnTaxa(el) {
             var p = el.dataset.p;
-            if (p !== 'pix') {
-                taxasRapidas[p] = el.value;
+            var v = el.value;
+            if (p === 'pix') {
+                /* Sincroniza com campo fixo porcentagemPix */
+                var pixInput = document.getElementById('porcentagemPix');
+                if (pixInput) pixInput.value = v;
+            } else {
+                /* Atualiza taxasRapidas e campo avançado */
+                taxasRapidas[p] = v;
                 var av = document.getElementById('porcentagem' + p + 'x');
-                if (av) av.value = el.value;
+                if (av) av.value = v;
+                /* Atualiza também o chip rápido na página (parcelaTaxasRow) */
+                var chipInput = document.querySelector('#parcelaTaxasRow input[data-parcela="' + p + '"]');
+                if (chipInput) chipInput.value = v;
             }
             _fpRecalc();
+            /* Agenda auto-save */
+            enviarLog('alterou_taxa_float');
         }
 
         /* ── Recalcular com configuração dos chips ───────────── */
@@ -2618,19 +2664,29 @@ Capa silicone R$ 50,00
             var dst = document.getElementById('fpResText');
             if (!dst) return;
             var parcsSorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
-            if (!parcsSorted.length && !_fpPixOn) { _fpSincResultado(); return; }
 
+            /* Sem nenhum chip marcado → resultado idêntico ao painel fixo */
+            if (!parcsSorted.length && !_fpPixOn && !_fpTotalOn) {
+                _fpSincResultado();
+                return;
+            }
+
+            /* Com chips marcados → calcula apenas o que está marcado no painel */
+            /* Usa config.especifica=false para que calcularParcelasParaUmProduto
+               respeite hideDinheiroPix/showTotal como passados via parâmetro,
+               mas sobrepomos os checkboxes temporariamente para controlar Pix */
             var config = { especifica: true, parcelas: parcsSorted };
 
-            /* Salva estado temporário dos checkboxes principais */
-            var _oh = hideDinheiroPixCheckbox.checked;
-            var _ot = showTotalValueCheckbox.checked;
-            var _op = especificaMostrarPixCb.checked;
-            var _otp = especificaMostrarTotalCb.checked;
+            /* Backup dos 4 checkboxes que vamos sobrescrever temporariamente */
+            var bkHide  = hideDinheiroPixCheckbox.checked;
+            var bkTotal = showTotalValueCheckbox.checked;
+            var bkPixCb = especificaMostrarPixCb.checked;
+            var bkTotCb = especificaMostrarTotalCb.checked;
 
-            hideDinheiroPixCheckbox.checked = !_fpPixOn;
-            showTotalValueCheckbox.checked = _fpTotalOn;
-            especificaMostrarPixCb.checked = _fpPixOn;
+            /* Aplica estado dos chips do painel */
+            hideDinheiroPixCheckbox.checked  = !_fpPixOn;
+            showTotalValueCheckbox.checked   = _fpTotalOn;
+            especificaMostrarPixCb.checked   = _fpPixOn;
             especificaMostrarTotalCb.checked = _fpTotalOn;
 
             var entrada = parseFloat(valorEntradaInput.value) || 0;
@@ -2655,11 +2711,11 @@ Capa silicone R$ 50,00
                 }
             }
 
-            /* Restaura estado */
-            hideDinheiroPixCheckbox.checked = _oh;
-            showTotalValueCheckbox.checked = _ot;
-            especificaMostrarPixCb.checked = _op;
-            especificaMostrarTotalCb.checked = _otp;
+            /* Restaura checkboxes imediatamente */
+            hideDinheiroPixCheckbox.checked  = bkHide;
+            showTotalValueCheckbox.checked   = bkTotal;
+            especificaMostrarPixCb.checked   = bkPixCb;
+            especificaMostrarTotalCb.checked = bkTotCb;
 
             var final = res;
             if (textoCabecalhoMensagemTextarea.value) final = [textoCabecalhoMensagemTextarea.value + '\n'].concat(res);
