@@ -1566,11 +1566,11 @@ Capa silicone R$ 50,00
             }
 
             const comTitulo = _sheetsCache.filter(r => {
-                const t = (r.titulo || '').trim();
+                const t = String(r.titulo == null ? '' : r.titulo).trim();
                 return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
             });
             const automaticos = _sheetsCache.filter(r => {
-                const t = (r.titulo || '').trim();
+                const t = String(r.titulo == null ? '' : r.titulo).trim();
                 return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
             });
 
@@ -2786,11 +2786,11 @@ Capa silicone R$ 50,00
                 return;
             }
             var comTit = regs.filter(function(r) {
-                var t = (r.titulo||'').trim();
+                var t = String(r.titulo == null ? '' : r.titulo).trim();
                 return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
             });
             var auto = regs.filter(function(r) {
-                var t = (r.titulo||'').trim();
+                var t = String(r.titulo == null ? '' : r.titulo).trim();
                 return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
             });
             var html = '';
@@ -2815,10 +2815,12 @@ Capa silicone R$ 50,00
                 val = d.produtosSelecionados.length + ' produto(s)';
             else if (d.valorBase)
                 val = 'R$ ' + parseFloat(d.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2});
+            var titulo = String(r.titulo == null ? '' : r.titulo) || '(sem título)';
+            var dataStr = r.date ? new Date(r.date).toLocaleString('pt-BR') : '';
             var sid = String(r.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
             return '<div class="fhist-item">' +
-                '<div class="fhist-item-titulo">' + (r.titulo||'(sem título)') + '</div>' +
-                '<div class="fhist-item-data">' + new Date(r.date).toLocaleString('pt-BR') + '</div>' +
+                '<div class="fhist-item-titulo">' + titulo + '</div>' +
+                (dataStr ? '<div class="fhist-item-data">' + dataStr + '</div>' : '') +
                 (val ? '<div class="fhist-item-valor">📦 ' + val + '</div>' : '') +
                 '<div class="fhist-item-acoes">' +
                     '<button class="fhist-btn-r" onclick="restaurarCalculo(\'' + sid + '\');fpFechar(\'historico\')">🔄 Restaurar</button>' +
