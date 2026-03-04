@@ -1260,18 +1260,27 @@ Capa silicone R$ 50,00
                     });
                 }
                 setSaveStatus('✅ Salvo ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), '#4CAF50');
+                _logTimer = null; /* Marca como salvo — sem diálogo de confirmação ao sair */
             } catch(e) {
                 setSaveStatus('❌ Falha ao salvar', 'var(--danger-color)');
                 console.warn('Log/auto-save falhou:', e.message);
             }
         }
 
-        window.addEventListener('beforeunload', () => {
+        window.addEventListener('beforeunload', (e) => {
             clearTimeout(_logTimer);
             const estado   = _coletarEstado();
             const temDados = estado.valor_base || estado.num_produtos > 0 || estado.resultado || estado.acoes || _tituloSessao || _comentarioSessao;
             if (!temDados) return;
+            /* Tenta salvar via beacon antes de sair */
             navigator.sendBeacon(SHEETS_URL, new Blob([JSON.stringify(estado)], { type: 'text/plain;charset=utf-8' }));
+            /* Mostra confirmação apenas se o save automático ainda não rodou
+               (_logTimer !== null significa que há mudanças pendentes não salvas) */
+            if (_logTimer !== null) {
+                e.preventDefault();
+                e.returnValue = 'Há informações que talvez não tenham sido salvas. Deseja realmente sair?';
+                return e.returnValue;
+            }
         });
 
         const valorBaseInput                  = document.getElementById('valorBase');
