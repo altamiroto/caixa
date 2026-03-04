@@ -1038,6 +1038,10 @@ Capa silicone R$ 50,00
                 <div class="fhist-titulo-label">🏷️ Título desta sessão (opcional):</div>
                 <input type="text" class="fhist-titulo-input" id="fpHistTituloInput"
                     placeholder="Ex: Venda iPhone 13">
+                <div class="fhist-titulo-label" style="margin-top:8px;">💬 Comentário (opcional):</div>
+                <textarea class="fhist-titulo-input" id="fpHistComentarioInput"
+                    placeholder="Observações sobre este acesso..."
+                    style="min-height:54px;resize:vertical;font-family:inherit;font-size:0.82rem;"></textarea>
             </div>
             <div id="fpHistLista"><div class="fhist-loading">Abrindo...</div></div>
         </div>
@@ -2604,14 +2608,15 @@ Capa silicone R$ 50,00
             _fpRecalc();
         }
 
-        /* Sincroniza chips do painel com o campo "Parcelas" fixo da página */
+        /* Sincroniza chips do painel com o campo "Parcelas" fixo da página
+           SEM dispatchEvent para evitar loop calcularParcelas → _fpRecalc → loop */
         function _fpSincCampoFixo() {
             var sorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
             var campo = document.getElementById('parcelaEspecifica');
             if (!campo) return;
             campo.value = sorted.join(',');
-            /* Dispara o evento input para que o campo fixo atualize chips de taxa e recalc */
-            campo.dispatchEvent(new Event('input', { bubbles: true }));
+            /* Atualiza chips de taxa da linha rápida manualmente (sem disparar evento) */
+            atualizarVisibilidadeMiniOpcoes();
         }
 
         function _fpRenderTaxas() {
@@ -2729,15 +2734,27 @@ Capa silicone R$ 50,00
             var tituloWrap = document.getElementById('fpHistTituloWrap');
             if (_currentUser && tituloWrap) {
                 tituloWrap.style.display = 'block';
-                /* Sincroniza campo de título com o painel fixo */
-                var fixo = document.getElementById('historicoTitulo');
-                var fp   = document.getElementById('fpHistTituloInput');
-                if (fixo && fp && !fp.dataset.synced) {
-                    fp.dataset.synced = '1';
-                    fp.value = fixo.value;
-                    fp.addEventListener('input', function() {
-                        if (fixo) fixo.value = fp.value;
-                        _tituloSessao = fp.value.trim();
+                /* Sincroniza campos título e comentário com o painel fixo */
+                var fixoTitulo = document.getElementById('historicoTitulo');
+                var fpTitulo   = document.getElementById('fpHistTituloInput');
+                if (fixoTitulo && fpTitulo && !fpTitulo.dataset.synced) {
+                    fpTitulo.dataset.synced = '1';
+                    fpTitulo.value = fixoTitulo.value;
+                    fpTitulo.addEventListener('input', function() {
+                        if (fixoTitulo) fixoTitulo.value = fpTitulo.value;
+                        _tituloSessao = fpTitulo.value.trim();
+                        clearTimeout(_logTimer);
+                        _logTimer = setTimeout(flushLog, 2000);
+                    });
+                }
+                var fixoComent = document.getElementById('historicoComentarios');
+                var fpComent   = document.getElementById('fpHistComentarioInput');
+                if (fixoComent && fpComent && !fpComent.dataset.synced) {
+                    fpComent.dataset.synced = '1';
+                    fpComent.value = fixoComent.value;
+                    fpComent.addEventListener('input', function() {
+                        if (fixoComent) fixoComent.value = fpComent.value;
+                        _comentarioSessao = fpComent.value.trim();
                         clearTimeout(_logTimer);
                         _logTimer = setTimeout(flushLog, 2000);
                     });
