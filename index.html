@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Parcelas Pro</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Desabilita o SES lockdown do Netlify que bloqueia fetch externo -->
+    <meta http-equiv="Content-Security-Policy" content="">
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -19,7 +22,6 @@
             --shadow: 0 4px 12px rgba(0,0,0,0.1);
             --shadow-hover: 0 6px 20px rgba(0,0,0,0.15);
         }
-
         [data-theme="dark"] {
             --bg-primary: #1a1a1a;
             --bg-secondary: #2d2d2d;
@@ -27,42 +29,26 @@
             --text-secondary: #b0b0b0;
             --border-color: #444;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--bg-primary) 0%, #e0e0e0 100%);
             color: var(--text-primary);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            transition: all 0.3s ease;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px; transition: all 0.3s ease;
         }
-
         .container {
-            width: 100%;
-            max-width: 700px;
+            width: 100%; max-width: 700px;
             background-color: var(--bg-secondary);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            padding: 30px; border-radius: 20px;
+            box-shadow: var(--shadow); transition: all 0.3s ease;
         }
-
         .header { text-align: center; margin-bottom: 30px; position: relative; }
-
         h1 {
             background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 2rem;
-            margin-bottom: 10px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; font-size: 2rem; margin-bottom: 10px;
         }
-
         .theme-toggle {
             position: absolute; top: 0; right: 0;
             background: var(--border-color); border: none;
@@ -70,11 +56,9 @@
             font-size: 1.2rem; transition: all 0.3s ease;
         }
         .theme-toggle:hover { transform: scale(1.1); }
-
         .quick-links { text-align: center; margin-bottom: 20px; font-size: 0.9rem; }
         .quick-links a { color: var(--secondary-color); text-decoration: none; margin: 0 10px; transition: color 0.3s; }
         .quick-links a:hover { color: var(--primary-color); text-decoration: underline; }
-
         .section-card {
             background: var(--bg-secondary);
             border: 2px solid var(--border-color);
@@ -82,22 +66,17 @@
             transition: all 0.3s ease;
         }
         .section-card:hover { box-shadow: var(--shadow-hover); }
-
         .section-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-
         .input-group { margin-bottom: 20px; position: relative; }
         .input-with-icon { position: relative; }
         .input-icon {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             color: var(--text-secondary); font-size: 1.2rem; pointer-events: none;
         }
-
         label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 0.95rem; }
         label small { font-weight: normal; color: var(--text-secondary); font-size: 0.85rem; }
-
         input::placeholder { color: #999; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
         input[type="number"], input[type="text"] {
             width: 100%; padding: 14px 14px 14px 42px; font-size: 16px;
             border: 2px solid var(--border-color); border-radius: 10px;
@@ -110,7 +89,6 @@
         }
         input[type="number"].has-value { border-color: var(--success-color); }
         input[type="number"].invalid { border-color: var(--danger-color); background-color: #fff5f5; }
-
         textarea {
             width: 100%; min-height: 120px; background-color: var(--bg-primary);
             padding: 12px; border: 2px solid var(--border-color); border-radius: 10px;
@@ -121,9 +99,9 @@
         textarea#resultado {
             background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
             font-family: 'Courier New', monospace; font-size: 13px;
+            min-height: 120px; height: auto; overflow-y: visible; resize: vertical;
         }
         [data-theme="dark"] textarea#resultado { background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); }
-
         .toggle-section {
             display: flex; align-items: center; gap: 10px; margin-bottom: 15px;
             padding: 15px; background: var(--bg-primary); border-radius: 10px;
@@ -132,28 +110,21 @@
         .toggle-section:hover { background: var(--border-color); }
         .toggle-section input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; flex-shrink: 0; }
         .toggle-section label { margin: 0; cursor: pointer; flex: 1; user-select: none; font-size: 1rem; }
-
         .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
         .collapsible-content.show { max-height: 5000px; transition: max-height 0.5s ease-in; }
-
         .option-group {
             border: 2px solid var(--border-color); padding: 15px; border-radius: 10px;
             margin-top: 15px; background: var(--bg-primary);
         }
         .option-group h4 { margin: 0 0 15px 0; color: var(--primary-color); display: flex; align-items: center; gap: 8px; }
-
         .parcelas-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-
         .checkbox-item { display: flex; flex-direction: column; }
         .parcela-input-group { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 8px; }
         .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
         .checkbox-item label { margin: 0; font-weight: normal; cursor: pointer; flex: 1; }
-
         .percent-input-container { display: none; align-items: center; gap: 5px; }
         .percent-input-container.show { display: flex; }
         .percent-input-container input { width: 70px; padding: 6px 8px; font-size: 13px; }
-
-        /* Mini-opções parcela específica */
         #parcelaEspecificaOpcoes { display: none; flex-direction: column; gap: 6px; margin-top: 10px; }
         #parcelaEspecificaOpcoes.show { display: flex; }
         .mini-opcao {
@@ -166,7 +137,6 @@
         .mini-opcao:hover { border-color: var(--primary-color); background: rgba(76,175,80,0.07); }
         .mini-opcao input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
         .mini-opcao.ativo { border-color: var(--primary-color); background: rgba(76,175,80,0.12); color: var(--primary-color); }
-
         .taxa-chip {
             display: inline-flex; align-items: center; gap: 5px;
             background: var(--bg-primary); border: 2px solid var(--border-color);
@@ -181,12 +151,10 @@
             background: var(--bg-secondary); color: var(--text-primary); text-align: right;
         }
         .taxa-chip input[type="number"]:focus { outline: none; border-color: var(--secondary-color); }
-
         .button-row {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 10px; margin-top: 15px;
         }
-
         .btn {
             padding: 14px 24px; font-size: 16px; font-weight: 600; border: none;
             border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
@@ -200,16 +168,13 @@
         .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-primary); }
         .btn-outline:hover { background: var(--border-color); }
         .btn-danger { background: linear-gradient(135deg, var(--danger-color) 0%, #d32f2f 100%); color: white; }
-
         .copy-message {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             color: #155724; padding: 15px; border-radius: 10px; font-size: 14px;
             opacity: 0; transition: opacity 0.5s ease; text-align: center; margin-top: 10px;
         }
         .copy-message.show { opacity: 1; }
-
         .info-badge { display: inline-block; background: var(--accent-color); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; margin-left: 8px; }
-
         .discount-summary {
             background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
             border-left: 4px solid var(--accent-color); padding: 15px;
@@ -219,19 +184,13 @@
         .discount-summary.active { display: block; }
         .discount-summary h4 { color: var(--accent-color); margin-bottom: 10px; }
         .discount-summary p { margin: 5px 0; color: var(--text-primary); }
-
         .error-message {
             color: #d9534f; background: linear-gradient(135deg, #f2dede 0%, #ebcccc 100%);
             padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #d9534f;
         }
-
-        /* =====================================================
-           TABELA DE PRODUTOS
-        ===================================================== */
         #productListResult table {
             width: 100%; border-collapse: collapse; margin-top: 15px;
-            border-radius: 10px; overflow: hidden;
-            table-layout: fixed;
+            border-radius: 10px; overflow: hidden; table-layout: fixed;
         }
         #productListResult th, #productListResult td {
             border: 1px solid var(--border-color); padding: 10px; text-align: center;
@@ -244,80 +203,37 @@
         #productListResult tr:hover { background: var(--bg-primary); }
         #productListResult a { color: var(--secondary-color); text-decoration: none; font-weight: 600; transition: all 0.3s ease; }
         #productListResult a:hover { color: var(--primary-color); text-decoration: underline; }
-
-        /* Larguras fixas das colunas */
-        #productListResult th:nth-child(1),
-        #productListResult td:nth-child(1) { width: 36px; padding: 8px 4px; }
-
-        #productListResult th:nth-child(3),
-        #productListResult td:nth-child(3) { width: 90px; font-size: 0.85rem; white-space: nowrap; }
-
-        #productListResult th:nth-child(4),
-        #productListResult td:nth-child(4) { width: 36px; padding: 8px 4px; }
-
+        #productListResult th:nth-child(1), #productListResult td:nth-child(1) { width: 36px; padding: 8px 4px; }
+        #productListResult th:nth-child(3), #productListResult td:nth-child(3) { width: 90px; font-size: 0.85rem; white-space: nowrap; }
+        #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 28px; padding: 6px 2px; }
+        #productListResult th:nth-child(5), #productListResult td:nth-child(5) { width: 28px; padding: 6px 2px; }
         #productListResult td:nth-child(2) { text-align: left; font-size: 0.88rem; }
-
-        /* Coluna de ajuste individual (⚙️) quando ativa */
-        #productListResult th:nth-child(4):not(:last-child),
-        #productListResult td:nth-child(4):not(:last-child) { width: 36px; padding: 8px 4px; overflow: hidden; }
-
         @media (max-width: 600px) {
-            #productListResult th, #productListResult td {
-                padding: 7px 5px;
-                font-size: 0.78rem;
-            }
-            #productListResult th:nth-child(3),
-            #productListResult td:nth-child(3) { width: 80px; font-size: 0.75rem; }
+            #productListResult th, #productListResult td { padding: 7px 4px; font-size: 0.78rem; }
+            #productListResult th:nth-child(3), #productListResult td:nth-child(3) { width: 80px; font-size: 0.75rem; }
             #productListResult td:nth-child(2) { font-size: 0.78rem; }
-            /* Coluna do lápis no mobile: bem compacta */
-            #productListResult th:nth-child(4):not(:last-child),
-            #productListResult td:nth-child(4):not(:last-child) { width: 30px; padding: 4px 2px; }
+            #productListResult th:nth-child(4), #productListResult td:nth-child(4) { width: 24px; padding: 4px 2px; }
+            #productListResult th:nth-child(5), #productListResult td:nth-child(5) { width: 24px; padding: 4px 2px; }
             .btn-adj { padding: 3px 4px; font-size: 0.78rem; }
         }
-
-        /* Linha de ajuste por produto */
-        .product-adj-row td {
-            padding: 0 !important;
-            border-top: none !important;
-            background: transparent !important;
-        }
+        .product-adj-row td { padding: 0 !important; border-top: none !important; background: transparent !important; }
         .product-adj-row:hover { background: transparent !important; }
-
         .adj-panel {
             display: none;
-            background: linear-gradient(135deg, rgba(33,150,243,0.05) 0%, rgba(76,175,80,0.05) 100%);
-            border: 2px dashed var(--secondary-color);
-            border-radius: 10px;
-            margin: 4px 6px 8px 6px;
-            padding: 12px 14px;
+            background: linear-gradient(135deg, rgba(33,150,243,0.04) 0%, rgba(76,175,80,0.04) 100%);
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px; margin: 2px 4px 10px 4px; padding: 12px 14px;
             animation: slideDown 0.25s ease;
         }
         .adj-panel.open { display: block; }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .adj-panel-title {
             font-size: 0.78rem; font-weight: 700; color: var(--secondary-color);
             text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
             display: flex; align-items: center; justify-content: space-between;
         }
-
-        .adj-fields {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 8px;
-        }
-
-        .adj-field {
-            display: flex; flex-direction: column; gap: 3px;
-        }
-        .adj-field label {
-            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
-            margin: 0; text-transform: uppercase; letter-spacing: 0.3px;
-        }
+        .adj-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+        .adj-field { display: flex; flex-direction: column; gap: 3px; }
         .adj-field-inner {
             display: flex; align-items: center; gap: 4px;
             background: var(--bg-secondary); border: 1.5px solid var(--border-color);
@@ -328,141 +244,148 @@
         .adj-field-inner input {
             width: 100%; padding: 0; font-size: 13px; border: none; background: transparent;
             color: var(--text-primary); outline: none; -moz-appearance: textfield;
-            /* override the global input padding */
             padding-left: 0 !important;
         }
-        .adj-field-inner input::-webkit-outer-spin-button,
-        .adj-field-inner input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
+        .adj-field-inner input::-webkit-outer-spin-button, .adj-field-inner input::-webkit-inner-spin-button { -webkit-appearance: none; }
         .adj-reset {
             background: none; border: none; color: var(--danger-color);
             cursor: pointer; font-size: 0.78rem; font-weight: 600;
             padding: 2px 6px; border-radius: 5px; transition: background 0.2s;
         }
         .adj-reset:hover { background: rgba(244,67,54,0.1); }
-
-        .adj-comment-row {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .adj-comment-row label {
-            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.3px; margin: 0;
-        }
+        .adj-comment-row { margin-top: 10px; display: flex; flex-direction: column; gap: 3px; }
+        .adj-comment-row label { font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin: 0; }
         .adj-comment-input {
-            width: 100%;
-            padding: 7px 10px !important;
-            font-size: 13px;
-            border: 1.5px solid var(--border-color) !important;
-            border-radius: 7px;
-            background: var(--bg-secondary) !important;
-            color: var(--text-primary);
-            resize: none;
-            min-height: 56px;
-            font-family: inherit;
-            transition: border-color 0.2s;
-            outline: none;
+            width: 100%; padding: 7px 10px !important; font-size: 13px;
+            border: 1.5px solid var(--border-color) !important; border-radius: 7px;
+            background: var(--bg-secondary) !important; color: var(--text-primary);
+            resize: none; min-height: 56px; font-family: inherit;
+            transition: border-color 0.2s; outline: none;
         }
         .adj-comment-input:focus { border-color: var(--secondary-color) !important; }
         .adj-comment-input::placeholder { color: #999; font-style: italic; }
-
-        /* Badge de comentário no nome do produto */
         .comment-badge {
             display: inline-block; background: var(--secondary-color); color: white;
             font-size: 0.65rem; font-weight: 700; padding: 1px 5px;
             border-radius: 4px; margin-left: 4px; vertical-align: middle;
             text-transform: uppercase; letter-spacing: 0.3px;
         }
-
-        /* Botão de ajuste na linha do produto */
         .btn-adj {
             background: none; border: 1.5px solid var(--border-color);
             color: var(--text-secondary); border-radius: 7px;
             cursor: pointer; padding: 4px 6px; font-size: 0.9rem;
             transition: all 0.2s ease; line-height: 1;
-            max-width: 100%; display: inline-flex;
-            align-items: center; justify-content: center;
+            max-width: 100%; display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-adj:hover { border-color: var(--secondary-color); color: var(--secondary-color); transform: scale(1.1); }
         .btn-adj.active { border-color: var(--secondary-color); background: rgba(33,150,243,0.12); color: var(--secondary-color); }
         .btn-adj.has-adj { border-color: var(--accent-color); color: var(--accent-color); }
         .btn-adj.has-adj.active { background: rgba(255,152,0,0.12); }
-
-        /* Badge de ajuste ativo no nome do produto */
         .adj-badge {
             display: inline-block; background: var(--accent-color); color: white;
             font-size: 0.65rem; font-weight: 700; padding: 1px 5px;
             border-radius: 4px; margin-left: 5px; vertical-align: middle;
             text-transform: uppercase; letter-spacing: 0.3px;
         }
-
-        /* Toggle de ajuste por produto (checkbox global na seção) */
         .per-product-toggle {
             display: flex; align-items: center; gap: 10px;
             padding: 10px 14px; background: var(--bg-primary);
             border: 2px solid var(--border-color); border-radius: 10px;
-            cursor: pointer; transition: all 0.2s; margin-top: 15px;
-            user-select: none;
+            cursor: pointer; transition: all 0.2s; margin-top: 15px; user-select: none;
         }
         .per-product-toggle:hover { border-color: var(--secondary-color); background: rgba(33,150,243,0.05); }
         .per-product-toggle.enabled { border-color: var(--secondary-color); background: rgba(33,150,243,0.08); }
         .per-product-toggle input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary-color); flex-shrink: 0; }
         .per-product-toggle label { margin: 0; cursor: pointer; font-size: 0.92rem; font-weight: 600; color: var(--text-secondary); }
         .per-product-toggle.enabled label { color: var(--secondary-color); }
-
-        /* =====================================================
-           RESTO DOS ESTILOS EXISTENTES
-        ===================================================== */
         .loading-spinner { text-align: center; padding: 20px; display: none; }
         .loading-spinner.active { display: block; }
-        .spinner {
-            border: 4px solid var(--border-color); border-top: 4px solid var(--primary-color);
-            border-radius: 50%; width: 40px; height: 40px;
-            animation: spin 1s linear infinite; margin: 0 auto;
-        }
+        .spinner { border: 4px solid var(--border-color); border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         hr { border: 0; height: 2px; background: var(--border-color); margin: 20px 0; }
-
         .tooltip { position: relative; display: inline-block; cursor: help; }
-        .tooltip:hover::after {
-            content: attr(data-tooltip); position: absolute; bottom: 125%; left: 50%;
-            transform: translateX(-50%); background: #333; color: white;
-            padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; white-space: nowrap; z-index: 1000;
-        }
-
-        input[type="number"]:not(:placeholder-shown), input[type="text"]:not(:placeholder-shown) {
-            border-color: var(--success-color); background: rgba(76, 175, 80, 0.05);
-        }
-        /* Override for adj-field inputs */
-        .adj-field-inner input:not(:placeholder-shown) {
-            border-color: transparent !important; background: transparent !important;
-        }
-
+        .tooltip:hover::after { content: attr(data-tooltip); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; white-space: nowrap; z-index: 1000; }
+        input[type="number"]:not(:placeholder-shown), input[type="text"]:not(:placeholder-shown) { border-color: var(--success-color); background: rgba(76, 175, 80, 0.05); }
+        .adj-field-inner input:not(:placeholder-shown) { border-color: transparent !important; background: transparent !important; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .discount-summary.active { animation: slideIn 0.3s ease; }
+        .product-count-badge { background: var(--secondary-color); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-left: 8px; }
 
-        .product-count-badge {
-            background: var(--secondary-color); color: white; padding: 4px 10px;
-            border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-left: 8px;
+        /* ── Adicionar produto manualmente ── */
+        .add-product-bar {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 14px; flex-wrap: wrap;
         }
-
-        /* Histórico */
+        .add-product-form {
+            display: none; flex-direction: column; gap: 10px;
+            background: linear-gradient(135deg, rgba(76,175,80,0.06) 0%, rgba(33,150,243,0.06) 100%);
+            border: 2px dashed var(--primary-color); border-radius: 12px;
+            padding: 14px 16px; margin-top: 12px;
+            animation: slideDown 0.25s ease;
+        }
+        .add-product-form.open { display: flex; }
+        .add-product-form-title {
+            font-size: 0.82rem; font-weight: 700; color: var(--primary-color);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
+        }
+        .add-product-fields { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+        @media (max-width: 480px) { .add-product-fields { grid-template-columns: 1fr; } }
+        .add-product-name-wrap { display: flex; flex-direction: column; gap: 4px; }
+        .add-product-price-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+        .add-product-form label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin: 0; }
+        .add-product-form input {
+            padding: 9px 12px 9px 12px !important;
+            font-size: 14px; border: 2px solid var(--border-color);
+            border-radius: 8px; background: var(--bg-secondary);
+            color: var(--text-primary); transition: border-color 0.2s; width: 100%;
+        }
+        .add-product-form input:focus { outline: none; border-color: var(--primary-color); }
+        .add-product-form input.field-error { border-color: var(--danger-color) !important; background: rgba(244,67,54,0.05) !important; }
+        .add-product-form-actions { display: flex; gap: 8px; margin-top: 4px; }
+        .btn-add-confirm {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
+            color: white; border: none; border-radius: 8px; padding: 9px 18px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-add-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,175,80,0.35); }
+        .btn-add-cancel {
+            background: transparent; color: var(--text-secondary);
+            border: 2px solid var(--border-color); border-radius: 8px;
+            padding: 9px 14px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-add-cancel:hover { border-color: var(--danger-color); color: var(--danger-color); }
+        .add-field-error-msg { font-size: 0.72rem; color: var(--danger-color); font-weight: 600; min-height: 14px; }
+        /* Inputs de ajuste dentro do form manual — herdam estilo do adj-field-inner sem padding-left extra */
+        .add-product-form .adj-field-inner input { padding-left: 0 !important; }
+        .add-product-form .adj-fields { margin-top: 4px; }
+        /* Placeholder "global" itálico nos campos de ajuste */
+        .adj-field-inner input::placeholder { color: #bbb; font-style: italic; font-size: 0.78rem; }
+        .add-product-form .adj-comment-input { background: var(--bg-primary) !important; }
+        .btn-add-product {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: transparent; border: 2px dashed var(--primary-color);
+            color: var(--primary-color); border-radius: 10px;
+            padding: 8px 14px; font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; margin-top: 12px; width: 100%;
+            justify-content: center;
+        }
+        .btn-add-product:hover { background: rgba(76,175,80,0.08); transform: translateY(-1px); }
+        .btn-add-product.open { background: rgba(76,175,80,0.1); border-style: solid; }
         .historico-item { background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; transition: all 0.3s ease; }
         .historico-item:hover { box-shadow: var(--shadow-hover); border-color: var(--primary-color); }
         .historico-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .historico-titulo { font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
         .historico-data { font-size: 0.85rem; color: var(--text-secondary); }
         .historico-comentarios { background: var(--bg-secondary); padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic; }
+        .historico-secao-titulo { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); padding: 8px 4px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
         .historico-dados { background: var(--bg-secondary); padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
         .historico-dados strong { color: var(--primary-color); }
         .historico-acoes { display: flex; gap: 8px; margin-top: 10px; }
         .historico-acoes button { flex: 1; padding: 8px 12px; font-size: 0.85rem; }
         .empty-historico { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
         .empty-historico-icon { font-size: 3rem; margin-bottom: 10px; }
-
         .fab-historico {
             position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
             border-radius: 50%; background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
@@ -478,7 +401,67 @@
             font-size: 0.75rem; font-weight: 600; display: flex; align-items: center;
             justify-content: center; border: 2px solid var(--bg-secondary);
         }
-
+        .feedback-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+            z-index: 9000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+        }
+        .feedback-overlay.show { opacity: 1; pointer-events: all; }
+        .feedback-modal {
+            background: var(--bg-secondary); border-radius: 20px;
+            padding: 36px 44px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            transform: scale(0.85);
+            transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+            max-width: 340px; width: 90%;
+        }
+        .feedback-overlay.show .feedback-modal { transform: scale(1); }
+        .feedback-icon { font-size: 3.4rem; margin-bottom: 12px; line-height: 1; }
+        .feedback-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+        .feedback-subtitle { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.5; }
+        .feedback-spinner {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 5px solid var(--border-color); border-top-color: var(--secondary-color);
+            animation: spin 0.75s linear infinite; margin: 0 auto 14px auto;
+        }
+        .auth-wall {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 20px; padding: 36px 32px; text-align: center;
+            max-width: 360px; width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: authPop 0.3s cubic-bezier(.34,1.4,.64,1);
+        }
+        @keyframes authPop { from { opacity:0; transform:scale(0.88) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .auth-logo  { font-size: 3rem; margin-bottom: 12px; line-height: 1; }
+        .auth-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+        .auth-sub   { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; }
+        .auth-note  { font-size: 0.72rem; color: var(--text-secondary); margin-top: 18px; line-height: 1.7; opacity: 0.7; }
+        .user-bar {
+            display: none; align-items: center; gap: 10px;
+            background: var(--bg-primary); border: 2px solid var(--border-color);
+            border-radius: 12px; padding: 10px 14px; margin-bottom: 16px;
+            width: 100%;
+        }
+        .user-bar img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); flex-shrink: 0; }
+        .user-bar-info { flex: 1; min-width: 0; overflow: hidden; }
+        .user-bar-name  { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-bar-email { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-bar-logout {
+            background: none; border: 1.5px solid var(--border-color);
+            color: var(--text-secondary); border-radius: 8px; padding: 5px 10px;
+            font-size: 0.76rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; flex-shrink: 0; white-space: nowrap;
+        }
+        .user-bar-logout:hover { border-color: var(--danger-color); color: var(--danger-color); background: rgba(244,67,54,0.07); }
         @media (max-width: 600px) {
             .container { padding: 20px; }
             h1 { font-size: 1.5rem; }
@@ -496,26 +479,194 @@
             #parcelaEspecificaOpcoes { flex-direction: column; }
             .adj-fields { grid-template-columns: 1fr 1fr; }
         }
+
+        /* ── FABs flutuantes (resultado + histórico) ── */
+        .fab-group {
+            position: fixed; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; align-items: flex-end;
+            gap: 10px; z-index: 1100;
+        }
+        .fab-pill {
+            display: flex; align-items: center; gap: 8px;
+            padding: 0 20px; height: 48px; border-radius: 24px; border: none;
+            cursor: pointer; font-size: 0.88rem; font-weight: 700; color: white;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25); transition: all 0.22s ease;
+            position: relative; white-space: nowrap;
+        }
+        .fab-pill:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.32); }
+        .fab-pill:active { transform: translateY(0); }
+        .fab-pill-resultado { background: linear-gradient(135deg,#4CAF50,#2e7d32); }
+        .fab-pill-historico { background: linear-gradient(135deg,#2196F3,#1565C0); }
+        .fab-pill-arrow { font-size: 0.7rem; transition: transform 0.22s; display: inline-block; }
+        .fab-pill-arrow.aberto { transform: rotate(180deg); }
+        .fab-badge-pill {
+            position: absolute; top: -5px; right: -5px;
+            background: #f44336; color: white; border-radius: 50%;
+            width: 20px; height: 20px; font-size: 0.68rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid white;
+        }
+        /* Painel genérico */
+        .float-panel {
+            position: fixed; bottom: 130px; right: 20px;
+            width: 370px; max-width: calc(100vw - 24px);
+            background: var(--bg-secondary); border: 2px solid var(--border-color);
+            border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+            z-index: 1099; display: flex; flex-direction: column;
+            max-height: 680px;
+            opacity: 0; transform: translateY(14px) scale(0.97);
+            pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .float-panel.aberto { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+        .float-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid var(--border-color);
+            font-weight: 700; font-size: 0.92rem; color: var(--text-primary); flex-shrink: 0;
+        }
+        .float-panel-fechar {
+            background: none; border: none; cursor: pointer; font-size: 1rem;
+            color: var(--text-secondary); padding: 2px 7px; border-radius: 6px;
+            transition: background 0.15s;
+        }
+        .float-panel-fechar:hover { background: var(--bg-primary); }
+        .float-panel-body { overflow-y: auto; padding: 12px 14px; flex: 1; min-height: 0; }
+        /* Resultado */
+        .fres-textarea {
+            width: 100%; min-height: 90px; max-height: 200px;
+            background: var(--bg-primary); border: 1.5px solid var(--border-color);
+            border-radius: 8px; padding: 10px; font-family: 'Courier New', monospace;
+            font-size: 12px; color: var(--text-primary); resize: vertical;
+        }
+        .fres-textarea:focus { outline: none; border-color: var(--primary-color); }
+        [data-theme="dark"] .fres-textarea { background: #1e1e1e; }
+        .fres-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .fres-btn {
+            padding: 8px; font-size: 0.82rem; font-weight: 700; border: none;
+            border-radius: 8px; cursor: pointer; transition: opacity 0.15s, transform 0.15s;
+        }
+        .fres-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .fres-btn-copiar { background: linear-gradient(135deg,var(--primary-color),#388e3c); color: white; }
+        .fres-btn-limpar { background: var(--bg-primary); border: 1.5px solid var(--border-color); color: var(--text-secondary); }
+        .fres-msg { font-size: 0.72rem; color: var(--primary-color); text-align: center; margin-top: 4px; height: 14px; opacity: 0; transition: opacity 0.3s; }
+        .fres-msg.visivel { opacity: 1; }
+        /* Chips de parcelas */
+        .fchips-secao { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+        .fchips-titulo { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); margin-bottom: 5px; }
+        .fchips-esp { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 5px; }
+        .fchips-parc { display: grid; grid-template-columns: repeat(10,1fr); gap: 3px; }
+        .fchip {
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            padding: 4px 2px; min-height: 26px; border-radius: 5px; cursor: pointer;
+            background: var(--bg-primary); border: 1.5px solid var(--border-color);
+            font-size: 0.6rem; font-weight: 700; color: var(--text-secondary);
+            user-select: none; transition: border-color .12s, background .12s, color .12s;
+            line-height: 1.2;
+        }
+        .fchip:hover { border-color: var(--text-secondary); }
+        .fchip.ativo-parc { border-color: var(--primary-color); background: rgba(76,175,80,0.12); color: var(--primary-color); }
+        .fchip.ativo-esp  { border-color: var(--secondary-color); background: rgba(33,150,243,0.12); color: var(--secondary-color); }
+        /* Taxas */
+        .ftaxas-secao { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color); }
+        .ftaxas-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; margin-top: 4px; }
+        .ftaxa-cel {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            background: var(--bg-primary); border: 1px solid var(--border-color);
+            border-radius: 5px; padding: 4px 2px;
+        }
+        .ftaxa-lbl { font-size: 0.56rem; font-weight: 700; color: var(--text-secondary); }
+        .ftaxa-row { display: flex; align-items: center; gap: 1px; }
+        .ftaxa-inp {
+            width: 44px !important; padding: 2px 3px !important; font-size: 0.72rem !important;
+            border: none !important; border-bottom: 1px solid var(--border-color) !important;
+            border-radius: 0 !important; background: transparent !important;
+            color: var(--text-primary) !important; text-align: center !important;
+            outline: none !important; -moz-appearance: textfield !important;
+            box-shadow: none !important; min-height: unset !important;
+        }
+        .ftaxa-inp::-webkit-outer-spin-button,.ftaxa-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .ftaxa-inp:focus { border-bottom-color: var(--primary-color); }
+        .ftaxa-pct { font-size: 0.52rem; color: var(--text-secondary); }
+        /* Histórico flutuante */
+        .fhist-titulo-wrap { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .fhist-titulo-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
+        .fhist-titulo-input {
+            width: 100%; padding: 7px 10px; font-size: 0.82rem;
+            border: 1.5px solid var(--border-color); border-radius: 7px;
+            background: var(--bg-primary); color: var(--text-primary);
+            outline: none; font-family: inherit; transition: border-color 0.2s;
+        }
+        .fhist-titulo-input:focus { border-color: var(--secondary-color); }
+        .fhist-loading { text-align: center; padding: 24px 12px; color: var(--text-secondary); font-size: 0.85rem; }
+        .fhist-secao { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); padding: 6px 0 5px; border-bottom: 1px solid var(--border-color); margin-bottom: 7px; }
+        .fhist-item { background: var(--bg-primary); border: 1.5px solid var(--border-color); border-radius: 9px; padding: 10px 11px; margin-bottom: 8px; transition: border-color 0.15s; }
+        .fhist-item:hover { border-color: var(--secondary-color); }
+        .fhist-item-titulo { font-weight: 700; font-size: 0.82rem; color: var(--primary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fhist-item-data { font-size: 0.68rem; color: var(--text-secondary); margin-bottom: 6px; }
+        .fhist-item-valor { font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 6px; }
+        .fhist-item-acoes { display: flex; gap: 5px; }
+        .fhist-item-acoes button { flex: 1; padding: 5px 6px; font-size: 0.72rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; }
+        .fhist-btn-r { background: linear-gradient(135deg,var(--primary-color),#388e3c); color: white; }
+        .fhist-btn-c { background: linear-gradient(135deg,var(--secondary-color),#1565C0); color: white; }
+        .fhist-btn-x { background: linear-gradient(135deg,var(--danger-color),#b71c1c); color: white; flex: 0 0 auto; padding: 5px 8px; }
+        .fhist-ver-todos { text-align: center; margin-top: 8px; font-size: 0.78rem; }
+        .fhist-ver-todos a { color: var(--secondary-color); cursor: pointer; text-decoration: underline; }
+        @media (max-width: 420px) {
+            .float-panel { width: calc(100vw - 24px); right: 12px; }
+            .fab-group { right: 12px; bottom: 12px; }
+        }
     </style>
 </head>
 <body>
+    <div class="auth-wall" id="authWall" style="display:none;">
+        <div class="auth-card">
+            <div class="auth-logo">💰</div>
+            <div class="auth-title">Calculadora de Parcelas Pro</div>
+            <div class="auth-sub">Entre com sua conta Google para sincronizar seus cálculos com a nuvem</div>
+            <div id="googleSignInBtn" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
+            <button class="btn btn-outline" onclick="usarSemLogin()" style="width:100%;margin-top:4px;font-size:0.9rem;">
+                Continuar sem login
+            </button>
+            <div class="auth-note">Seus dados ficam na sua própria planilha.<br>Nenhuma informação é compartilhada.</div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>💰 Calculadora de Parcelas Pro</h1>
             <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌓</button>
         </div>
-
+        <div id="saveStatus" style="text-align:center;font-size:0.75rem;color:var(--text-secondary);padding:2px 4px 6px;min-height:18px;transition:color 0.3s;"></div>
         <div class="quick-links">
             <a href="https://calculadoracaixa.netlify.app/listas/" target="_blank">📋 Processamento de Lista</a>
-            |
-            <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
+            | <a href="https://calculadoracaixa.netlify.app/gestaoclick/" target="_blank">📦 Estoque</a>
+        </div>
+
+        <div id="accountBar" style="margin-bottom:16px;">
+            <div id="accountBarGuest" style="display:none;">
+                <button onclick="pedirLogin()" style="
+                    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+                    padding:11px 16px; border-radius:12px; cursor:pointer;
+                    background:var(--bg-primary); border:2px dashed var(--border-color);
+                    color:var(--text-secondary); font-size:0.9rem; font-weight:600;
+                    transition:all 0.2s;">
+                    <img src="https://www.google.com/favicon.ico" width="16" height="16" style="border-radius:2px;">
+                    Entrar com Google para sincronizar na nuvem ☁️
+                </button>
+            </div>
+            <div id="userBar" class="user-bar" style="display:none;">
+                <img id="userAvatar" src="" alt="" onerror="this.style.display='none'">
+                <div class="user-bar-info">
+                    <div class="user-bar-name"  id="userBarName"></div>
+                    <div class="user-bar-email" id="userBarEmail"></div>
+                </div>
+                <button class="user-bar-logout" onclick="logoutGoogle()">Sair</button>
+            </div>
         </div>
 
         <div class="toggle-section">
             <input type="checkbox" id="toggleProductList" onchange="toggleProductListSection()">
             <label for="toggleProductList">📦 Usar lista de produtos</label>
         </div>
-
         <div id="productListSection" class="collapsible-content">
             <div class="section-card">
                 <div class="input-group">
@@ -526,11 +677,65 @@
                     <button class="btn btn-secondary" onclick="processList()">📊 Processar Lista</button>
                     <button class="btn btn-accent" onclick="processWithAI()">✨ Processar com IA</button>
                 </div>
-                <div id="productListLoading" class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Processando...</p>
+                <div id="productListLoading" class="loading-spinner"><div class="spinner"></div><p>Processando...</p></div>
+            </div>
+        </div>
+
+        <!-- Tabela e botão de adicionar — FORA da seção colapsável, sempre visíveis -->
+        <div id="productListResult"></div>
+        <button class="btn-add-product" id="btnToggleAddProduct" onclick="toggleAddProductForm()">
+            ➕ Adicionar produto manualmente
+        </button>
+        <div class="add-product-form" id="addProductForm">
+            <div class="add-product-form-title">📦 Novo Produto</div>
+            <div class="add-product-fields">
+                <div class="add-product-name-wrap">
+                    <label for="addProdNome">Nome do produto *</label>
+                    <input type="text" id="addProdNome" placeholder="Ex: iPhone 15 Pro Max 256GB"
+                        oninput="clearAddFieldError('addProdNome')"
+                        onkeydown="if(event.key==='Enter') confirmarAddProduto()">
+                    <span class="add-field-error-msg" id="addProdNomeErr"></span>
                 </div>
-                <div id="productListResult"></div>
+                <div class="add-product-price-wrap">
+                    <label for="addProdPreco">Preço (R$) *</label>
+                    <input type="number" id="addProdPreco" placeholder="Ex: 1299.90" step="0.01" min="0.01"
+                        oninput="clearAddFieldError('addProdPreco')"
+                        onkeydown="if(event.key==='Enter') confirmarAddProduto()">
+                    <span class="add-field-error-msg" id="addProdPrecoErr"></span>
+                </div>
+            </div>
+            <div class="add-product-form-title" style="margin-top:10px;font-size:0.75rem;opacity:0.8;">
+                ⚙️ Ajustes individuais <small style="font-weight:400;text-transform:none;">(opcionais — sobrescrevem os campos globais)</small>
+            </div>
+            <div class="adj-fields" style="margin-top:4px;">
+                <div class="adj-field">
+                    <label>Desconto R$</label>
+                    <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdDescontoR" step="0.01" min="0" placeholder="global"></div>
+                </div>
+                <div class="adj-field">
+                    <label>Desconto %</label>
+                    <div class="adj-field-inner"><input type="number" id="addProdDescontoP" step="0.01" min="0" max="100" placeholder="global"><span>%</span></div>
+                </div>
+                <div class="adj-field">
+                    <label>Acréscimo R$</label>
+                    <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdAcrescimoR" step="0.01" min="0" placeholder="global"></div>
+                </div>
+                <div class="adj-field">
+                    <label>Acréscimo %</label>
+                    <div class="adj-field-inner"><input type="number" id="addProdAcrescimoP" step="0.01" min="0" placeholder="global"><span>%</span></div>
+                </div>
+                <div class="adj-field">
+                    <label>Comissão R$</label>
+                    <div class="adj-field-inner"><span>R$</span><input type="number" id="addProdComissao" step="0.01" min="0" placeholder="global"></div>
+                </div>
+            </div>
+            <div class="adj-comment-row" style="margin-top:8px;">
+                <label>💬 Comentário</label>
+                <textarea class="adj-comment-input" id="addProdComentario" placeholder="Observação opcional para este produto..."></textarea>
+            </div>
+            <div class="add-product-form-actions">
+                <button class="btn-add-confirm" onclick="confirmarAddProduto()">✅ Adicionar</button>
+                <button class="btn-add-cancel" onclick="toggleAddProductForm()">Cancelar</button>
             </div>
         </div>
 
@@ -538,26 +743,20 @@
             <div class="section-title">💵 Valores Principais</div>
             <div class="input-group">
                 <label for="valorBase">Valor Base (R$):</label>
-                <div class="input-with-icon">
-                    <span class="input-icon">💲</span>
-                    <input type="number" id="valorBase" placeholder="Ex: 500.00" step="0.01">
-                </div>
+                <div class="input-with-icon"><span class="input-icon">💲</span>
+                <input type="number" id="valorBase" placeholder="Ex: 500.00" step="0.01"></div>
             </div>
             <div class="input-group" style="margin-bottom: 0;">
                 <label for="parcelaEspecifica">Parcelas <small>(opcional — ex: 6 ou 3,6,12)</small>:</label>
-                <div class="input-with-icon">
-                    <span class="input-icon">🔢</span>
-                    <input type="text" id="parcelaEspecifica" placeholder="Ex: 6  ou  3,6,12" inputmode="numeric">
-                </div>
+                <div class="input-with-icon"><span class="input-icon">🔢</span>
+                <input type="text" id="parcelaEspecifica" placeholder="Ex: 6  ou  3,6,12" inputmode="numeric"></div>
                 <div id="parcelaEspecificaOpcoes">
                     <div id="parcelaChipsRow" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">
                         <label class="mini-opcao" id="labelEspecificaPix">
-                            <input type="checkbox" id="especificaMostrarPix" checked onchange="onQuickPixChange()">
-                            💸 Dinheiro/Pix
+                            <input type="checkbox" id="especificaMostrarPix" checked onchange="onQuickPixChange()"> 💸 Dinheiro/Pix
                         </label>
                         <label class="mini-opcao" id="labelEspecificaTotal">
-                            <input type="checkbox" id="especificaMostrarTotal" onchange="onQuickTotalChange()">
-                            🧾 Total
+                            <input type="checkbox" id="especificaMostrarTotal" onchange="onQuickTotalChange()"> 🧾 Total
                         </label>
                     </div>
                     <div id="parcelaTaxasRow" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:4px;"></div>
@@ -567,72 +766,40 @@
 
         <div class="section-card">
             <div class="section-title">🎁 Acréscimos e Descontos</div>
-
             <div class="input-group">
-                <label for="lucroAdicional">
-                    Acréscimo/Lucro (R$) <small>(aplicado ao valor final)</small>
-                    <span class="tooltip" data-tooltip="Valor adicional de lucro ou margem">ℹ️</span>
-                </label>
-                <div class="input-with-icon">
-                    <span class="input-icon">💰</span>
-                    <input type="number" id="lucroAdicional" placeholder="Ex: 50.00" step="0.01">
-                </div>
+                <label for="lucroAdicional">Acréscimo/Lucro (R$) <small>(aplicado ao valor final)</small> <span class="tooltip" data-tooltip="Valor adicional de lucro ou margem">ℹ️</span></label>
+                <div class="input-with-icon"><span class="input-icon">💰</span>
+                <input type="number" id="lucroAdicional" placeholder="Ex: 50.00" step="0.01"></div>
             </div>
-
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-group">
                     <label for="descontoFixo">Desconto em R$ <small>(antes dos juros)</small>:</label>
-                    <div class="input-with-icon">
-                        <span class="input-icon">💸</span>
-                        <input type="number" id="descontoFixo" placeholder="Ex: 50.00" step="0.01" min="0">
-                    </div>
+                    <div class="input-with-icon"><span class="input-icon">💸</span>
+                    <input type="number" id="descontoFixo" placeholder="Ex: 50.00" step="0.01" min="0"></div>
                 </div>
                 <div class="input-group">
-                    <label for="descontoPercentual">
-                        Desconto em % <small>(antes dos juros)</small>
-                        <span class="tooltip" data-tooltip="Ex: 10% = R$500 vira R$450">ℹ️</span>
-                    </label>
-                    <div class="input-with-icon">
-                        <span class="input-icon">📉</span>
-                        <input type="number" id="descontoPercentual" placeholder="Ex: 10" step="0.01" min="0" max="100">
-                    </div>
+                    <label for="descontoPercentual">Desconto em % <small>(antes dos juros)</small> <span class="tooltip" data-tooltip="Ex: 10% = R$500 vira R$450">ℹ️</span></label>
+                    <div class="input-with-icon"><span class="input-icon">📉</span>
+                    <input type="number" id="descontoPercentual" placeholder="Ex: 10" step="0.01" min="0" max="100"></div>
                 </div>
             </div>
-
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-group">
                     <label for="acrescimoComissao">Comissão (R$) <small>(acréscimo fixo)</small>:</label>
-                    <div class="input-with-icon">
-                        <span class="input-icon">🤝</span>
-                        <input type="number" id="acrescimoComissao" placeholder="Ex: 30.00" step="0.01" min="0">
-                    </div>
+                    <div class="input-with-icon"><span class="input-icon">🤝</span>
+                    <input type="number" id="acrescimoComissao" placeholder="Ex: 30.00" step="0.01" min="0"></div>
                 </div>
                 <div class="input-group">
-                    <label for="acrescimoPercentual">
-                        Acréscimo % <small>(sobre o valor base)</small>
-                        <span class="tooltip" data-tooltip="Ex: 5% = R$500 vira R$525">ℹ️</span>
-                    </label>
-                    <div class="input-with-icon">
-                        <span class="input-icon">📈</span>
-                        <input type="number" id="acrescimoPercentual" placeholder="Ex: 5" step="0.01" min="0">
-                    </div>
+                    <label for="acrescimoPercentual">Acréscimo % <small>(sobre o valor base)</small> <span class="tooltip" data-tooltip="Ex: 5% = R$500 vira R$525">ℹ️</span></label>
+                    <div class="input-with-icon"><span class="input-icon">📈</span>
+                    <input type="number" id="acrescimoPercentual" placeholder="Ex: 5" step="0.01" min="0"></div>
                 </div>
             </div>
-
             <div class="input-group">
                 <label for="valorEntrada">Valor da Entrada (R$):</label>
-                <div class="input-with-icon">
-                    <span class="input-icon">🏦</span>
-                    <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01" min="0">
-                </div>
+                <div class="input-with-icon"><span class="input-icon">🏦</span>
+                <input type="number" id="valorEntrada" placeholder="Ex: 100.00" step="0.01" min="0"></div>
             </div>
-
-            <!-- NOVO: Toggle ajuste por produto -->
-            <label class="per-product-toggle" id="perProductToggleLabel" for="perProductAdjust">
-                <input type="checkbox" id="perProductAdjust" onchange="onPerProductAdjustChange()">
-                <span>⚙️ Ajuste individual por produto</span>
-                <small style="margin-left:auto;font-size:0.78rem;font-weight:400;color:inherit;opacity:0.8;">Ativa campos de ajuste na tabela de produtos</small>
-            </label>
 
             <div id="discountSummary" class="discount-summary">
                 <h4>📊 Resumo de Cálculos</h4>
@@ -644,7 +811,6 @@
             <input type="checkbox" id="toggleAdvancedOptions" onchange="toggleAdvancedSection()">
             <label for="toggleAdvancedOptions">⚙️ Opções Avançadas</label>
         </div>
-
         <div id="advancedOptions" class="collapsible-content">
             <div class="section-card">
                 <div class="option-group">
@@ -661,17 +827,13 @@ Capa silicone R$ 50,00
 - Não escreva introduções nem conclusões.</textarea>
                     </div>
                 </div>
-
                 <hr>
-
                 <div class="option-group">
                     <h4>✨ Emoticons nos Valores</h4>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="useEmoticons" onchange="calcularParcelas()">
-                            <label for="useEmoticons">Ativar emoticons no texto de saída</label>
-                        </div>
-                    </div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="useEmoticons" onchange="calcularParcelas(); enviarLog('alterou_emoticons');">
+                        <label for="useEmoticons">Ativar emoticons no texto de saída</label>
+                    </div></div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
                         <div class="input-group">
                             <label for="emoticonDinheiro">Dinheiro:</label>
@@ -685,83 +847,57 @@ Capa silicone R$ 50,00
                         </div>
                     </div>
                 </div>
-
                 <hr>
-
                 <div class="option-group">
                     <h4>🎯 Arredondamento de Valores</h4>
                     <div class="input-group">
                         <label for="fatorArredondamento">Fator de arredondamento:</label>
-                        <div class="input-with-icon">
-                            <span class="input-icon">🔄</span>
-                            <input type="number" id="fatorArredondamento" placeholder="Ex: 0.5, 0.2, 1" step="0.01" value="1" min="0.01">
-                        </div>
-                        <small style="color: var(--text-secondary); margin-top: 5px; display: block;">
-                            💡 Exemplos: 1 = inteiro (5,51→6) | 0,5 = meio (5,51→5,50 ou 6,00) | 0,2 = 20 centavos (5,51→5,60)
-                        </small>
+                        <div class="input-with-icon"><span class="input-icon">🔄</span>
+                        <input type="number" id="fatorArredondamento" placeholder="Ex: 0.5, 0.2, 1" step="0.01" value="1" min="0.01"></div>
+                        <small style="color: var(--text-secondary); margin-top: 5px; display: block;">💡 Exemplos: 1 = inteiro (5,51→6) | 0,5 = meio | 0,2 = 20 centavos</small>
                     </div>
                 </div>
-
                 <hr>
-
                 <div class="option-group">
                     <h4>禁 Personalizar Texto de Saída</h4>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="hideDinheiroPix">
-                            <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
-                            <div class="percent-input-container" id="porcentagemPixContainer">
-                                <input type="number" id="porcentagemPix" placeholder="%" step="0.01" value="0">
-                                <span>%</span>
-                            </div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="hideDinheiroPix">
+                        <label for="hideDinheiroPix">Não mostrar "Dinheiro/Pix"</label>
+                        <div class="percent-input-container" id="porcentagemPixContainer">
+                            <input type="number" id="porcentagemPix" placeholder="%" step="0.01" value="0"><span>%</span>
                         </div>
-                    </div>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="showDebito">
-                            <label for="showDebito">Mostrar "Débito"</label>
-                            <div class="percent-input-container" id="porcentagemDebitoContainer">
-                                <input type="number" id="porcentagemDebito" placeholder="%" step="0.01" value="2.5">
-                                <span>%</span>
-                            </div>
+                    </div></div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="showDebito">
+                        <label for="showDebito">Mostrar "Débito"</label>
+                        <div class="percent-input-container" id="porcentagemDebitoContainer">
+                            <input type="number" id="porcentagemDebito" placeholder="%" step="0.01" value="2.5"><span>%</span>
                         </div>
-                    </div>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="showComparison">
-                            <label for="showComparison">Mostrar comparação (economia vs sem desconto)</label>
-                        </div>
-                    </div>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="hideEntradaText">
-                            <label for="hideEntradaText">Não mostrar "Entrada"</label>
-                        </div>
-                    </div>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="showTotalValue">
-                            <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
-                        </div>
-                    </div>
-                    <div class="checkbox-item">
-                        <div class="parcela-input-group">
-                            <input type="checkbox" id="boldProductName" checked>
-                            <label for="boldProductName">Nome do produto em negrito (*texto*)</label>
-                        </div>
-                    </div>
+                    </div></div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="showComparison">
+                        <label for="showComparison">Mostrar comparação (economia vs sem desconto)</label>
+                    </div></div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="hideEntradaText">
+                        <label for="hideEntradaText">Não mostrar "Entrada"</label>
+                    </div></div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="showTotalValue">
+                        <label for="showTotalValue">Mostrar valor total (R$ XXXX)</label>
+                    </div></div>
+                    <div class="checkbox-item"><div class="parcela-input-group">
+                        <input type="checkbox" id="boldProductName" checked>
+                        <label for="boldProductName">Nome do produto em negrito (*texto*)</label>
+                    </div></div>
                 </div>
-
                 <hr>
-
                 <div class="option-group">
                     <h4>✏️ Textos Personalizados</h4>
                     <div class="input-group">
                         <label for="produtoPrefix">Prefixo do produto:</label>
                         <input type="text" id="produtoPrefix" placeholder="Ex: 📦, ➡️, ✨" value="➡️ ">
-                        <small style="color: var(--text-secondary); margin-top: 5px; display: block;">
-                            Sugestões: 📱 🍏 🍎 📺 💻 ✳️ 📦 🔌 ⬛ ✨ 🎁
-                        </small>
+                        <small style="color: var(--text-secondary); margin-top: 5px; display: block;">Sugestões: 📱 🍏 🍎 📺 💻 ✳️ 📦 🔌 ⬛ ✨ 🎁</small>
                     </div>
                     <div class="input-group">
                         <label for="textoAdicionalLinha">Texto adicional por linha:</label>
@@ -776,9 +912,7 @@ Capa silicone R$ 50,00
                         <textarea id="textoFinalMensagem" placeholder="Ex: 'Entre em contato para mais informações! 📱'"></textarea>
                     </div>
                 </div>
-
                 <hr>
-
                 <div class="option-group">
                     <h4>🎯 Selecionar Parcelas e Taxa %</h4>
                     <div class="parcelas-checkboxes" id="parcelasAvancadas"></div>
@@ -804,48 +938,342 @@ Capa silicone R$ 50,00
 
         <div class="toggle-section">
             <input type="checkbox" id="toggleHistorico" onchange="toggleHistoricoSection()">
-            <label for="toggleHistorico">📚 Salvar no Histórico</label>
+            <label for="toggleHistorico">📚 Meus Acessos Anteriores</label>
         </div>
 
         <div id="historicoSection" class="collapsible-content">
             <div class="section-card">
-                <div class="input-group">
-                    <label for="historicoTitulo">Título do cálculo:</label>
-                    <div class="input-with-icon">
-                        <span class="input-icon">📝</span>
-                        <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13">
+                <div id="sheetsLoginPrompt" style="display:none;margin-bottom:15px;">
+                    <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:8px;">🔒 Entre com Google para salvar e recuperar seus acessos automaticamente.</p>
+                    <button class="btn btn-outline" onclick="pedirLogin()" style="width:100%;font-size:0.88rem;border-color:var(--secondary-color);color:var(--secondary-color);">
+                        🔑 Entrar com Google
+                    </button>
+                </div>
+                <div id="tituloAutoWrap" style="display:none;">
+                    <div class="input-group" style="margin-bottom:8px;">
+                        <label for="historicoTitulo">🏷️ Título (opcional):</label>
+                        <div class="input-with-icon"><span class="input-icon">📝</span>
+                        <input type="text" id="historicoTitulo" placeholder="Ex: Venda iPhone 13 — deixe vazio para usar data/hora"></div>
                     </div>
-                </div>
-                <div class="input-group">
-                    <label for="historicoComentarios">Comentários (opcional):</label>
-                    <textarea id="historicoComentarios" placeholder="Observações sobre este cálculo..." style="min-height: 80px;"></textarea>
-                </div>
-                <div class="button-row">
-                    <button class="btn btn-primary" onclick="salvarNoHistorico()">💾 Salvar Agora</button>
-                    <button class="btn btn-secondary" onclick="toggleVerHistorico()">📋 Ver Histórico</button>
+                    <div class="input-group" style="margin-bottom:12px;">
+                        <label for="historicoComentarios">💬 Comentário (opcional):</label>
+                        <textarea id="historicoComentarios" placeholder="Observações sobre este acesso..." style="min-height:60px;display:block;"></textarea>
+                    </div>
+                    <small style="color:var(--text-secondary);font-size:0.8rem;display:block;margin-bottom:10px;">Salvo automaticamente após 2s de inatividade</small>
+                    <button class="btn btn-secondary" onclick="toggleVerHistorico()" style="width:100%;">📋 Ver Meus Acessos Anteriores</button>
                 </div>
             </div>
         </div>
 
-        <div id="visualizarHistoricoSection" class="collapsible-content">
+        <div id="visualizarHistoricoSection" style="display:none;">
             <div class="section-card">
-                <div class="section-title">📖 Histórico de Cálculos</div>
+                <div class="section-title">🕓 Meus Acessos Anteriores</div>
                 <div id="historicoLista"></div>
-                <div class="button-row" style="margin-top: 15px;">
+                <div class="button-row" style="margin-top:15px;">
                     <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
-                    <button class="btn btn-danger" onclick="limparHistoricoCompleto()">🗑️ Limpar Histórico</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" id="toggleSheets">
+        <div id="sheetsToggleArea" style="display:none;"></div>
+        <div id="sheetsToggleWrap" style="display:none;"></div>
+        <span id="historicoFonte" style="display:none;"></span>
+
+    </div>
+
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <div class="feedback-modal" id="feedbackModal">
+            <div id="feedbackIcon" class="feedback-icon"></div>
+            <div id="feedbackSpinner" class="feedback-spinner" style="display:none;"></div>
+            <div id="feedbackTitle" class="feedback-title"></div>
+            <div id="feedbackSubtitle" class="feedback-subtitle"></div>
+        </div>
+    </div>
+
+    <!-- FABs flutuantes -->
+    <div class="fab-group">
+        <button class="fab-pill fab-pill-resultado" onclick="fpToggle('resultado')" title="Resultado rápido">
+            📋 Resultado <span class="fab-pill-arrow" id="fpArrow_resultado">▲</span>
+        </button>
+        <button class="fab-pill fab-pill-historico" onclick="fpToggle('historico')" title="Histórico rápido">
+            📚 Histórico <span class="fab-pill-arrow" id="fpArrow_historico">▲</span>
+            <span class="fab-badge-pill" id="fabBadge" style="display:none;"></span>
+        </button>
+    </div>
+
+    <!-- Painel Resultado -->
+    <div class="float-panel" id="fpPanel_resultado">
+        <div class="float-panel-header">
+            <span>📋 Resultado</span>
+            <button class="float-panel-fechar" onclick="fpFechar('resultado')">✕</button>
+        </div>
+        <div class="float-panel-body">
+            <textarea class="fres-textarea" id="fpResText" readonly placeholder="O resultado aparecerá aqui..."></textarea>
+            <div class="fres-acoes">
+                <button class="fres-btn fres-btn-copiar" onclick="fpCopiar()">📋 Copiar</button>
+                <button class="fres-btn fres-btn-limpar" onclick="fpLimpar()">🗑️ Limpar</button>
+            </div>
+            <div class="fres-msg" id="fpCopyMsg">✅ Copiado!</div>
+            <!-- Chips -->
+            <div class="fchips-secao">
+                <div class="fchips-titulo">Selecione para exibir:</div>
+                <div class="fchips-esp" id="fpChipsEsp"></div>
+                <div class="fchips-parc" id="fpChipsParc"></div>
+                <div class="ftaxas-secao" id="fpTaxasSec" style="display:none;">
+                    <div class="fchips-titulo">Taxas (%):</div>
+                    <div class="ftaxas-grid" id="fpTaxasGrid"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <button class="fab-historico" onclick="abrirHistoricoRapido()" title="Ver histórico">
-        📚
-        <span class="fab-badge" id="fabBadge" style="display: none;">0</span>
-    </button>
+    <!-- Painel Histórico -->
+    <div class="float-panel" id="fpPanel_historico">
+        <div class="float-panel-header">
+            <span>📚 Histórico</span>
+            <button class="float-panel-fechar" onclick="fpFechar('historico')">✕</button>
+        </div>
+        <div class="float-panel-body">
+            <div class="fhist-titulo-wrap" id="fpHistTituloWrap" style="display:none;">
+                <div class="fhist-titulo-label">🏷️ Título desta sessão (opcional):</div>
+                <input type="text" class="fhist-titulo-input" id="fpHistTituloInput"
+                    placeholder="Ex: Venda iPhone 13">
+                <div class="fhist-titulo-label" style="margin-top:8px;">💬 Comentário (opcional):</div>
+                <textarea class="fhist-titulo-input" id="fpHistComentarioInput"
+                    placeholder="Observações sobre este acesso..."
+                    style="min-height:54px;resize:vertical;font-family:inherit;font-size:0.82rem;"></textarea>
+            </div>
+            <div id="fpHistLista"><div class="fhist-loading">Abrindo...</div></div>
+        </div>
+    </div>
 
     <script>
-        // ── DOM refs ──────────────────────────────────────────────────────────
+        // ── Config ───────────────────────────────────────────────────────────
+        const SHEETS_URL       = 'https://script.google.com/macros/s/AKfycbwx3vtV7b7uK3IrPv_4mXZOJVxYwMqxZIDPZt3RIeByO4JPS0bIdhXxN_1460UqWqMj/exec';
+        const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
+        const SESSION_KEY      = 'calc_gsession_v1';
+        const SESSION_DAYS     = 90;
+        let _sheetsCache       = [];
+        let _currentUser       = null;
+
+        // ── Auth ──────────────────────────────────────────────────────────────
+        function _decodeJwt(token) {
+            try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
+            catch(e) { return null; }
+        }
+        function _saveSession(payload) {
+            const s = {
+                email:   payload.email,
+                name:    payload.name   || '',
+                picture: payload.picture || '',
+                expires: Date.now() + SESSION_DAYS * 86400000
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+            return s;
+        }
+        function _loadSession() {
+            try {
+                const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+                if (!s || Date.now() > s.expires) { localStorage.removeItem(SESSION_KEY); return null; }
+                return s;
+            } catch(e) { return null; }
+        }
+        function logoutGoogle() {
+            if (!confirm('Deseja sair da sua conta Google?')) return;
+            localStorage.removeItem(SESSION_KEY);
+            _currentUser = null;
+            document.getElementById('userBar').style.display        = 'none';
+            document.getElementById('accountBarGuest').style.display = 'block';
+            document.getElementById('sheetsToggleArea').style.display  = 'none';
+            document.getElementById('sheetsLoginPrompt').style.display = 'none';
+            const cb = document.getElementById('toggleSheets');
+            if (cb) cb.checked = false;
+            onSheetsToggleChange();
+        }
+        function _onGoogleCredential(response) {
+            const payload = _decodeJwt(response.credential);
+            if (!payload || !payload.email) {
+                showModal('error', 'Erro de login', 'Não foi possível autenticar com o Google.', 3500);
+                return;
+            }
+            _currentUser = _saveSession(payload);
+            _showApp();
+        }
+        function _showApp() {
+            document.getElementById('authWall').style.display      = 'none';
+            document.getElementById('accountBarGuest').style.display = 'none';
+            document.getElementById('userBar').style.display       = 'flex';
+            document.getElementById('userAvatar').src              = _currentUser.picture || '';
+            document.getElementById('userBarName').textContent     = _currentUser.name    || '';
+            document.getElementById('userBarEmail').textContent    = _currentUser.email   || '';
+            document.getElementById('sheetsLoginPrompt').style.display = 'none';
+            document.getElementById('sheetsToggleArea').style.display  = 'block';
+            atualizarBadgeHistorico();
+        }
+        function _showGuestMode() {
+            document.getElementById('authWall').style.display       = 'none';
+            document.getElementById('accountBarGuest').style.display = 'block';
+            document.getElementById('userBar').style.display        = 'none';
+            document.getElementById('sheetsLoginPrompt').style.display = 'none';
+            document.getElementById('sheetsToggleArea').style.display  = 'none';
+            atualizarBadgeHistorico();
+        }
+        function usarSemLogin() { _showGuestMode(); }
+        function pedirLogin() {
+            document.getElementById('authWall').style.display = 'flex';
+            _renderGoogleButton();
+        }
+        function _renderGoogleButton() {
+            if (!window.google || !window.google.accounts) return;
+            window.google.accounts.id.initialize({
+                client_id:   GOOGLE_CLIENT_ID,
+                callback:    _onGoogleCredential,
+                auto_select: false,
+            });
+            window.google.accounts.id.renderButton(
+                document.getElementById('googleSignInBtn'),
+                { theme: 'outline', size: 'large', text: 'signin_with', width: 260, logo_alignment: 'center' }
+            );
+        }
+        function _showAuthWall() {
+            document.getElementById('authWall').style.display = 'flex';
+            (function _tryRender() {
+                if (window.google && window.google.accounts) {
+                    _renderGoogleButton();
+                } else { setTimeout(_tryRender, 80); }
+            })();
+        }
+        function _initAuth() {
+            _currentUser = _loadSession();
+            if (_currentUser) { _showApp(); return; }
+            _showGuestMode();
+        }
+        (function _waitGSI() {
+            if (window.google && window.google.accounts) { _initAuth(); }
+            else { setTimeout(_waitGSI, 80); }
+        })();
+
+        // ── Sheets ────────────────────────────────────────────────────────────
+        function isSheetsEnabled() { return !!(document.getElementById('toggleSheets') && document.getElementById('toggleSheets').checked); }
+        function onSheetsToggleChange() {
+            const on = isSheetsEnabled();
+            const wrap = document.getElementById('sheetsToggleWrap');
+            if (wrap) wrap.classList.toggle('enabled', on);
+            const btnLimpar = document.getElementById('btnLimparHistorico');
+            if (btnLimpar) btnLimpar.style.display = on ? 'none' : '';
+            const fonteEl = document.getElementById('historicoFonte');
+            if (fonteEl) fonteEl.textContent = on ? '☁️ Google Sheets' : '💾 Local';
+        }
+        async function sheetsPost(body) {
+            if (_currentUser) body.user_email = _currentUser.email;
+            const resp = await fetch(SHEETS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(body)
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const json = await resp.json();
+            if (json.error) throw new Error(json.error);
+            return json;
+        }
+
+        // ── LOG AUTOMÁTICO — UMA LINHA POR SESSÃO ─────────────────────────────
+        const _sessaoId        = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const _historicoId     = Date.now().toString();
+        const _sessaoInicio    = new Date().toISOString();
+        const _acoesLog     = [];
+        let   _logTimer     = null;
+
+        function _registrarAcao(acao) {
+            if (acao && !_acoesLog.includes(acao)) _acoesLog.push(acao);
+        }
+
+        function _coletarEstado() {
+            return {
+                type:          'log',
+                sessao_id:     _sessaoId,
+                email:         _currentUser ? _currentUser.email : 'anonimo',
+                nome:          _currentUser ? _currentUser.name  : 'anonimo',
+                inicio:        _sessaoInicio,
+                ultima_acao:   new Date().toISOString(),
+                valor_base:    document.getElementById('valorBase')            ? document.getElementById('valorBase').value            : '',
+                desconto_perc: document.getElementById('descontoPercentual')   ? document.getElementById('descontoPercentual').value   : '',
+                desconto_fixo: document.getElementById('descontoFixo')         ? document.getElementById('descontoFixo').value         : '',
+                acrescimo_r:   document.getElementById('lucroAdicional')       ? document.getElementById('lucroAdicional').value       : '',
+                acrescimo_p:   document.getElementById('acrescimoPercentual')  ? document.getElementById('acrescimoPercentual').value  : '',
+                comissao:      document.getElementById('acrescimoComissao')    ? document.getElementById('acrescimoComissao').value    : '',
+                entrada:       document.getElementById('valorEntrada')         ? document.getElementById('valorEntrada').value         : '',
+                parcelas:      document.getElementById('parcelaEspecifica')    ? document.getElementById('parcelaEspecifica').value    : '',
+                num_produtos:  (typeof selectedProducts !== 'undefined')       ? selectedProducts.length                               : 0,
+                resultado:     document.getElementById('resultado')            ? document.getElementById('resultado').value.substring(0, 800) : '',
+                acoes:         _acoesLog.join(', '),
+                userAgent:     navigator.userAgent.substring(0, 120)
+            };
+        }
+
+        function enviarLog(acao) {
+            _registrarAcao(acao);
+            clearTimeout(_logTimer);
+            _logTimer = setTimeout(flushLog, 2000);
+        }
+
+        function setSaveStatus(msg, color) {
+            const el = document.getElementById('saveStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.color = color || 'var(--text-secondary)';
+            if (color && color !== 'var(--text-secondary)') {
+                setTimeout(() => { el.style.color = 'var(--text-secondary)'; }, 3000);
+            }
+        }
+
+        async function flushLog() {
+            const estado = _coletarEstado();
+            const temDados = estado.valor_base || estado.num_produtos > 0 || estado.resultado || estado.acoes || _tituloSessao || _comentarioSessao;
+            if (!temDados) return;
+            setSaveStatus('⏳ Salvando...', 'var(--text-secondary)');
+            try {
+                await fetch(SHEETS_URL, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body:    JSON.stringify(estado)
+                });
+
+                if (_currentUser) {
+                    const agora     = new Date();
+                    const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
+                    const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
+                    const titulo    = _tituloSessao || tituloAuto;
+                    const comentario = _comentarioSessao;
+                    const dados     = obterDadosCalculadora();
+                    dados.titulo    = titulo;
+                    dados.comentarios = comentario;
+                    dados.auto      = true;
+                    await sheetsPost({
+                        id:         _historicoId,
+                        date:       agora.toISOString(),
+                        titulo:     titulo,
+                        user_email: _currentUser.email,
+                        payload:    dados,
+                        auto:       true
+                    });
+                }
+                setSaveStatus('✅ Salvo ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), '#4CAF50');
+            } catch(e) {
+                setSaveStatus('❌ Falha ao salvar', 'var(--danger-color)');
+                console.warn('Log/auto-save falhou:', e.message);
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(_logTimer);
+            const estado   = _coletarEstado();
+            const temDados = estado.valor_base || estado.num_produtos > 0 || estado.resultado || estado.acoes || _tituloSessao || _comentarioSessao;
+            if (!temDados) return;
+            navigator.sendBeacon(SHEETS_URL, new Blob([JSON.stringify(estado)], { type: 'text/plain;charset=utf-8' }));
+        });
+
         const valorBaseInput                  = document.getElementById('valorBase');
         const parcelaEspecificaInput          = document.getElementById('parcelaEspecifica');
         const descontoPercentualInput         = document.getElementById('descontoPercentual');
@@ -855,6 +1283,11 @@ Capa silicone R$ 50,00
         const acrescimoPercentualInput        = document.getElementById('acrescimoPercentual');
         const valorEntradaInput               = document.getElementById('valorEntrada');
         const resultadoTextarea               = document.getElementById('resultado');
+        function autoResizeResultado() {
+            if (!resultadoTextarea) return;
+            resultadoTextarea.style.height = 'auto';
+            resultadoTextarea.style.height = Math.max(120, resultadoTextarea.scrollHeight) + 'px';
+        }
         const mensagemCopiado                 = document.getElementById('mensagemCopiado');
         const discountSummary                 = document.getElementById('discountSummary');
         const discountDetails                 = document.getElementById('discountDetails');
@@ -891,14 +1324,30 @@ Capa silicone R$ 50,00
         const historicoSection                = document.getElementById('historicoSection');
         const historicoTituloInput            = document.getElementById('historicoTitulo');
         const historicoComentariosTextarea    = document.getElementById('historicoComentarios');
+
+        let _tituloSessao    = '';
+        let _comentarioSessao = '';
+
+        if (historicoTituloInput) {
+            historicoTituloInput.addEventListener('input', () => {
+                _tituloSessao = historicoTituloInput.value.trim();
+                clearTimeout(_logTimer);
+                _logTimer = setTimeout(flushLog, 2000);
+            });
+        }
+        if (historicoComentariosTextarea) {
+            historicoComentariosTextarea.addEventListener('input', () => {
+                _comentarioSessao = historicoComentariosTextarea.value.trim();
+                clearTimeout(_logTimer);
+                _logTimer = setTimeout(flushLog, 2000);
+            });
+        }
         const visualizarHistoricoSection      = document.getElementById('visualizarHistoricoSection');
         const historicoLista                  = document.getElementById('historicoLista');
         const parcelaEspecificaOpcoes         = document.getElementById('parcelaEspecificaOpcoes');
         const especificaMostrarPixCb          = document.getElementById('especificaMostrarPix');
         const especificaMostrarTotalCb        = document.getElementById('especificaMostrarTotal');
         const parcelaTaxasRow                 = document.getElementById('parcelaTaxasRow');
-        const perProductAdjustCb              = document.getElementById('perProductAdjust');
-        const perProductToggleLabel           = document.getElementById('perProductToggleLabel');
 
         // ── Taxas e configurações padrão ──────────────────────────────────────
         const taxasDeJurosPadrao = {
@@ -906,41 +1355,28 @@ Capa silicone R$ 50,00
             7: 0.095, 8: 0.10, 9: 0.105, 10: 0.115, 11: 0.12, 12: 0.125,
             13: 0.135, 14: 0.145, 15: 0.15, 16: 0.155, 17: 0.16, 18: 0.17, 'debito': 0.025
         };
-
         let taxasRapidas = {};
         const parcelasPadrao = [3, 6, 10, 12];
         let products = [];
         let selectedProducts = [];
-
-        // ── Ajustes individuais por produto ───────────────────────────────────
-        // Estrutura: { prodIndex: { descontoR: '', descontoP: '', acrescimoR: '', acrescimoP: '', comissao: '' } }
         let productAdjustments = {};
 
+        // ── Ajustes individuais ───────────────────────────────────────────────
         function getProductAdj(idx) {
             return productAdjustments[idx] || { descontoR: '', descontoP: '', acrescimoR: '', acrescimoP: '', comissao: '', comentario: '' };
         }
-
         function hasProductAdj(idx) {
             const a = productAdjustments[idx];
             if (!a) return false;
-            return Object.values(a).some(v => v !== '' && v !== '0' && parseFloat(v) !== 0);
+            // Considera preenchido se não for string vazia (0 é um valor válido intencional)
+            return Object.values(a).some(v => v !== '' && v !== null && v !== undefined);
         }
-
-        function onPerProductAdjustChange() {
-            const enabled = perProductAdjustCb.checked;
-            perProductToggleLabel.classList.toggle('enabled', enabled);
-            // Re-renderiza a tabela para mostrar/ocultar coluna de ajuste
-            if (products.length > 0) displayTable(products);
-            calcularParcelas();
-        }
-
         // ── Parcelas rápidas ──────────────────────────────────────────────────
         function getParcelas() {
             const raw = parcelaEspecificaInput.value.trim();
             if (!raw) return [];
             return raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 18);
         }
-
         function syncChipPix(checked) {
             especificaMostrarPixCb.checked = checked;
             document.getElementById('labelEspecificaPix').classList.toggle('ativo', checked);
@@ -952,9 +1388,16 @@ Capa silicone R$ 50,00
             document.getElementById('labelEspecificaTotal').classList.toggle('ativo', checked);
             showTotalValueCheckbox.checked = checked;
         }
-        function onQuickPixChange()   { syncChipPix(especificaMostrarPixCb.checked);    calcularParcelas(); }
-        function onQuickTotalChange() { syncChipTotal(especificaMostrarTotalCb.checked); calcularParcelas(); }
-
+        function onQuickPixChange()   {
+            syncChipPix(especificaMostrarPixCb.checked);
+            calcularParcelas();
+            enviarLog('alterou_opcao_pix');
+        }
+        function onQuickTotalChange() {
+            syncChipTotal(especificaMostrarTotalCb.checked);
+            calcularParcelas();
+            enviarLog('alterou_opcao_total');
+        }
         function gerarChipsTaxa(parcelas) {
             parcelaTaxasRow.innerHTML = '';
             if (parcelas.length === 0) return;
@@ -963,19 +1406,17 @@ Capa silicone R$ 50,00
                 const valorAtual = taxasRapidas[n] !== undefined ? taxasRapidas[n] : taxaPadrao;
                 const chip = document.createElement('div');
                 chip.className = 'taxa-chip';
-                chip.innerHTML = `<span>${n}x</span>
-                    <input type="number" step="0.01" min="0" value="${valorAtual}" data-parcela="${n}" title="Taxa para ${n}x">
-                    <span>%</span>`;
+                chip.innerHTML = `<span>${n}x</span><input type="number" step="0.01" min="0" value="${valorAtual}" data-parcela="${n}" title="Taxa para ${n}x"><span>%</span>`;
                 chip.querySelector('input').addEventListener('input', function() {
                     taxasRapidas[this.dataset.parcela] = this.value;
                     const avInput = document.getElementById('porcentagem' + this.dataset.parcela + 'x');
                     if (avInput) avInput.value = this.value;
                     calcularParcelas();
+                    enviarLog('alterou_taxa_parcela');
                 });
                 parcelaTaxasRow.appendChild(chip);
             });
         }
-
         function atualizarVisibilidadeMiniOpcoes() {
             const parcelas = getParcelas();
             parcelaEspecificaOpcoes.classList.toggle('show', parcelas.length > 0);
@@ -984,148 +1425,226 @@ Capa silicone R$ 50,00
 
         // ── Histórico ─────────────────────────────────────────────────────────
         function toggleHistoricoSection() {
-            historicoSection.classList.toggle('show', toggleHistorico.checked);
+            const checked    = document.getElementById('toggleHistorico').checked;
+            const lista      = document.getElementById('visualizarHistoricoSection');
+            const tituloWrap = document.getElementById('tituloAutoWrap');
+            const loginPrompt = document.getElementById('sheetsLoginPrompt');
+            const section    = document.getElementById('historicoSection');
+
+            if (checked) {
+                section.classList.add('show');
+                if (tituloWrap) tituloWrap.style.display = 'block';
+                if (!_currentUser && loginPrompt) loginPrompt.style.display = 'block';
+                if (lista) {
+                    lista.style.display = 'block';
+                    carregarHistorico();
+                    setTimeout(() => lista.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+                }
+            } else {
+                section.classList.remove('show');
+                if (tituloWrap) tituloWrap.style.display = 'none';
+                if (loginPrompt) loginPrompt.style.display = 'none';
+                if (lista) lista.style.display = 'none';
+            }
         }
+
         function toggleVerHistorico() {
-            visualizarHistoricoSection.classList.toggle('show');
-            if (visualizarHistoricoSection.classList.contains('show')) {
+            const lista = document.getElementById('visualizarHistoricoSection');
+            const cb    = document.getElementById('toggleHistorico');
+            if (!lista) return;
+            const abrindo = lista.style.display === 'none' || lista.style.display === '';
+            if (abrindo) {
+                lista.style.display = 'block';
                 carregarHistorico();
-                setTimeout(() => visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                lista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                lista.style.display = 'none';
+                if (cb) cb.checked = false;
+                document.getElementById('historicoSection').classList.remove('show');
+                const tituloWrap = document.getElementById('tituloAutoWrap');
+                if (tituloWrap) tituloWrap.style.display = 'none';
             }
         }
         function abrirHistoricoRapido() {
-            if (!visualizarHistoricoSection.classList.contains('show')) {
-                visualizarHistoricoSection.classList.add('show');
-                carregarHistorico();
+            const cb = document.getElementById('toggleHistorico');
+            if (cb && !cb.checked) {
+                cb.checked = true;
+                toggleHistoricoSection();
+            } else {
+                const lista = document.getElementById('visualizarHistoricoSection');
+                if (lista) {
+                    lista.style.display = 'block';
+                    carregarHistorico();
+                    lista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
-            visualizarHistoricoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         function atualizarBadgeHistorico() {
-            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
             const badge = document.getElementById('fabBadge');
-            if (historico.length > 0) {
-                badge.textContent = historico.length > 99 ? '99+' : historico.length;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
+            if (badge) badge.style.display = 'none';
         }
         function obterDataFormatada() {
             const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
             const agora = new Date();
-            const d = String(agora.getDate()).padStart(2,'0');
-            const m = String(agora.getMonth()+1).padStart(2,'0');
-            const h = String(agora.getHours()).padStart(2,'0');
-            const min = String(agora.getMinutes()).padStart(2,'0');
-            return `${dias[agora.getDay()]}, ${d}/${m}/${agora.getFullYear()} às ${h}:${min}`;
+            return `${dias[agora.getDay()]}, ${String(agora.getDate()).padStart(2,'0')}/${String(agora.getMonth()+1).padStart(2,'0')}/${agora.getFullYear()} às ${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
         }
         function obterDadosCalculadora() {
-            const parcelasSelecionadas = [];
-            const parcelasTaxas = {};
+            const parcelasSelecionadas = [], parcelasTaxas = {};
             document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked').forEach(cb => {
-                const num = parseInt(cb.value);
-                parcelasSelecionadas.push(num);
+                const num = parseInt(cb.value); parcelasSelecionadas.push(num);
                 const taxaInput = document.getElementById(`porcentagem${num}x`);
                 if (taxaInput) parcelasTaxas[num] = taxaInput.value;
             });
             return {
-                valorBase: valorBaseInput.value,
-                parcelaEspecifica: parcelaEspecificaInput.value,
-                descontoPercentual: descontoPercentualInput.value,
-                descontoFixo: descontoFixoInput.value,
-                lucroAdicional: lucroAdicionalInput.value,
-                acrescimoComissao: acrescimoComissaoInput.value,
-                acrescimoPercentual: acrescimoPercentualInput.value,
-                valorEntrada: valorEntradaInput.value,
-                fatorArredondamento: fatorArredondamentoInput.value,
-                resultado: resultadoTextarea.value,
-                usandoListaProdutos: toggleProductList.checked,
-                listaProdutosTexto: productListTextarea.value,
-                produtosSelecionados: selectedProducts,
-                todosProdutos: products,
-                productAdjustments: productAdjustments,
-                perProductAdjust: perProductAdjustCb.checked,
+                valorBase: valorBaseInput.value, parcelaEspecifica: parcelaEspecificaInput.value,
+                descontoPercentual: descontoPercentualInput.value, descontoFixo: descontoFixoInput.value,
+                lucroAdicional: lucroAdicionalInput.value, acrescimoComissao: acrescimoComissaoInput.value,
+                acrescimoPercentual: acrescimoPercentualInput.value, valorEntrada: valorEntradaInput.value,
+                fatorArredondamento: fatorArredondamentoInput.value, resultado: resultadoTextarea.value,
+                usandoListaProdutos: toggleProductList.checked, listaProdutosTexto: productListTextarea.value,
+                produtosSelecionados: selectedProducts, todosProdutos: products,
+                productAdjustments: productAdjustments, perProductAdjust: true,
                 opcoesAvancadasAtivo: toggleAdvancedOptions.checked,
                 opcoes: {
-                    hideDinheiroPix: hideDinheiroPixCheckbox.checked,
-                    showDebito: showDebitoCheckbox.checked,
-                    showComparison: showComparisonCheckbox.checked,
-                    hideEntradaText: hideEntradaTextCheckbox.checked,
-                    showTotalValue: showTotalValueCheckbox.checked,
-                    boldProductName: boldProductNameCheckbox.checked,
+                    hideDinheiroPix: hideDinheiroPixCheckbox.checked, showDebito: showDebitoCheckbox.checked,
+                    showComparison: showComparisonCheckbox.checked, hideEntradaText: hideEntradaTextCheckbox.checked,
+                    showTotalValue: showTotalValueCheckbox.checked, boldProductName: boldProductNameCheckbox.checked,
                     useEmoticons: useEmoticonsCheckbox.checked,
-                    especificaMostrarPix: especificaMostrarPixCb.checked,
-                    especificaMostrarTotal: especificaMostrarTotalCb.checked
+                    especificaMostrarPix: especificaMostrarPixCb.checked, especificaMostrarTotal: especificaMostrarTotalCb.checked
                 },
-                porcentagemPix: porcentagemPixInput.value,
-                porcentagemDebito: porcentagemDebitoInput.value,
+                porcentagemPix: porcentagemPixInput.value, porcentagemDebito: porcentagemDebitoInput.value,
                 textos: {
-                    produtoPrefix: produtoPrefixInput.value,
-                    textoAdicionalLinha: textoAdicionalLinhaInput.value,
-                    textoCabecalho: textoCabecalhoMensagemTextarea.value,
-                    textoFinal: textoFinalMensagemTextarea.value,
-                    aiPrompt: aiPromptTextarea.value,
-                    emoticonDinheiro: emoticonDinheiroInput.value,
-                    emoticonCartao: emoticonCartaoInput.value
+                    produtoPrefix: produtoPrefixInput.value, textoAdicionalLinha: textoAdicionalLinhaInput.value,
+                    textoCabecalho: textoCabecalhoMensagemTextarea.value, textoFinal: textoFinalMensagemTextarea.value,
+                    aiPrompt: aiPromptTextarea.value, emoticonDinheiro: emoticonDinheiroInput.value, emoticonCartao: emoticonCartaoInput.value
                 },
                 parcelasSelecionadas, parcelasTaxas
             };
         }
-        function salvarNoHistorico() {
-            const titulo = historicoTituloInput.value.trim();
-            if (!titulo) { alert('⚠️ Por favor, insira um título para o cálculo'); historicoTituloInput.focus(); return; }
-            if (!resultadoTextarea.value) { alert('⚠️ Não há cálculo para salvar.'); return; }
-            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-            historico.unshift({ id: Date.now(), data: obterDataFormatada(), titulo, comentarios: historicoComentariosTextarea.value.trim(), dados: obterDadosCalculadora() });
-            localStorage.setItem('historicoCalculos', JSON.stringify(historico));
-            atualizarBadgeHistorico();
-            historicoTituloInput.value = '';
-            historicoComentariosTextarea.value = '';
-            showToast('✅ Cálculo salvo no histórico!');
+
+        function buildItemHistoricoHtml(id, titulo, dataStr, comentarios, dados, isAuto) {
+            let resumoValor = '';
+            if (dados.usandoListaProdutos && dados.produtosSelecionados && dados.produtosSelecionados.length > 0)
+                resumoValor = `${dados.produtosSelecionados.length} produto${dados.produtosSelecionados.length>1?'s':''} selecionado${dados.produtosSelecionados.length>1?'s':''}`;
+            else if (dados.valorBase)
+                resumoValor = `R$ ${parseFloat(dados.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            else resumoValor = 'Sem valor';
+            let extras = [];
+            if (dados.descontoPercentual) extras.push(`Desconto: ${dados.descontoPercentual}%`);
+            if (dados.descontoFixo) extras.push(`Desc. fixo: R$ ${parseFloat(dados.descontoFixo).toFixed(2)}`);
+            if (dados.lucroAdicional) extras.push(`Acrésc. R$: R$ ${parseFloat(dados.lucroAdicional).toFixed(2)}`);
+            if (dados.acrescimoPercentual) extras.push(`Acrésc. %: ${dados.acrescimoPercentual}%`);
+            if (dados.acrescimoComissao) extras.push(`Comissão: R$ ${parseFloat(dados.acrescimoComissao).toFixed(2)}`);
+            if (dados.valorEntrada) extras.push(`Entrada: R$ ${parseFloat(dados.valorEntrada).toFixed(2)}`);
+            if (dados.parcelaEspecifica) extras.push(`Parcela: ${dados.parcelaEspecifica}x`);
+            const sid = "'" + String(id).replace(/'/g, "\\'") + "'";
+            return `<div class="historico-item">
+                <div class="historico-header">
+                    <div class="historico-titulo">${titulo}</div>
+                    <div class="historico-data">${dataStr}</div>
+                </div>
+                ${comentarios ? `<div class="historico-comentarios">💬 ${comentarios}</div>` : ''}
+                <div class="historico-dados"><strong>Valor:</strong> ${resumoValor}${extras.length ? ' | '+extras.join(' | ') : ''}</div>
+                <div class="historico-acoes">
+                    <button class="btn btn-primary" onclick="restaurarCalculo(${sid})">🔄 Restaurar</button>
+                    <button class="btn btn-secondary" onclick="copiarResultadoHistorico(${sid})">📋 Copiar</button>
+                    ${isAuto ? '' : `<button class="btn btn-danger" onclick="excluirDoHistorico(${sid})">🗑️ Excluir</button>`}
+                </div>
+            </div>`;
         }
-        function carregarHistorico() {
-            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-            if (historico.length === 0) {
-                historicoLista.innerHTML = `<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum cálculo salvo ainda</p><small>Salve seus cálculos para acessá-los depois!</small></div>`;
+
+        async function salvarNoHistorico() {
+            // Salvamento agora é automático — mantido por compatibilidade
+        }
+
+        const HIST_PAGE_SIZE = 20;
+        let _autoVisivel = HIST_PAGE_SIZE;
+
+        function renderizarHistorico() {
+            if (!_sheetsCache || !_sheetsCache.length) {
+                historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso anterior encontrado</p><small>Use a calculadora e aguarde 2s para salvar automaticamente</small></div>';
                 return;
             }
-            let html = '';
-            historico.forEach(item => {
-                let resumoValor = '';
-                if (item.dados.usandoListaProdutos && item.dados.produtosSelecionados && item.dados.produtosSelecionados.length > 0)
-                    resumoValor = `${item.dados.produtosSelecionados.length} produto${item.dados.produtosSelecionados.length>1?'s':''} selecionado${item.dados.produtosSelecionados.length>1?'s':''}`;
-                else if (item.dados.valorBase)
-                    resumoValor = `R$ ${parseFloat(item.dados.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-                else resumoValor = 'Sem valor';
-                let detalhesExtras = [];
-                if (item.dados.descontoPercentual) detalhesExtras.push(`Desconto: ${item.dados.descontoPercentual}%`);
-                if (item.dados.descontoFixo) detalhesExtras.push(`Desc. fixo: R$ ${parseFloat(item.dados.descontoFixo).toFixed(2)}`);
-                if (item.dados.lucroAdicional) detalhesExtras.push(`Acrésc. R$: R$ ${parseFloat(item.dados.lucroAdicional).toFixed(2)}`);
-                if (item.dados.acrescimoPercentual) detalhesExtras.push(`Acrésc. %: ${item.dados.acrescimoPercentual}%`);
-                if (item.dados.acrescimoComissao) detalhesExtras.push(`Comissão: R$ ${parseFloat(item.dados.acrescimoComissao).toFixed(2)}`);
-                if (item.dados.valorEntrada) detalhesExtras.push(`Entrada: R$ ${parseFloat(item.dados.valorEntrada).toFixed(2)}`);
-                if (item.dados.parcelaEspecifica) detalhesExtras.push(`Parcela: ${item.dados.parcelaEspecifica}x`);
-                html += `<div class="historico-item">
-                    <div class="historico-header">
-                        <div class="historico-titulo">${item.titulo}</div>
-                        <div class="historico-data">${item.data}</div>
-                    </div>
-                    ${item.comentarios ? `<div class="historico-comentarios">💬 ${item.comentarios}</div>` : ''}
-                    <div class="historico-dados"><strong>Valor:</strong> ${resumoValor}${detalhesExtras.length ? ' | '+detalhesExtras.join(' | ') : ''}</div>
-                    <div class="historico-acoes">
-                        <button class="btn btn-primary" onclick="restaurarCalculo(${item.id})">🔄 Restaurar</button>
-                        <button class="btn btn-secondary" onclick="copiarResultadoHistorico(${item.id})">📋 Copiar</button>
-                        <button class="btn btn-danger" onclick="excluirDoHistorico(${item.id})">🗑️ Excluir</button>
-                    </div>
-                </div>`;
+
+            const comTitulo = _sheetsCache.filter(r => {
+                const t = String(r.titulo == null ? '' : r.titulo).trim();
+                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
             });
+            const automaticos = _sheetsCache.filter(r => {
+                const t = String(r.titulo == null ? '' : r.titulo).trim();
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+
+            let html = '';
+
+            if (comTitulo.length) {
+                html += `<div class="historico-secao-titulo">📌 Com título (${comTitulo.length})</div>`;
+                html += comTitulo.map(r => {
+                    const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
+                    return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, false);
+                }).join('');
+            }
+
+            if (automaticos.length) {
+                const visiveis  = automaticos.slice(0, _autoVisivel);
+                const temMais   = automaticos.length > _autoVisivel;
+                html += `<div class="historico-secao-titulo" style="margin-top:${comTitulo.length ? '20px' : '0'};">🕓 Automáticos (${automaticos.length})</div>`;
+                html += visiveis.map(r => {
+                    const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
+                    return buildItemHistoricoHtml(r.id, r.titulo, new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, true);
+                }).join('');
+                if (temMais) {
+                    html += `<button class="btn btn-outline" onclick="carregarMaisAuto()" style="width:100%;margin-top:10px;">
+                        ⬇️ Carregar mais (${automaticos.length - _autoVisivel} restantes)
+                    </button>`;
+                }
+            }
+
+            if (!comTitulo.length && !automaticos.length) {
+                html = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso encontrado</p></div>';
+            }
+
             historicoLista.innerHTML = html;
         }
+
+        function carregarMaisAuto() {
+            _autoVisivel += HIST_PAGE_SIZE;
+            renderizarHistorico();
+        }
+
+        async function carregarHistorico() {
+            if (!_currentUser) {
+                historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">🔑</div><p>Entre com Google para ver seu histórico</p><button class="btn btn-primary" onclick="pedirLogin()" style="margin-top:12px;">Entrar com Google</button></div>';
+                return;
+            }
+            _autoVisivel = HIST_PAGE_SIZE;
+            historicoLista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">⏳ Carregando...</div>';
+            try {
+                const url  = SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email);
+                const text = await (await fetch(url)).text();
+                const registros = JSON.parse(text);
+                if (registros.error) throw new Error(registros.error);
+                _sheetsCache = registros;
+                renderizarHistorico();
+            } catch(e) {
+                historicoLista.innerHTML = `<div class="error-message">❌ Erro ao carregar: ${e.message}</div>`;
+            }
+        }
+
         function restaurarCalculo(id) {
-            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-            const item = historico.find(h => h.id === id);
-            if (!item) { alert('Registro não encontrado'); return; }
-            const dados = item.dados;
+            let dados, tituloItem;
+            if (_currentUser && _sheetsCache && _sheetsCache.length) {
+                const reg = _sheetsCache.find(r => String(r.id) === String(id));
+                if (!reg) { alert('Registro não encontrado'); return; }
+                dados = typeof reg.payload === 'string' ? JSON.parse(reg.payload) : (reg.payload || {});
+                tituloItem = reg.titulo;
+            } else {
+                const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+                const item = historico.find(h => String(h.id) === String(id));
+                if (!item) { alert('Registro não encontrado'); return; }
+                dados = item.dados;
+                tituloItem = item.titulo;
+            }
             valorBaseInput.value = dados.valorBase || '';
             parcelaEspecificaInput.value = dados.parcelaEspecifica || '';
             descontoPercentualInput.value = dados.descontoPercentual || '';
@@ -1146,10 +1665,8 @@ Capa silicone R$ 50,00
                 emoticonDinheiroInput.value = dados.textos.emoticonDinheiro || '💸 ';
                 emoticonCartaoInput.value = dados.textos.emoticonCartao || '💳 ';
             }
-            // Restaurar ajustes individuais
             productAdjustments = dados.productAdjustments || {};
-            perProductAdjustCb.checked = dados.perProductAdjust || false;
-            perProductToggleLabel.classList.toggle('enabled', perProductAdjustCb.checked);
+            // perProductAdjust always enabled — nothing to restore
             if (dados.usandoListaProdutos) {
                 toggleProductList.checked = true;
                 productListTextarea.value = dados.listaProdutosTexto || '';
@@ -1161,10 +1678,7 @@ Capa silicone R$ 50,00
                         setTimeout(() => {
                             dados.produtosSelecionados.forEach(ps => {
                                 const idx = products.findIndex(p => p.produto === ps.produto && p.preco === ps.preco);
-                                if (idx !== -1) {
-                                    const cb = document.querySelector(`.product-checkbox[value="${idx}"]`);
-                                    if (cb) cb.checked = true;
-                                }
+                                if (idx !== -1) { const cb = document.querySelector(`.product-checkbox[value="${idx}"]`); if (cb) cb.checked = true; }
                             });
                         }, 100);
                     }
@@ -1186,60 +1700,105 @@ Capa silicone R$ 50,00
                 if (dados.opcoes.especificaMostrarTotal !== undefined) syncChipTotal(dados.opcoes.especificaMostrarTotal);
             }
             if (dados.opcoesAvancadasAtivo) {
-                toggleAdvancedOptions.checked = true;
-                toggleAdvancedSection();
-                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
-                    cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false);
-                });
+                toggleAdvancedOptions.checked = true; toggleAdvancedSection();
+                document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); });
                 if (dados.parcelasSelecionadas) {
                     dados.parcelasSelecionadas.forEach(n => {
                         const cb = document.getElementById(`parcela${n}x`);
                         if (cb) { cb.checked = true; togglePorcentagemInput(n, true); }
-                        if (dados.parcelasTaxas && dados.parcelasTaxas[n]) {
-                            const ti = document.getElementById(`porcentagem${n}x`);
-                            if (ti) ti.value = dados.parcelasTaxas[n];
-                        }
+                        if (dados.parcelasTaxas && dados.parcelasTaxas[n]) { const ti = document.getElementById(`porcentagem${n}x`); if (ti) ti.value = dados.parcelasTaxas[n]; }
                     });
                 }
             } else {
                 toggleAdvancedOptions.checked = false;
                 if (advancedOptionsDiv.classList.contains('show')) toggleAdvancedSection();
             }
+            enviarLog('restaurou_calculo');
             toggleVerHistorico();
             atualizarResumoDescontos();
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            showToast(`✅ Cálculo "${item.titulo}" restaurado!`);
+            showModal('success', 'Cálculo Restaurado!', `<strong>${tituloItem}</strong><br>Todos os dados foram carregados 🔄`, 2200);
         }
+
         function copiarResultadoHistorico(id) {
-            const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-            const item = historico.find(h => h.id === id);
-            if (!item || !item.dados.resultado) { alert('Resultado não encontrado'); return; }
-            navigator.clipboard.writeText(item.dados.resultado).then(() => showToast(`✅ Resultado de "${item.titulo}" copiado!`));
+            let resultado, titulo;
+            if (isSheetsEnabled()) {
+                const reg = _sheetsCache.find(r => String(r.id) === String(id));
+                if (!reg) { alert('Resultado não encontrado'); return; }
+                const dados = typeof reg.payload === 'string' ? JSON.parse(reg.payload) : (reg.payload || {});
+                resultado = dados.resultado; titulo = reg.titulo;
+            } else {
+                const historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+                const item = historico.find(h => String(h.id) === String(id));
+                if (!item) { alert('Resultado não encontrado'); return; }
+                resultado = item.dados.resultado; titulo = item.titulo;
+            }
+            if (!resultado) { alert('Resultado não encontrado'); return; }
+            navigator.clipboard.writeText(resultado).then(() => showModal('success', 'Copiado!', `Resultado de <strong>${titulo}</strong><br>copiado para a área de transferência 📋`, 2000));
         }
-        function excluirDoHistorico(id) {
+
+        async function excluirDoHistorico(id) {
             if (!confirm('⚠️ Deseja realmente excluir este registro?')) return;
-            let historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
-            historico = historico.filter(h => h.id !== id);
-            localStorage.setItem('historicoCalculos', JSON.stringify(historico));
-            atualizarBadgeHistorico(); carregarHistorico();
-            showToast('✅ Registro excluído!');
+            if (_currentUser) {
+                try {
+                    const resp = await fetch(SHEETS_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'delete', id: String(id) })
+                    });
+                    const json = await resp.json();
+                    if (json.erro) throw new Error(json.erro);
+                    _sheetsCache = _sheetsCache.filter(r => String(r.id) !== String(id));
+                    renderizarHistorico();
+                    setSaveStatus('🗑️ Registro excluído', 'var(--danger-color)');
+                } catch(e) { alert('Erro ao excluir: ' + e.message); }
+            } else {
+                let historico = JSON.parse(localStorage.getItem('historicoCalculos') || '[]');
+                historico = historico.filter(h => String(h.id) !== String(id));
+                localStorage.setItem('historicoCalculos', JSON.stringify(historico));
+                renderizarHistorico();
+            }
         }
+
         function limparHistoricoCompleto() {
+            if (isSheetsEnabled()) { showToast('⚠️ No modo Sheets, exclua individualmente.'); return; }
             if (!confirm('⚠️ Isso irá excluir TODOS os registros. Deseja continuar?')) return;
             localStorage.removeItem('historicoCalculos');
             atualizarBadgeHistorico(); carregarHistorico();
             showToast('✅ Histórico limpo!');
         }
+
+        let _feedbackTimer = null;
+        function showModal(type, title, subtitle, autoDismiss) {
+            const overlay  = document.getElementById('feedbackOverlay');
+            const icon     = document.getElementById('feedbackIcon');
+            const spinner  = document.getElementById('feedbackSpinner');
+            const titleEl  = document.getElementById('feedbackTitle');
+            const subEl    = document.getElementById('feedbackSubtitle');
+            clearTimeout(_feedbackTimer);
+            const icons = { success: '✅', error: '❌', warning: '⚠️', loading: '' };
+            icon.textContent    = icons[type] || '';
+            icon.style.display  = type === 'loading' ? 'none' : 'block';
+            spinner.style.display = type === 'loading' ? 'block' : 'none';
+            titleEl.textContent = title;
+            subEl.innerHTML     = subtitle || '';
+            overlay.classList.add('show');
+            overlay.onclick = (e) => { if (e.target === overlay && type !== 'loading') hideModal(); };
+            if (autoDismiss) _feedbackTimer = setTimeout(hideModal, autoDismiss);
+        }
+        function hideModal() {
+            clearTimeout(_feedbackTimer);
+            const overlay = document.getElementById('feedbackOverlay');
+            overlay.classList.remove('show');
+        }
         function showToast(msg) {
-            const orig = mensagemCopiado.textContent;
             mensagemCopiado.textContent = msg;
             mensagemCopiado.classList.add('show');
             setTimeout(() => { mensagemCopiado.classList.remove('show'); mensagemCopiado.textContent = '✅ Texto copiado para área de transferência!'; }, 2500);
         }
 
-        // ── Tema ──────────────────────────────────────────────────────────────
         function toggleTheme() {
             const newTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.body.setAttribute('data-theme', newTheme);
@@ -1248,20 +1807,28 @@ Capa silicone R$ 50,00
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 
-        // ── Seções collapsible ────────────────────────────────────────────────
         function toggleProductListSection() {
             productListSection.classList.toggle('show', toggleProductList.checked);
             valorBaseInput.disabled = toggleProductList.checked;
-            if (!toggleProductList.checked) { products = []; selectedProducts = []; productListResult.innerHTML = ''; productAdjustments = {}; }
+            // Ao desmarcar: só limpa se não houver produtos (manual ou processados)
+            // para não perder dados digitados manualmente
+            if (!toggleProductList.checked) {
+                if (products.length === 0) {
+                    productListResult.innerHTML = '';
+                }
+                // Mantém products, selectedProducts e productAdjustments intactos
+                // para não perder dados ao desmarcar/remarcar acidentalmente
+            }
             calcularParcelas();
+            enviarLog('alterou_lista_produtos');
         }
         function toggleAdvancedSection() {
             advancedOptionsDiv.classList.toggle('show', toggleAdvancedOptions.checked);
             toggleDebitoPixPorcentagemInputs();
             document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => togglePorcentagemInput(parseInt(cb.value), cb.checked));
             calcularParcelas();
+            enviarLog('alterou_opcoes_avancadas');
         }
-
         window.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.toggle-section').forEach(section => {
                 section.addEventListener('click', function(e) {
@@ -1275,47 +1842,49 @@ Capa silicone R$ 50,00
             syncChipTotal(especificaMostrarTotalCb.checked);
         });
 
-        // ── Checkboxes avançadas ──────────────────────────────────────────────
         function gerarCheckboxesAvancadas() {
             parcelasAvancadasDiv.innerHTML = '';
             for (let i = 1; i <= 18; i++) {
-                const div = document.createElement('div');
-                div.className = 'checkbox-item';
-                const pg = document.createElement('div');
-                pg.className = 'parcela-input-group';
+                const div = document.createElement('div'); div.className = 'checkbox-item';
+                const pg = document.createElement('div'); pg.className = 'parcela-input-group';
                 const input = document.createElement('input');
                 input.type = 'checkbox'; input.id = `parcela${i}x`; input.value = i;
                 input.checked = parcelasPadrao.includes(i);
-                input.addEventListener('change', () => { togglePorcentagemInput(i, input.checked); calcularParcelas(); });
-                const label = document.createElement('label');
-                label.htmlFor = `parcela${i}x`; label.textContent = `${i}x`;
+                input.addEventListener('change', () => {
+                    togglePorcentagemInput(i, input.checked);
+                    calcularParcelas();
+                    enviarLog('alterou_selecao_parcelas');
+                });
+                const label = document.createElement('label'); label.htmlFor = `parcela${i}x`; label.textContent = `${i}x`;
                 pg.appendChild(input); pg.appendChild(label);
-                const pc = document.createElement('div');
-                pc.className = 'percent-input-container'; pc.id = `porcentagem${i}xContainer`;
+                const pc = document.createElement('div'); pc.className = 'percent-input-container'; pc.id = `porcentagem${i}xContainer`;
                 if (input.checked) pc.classList.add('show');
-                const pi = document.createElement('input');
-                pi.type = 'number'; pi.id = `porcentagem${i}x`;
+                const pi = document.createElement('input'); pi.type = 'number'; pi.id = `porcentagem${i}x`;
                 pi.value = (taxasDeJurosPadrao[i] * 100).toFixed(2);
-                pi.addEventListener('input', calcularParcelas);
+                pi.addEventListener('input', () => {
+                    calcularParcelas();
+                    enviarLog('alterou_taxa_avancada');
+                });
                 pc.appendChild(pi); pc.appendChild(document.createTextNode('%'));
                 pg.appendChild(pc); div.appendChild(pg); parcelasAvancadasDiv.appendChild(div);
             }
         }
 
-        // ── IA / processamento de lista ───────────────────────────────────────
         async function processWithAI() {
             const rawText = productListTextarea.value;
             if (!rawText) { displayErrorList('Por favor, cole o texto para a IA processar.'); return; }
             productListLoading.classList.add('active'); productListResult.innerHTML = '';
             try {
                 const response = await fetch("https://caixa-kal3.vercel.app/api/groq", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ systemPrompt: aiPromptTextarea.value, messages: rawText })
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || data.message || "Erro na requisição");
-                if (data.choices && data.choices[0]) { productListTextarea.value = data.choices[0].message.content; processList(); }
+                if (data.choices && data.choices[0]) {
+                    productListTextarea.value = data.choices[0].message.content;
+                    processList();
+                }
                 else throw new Error("Resposta da IA inválida");
             } catch (error) { displayErrorList(`❌ Erro na IA: ${error.message}`); }
             finally { productListLoading.classList.remove('active'); }
@@ -1329,29 +1898,25 @@ Capa silicone R$ 50,00
             porcentagemPixContainer.classList.toggle('show', !hideDinheiroPixCheckbox.checked && toggleAdvancedOptions.checked);
             porcentagemDebitoContainer.classList.toggle('show', showDebitoCheckbox.checked && toggleAdvancedOptions.checked);
         }
-
         function arredondarParaMultiplo(valor, fator) {
             if (fator <= 0) fator = 1;
             return Math.ceil(valor / fator) * fator;
         }
-
-        // Calcula valor com desconto/acréscimo — agora aceita overrides individuais
         function calcularValorComDesconto(valorBase, overrides) {
-            let valor = valorBase;
             const ov = overrides || {};
-            const acrescimoPerc = parseFloat(ov.acrescimoP !== undefined && ov.acrescimoP !== '' ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
-            const lucroFixo     = parseFloat(ov.acrescimoR !== undefined && ov.acrescimoR !== '' ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
-            const acrescimoFix  = parseFloat(ov.comissao   !== undefined && ov.comissao   !== '' ? ov.comissao   : acrescimoComissaoInput.value) || 0;
-            const descontoPerc  = parseFloat(ov.descontoP  !== undefined && ov.descontoP  !== '' ? ov.descontoP  : descontoPercentualInput.value) || 0;
-            const descontoFix   = parseFloat(ov.descontoR  !== undefined && ov.descontoR  !== '' ? ov.descontoR  : descontoFixoInput.value) || 0;
-            if (acrescimoPerc > 0) valor *= (1 + acrescimoPerc / 100);
-            if (lucroFixo     > 0) valor += lucroFixo;
-            if (acrescimoFix  > 0) valor += acrescimoFix;
-            if (descontoPerc  > 0) valor *= (1 - descontoPerc / 100);
-            if (descontoFix   > 0) valor -= descontoFix;
+            // Cada campo individual só sobrescreve o global se estiver preenchido com valor > 0
+            // Caso contrário, herda o valor global (campo da seção Acréscimos e Descontos)
+            const _hasVal = (v) => v !== undefined && v !== '' && v !== null;
+            const acrescimoPerc = parseFloat(_hasVal(ov.acrescimoP) ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
+            const lucroFixo     = parseFloat(_hasVal(ov.acrescimoR) ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
+            const acrescimoFix  = parseFloat(_hasVal(ov.comissao)   ? ov.comissao   : acrescimoComissaoInput.value) || 0;
+            const descontoPerc  = parseFloat(_hasVal(ov.descontoP)  ? ov.descontoP  : descontoPercentualInput.value) || 0;
+            const descontoFix   = parseFloat(_hasVal(ov.descontoR)  ? ov.descontoR  : descontoFixoInput.value) || 0;
+            const valorAcrescimoPerc = valorBase * (acrescimoPerc / 100);
+            const valorDescontoPerc  = valorBase * (descontoPerc  / 100);
+            const valor = valorBase + valorAcrescimoPerc + lucroFixo + acrescimoFix - valorDescontoPerc - descontoFix;
             return Math.max(0, valor);
         }
-
         function atualizarResumoDescontos() {
             const base = parseFloat(valorBaseInput.value) || 0;
             if (base === 0) { discountSummary.classList.remove('active'); return; }
@@ -1380,21 +1945,163 @@ Capa silicone R$ 50,00
 
         gerarCheckboxesAvancadas();
 
-        // ── Tabela de produtos ─────────────────────────────────────────────────
+        // ── Adicionar produto manualmente ──────────────────────────────────────
+        function toggleAddProductForm() {
+            const form = document.getElementById('addProductForm');
+            const btn  = document.getElementById('btnToggleAddProduct');
+            const isOpen = form.classList.toggle('open');
+            btn.classList.toggle('open', isOpen);
+            btn.innerHTML = isOpen ? '✖ Fechar' : '➕ Adicionar produto manualmente';
+            if (isOpen) {
+                // Se abriu, garante que a seção de lista está visível
+                if (!toggleProductList.checked) {
+                    toggleProductList.checked = true;
+                    toggleProductListSection();
+                }
+                // Atualiza placeholders dos campos de ajuste com valores globais atuais
+                document.getElementById('addProdDescontoR').placeholder  = parseFloat(descontoFixoInput.value)        || 0;
+                document.getElementById('addProdDescontoP').placeholder  = parseFloat(descontoPercentualInput.value)   || 0;
+                document.getElementById('addProdAcrescimoR').placeholder = parseFloat(lucroAdicionalInput.value)       || 0;
+                document.getElementById('addProdAcrescimoP').placeholder = parseFloat(acrescimoPercentualInput.value)  || 0;
+                document.getElementById('addProdComissao').placeholder   = parseFloat(acrescimoComissaoInput.value)    || 0;
+                setTimeout(() => document.getElementById('addProdNome').focus(), 80);
+            } else {
+                // Limpa todos os campos ao fechar
+                document.getElementById('addProdNome').value = '';
+                document.getElementById('addProdPreco').value = '';
+                document.getElementById('addProdDescontoR').value  = '';
+                document.getElementById('addProdDescontoP').value  = '';
+                document.getElementById('addProdAcrescimoR').value = '';
+                document.getElementById('addProdAcrescimoP').value = '';
+                document.getElementById('addProdComissao').value   = '';
+                document.getElementById('addProdComentario').value = '';
+                clearAddFieldError('addProdNome');
+                clearAddFieldError('addProdPreco');
+            }
+        }
+        function clearAddFieldError(fieldId) {
+            const el = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + 'Err');
+            if (el) el.classList.remove('field-error');
+            if (errEl) errEl.textContent = '';
+        }
+        function confirmarAddProduto() {
+            const nomeInput  = document.getElementById('addProdNome');
+            const precoInput = document.getElementById('addProdPreco');
+            const nomeErr    = document.getElementById('addProdNomeErr');
+            const precoErr   = document.getElementById('addProdPrecoErr');
+            let valid = true;
+
+            const nome = nomeInput.value.trim();
+            const preco = parseFloat(precoInput.value);
+
+            // Validação nome
+            if (!nome) {
+                nomeInput.classList.add('field-error');
+                nomeErr.textContent = '⚠️ Nome obrigatório';
+                nomeInput.focus();
+                valid = false;
+            } else if (nome.length < 2) {
+                nomeInput.classList.add('field-error');
+                nomeErr.textContent = '⚠️ Nome muito curto';
+                nomeInput.focus();
+                valid = false;
+            }
+
+            // Validação preço
+            if (!precoInput.value || isNaN(preco) || preco <= 0) {
+                precoInput.classList.add('field-error');
+                precoErr.textContent = '⚠️ Preço inválido (deve ser > 0)';
+                if (valid) precoInput.focus();
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            // Lê ajustes individuais do formulário (opcionais)
+            const adjDescontoR  = document.getElementById('addProdDescontoR').value;
+            const adjDescontoP  = document.getElementById('addProdDescontoP').value;
+            const adjAcrescimoR = document.getElementById('addProdAcrescimoR').value;
+            const adjAcrescimoP = document.getElementById('addProdAcrescimoP').value;
+            const adjComissao   = document.getElementById('addProdComissao').value;
+            const adjComentario = document.getElementById('addProdComentario').value.trim();
+
+            // Adiciona ao array de produtos
+            const newIdx = products.length;
+            products.push({ produto: nome, preco: preco });
+
+            // Salva ajustes individuais se algum foi preenchido
+            const temAdj = adjDescontoR || adjDescontoP || adjAcrescimoR || adjAcrescimoP || adjComissao || adjComentario;
+            if (temAdj) {
+                productAdjustments[newIdx] = {
+                    descontoR:  adjDescontoR,
+                    descontoP:  adjDescontoP,
+                    acrescimoR: adjAcrescimoR,
+                    acrescimoP: adjAcrescimoP,
+                    comissao:   adjComissao,
+                    comentario: adjComentario
+                };
+
+            }
+
+            // Reconstrói a tabela mantendo seleções e ajustes existentes
+            const selectedIdxs = new Set(selectedProducts.map(p => p._idx));
+            displayTable(products);
+
+            // Restaura checkboxes que já estavam marcados
+            document.querySelectorAll('.product-checkbox').forEach(cb => {
+                const idx = parseInt(cb.value);
+                if (selectedIdxs.has(idx)) cb.checked = true;
+            });
+
+            // Seleciona automaticamente o novo produto recém-adicionado
+            const newCb = document.querySelector(`.product-checkbox[value="${newIdx}"]`);
+            if (newCb) newCb.checked = true;
+
+            handleProductSelection();
+            enviarLog('adicionou_produto_manual');
+
+            // Feedback visual
+            showToast(`✅ "${nome}" adicionado!`);
+
+            // Limpa todos os campos mas mantém form aberto para adicionar mais
+            nomeInput.value = '';
+            precoInput.value = '';
+            document.getElementById('addProdDescontoR').value  = '';
+            document.getElementById('addProdDescontoP').value  = '';
+            document.getElementById('addProdAcrescimoR').value = '';
+            document.getElementById('addProdAcrescimoP').value = '';
+            document.getElementById('addProdComissao').value   = '';
+            document.getElementById('addProdComentario').value = '';
+            nomeInput.focus();
+
+            // Garante que a seção processada está visível
+            if (!toggleProductList.checked) {
+                toggleProductList.checked = true;
+                toggleProductListSection();
+            }
+
+            // Scroll suave para a tabela
+            setTimeout(() => {
+                const result = document.getElementById('productListResult');
+                if (result) result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
         function processList() {
             const list = productListTextarea.value;
             if (!list) { displayErrorList('Por favor, cole a lista de produtos.'); return; }
             productListLoading.classList.add('active'); productListResult.innerHTML = '';
             try {
                 products = parseProducts(list);
-                productAdjustments = {}; // reset ao processar nova lista
+                productAdjustments = {};
                 displayTable(products);
                 selectedProducts = [];
                 handleProductSelection();
+                enviarLog('processou_lista');
             } catch (error) { displayErrorList(`❌ Erro: ${error.message}`); }
             finally { productListLoading.classList.remove('active'); }
         }
-
         function parseProducts(text) {
             const cleanText = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\u00A9|\u00AE|[\u2000-\u3300]/g, '');
             const lines = cleanText.split('\n');
@@ -1413,114 +2120,57 @@ Capa silicone R$ 50,00
             if (prods.length === 0) throw new Error('Nenhum produto encontrado.');
             return prods;
         }
-
         function displayTable(prods) {
-            const adjMode = perProductAdjustCb.checked;
+            // Coluna ✏️ sempre visível — fixo
             let html = `<table><thead><tr>
                 <th><input type="checkbox" id="selectAllProducts"></th>
                 <th>Produto</th><th>Preço</th>
-                ${adjMode ? '<th title="Ajuste individual">⚙️</th>' : ''}
-                <th>Imagem</th>
+                <th title="Ajuste individual">✏️</th>
+                <th>🔍</th>
             </tr></thead><tbody>`;
-
             prods.forEach((p, i) => {
                 const price = `R$ ${p.preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
                 const adj = getProductAdj(i);
                 const hasAdj = hasProductAdj(i);
                 const btnClass = `btn-adj${hasAdj ? ' has-adj' : ''}`;
-
                 html += `<tr data-prod-idx="${i}">
                     <td><input type="checkbox" class="product-checkbox" value="${i}"></td>
                     <td>${p.produto}${hasAdj ? '<span class="adj-badge">ajuste</span>' : ''}</td>
                     <td>${price}</td>
-                    ${adjMode ? `<td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>` : ''}
+                    <td><button class="${btnClass}" id="adjBtn_${i}" onclick="toggleAdjPanel(${i})" title="Ajuste individual">✏️</button></td>
                     <td><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.produto)}" target="_blank">🔍</a></td>
                 </tr>`;
-
-                if (adjMode) {
-                    html += `<tr class="product-adj-row" id="adjRow_${i}">
-                        <td colspan="${5}">
-                            <div class="adj-panel${false ? ' open' : ''}" id="adjPanel_${i}">
-                                <div class="adj-panel-title">
-                                    <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
-                                    <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
-                                </div>
-                                <div class="adj-fields">
-                                    <div class="adj-field">
-                                        <label>Desconto R$</label>
-                                        <div class="adj-field-inner">
-                                            <span>R$</span>
-                                            <input type="number" step="0.01" min="0" placeholder="0"
-                                                value="${adj.descontoR}"
-                                                oninput="saveProductAdj(${i},'descontoR',this.value)"
-                                                id="adj_${i}_descontoR">
-                                        </div>
-                                    </div>
-                                    <div class="adj-field">
-                                        <label>Desconto %</label>
-                                        <div class="adj-field-inner">
-                                            <input type="number" step="0.01" min="0" max="100" placeholder="0"
-                                                value="${adj.descontoP}"
-                                                oninput="saveProductAdj(${i},'descontoP',this.value)"
-                                                id="adj_${i}_descontoP">
-                                            <span>%</span>
-                                        </div>
-                                    </div>
-                                    <div class="adj-field">
-                                        <label>Acréscimo R$</label>
-                                        <div class="adj-field-inner">
-                                            <span>R$</span>
-                                            <input type="number" step="0.01" min="0" placeholder="0"
-                                                value="${adj.acrescimoR}"
-                                                oninput="saveProductAdj(${i},'acrescimoR',this.value)"
-                                                id="adj_${i}_acrescimoR">
-                                        </div>
-                                    </div>
-                                    <div class="adj-field">
-                                        <label>Acréscimo %</label>
-                                        <div class="adj-field-inner">
-                                            <input type="number" step="0.01" min="0" placeholder="0"
-                                                value="${adj.acrescimoP}"
-                                                oninput="saveProductAdj(${i},'acrescimoP',this.value)"
-                                                id="adj_${i}_acrescimoP">
-                                            <span>%</span>
-                                        </div>
-                                    </div>
-                                    <div class="adj-field">
-                                        <label>Comissão R$</label>
-                                        <div class="adj-field-inner">
-                                            <span>R$</span>
-                                            <input type="number" step="0.01" min="0" placeholder="0"
-                                                value="${adj.comissao}"
-                                                oninput="saveProductAdj(${i},'comissao',this.value)"
-                                                id="adj_${i}_comissao">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="adj-comment-row">
-                                    <label>💬 Comentário do produto</label>
-                                    <textarea class="adj-comment-input"
-                                        placeholder="Ex: cliente pediu desconto especial, cor diferente, observação de entrega..."
-                                        oninput="saveProductAdj(${i},'comentario',this.value)"
-                                        id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
-                                </div>
+                html += `<tr class="product-adj-row" id="adjRow_${i}">
+                    <td colspan="5">
+                        <div class="adj-panel" id="adjPanel_${i}">
+                            <div class="adj-panel-title">
+                                <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
+                                <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
                             </div>
-                        </td>
-                    </tr>`;
-                }
+                            <div class="adj-fields">
+                                <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(descontoFixoInput.value)||0}" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
+                                <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="${parseFloat(descontoPercentualInput.value)||0}" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Acréscimo R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(lucroAdicionalInput.value)||0}" value="${adj.acrescimoR}" oninput="saveProductAdj(${i},'acrescimoR',this.value)" id="adj_${i}_acrescimoR"></div></div>
+                                <div class="adj-field"><label>Acréscimo %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" placeholder="${parseFloat(acrescimoPercentualInput.value)||0}" value="${adj.acrescimoP}" oninput="saveProductAdj(${i},'acrescimoP',this.value)" id="adj_${i}_acrescimoP"><span>%</span></div></div>
+                                <div class="adj-field"><label>Comissão R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(acrescimoComissaoInput.value)||0}" value="${adj.comissao}" oninput="saveProductAdj(${i},'comissao',this.value)" id="adj_${i}_comissao"></div></div>
+                            </div>
+                            <div class="adj-comment-row">
+                                <label>💬 Comentário do produto</label>
+                                <textarea class="adj-comment-input" placeholder="Ex: cliente pediu desconto especial..." oninput="saveProductAdj(${i},'comentario',this.value)" id="adj_${i}_comentario">${adj.comentario || ''}</textarea>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
             });
-
             html += '</tbody></table>';
             const badge = `<span class="product-count-badge">${prods.length} produto${prods.length>1?'s':''} encontrado${prods.length>1?'s':''}</span>`;
             productListResult.innerHTML = badge + html;
-
             document.getElementById('selectAllProducts').addEventListener('change', e => {
                 document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = e.target.checked);
                 handleProductSelection();
             });
             document.querySelectorAll('.product-checkbox').forEach(cb => cb.addEventListener('change', handleProductSelection));
         }
-
         function toggleAdjPanel(idx) {
             const panel = document.getElementById(`adjPanel_${idx}`);
             const btn   = document.getElementById(`adjBtn_${idx}`);
@@ -1528,59 +2178,40 @@ Capa silicone R$ 50,00
             const isOpen = panel.classList.toggle('open');
             btn.classList.toggle('active', isOpen);
         }
-
         function saveProductAdj(idx, field, value) {
             if (!productAdjustments[idx]) productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'', comentario:'' };
             productAdjustments[idx][field] = value;
-            // Atualiza badges na célula do produto sem re-renderizar toda a tabela
             const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
             if (row) {
                 const nameCell = row.cells[1];
                 const adjAtivo = hasProductAdj(idx);
                 const hasComment = (productAdjustments[idx].comentario || '').trim() !== '';
                 const btn = document.getElementById(`adjBtn_${idx}`);
-
-                // Badge ajuste
                 let existingBadge = nameCell.querySelector('.adj-badge');
-                if (adjAtivo) {
-                    if (!existingBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="adj-badge">ajuste</span>');
-                    if (btn) btn.classList.add('has-adj');
-                } else {
-                    if (existingBadge) existingBadge.remove();
-                    if (btn) btn.classList.remove('has-adj');
-                }
-
-                // Badge comentário
+                if (adjAtivo) { if (!existingBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="adj-badge">ajuste</span>'); if (btn) btn.classList.add('has-adj'); }
+                else { if (existingBadge) existingBadge.remove(); if (btn) btn.classList.remove('has-adj'); }
                 let existingCommentBadge = nameCell.querySelector('.comment-badge');
-                if (hasComment) {
-                    if (!existingCommentBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="comment-badge">💬</span>');
-                } else {
-                    if (existingCommentBadge) existingCommentBadge.remove();
-                }
+                if (hasComment) { if (!existingCommentBadge) nameCell.insertAdjacentHTML('beforeend', '<span class="comment-badge">💬</span>'); }
+                else { if (existingCommentBadge) existingCommentBadge.remove(); }
             }
             calcularParcelas();
+            // ── CORRIGIDO: agenda auto-save ao alterar ajuste individual ──
+            enviarLog('ajuste_individual_produto');
         }
-
         function resetProductAdj(idx) {
             productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'', comentario:'' };
-            ['descontoR','descontoP','acrescimoR','acrescimoP','comissao'].forEach(f => {
-                const el = document.getElementById(`adj_${idx}_${f}`);
-                if (el) el.value = '';
-            });
-            const commentEl = document.getElementById(`adj_${idx}_comentario`);
-            if (commentEl) commentEl.value = '';
+            ['descontoR','descontoP','acrescimoR','acrescimoP','comissao'].forEach(f => { const el = document.getElementById(`adj_${idx}_${f}`); if (el) el.value = ''; });
+            const commentEl = document.getElementById(`adj_${idx}_comentario`); if (commentEl) commentEl.value = '';
             const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
             if (row) {
-                const badge = row.cells[1].querySelector('.adj-badge');
-                if (badge) badge.remove();
-                const commentBadge = row.cells[1].querySelector('.comment-badge');
-                if (commentBadge) commentBadge.remove();
-                const btn = document.getElementById(`adjBtn_${idx}`);
-                if (btn) btn.classList.remove('has-adj');
+                const badge = row.cells[1].querySelector('.adj-badge'); if (badge) badge.remove();
+                const commentBadge = row.cells[1].querySelector('.comment-badge'); if (commentBadge) commentBadge.remove();
+                const btn = document.getElementById(`adjBtn_${idx}`); if (btn) btn.classList.remove('has-adj');
             }
             calcularParcelas();
+            // ── CORRIGIDO: agenda auto-save ao limpar ajuste individual ──
+            enviarLog('resetou_ajuste_individual');
         }
-
         function handleProductSelection() {
             selectedProducts = [];
             document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
@@ -1588,11 +2219,11 @@ Capa silicone R$ 50,00
                 if (p) selectedProducts.push({ ...p, _idx: parseInt(cb.value) });
             });
             calcularParcelas();
+            // ── CORRIGIDO: agenda auto-save ao selecionar/desselecionar produtos ──
+            enviarLog('selecionou_produtos');
         }
-
         function displayErrorList(msg) { productListResult.innerHTML = `<div class="error-message">${msg}</div>`; }
 
-        // ── Cálculo de parcelas ───────────────────────────────────────────────
         function getTaxa(parcelas) {
             const parcelasRapidas = getParcelas();
             if (parcelasRapidas.length > 0 && parcelas !== 'pix' && parcelas !== 'debito') {
@@ -1607,7 +2238,6 @@ Capa silicone R$ 50,00
             }
             return taxasDeJurosPadrao[parcelas] || 0;
         }
-
         function getParcelasSelecionadas() {
             const parcelas = getParcelas();
             if (parcelas.length > 0) return { especifica: true, parcelas };
@@ -1618,17 +2248,13 @@ Capa silicone R$ 50,00
             }
             return { especifica: false, parcelas: [...parcelasPadrao] };
         }
-
         function calcularParcelas() {
             const entrada = parseFloat(valorEntradaInput.value) || 0;
             const res = [];
             const config = getParcelasSelecionadas();
-
             if (selectedProducts.length > 0) {
                 selectedProducts.forEach((p, i) => {
-                    // Pega ajustes individuais se o modo estiver ativo
-                    const overrides = (perProductAdjustCb.checked && p._idx !== undefined)
-                        ? getProductAdj(p._idx) : null;
+                    const overrides = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
                     let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
                     if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
                     const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, showTotalValueCheckbox.checked, name, config, p.preco, overrides);
@@ -1642,39 +2268,30 @@ Capa silicone R$ 50,00
                     if (r) res.push(r);
                 }
             }
-
             let final = res;
             if (textoCabecalhoMensagemTextarea.value) final = [`${textoCabecalhoMensagemTextarea.value}\n`, ...res];
             if (textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
             resultadoTextarea.value = final.join('\n');
+            if (typeof autoResizeResultado === 'function') autoResizeResultado();
         }
-
         function calcularParcelasParaUmProduto(valorBase, ent, txtAdd, showTot, nome, config, valorOriginal, overrides) {
             let res = [];
             let fator = parseFloat(fatorArredondamentoInput.value) || 1;
             const emoAtivo = useEmoticonsCheckbox.checked;
             const emoDinheiro = emoAtivo ? emoticonDinheiroInput.value : "";
             const emoCartao   = emoAtivo ? emoticonCartaoInput.value   : "";
-
             let valLiq = calcularValorComDesconto(valorBase, overrides);
-
             if (nome) res.push(`${nome}`);
-
             const showEnt = !hideEntradaTextCheckbox.checked && ent > 0;
             const txtEnt  = showEnt ? `Entrada de R$ ${ent.toLocaleString('pt-BR',{minimumFractionDigits:2})} + ` : '';
             const aParc   = valLiq - ent;
-
             const mostrarPix   = config.especifica ? especificaMostrarPixCb.checked   : !hideDinheiroPixCheckbox.checked;
             const mostrarTotal = config.especifica ? especificaMostrarTotalCb.checked : showTot;
-
             if (valLiq >= ent) {
                 if (mostrarPix) {
                     const v = arredondarParaMultiplo(valLiq / (1 - getTaxa('pix')), fator);
                     let linhaPix = `${emoDinheiro}Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-                    if (showComparisonCheckbox.checked && valorOriginal !== valLiq) {
-                        const eco = valorOriginal - v;
-                        linhaPix += ` (economize R$ ${eco.toLocaleString('pt-BR',{minimumFractionDigits:2})})`;
-                    }
+                    if (showComparisonCheckbox.checked && valorOriginal !== valLiq) linhaPix += ` (economize R$ ${(valorOriginal - v).toLocaleString('pt-BR',{minimumFractionDigits:2})})`;
                     res.push(linhaPix);
                 }
                 if (!config.especifica && showDebitoCheckbox.checked && ent === 0) {
@@ -1692,13 +2309,14 @@ Capa silicone R$ 50,00
             return res.join('\n');
         }
 
-        // ── Copiar / limpar ───────────────────────────────────────────────────
         function copiarTexto() {
             const txt = resultadoTextarea.value;
             if (!txt) return;
-            navigator.clipboard.writeText(txt).then(() => showToast('✅ Texto copiado!'));
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast('✅ Texto copiado!');
+                enviarLog('copiou_resultado');
+            });
         }
-
         function limparCampos() {
             if (!confirm('⚠️ Deseja realmente limpar todos os campos?')) return;
             valorBaseInput.value = ''; parcelaEspecificaInput.value = '';
@@ -1708,46 +2326,132 @@ Capa silicone R$ 50,00
             productListTextarea.value = ''; textoAdicionalLinhaInput.value = '';
             textoCabecalhoMensagemTextarea.value = ''; textoFinalMensagemTextarea.value = '';
             resultadoTextarea.value = '';
+            if (typeof autoResizeResultado === 'function') autoResizeResultado();
             products = []; selectedProducts = []; productAdjustments = {};
             productListResult.innerHTML = '';
             discountSummary.classList.remove('active');
             valorBaseInput.classList.remove('has-value');
             parcelaEspecificaInput.classList.remove('invalid');
             taxasRapidas = {};
-            perProductAdjustCb.checked = false;
-            perProductToggleLabel.classList.remove('enabled');
-            especificaMostrarPixCb.checked = true;
-            especificaMostrarTotalCb.checked = false;
+            especificaMostrarPixCb.checked = true; especificaMostrarTotalCb.checked = false;
             syncChipPix(true); syncChipTotal(false);
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
+            enviarLog('limpou_campos');
         }
 
         // ── Event listeners ───────────────────────────────────────────────────
-        valorBaseInput.addEventListener('input',          () => { valorBaseInput.classList.toggle('has-value', !!valorBaseInput.value); atualizarResumoDescontos(); calcularParcelas(); });
-        descontoPercentualInput.addEventListener('input', () => { atualizarResumoDescontos(); calcularParcelas(); });
-        descontoFixoInput.addEventListener('input',       () => { atualizarResumoDescontos(); calcularParcelas(); });
-        lucroAdicionalInput.addEventListener('input',     () => { atualizarResumoDescontos(); calcularParcelas(); });
-        acrescimoComissaoInput.addEventListener('input',  () => { atualizarResumoDescontos(); calcularParcelas(); });
-        acrescimoPercentualInput.addEventListener('input',() => { atualizarResumoDescontos(); calcularParcelas(); });
-        valorEntradaInput.addEventListener('input',       calcularParcelas);
-        fatorArredondamentoInput.addEventListener('input',calcularParcelas);
-
-        hideDinheiroPixCheckbox.addEventListener('change', () => { syncChipPix(!hideDinheiroPixCheckbox.checked); toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        showDebitoCheckbox.addEventListener('change',      () => { toggleDebitoPixPorcentagemInputs(); calcularParcelas(); });
-        showComparisonCheckbox.addEventListener('change',  calcularParcelas);
-        porcentagemPixInput.addEventListener('input',      calcularParcelas);
-        porcentagemDebitoInput.addEventListener('input',   calcularParcelas);
-        hideEntradaTextCheckbox.addEventListener('change', calcularParcelas);
-        showTotalValueCheckbox.addEventListener('change',  () => { syncChipTotal(showTotalValueCheckbox.checked); calcularParcelas(); });
-        boldProductNameCheckbox.addEventListener('change', calcularParcelas);
-        textoAdicionalLinhaInput.addEventListener('input', calcularParcelas);
-        produtoPrefixInput.addEventListener('input',       calcularParcelas);
-        textoFinalMensagemTextarea.addEventListener('input',calcularParcelas);
-        textoCabecalhoMensagemTextarea.addEventListener('input',calcularParcelas);
-        emoticonDinheiroInput.addEventListener('input',    calcularParcelas);
-        emoticonCartaoInput.addEventListener('input',      calcularParcelas);
-
+        valorBaseInput.addEventListener('input', () => {
+            valorBaseInput.classList.toggle('has-value', !!valorBaseInput.value);
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog();
+        });
+        descontoPercentualInput.addEventListener('input', () => {
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog();
+        });
+        descontoFixoInput.addEventListener('input', () => {
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog();
+        });
+        lucroAdicionalInput.addEventListener('input', () => {
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog();
+        });
+        acrescimoComissaoInput.addEventListener('input', () => {
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog();
+        });
+        acrescimoPercentualInput.addEventListener('input', () => {
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog();
+        });
+        valorEntradaInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog();
+        });
+        // ── CORRIGIDO: fator de arredondamento agenda auto-save ──
+        fatorArredondamentoInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_arredondamento');
+        });
+        // ── CORRIGIDO: lista de produtos (textarea) agenda auto-save ao digitar ──
+        productListTextarea.addEventListener('input', () => {
+            enviarLog('editou_lista_produtos');
+        });
+        // ── CORRIGIDO: prompt da IA agenda auto-save ──
+        aiPromptTextarea.addEventListener('input', () => {
+            enviarLog('editou_prompt_ia');
+        });
+        hideDinheiroPixCheckbox.addEventListener('change', () => {
+            syncChipPix(!hideDinheiroPixCheckbox.checked);
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
+            enviarLog('alterou_opcao_pix');
+        });
+        showDebitoCheckbox.addEventListener('change', () => {
+            toggleDebitoPixPorcentagemInputs();
+            calcularParcelas();
+            enviarLog('alterou_opcao_debito');
+        });
+        showComparisonCheckbox.addEventListener('change', () => {
+            calcularParcelas();
+            enviarLog('alterou_opcao_comparacao');
+        });
+        // ── CORRIGIDO: taxas Pix e Débito agendas auto-save ──
+        porcentagemPixInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_taxa_pix');
+        });
+        porcentagemDebitoInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_taxa_debito');
+        });
+        hideEntradaTextCheckbox.addEventListener('change', () => {
+            calcularParcelas();
+            enviarLog('alterou_opcao_entrada');
+        });
+        showTotalValueCheckbox.addEventListener('change', () => {
+            syncChipTotal(showTotalValueCheckbox.checked);
+            calcularParcelas();
+            enviarLog('alterou_opcao_total');
+        });
+        boldProductNameCheckbox.addEventListener('change', () => {
+            calcularParcelas();
+            enviarLog('alterou_negrito_produto');
+        });
+        // ── CORRIGIDO: textos personalizados agendas auto-save ──
+        textoAdicionalLinhaInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_texto_adicional');
+        });
+        produtoPrefixInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_prefixo');
+        });
+        textoFinalMensagemTextarea.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_texto_final');
+        });
+        textoCabecalhoMensagemTextarea.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_cabecalho');
+        });
+        // ── CORRIGIDO: emoticons agendas auto-save ──
+        emoticonDinheiroInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_emoticon');
+        });
+        emoticonCartaoInput.addEventListener('input', () => {
+            calcularParcelas();
+            enviarLog('alterou_emoticon');
+        });
         parcelaEspecificaInput.addEventListener('input', function() {
             const parcelas = getParcelas();
             const raw = this.value.trim();
@@ -1757,14 +2461,405 @@ Capa silicone R$ 50,00
             Object.keys(taxasRapidas).forEach(k => { if (!current.has(k)) delete taxasRapidas[k]; });
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
+            enviarLog();
+        });
+        selectAllButton.addEventListener('click', () => {
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); });
+            calcularParcelas();
+            enviarLog('marcou_todas_parcelas');
+        });
+        deselectAllButton.addEventListener('click', () => {
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); });
+            calcularParcelas();
+            enviarLog('desmarcou_todas_parcelas');
         });
 
-        selectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); }); calcularParcelas(); });
-        deselectAllButton.addEventListener('click', () => { document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = false; togglePorcentagemInput(parseInt(cb.value), false); }); calcularParcelas(); });
 
-        // ── Init ──────────────────────────────────────────────────────────────
+        /* ══════════════════════════════════════════════════════
+           FAB PANELS — Resultado e Histórico flutuantes
+           Não modifica nenhuma função existente
+        ══════════════════════════════════════════════════════ */
+        let _fpAberto = null;
+
+        function fpToggle(qual) {
+            if (_fpAberto === qual) { fpFechar(qual); return; }
+            if (_fpAberto) { _fpFecharSilencioso(_fpAberto); }
+            _fpAbrir(qual);
+        }
+
+        function _fpAbrir(qual) {
+            _fpAberto = qual;
+            document.getElementById('fpPanel_' + qual).classList.add('aberto');
+            document.getElementById('fpArrow_' + qual).classList.add('aberto');
+            if (qual === 'resultado') { _fpSincResultado(); _fpIniciarChips(); }
+            else { _fpCarregarHistorico(); }
+        }
+
+        function fpFechar(qual) {
+            _fpFecharSilencioso(qual);
+            _fpAberto = null;
+        }
+
+        function _fpFecharSilencioso(qual) {
+            document.getElementById('fpPanel_' + qual).classList.remove('aberto');
+            document.getElementById('fpArrow_' + qual).classList.remove('aberto');
+        }
+
+        /* ── Sincronização resultado ─────────────────────────── */
+        function _fpSincResultado() {
+            var src = document.getElementById('resultado');
+            var dst = document.getElementById('fpResText');
+            if (src && dst) dst.value = src.value;
+        }
+
+        /* Patch não-invasivo: envolve calcularParcelas para sincronizar após cada chamada */
+        var _fpOrigCalc = calcularParcelas;
+        calcularParcelas = function() {
+            _fpOrigCalc.apply(this, arguments);
+            if (_fpAberto === 'resultado') {
+                if (_fpChipsParcs.size === 0 && !_fpPixOn && !_fpTotalOn) { _fpSincResultado(); }
+                else { _fpRecalc(); }
+            }
+        };
+
+        function fpCopiar() {
+            var txt = (document.getElementById('fpResText') || {}).value || '';
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(function() {
+                var m = document.getElementById('fpCopyMsg');
+                m.classList.add('visivel');
+                setTimeout(function() { m.classList.remove('visivel'); }, 2000);
+                enviarLog('copiou_float');
+            });
+        }
+
+        function fpLimpar() {
+            if (!confirm('Limpar todos os campos?')) return;
+            limparCampos();
+            _fpSincResultado();
+        }
+
+        /* ── Chips ───────────────────────────────────────────── */
+        var _fpChipsParcs = new Set();
+        var _fpPixOn = false;
+        var _fpTotalOn = false;
+        var _fpChipsOk = false;
+
+        function _fpIniciarChips() {
+            var espEl = document.getElementById('fpChipsEsp');
+            var parcEl = document.getElementById('fpChipsParc');
+            if (!espEl || !parcEl) return;
+            if (!_fpChipsOk) {
+                _fpChipsOk = true;
+                espEl.innerHTML =
+                    '<div class="fchip" id="fpChipPix" onclick="_fpTogEsp(\'pix\')">💸<br>Pix</div>' +
+                    '<div class="fchip" id="fpChipTotal" onclick="_fpTogEsp(\'total\')">🧾<br>Total</div>';
+                var h = '';
+                for (var i = 1; i <= 18; i++) {
+                    h += '<div class="fchip" id="fpChipParc' + i + '" onclick="_fpTogParc(' + i + ')">' + i + 'x</div>';
+                }
+                parcEl.innerHTML = h;
+            }
+            /* Sempre inicia com tudo desmarcado — painel começa "neutro" */
+            _fpChipsParcs.clear();
+            _fpPixOn = false;
+            _fpTotalOn = false;
+            document.querySelectorAll('.fchip[id^="fpChipParc"]').forEach(function(el) {
+                el.classList.remove('ativo-parc');
+            });
+            var chipPix = document.getElementById('fpChipPix');
+            var chipTot = document.getElementById('fpChipTotal');
+            if (chipPix) chipPix.classList.remove('ativo-esp');
+            if (chipTot) chipTot.classList.remove('ativo-esp');
+            _fpRenderTaxas();
+        }
+
+        function _fpTogEsp(qual) {
+            if (qual === 'pix') {
+                _fpPixOn = !_fpPixOn;
+                document.getElementById('fpChipPix').classList.toggle('ativo-esp', _fpPixOn);
+                /* Sincroniza com checkbox fixo hideDinheiroPix */
+                hideDinheiroPixCheckbox.checked = !_fpPixOn;
+                especificaMostrarPixCb.checked = _fpPixOn;
+                document.getElementById('labelEspecificaPix') &&
+                    document.getElementById('labelEspecificaPix').classList.toggle('ativo', _fpPixOn);
+            } else {
+                _fpTotalOn = !_fpTotalOn;
+                document.getElementById('fpChipTotal').classList.toggle('ativo-esp', _fpTotalOn);
+                /* Sincroniza com checkbox fixo showTotalValue */
+                showTotalValueCheckbox.checked = _fpTotalOn;
+                especificaMostrarTotalCb.checked = _fpTotalOn;
+                document.getElementById('labelEspecificaTotal') &&
+                    document.getElementById('labelEspecificaTotal').classList.toggle('ativo', _fpTotalOn);
+            }
+            _fpRenderTaxas();
+            _fpRecalc();
+        }
+
+        function _fpTogParc(n) {
+            if (_fpChipsParcs.has(n)) {
+                _fpChipsParcs.delete(n);
+                document.getElementById('fpChipParc' + n).classList.remove('ativo-parc');
+            } else {
+                _fpChipsParcs.add(n);
+                document.getElementById('fpChipParc' + n).classList.add('ativo-parc');
+            }
+            _fpSincCampoFixo();
+            _fpRenderTaxas();
+            _fpRecalc();
+        }
+
+        /* Sincroniza chips do painel com o campo "Parcelas" fixo da página
+           SEM dispatchEvent para evitar loop calcularParcelas → _fpRecalc → loop */
+        function _fpSincCampoFixo() {
+            var sorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
+            var campo = document.getElementById('parcelaEspecifica');
+            if (!campo) return;
+            campo.value = sorted.join(',');
+            /* Atualiza chips de taxa da linha rápida manualmente (sem disparar evento) */
+            atualizarVisibilidadeMiniOpcoes();
+        }
+
+        function _fpRenderTaxas() {
+            var sec = document.getElementById('fpTaxasSec');
+            var grid = document.getElementById('fpTaxasGrid');
+            if (!sec || !grid) return;
+            var items = [];
+            if (_fpPixOn) items.push({ id: 'pix', lbl: '💸 Pix', t: '0.00' });
+            var sorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
+            sorted.forEach(function(i) {
+                var t = taxasRapidas[i] !== undefined ? taxasRapidas[i] : ((taxasDeJurosPadrao[i]||0)*100).toFixed(2);
+                items.push({ id: String(i), lbl: i + 'x', t: t });
+            });
+            if (!items.length) { sec.style.display = 'none'; return; }
+            sec.style.display = 'block';
+            grid.innerHTML = items.map(function(m) {
+                return '<div class="ftaxa-cel">' +
+                    '<span class="ftaxa-lbl">' + m.lbl + '</span>' +
+                    '<div class="ftaxa-row">' +
+                        '<input class="ftaxa-inp" type="number" step="0.01" min="0" value="' + m.t + '" data-p="' + m.id + '" oninput="_fpOnTaxa(this)">' +
+                        '<span class="ftaxa-pct">%</span>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function _fpOnTaxa(el) {
+            var p = el.dataset.p;
+            var v = el.value;
+            if (p === 'pix') {
+                /* Sincroniza com campo fixo porcentagemPix */
+                var pixInput = document.getElementById('porcentagemPix');
+                if (pixInput) pixInput.value = v;
+            } else {
+                /* Atualiza taxasRapidas e campo avançado */
+                taxasRapidas[p] = v;
+                var av = document.getElementById('porcentagem' + p + 'x');
+                if (av) av.value = v;
+                /* Atualiza também o chip rápido na página (parcelaTaxasRow) */
+                var chipInput = document.querySelector('#parcelaTaxasRow input[data-parcela="' + p + '"]');
+                if (chipInput) chipInput.value = v;
+            }
+            _fpRecalc();
+            /* Agenda auto-save */
+            enviarLog('alterou_taxa_float');
+        }
+
+        /* ── Recalcular com configuração dos chips ───────────── */
+        function _fpRecalc() {
+            var dst = document.getElementById('fpResText');
+            if (!dst) return;
+            var parcsSorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
+
+            /* Sem nenhum chip marcado → resultado idêntico ao painel fixo */
+            if (!parcsSorted.length && !_fpPixOn && !_fpTotalOn) {
+                _fpSincResultado();
+                return;
+            }
+
+            /* Com chips marcados → calcula apenas o que está marcado no painel */
+            /* Usa config.especifica=false para que calcularParcelasParaUmProduto
+               respeite hideDinheiroPix/showTotal como passados via parâmetro,
+               mas sobrepomos os checkboxes temporariamente para controlar Pix */
+            var config = { especifica: true, parcelas: parcsSorted };
+
+            /* Backup dos 4 checkboxes que vamos sobrescrever temporariamente */
+            var bkHide  = hideDinheiroPixCheckbox.checked;
+            var bkTotal = showTotalValueCheckbox.checked;
+            var bkPixCb = especificaMostrarPixCb.checked;
+            var bkTotCb = especificaMostrarTotalCb.checked;
+
+            /* Aplica estado dos chips do painel */
+            hideDinheiroPixCheckbox.checked  = !_fpPixOn;
+            showTotalValueCheckbox.checked   = _fpTotalOn;
+            especificaMostrarPixCb.checked   = _fpPixOn;
+            especificaMostrarTotalCb.checked = _fpTotalOn;
+
+            var entrada = parseFloat(valorEntradaInput.value) || 0;
+            var res = [];
+
+            if (selectedProducts.length > 0) {
+                selectedProducts.forEach(function(p, i) {
+                    var ov = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
+                    var nm = boldProductNameCheckbox.checked ? '*' + p.produto + '*' : p.produto;
+                    if (produtoPrefixInput.value) nm = produtoPrefixInput.value + ' ' + nm;
+                    var r = calcularParcelasParaUmProduto(p.preco, entrada,
+                        textoAdicionalLinhaInput.value, _fpTotalOn, nm, config, p.preco, ov);
+                    if (r) res.push(r);
+                    if (i < selectedProducts.length - 1) res.push('\n' + '━'.repeat(20));
+                });
+            } else {
+                var base = parseFloat(valorBaseInput.value);
+                if (!isNaN(base) && base > 0) {
+                    var r2 = calcularParcelasParaUmProduto(base, entrada,
+                        textoAdicionalLinhaInput.value, _fpTotalOn, '', config, base, null);
+                    if (r2) res.push(r2);
+                }
+            }
+
+            /* Restaura checkboxes imediatamente */
+            hideDinheiroPixCheckbox.checked  = bkHide;
+            showTotalValueCheckbox.checked   = bkTotal;
+            especificaMostrarPixCb.checked   = bkPixCb;
+            especificaMostrarTotalCb.checked = bkTotCb;
+
+            var final = res;
+            if (textoCabecalhoMensagemTextarea.value) final = [textoCabecalhoMensagemTextarea.value + '\n'].concat(res);
+            if (textoFinalMensagemTextarea.value) final.push('\n' + textoFinalMensagemTextarea.value);
+            dst.value = final.join('\n');
+        }
+
+        /* ── Histórico flutuante ─────────────────────────────── */
+        async function _fpCarregarHistorico() {
+            var lista = document.getElementById('fpHistLista');
+            var tituloWrap = document.getElementById('fpHistTituloWrap');
+            if (_currentUser && tituloWrap) {
+                tituloWrap.style.display = 'block';
+                /* Sincroniza campos título e comentário com o painel fixo */
+                var fixoTitulo = document.getElementById('historicoTitulo');
+                var fpTitulo   = document.getElementById('fpHistTituloInput');
+                if (fixoTitulo && fpTitulo && !fpTitulo.dataset.synced) {
+                    fpTitulo.dataset.synced = '1';
+                    fpTitulo.value = fixoTitulo.value;
+                    fpTitulo.addEventListener('input', function() {
+                        if (fixoTitulo) fixoTitulo.value = fpTitulo.value;
+                        _tituloSessao = fpTitulo.value.trim();
+                        clearTimeout(_logTimer);
+                        _logTimer = setTimeout(flushLog, 2000);
+                    });
+                }
+                var fixoComent = document.getElementById('historicoComentarios');
+                var fpComent   = document.getElementById('fpHistComentarioInput');
+                if (fixoComent && fpComent && !fpComent.dataset.synced) {
+                    fpComent.dataset.synced = '1';
+                    fpComent.value = fixoComent.value;
+                    fpComent.addEventListener('input', function() {
+                        if (fixoComent) fixoComent.value = fpComent.value;
+                        _comentarioSessao = fpComent.value.trim();
+                        clearTimeout(_logTimer);
+                        _logTimer = setTimeout(flushLog, 2000);
+                    });
+                }
+            }
+            if (!_currentUser) {
+                lista.innerHTML = '<div class="fhist-loading">🔑 Entre com Google para ver o histórico<br><br>' +
+                    '<button class="fres-btn fres-btn-copiar" style="margin:0 auto;display:block;padding:8px 18px;" onclick="pedirLogin()">Entrar com Google</button></div>';
+                return;
+            }
+            if (_sheetsCache && _sheetsCache.length) { _fpRenderHist(_sheetsCache); return; }
+            lista.innerHTML = '<div class="fhist-loading">⏳ Carregando...</div>';
+            try {
+                var url = SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email);
+                var text = await (await fetch(url)).text();
+                var regs = JSON.parse(text);
+                if (regs.error) throw new Error(regs.error);
+                _sheetsCache = regs;
+                _fpRenderHist(_sheetsCache);
+            } catch(e) {
+                lista.innerHTML = '<div class="fhist-loading" style="color:var(--danger-color);">❌ ' + e.message + '</div>';
+            }
+        }
+
+        function _fpRenderHist(regs) {
+            var lista = document.getElementById('fpHistLista');
+            if (!regs || !regs.length) {
+                lista.innerHTML = '<div class="fhist-loading">📭 Nenhum registro encontrado</div>';
+                return;
+            }
+            var comTit = regs.filter(function(r) {
+                var t = String(r.titulo == null ? '' : r.titulo).trim();
+                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+            var auto = regs.filter(function(r) {
+                var t = String(r.titulo == null ? '' : r.titulo).trim();
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+            var html = '';
+            if (comTit.length) {
+                html += '<div class="fhist-secao">📌 Com título (' + comTit.length + ')</div>';
+                html += comTit.slice(0,15).map(function(r){ return _fpBuildItem(r, false); }).join('');
+            }
+            if (auto.length) {
+                html += '<div class="fhist-secao" style="margin-top:8px;">🕓 Automáticos (' + auto.length + ')</div>';
+                html += auto.slice(0,10).map(function(r){ return _fpBuildItem(r, true); }).join('');
+            }
+            if (regs.length > 25) {
+                html += '<div class="fhist-ver-todos"><a onclick="fpFechar(\'historico\');abrirHistoricoRapido()">Ver todos (' + regs.length + ') ↗</a></div>';
+            }
+            lista.innerHTML = html;
+        }
+
+        function _fpBuildItem(r, isAuto) {
+            var d = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload||{});
+            var val = '';
+            if (d.usandoListaProdutos && d.produtosSelecionados && d.produtosSelecionados.length)
+                val = d.produtosSelecionados.length + ' produto(s)';
+            else if (d.valorBase)
+                val = 'R$ ' + parseFloat(d.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2});
+            var titulo = String(r.titulo == null ? '' : r.titulo) || '(sem título)';
+            var dataStr = r.date ? new Date(r.date).toLocaleString('pt-BR') : '';
+            var sid = String(r.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            return '<div class="fhist-item">' +
+                '<div class="fhist-item-titulo">' + titulo + '</div>' +
+                (dataStr ? '<div class="fhist-item-data">' + dataStr + '</div>' : '') +
+                (val ? '<div class="fhist-item-valor">📦 ' + val + '</div>' : '') +
+                '<div class="fhist-item-acoes">' +
+                    '<button class="fhist-btn-r" onclick="restaurarCalculo(\'' + sid + '\');fpFechar(\'historico\')">🔄 Restaurar</button>' +
+                    '<button class="fhist-btn-c" onclick="_fpCopiarHist(\'' + sid + '\')">📋 Copiar</button>' +
+                    (!isAuto ? '<button class="fhist-btn-x" onclick="_fpExcluirHist(\'' + sid + '\')">🗑️</button>' : '') +
+                '</div></div>';
+        }
+
+        function _fpCopiarHist(id) {
+            var reg = _sheetsCache && _sheetsCache.find(function(r){return String(r.id)===String(id);});
+            if (!reg) { alert('Registro não encontrado'); return; }
+            var d = typeof reg.payload === 'string' ? JSON.parse(reg.payload) : (reg.payload||{});
+            if (!d.resultado) { alert('Resultado não encontrado'); return; }
+            navigator.clipboard.writeText(d.resultado).then(function() {
+                showModal('success','Copiado!','Resultado de <strong>'+(reg.titulo||'(sem título)')+'</strong><br>copiado 📋',2000);
+            });
+        }
+
+        async function _fpExcluirHist(id) {
+            if (!confirm('⚠️ Deseja realmente excluir este registro?')) return;
+            try {
+                var resp = await fetch(SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete', id: String(id) })
+                });
+                var json = await resp.json();
+                if (json.erro) throw new Error(json.erro);
+                _sheetsCache = _sheetsCache.filter(function(r){ return String(r.id) !== String(id); });
+                _fpRenderHist(_sheetsCache);
+                /* Atualiza também o painel fixo se estiver visível */
+                renderizarHistorico();
+                setSaveStatus('🗑️ Registro excluído', 'var(--danger-color)');
+            } catch(e) {
+                alert('Erro ao excluir: ' + e.message);
+            }
+        }
         calcularParcelas();
-        atualizarBadgeHistorico();
     </script>
 </body>
 </html>
