@@ -607,6 +607,7 @@
         .fhist-item-acoes button { flex: 1; padding: 5px 6px; font-size: 0.72rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; }
         .fhist-btn-r { background: linear-gradient(135deg,var(--primary-color),#388e3c); color: white; }
         .fhist-btn-c { background: linear-gradient(135deg,var(--secondary-color),#1565C0); color: white; }
+        .fhist-btn-x { background: linear-gradient(135deg,var(--danger-color),#b71c1c); color: white; flex: 0 0 auto; padding: 5px 8px; }
         .fhist-ver-todos { text-align: center; margin-top: 8px; font-size: 0.78rem; }
         .fhist-ver-todos a { color: var(--secondary-color); cursor: pointer; text-decoration: underline; }
         @media (max-width: 420px) {
@@ -2796,11 +2797,11 @@ Capa silicone R$ 50,00
             var html = '';
             if (comTit.length) {
                 html += '<div class="fhist-secao">📌 Com título (' + comTit.length + ')</div>';
-                html += comTit.slice(0,15).map(_fpBuildItem).join('');
+                html += comTit.slice(0,15).map(function(r){ return _fpBuildItem(r, false); }).join('');
             }
             if (auto.length) {
                 html += '<div class="fhist-secao" style="margin-top:8px;">🕓 Automáticos (' + auto.length + ')</div>';
-                html += auto.slice(0,10).map(_fpBuildItem).join('');
+                html += auto.slice(0,10).map(function(r){ return _fpBuildItem(r, true); }).join('');
             }
             if (regs.length > 25) {
                 html += '<div class="fhist-ver-todos"><a onclick="fpFechar(\'historico\');abrirHistoricoRapido()">Ver todos (' + regs.length + ') ↗</a></div>';
@@ -2808,7 +2809,7 @@ Capa silicone R$ 50,00
             lista.innerHTML = html;
         }
 
-        function _fpBuildItem(r) {
+        function _fpBuildItem(r, isAuto) {
             var d = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload||{});
             var val = '';
             if (d.usandoListaProdutos && d.produtosSelecionados && d.produtosSelecionados.length)
@@ -2825,6 +2826,7 @@ Capa silicone R$ 50,00
                 '<div class="fhist-item-acoes">' +
                     '<button class="fhist-btn-r" onclick="restaurarCalculo(\'' + sid + '\');fpFechar(\'historico\')">🔄 Restaurar</button>' +
                     '<button class="fhist-btn-c" onclick="_fpCopiarHist(\'' + sid + '\')">📋 Copiar</button>' +
+                    (!isAuto ? '<button class="fhist-btn-x" onclick="_fpExcluirHist(\'' + sid + '\')">🗑️</button>' : '') +
                 '</div></div>';
         }
 
@@ -2836,6 +2838,26 @@ Capa silicone R$ 50,00
             navigator.clipboard.writeText(d.resultado).then(function() {
                 showModal('success','Copiado!','Resultado de <strong>'+(reg.titulo||'(sem título)')+'</strong><br>copiado 📋',2000);
             });
+        }
+
+        async function _fpExcluirHist(id) {
+            if (!confirm('⚠️ Deseja realmente excluir este registro?')) return;
+            try {
+                var resp = await fetch(SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete', id: String(id) })
+                });
+                var json = await resp.json();
+                if (json.erro) throw new Error(json.erro);
+                _sheetsCache = _sheetsCache.filter(function(r){ return String(r.id) !== String(id); });
+                _fpRenderHist(_sheetsCache);
+                /* Atualiza também o painel fixo se estiver visível */
+                renderizarHistorico();
+                setSaveStatus('🗑️ Registro excluído', 'var(--danger-color)');
+            } catch(e) {
+                alert('Erro ao excluir: ' + e.message);
+            }
         }
         calcularParcelas();
     </script>
