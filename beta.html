@@ -479,6 +479,137 @@
             #parcelaEspecificaOpcoes { flex-direction: column; }
             .adj-fields { grid-template-columns: 1fr 1fr; }
         }
+
+        /* ── FABs flutuantes (resultado + histórico) ── */
+        .fab-group {
+            position: fixed; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; align-items: flex-end;
+            gap: 10px; z-index: 1100;
+        }
+        .fab-pill {
+            display: flex; align-items: center; gap: 8px;
+            padding: 0 20px; height: 48px; border-radius: 24px; border: none;
+            cursor: pointer; font-size: 0.88rem; font-weight: 700; color: white;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25); transition: all 0.22s ease;
+            position: relative; white-space: nowrap;
+        }
+        .fab-pill:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.32); }
+        .fab-pill:active { transform: translateY(0); }
+        .fab-pill-resultado { background: linear-gradient(135deg,#4CAF50,#2e7d32); }
+        .fab-pill-historico { background: linear-gradient(135deg,#2196F3,#1565C0); }
+        .fab-pill-arrow { font-size: 0.7rem; transition: transform 0.22s; display: inline-block; }
+        .fab-pill-arrow.aberto { transform: rotate(180deg); }
+        .fab-badge-pill {
+            position: absolute; top: -5px; right: -5px;
+            background: #f44336; color: white; border-radius: 50%;
+            width: 20px; height: 20px; font-size: 0.68rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid white;
+        }
+        /* Painel genérico */
+        .float-panel {
+            position: fixed; bottom: 80px; right: 20px;
+            width: 370px; max-width: calc(100vw - 24px);
+            background: var(--bg-secondary); border: 2px solid var(--border-color);
+            border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+            z-index: 1099; display: flex; flex-direction: column;
+            max-height: 680px;
+            opacity: 0; transform: translateY(14px) scale(0.97);
+            pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .float-panel.aberto { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+        .float-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid var(--border-color);
+            font-weight: 700; font-size: 0.92rem; color: var(--text-primary); flex-shrink: 0;
+        }
+        .float-panel-fechar {
+            background: none; border: none; cursor: pointer; font-size: 1rem;
+            color: var(--text-secondary); padding: 2px 7px; border-radius: 6px;
+            transition: background 0.15s;
+        }
+        .float-panel-fechar:hover { background: var(--bg-primary); }
+        .float-panel-body { overflow-y: auto; padding: 12px 14px; flex: 1; min-height: 0; }
+        /* Resultado */
+        .fres-textarea {
+            width: 100%; min-height: 90px; max-height: 200px;
+            background: var(--bg-primary); border: 1.5px solid var(--border-color);
+            border-radius: 8px; padding: 10px; font-family: 'Courier New', monospace;
+            font-size: 12px; color: var(--text-primary); resize: vertical;
+        }
+        .fres-textarea:focus { outline: none; border-color: var(--primary-color); }
+        [data-theme="dark"] .fres-textarea { background: #1e1e1e; }
+        .fres-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .fres-btn {
+            padding: 8px; font-size: 0.82rem; font-weight: 700; border: none;
+            border-radius: 8px; cursor: pointer; transition: opacity 0.15s, transform 0.15s;
+        }
+        .fres-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .fres-btn-copiar { background: linear-gradient(135deg,var(--primary-color),#388e3c); color: white; }
+        .fres-btn-limpar { background: var(--bg-primary); border: 1.5px solid var(--border-color); color: var(--text-secondary); }
+        .fres-msg { font-size: 0.72rem; color: var(--primary-color); text-align: center; margin-top: 4px; height: 14px; opacity: 0; transition: opacity 0.3s; }
+        .fres-msg.visivel { opacity: 1; }
+        /* Chips de parcelas */
+        .fchips-secao { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+        .fchips-titulo { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); margin-bottom: 5px; }
+        .fchips-esp { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 5px; }
+        .fchips-parc { display: grid; grid-template-columns: repeat(10,1fr); gap: 3px; }
+        .fchip {
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            padding: 4px 2px; min-height: 26px; border-radius: 5px; cursor: pointer;
+            background: var(--bg-primary); border: 1.5px solid var(--border-color);
+            font-size: 0.6rem; font-weight: 700; color: var(--text-secondary);
+            user-select: none; transition: border-color .12s, background .12s, color .12s;
+            line-height: 1.2;
+        }
+        .fchip:hover { border-color: var(--text-secondary); }
+        .fchip.ativo-parc { border-color: var(--primary-color); background: rgba(76,175,80,0.12); color: var(--primary-color); }
+        .fchip.ativo-esp  { border-color: var(--secondary-color); background: rgba(33,150,243,0.12); color: var(--secondary-color); }
+        /* Taxas */
+        .ftaxas-secao { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color); }
+        .ftaxas-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; margin-top: 4px; }
+        .ftaxa-cel {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            background: var(--bg-primary); border: 1px solid var(--border-color);
+            border-radius: 5px; padding: 4px 2px;
+        }
+        .ftaxa-lbl { font-size: 0.56rem; font-weight: 700; color: var(--text-secondary); }
+        .ftaxa-row { display: flex; align-items: center; gap: 1px; }
+        .ftaxa-inp {
+            width: 30px; font-size: 0.6rem; border: none; border-bottom: 1px solid var(--border-color);
+            background: transparent; color: var(--text-primary); text-align: center;
+            outline: none; -moz-appearance: textfield;
+        }
+        .ftaxa-inp::-webkit-outer-spin-button,.ftaxa-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .ftaxa-inp:focus { border-bottom-color: var(--primary-color); }
+        .ftaxa-pct { font-size: 0.52rem; color: var(--text-secondary); }
+        /* Histórico flutuante */
+        .fhist-titulo-wrap { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .fhist-titulo-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
+        .fhist-titulo-input {
+            width: 100%; padding: 7px 10px; font-size: 0.82rem;
+            border: 1.5px solid var(--border-color); border-radius: 7px;
+            background: var(--bg-primary); color: var(--text-primary);
+            outline: none; font-family: inherit; transition: border-color 0.2s;
+        }
+        .fhist-titulo-input:focus { border-color: var(--secondary-color); }
+        .fhist-loading { text-align: center; padding: 24px 12px; color: var(--text-secondary); font-size: 0.85rem; }
+        .fhist-secao { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); padding: 6px 0 5px; border-bottom: 1px solid var(--border-color); margin-bottom: 7px; }
+        .fhist-item { background: var(--bg-primary); border: 1.5px solid var(--border-color); border-radius: 9px; padding: 10px 11px; margin-bottom: 8px; transition: border-color 0.15s; }
+        .fhist-item:hover { border-color: var(--secondary-color); }
+        .fhist-item-titulo { font-weight: 700; font-size: 0.82rem; color: var(--primary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fhist-item-data { font-size: 0.68rem; color: var(--text-secondary); margin-bottom: 6px; }
+        .fhist-item-valor { font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 6px; }
+        .fhist-item-acoes { display: flex; gap: 5px; }
+        .fhist-item-acoes button { flex: 1; padding: 5px 6px; font-size: 0.72rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; }
+        .fhist-btn-r { background: linear-gradient(135deg,var(--primary-color),#388e3c); color: white; }
+        .fhist-btn-c { background: linear-gradient(135deg,var(--secondary-color),#1565C0); color: white; }
+        .fhist-ver-todos { text-align: center; margin-top: 8px; font-size: 0.78rem; }
+        .fhist-ver-todos a { color: var(--secondary-color); cursor: pointer; text-decoration: underline; }
+        @media (max-width: 420px) {
+            .float-panel { width: calc(100vw - 24px); right: 12px; }
+            .fab-group { right: 12px; bottom: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -856,9 +987,58 @@ Capa silicone R$ 50,00
         </div>
     </div>
 
-    <button class="fab-historico" onclick="abrirHistoricoRapido()" title="Ver histórico">
-        📚 <span class="fab-badge" id="fabBadge" style="display: none;">0</span>
-    </button>
+    <!-- FABs flutuantes -->
+    <div class="fab-group">
+        <button class="fab-pill fab-pill-resultado" onclick="fpToggle('resultado')" title="Resultado rápido">
+            📋 Resultado <span class="fab-pill-arrow" id="fpArrow_resultado">▲</span>
+        </button>
+        <button class="fab-pill fab-pill-historico" onclick="fpToggle('historico')" title="Histórico rápido">
+            📚 Histórico <span class="fab-pill-arrow" id="fpArrow_historico">▲</span>
+            <span class="fab-badge-pill" id="fabBadge" style="display:none;"></span>
+        </button>
+    </div>
+
+    <!-- Painel Resultado -->
+    <div class="float-panel" id="fpPanel_resultado">
+        <div class="float-panel-header">
+            <span>📋 Resultado</span>
+            <button class="float-panel-fechar" onclick="fpFechar('resultado')">✕</button>
+        </div>
+        <div class="float-panel-body">
+            <textarea class="fres-textarea" id="fpResText" readonly placeholder="O resultado aparecerá aqui..."></textarea>
+            <div class="fres-acoes">
+                <button class="fres-btn fres-btn-copiar" onclick="fpCopiar()">📋 Copiar</button>
+                <button class="fres-btn fres-btn-limpar" onclick="fpLimpar()">🗑️ Limpar</button>
+            </div>
+            <div class="fres-msg" id="fpCopyMsg">✅ Copiado!</div>
+            <!-- Chips -->
+            <div class="fchips-secao">
+                <div class="fchips-titulo">Selecione para exibir:</div>
+                <div class="fchips-esp" id="fpChipsEsp"></div>
+                <div class="fchips-parc" id="fpChipsParc"></div>
+                <div class="ftaxas-secao" id="fpTaxasSec" style="display:none;">
+                    <div class="fchips-titulo">Taxas (%):</div>
+                    <div class="ftaxas-grid" id="fpTaxasGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel Histórico -->
+    <div class="float-panel" id="fpPanel_historico">
+        <div class="float-panel-header">
+            <span>📚 Histórico</span>
+            <button class="float-panel-fechar" onclick="fpFechar('historico')">✕</button>
+        </div>
+        <div class="float-panel-body">
+            <div class="fhist-titulo-wrap" id="fpHistTituloWrap" style="display:none;">
+                <div class="fhist-titulo-label">🏷️ Título desta sessão (opcional):</div>
+                <input type="text" class="fhist-titulo-input" id="fpHistTituloInput"
+                    placeholder="Ex: Venda iPhone 13">
+            </div>
+            <div id="fpHistLista"><div class="fhist-loading">Abrindo...</div></div>
+        </div>
+    </div>
 
     <script>
         // ── Config ───────────────────────────────────────────────────────────
@@ -2286,6 +2466,302 @@ Capa silicone R$ 50,00
             enviarLog('desmarcou_todas_parcelas');
         });
 
+
+        /* ══════════════════════════════════════════════════════
+           FAB PANELS — Resultado e Histórico flutuantes
+           Não modifica nenhuma função existente
+        ══════════════════════════════════════════════════════ */
+        let _fpAberto = null;
+
+        function fpToggle(qual) {
+            if (_fpAberto === qual) { fpFechar(qual); return; }
+            if (_fpAberto) { _fpFecharSilencioso(_fpAberto); }
+            _fpAbrir(qual);
+        }
+
+        function _fpAbrir(qual) {
+            _fpAberto = qual;
+            document.getElementById('fpPanel_' + qual).classList.add('aberto');
+            document.getElementById('fpArrow_' + qual).classList.add('aberto');
+            if (qual === 'resultado') { _fpSincResultado(); _fpIniciarChips(); }
+            else { _fpCarregarHistorico(); }
+        }
+
+        function fpFechar(qual) {
+            _fpFecharSilencioso(qual);
+            _fpAberto = null;
+        }
+
+        function _fpFecharSilencioso(qual) {
+            document.getElementById('fpPanel_' + qual).classList.remove('aberto');
+            document.getElementById('fpArrow_' + qual).classList.remove('aberto');
+        }
+
+        /* ── Sincronização resultado ─────────────────────────── */
+        function _fpSincResultado() {
+            var src = document.getElementById('resultado');
+            var dst = document.getElementById('fpResText');
+            if (src && dst) dst.value = src.value;
+        }
+
+        /* Patch não-invasivo: envolve calcularParcelas para sincronizar após cada chamada */
+        var _fpOrigCalc = calcularParcelas;
+        calcularParcelas = function() {
+            _fpOrigCalc.apply(this, arguments);
+            if (_fpAberto === 'resultado') {
+                if (_fpChipsParcs.size === 0 && !_fpPixOn) { _fpSincResultado(); }
+                else { _fpRecalc(); }
+            }
+        };
+
+        function fpCopiar() {
+            var txt = (document.getElementById('fpResText') || {}).value || '';
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(function() {
+                var m = document.getElementById('fpCopyMsg');
+                m.classList.add('visivel');
+                setTimeout(function() { m.classList.remove('visivel'); }, 2000);
+                enviarLog('copiou_float');
+            });
+        }
+
+        function fpLimpar() {
+            if (!confirm('Limpar todos os campos?')) return;
+            limparCampos();
+            _fpSincResultado();
+        }
+
+        /* ── Chips ───────────────────────────────────────────── */
+        var _fpChipsParcs = new Set();
+        var _fpPixOn = false;
+        var _fpTotalOn = false;
+        var _fpChipsOk = false;
+
+        function _fpIniciarChips() {
+            var espEl = document.getElementById('fpChipsEsp');
+            var parcEl = document.getElementById('fpChipsParc');
+            if (!espEl || !parcEl) return;
+            if (!_fpChipsOk) {
+                _fpChipsOk = true;
+                espEl.innerHTML =
+                    '<div class="fchip" id="fpChipPix" onclick="_fpTogEsp(\'pix\')">💸<br>Pix</div>' +
+                    '<div class="fchip" id="fpChipTotal" onclick="_fpTogEsp(\'total\')">🧾<br>Total</div>';
+                var h = '';
+                for (var i = 1; i <= 18; i++) {
+                    h += '<div class="fchip" id="fpChipParc' + i + '" onclick="_fpTogParc(' + i + ')">' + i + 'x</div>';
+                }
+                parcEl.innerHTML = h;
+            }
+            _fpRenderTaxas();
+        }
+
+        function _fpTogEsp(qual) {
+            if (qual === 'pix') {
+                _fpPixOn = !_fpPixOn;
+                document.getElementById('fpChipPix').classList.toggle('ativo-esp', _fpPixOn);
+            } else {
+                _fpTotalOn = !_fpTotalOn;
+                document.getElementById('fpChipTotal').classList.toggle('ativo-esp', _fpTotalOn);
+            }
+            _fpRenderTaxas();
+            _fpRecalc();
+        }
+
+        function _fpTogParc(n) {
+            if (_fpChipsParcs.has(n)) {
+                _fpChipsParcs.delete(n);
+                document.getElementById('fpChipParc' + n).classList.remove('ativo-parc');
+            } else {
+                _fpChipsParcs.add(n);
+                document.getElementById('fpChipParc' + n).classList.add('ativo-parc');
+            }
+            _fpRenderTaxas();
+            _fpRecalc();
+        }
+
+        function _fpRenderTaxas() {
+            var sec = document.getElementById('fpTaxasSec');
+            var grid = document.getElementById('fpTaxasGrid');
+            if (!sec || !grid) return;
+            var items = [];
+            if (_fpPixOn) items.push({ id: 'pix', lbl: '💸 Pix', t: '0.00' });
+            var sorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
+            sorted.forEach(function(i) {
+                var t = taxasRapidas[i] !== undefined ? taxasRapidas[i] : ((taxasDeJurosPadrao[i]||0)*100).toFixed(2);
+                items.push({ id: String(i), lbl: i + 'x', t: t });
+            });
+            if (!items.length) { sec.style.display = 'none'; return; }
+            sec.style.display = 'block';
+            grid.innerHTML = items.map(function(m) {
+                return '<div class="ftaxa-cel">' +
+                    '<span class="ftaxa-lbl">' + m.lbl + '</span>' +
+                    '<div class="ftaxa-row">' +
+                        '<input class="ftaxa-inp" type="number" step="0.01" min="0" value="' + m.t + '" data-p="' + m.id + '" oninput="_fpOnTaxa(this)">' +
+                        '<span class="ftaxa-pct">%</span>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function _fpOnTaxa(el) {
+            var p = el.dataset.p;
+            if (p !== 'pix') {
+                taxasRapidas[p] = el.value;
+                var av = document.getElementById('porcentagem' + p + 'x');
+                if (av) av.value = el.value;
+            }
+            _fpRecalc();
+        }
+
+        /* ── Recalcular com configuração dos chips ───────────── */
+        function _fpRecalc() {
+            var dst = document.getElementById('fpResText');
+            if (!dst) return;
+            var parcsSorted = Array.from(_fpChipsParcs).sort(function(a,b){return a-b;});
+            if (!parcsSorted.length && !_fpPixOn) { _fpSincResultado(); return; }
+
+            var config = { especifica: true, parcelas: parcsSorted };
+
+            /* Salva estado temporário dos checkboxes principais */
+            var _oh = hideDinheiroPixCheckbox.checked;
+            var _ot = showTotalValueCheckbox.checked;
+            var _op = especificaMostrarPixCb.checked;
+            var _otp = especificaMostrarTotalCb.checked;
+
+            hideDinheiroPixCheckbox.checked = !_fpPixOn;
+            showTotalValueCheckbox.checked = _fpTotalOn;
+            especificaMostrarPixCb.checked = _fpPixOn;
+            especificaMostrarTotalCb.checked = _fpTotalOn;
+
+            var entrada = parseFloat(valorEntradaInput.value) || 0;
+            var res = [];
+
+            if (selectedProducts.length > 0) {
+                selectedProducts.forEach(function(p, i) {
+                    var ov = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
+                    var nm = boldProductNameCheckbox.checked ? '*' + p.produto + '*' : p.produto;
+                    if (produtoPrefixInput.value) nm = produtoPrefixInput.value + ' ' + nm;
+                    var r = calcularParcelasParaUmProduto(p.preco, entrada,
+                        textoAdicionalLinhaInput.value, _fpTotalOn, nm, config, p.preco, ov);
+                    if (r) res.push(r);
+                    if (i < selectedProducts.length - 1) res.push('\n' + '━'.repeat(20));
+                });
+            } else {
+                var base = parseFloat(valorBaseInput.value);
+                if (!isNaN(base) && base > 0) {
+                    var r2 = calcularParcelasParaUmProduto(base, entrada,
+                        textoAdicionalLinhaInput.value, _fpTotalOn, '', config, base, null);
+                    if (r2) res.push(r2);
+                }
+            }
+
+            /* Restaura estado */
+            hideDinheiroPixCheckbox.checked = _oh;
+            showTotalValueCheckbox.checked = _ot;
+            especificaMostrarPixCb.checked = _op;
+            especificaMostrarTotalCb.checked = _otp;
+
+            var final = res;
+            if (textoCabecalhoMensagemTextarea.value) final = [textoCabecalhoMensagemTextarea.value + '\n'].concat(res);
+            if (textoFinalMensagemTextarea.value) final.push('\n' + textoFinalMensagemTextarea.value);
+            dst.value = final.join('\n');
+        }
+
+        /* ── Histórico flutuante ─────────────────────────────── */
+        async function _fpCarregarHistorico() {
+            var lista = document.getElementById('fpHistLista');
+            var tituloWrap = document.getElementById('fpHistTituloWrap');
+            if (_currentUser && tituloWrap) {
+                tituloWrap.style.display = 'block';
+                /* Sincroniza campo de título com o painel fixo */
+                var fixo = document.getElementById('historicoTitulo');
+                var fp   = document.getElementById('fpHistTituloInput');
+                if (fixo && fp && !fp.dataset.synced) {
+                    fp.dataset.synced = '1';
+                    fp.value = fixo.value;
+                    fp.addEventListener('input', function() {
+                        if (fixo) fixo.value = fp.value;
+                        _tituloSessao = fp.value.trim();
+                        clearTimeout(_logTimer);
+                        _logTimer = setTimeout(flushLog, 2000);
+                    });
+                }
+            }
+            if (!_currentUser) {
+                lista.innerHTML = '<div class="fhist-loading">🔑 Entre com Google para ver o histórico<br><br>' +
+                    '<button class="fres-btn fres-btn-copiar" style="margin:0 auto;display:block;padding:8px 18px;" onclick="pedirLogin()">Entrar com Google</button></div>';
+                return;
+            }
+            if (_sheetsCache && _sheetsCache.length) { _fpRenderHist(_sheetsCache); return; }
+            lista.innerHTML = '<div class="fhist-loading">⏳ Carregando...</div>';
+            try {
+                var url = SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email);
+                var text = await (await fetch(url)).text();
+                var regs = JSON.parse(text);
+                if (regs.error) throw new Error(regs.error);
+                _sheetsCache = regs;
+                _fpRenderHist(_sheetsCache);
+            } catch(e) {
+                lista.innerHTML = '<div class="fhist-loading" style="color:var(--danger-color);">❌ ' + e.message + '</div>';
+            }
+        }
+
+        function _fpRenderHist(regs) {
+            var lista = document.getElementById('fpHistLista');
+            if (!regs || !regs.length) {
+                lista.innerHTML = '<div class="fhist-loading">📭 Nenhum registro encontrado</div>';
+                return;
+            }
+            var comTit = regs.filter(function(r) {
+                var t = (r.titulo||'').trim();
+                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+            var auto = regs.filter(function(r) {
+                var t = (r.titulo||'').trim();
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+            });
+            var html = '';
+            if (comTit.length) {
+                html += '<div class="fhist-secao">📌 Com título (' + comTit.length + ')</div>';
+                html += comTit.slice(0,15).map(_fpBuildItem).join('');
+            }
+            if (auto.length) {
+                html += '<div class="fhist-secao" style="margin-top:8px;">🕓 Automáticos (' + auto.length + ')</div>';
+                html += auto.slice(0,10).map(_fpBuildItem).join('');
+            }
+            if (regs.length > 25) {
+                html += '<div class="fhist-ver-todos"><a onclick="fpFechar(\'historico\');abrirHistoricoRapido()">Ver todos (' + regs.length + ') ↗</a></div>';
+            }
+            lista.innerHTML = html;
+        }
+
+        function _fpBuildItem(r) {
+            var d = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload||{});
+            var val = '';
+            if (d.usandoListaProdutos && d.produtosSelecionados && d.produtosSelecionados.length)
+                val = d.produtosSelecionados.length + ' produto(s)';
+            else if (d.valorBase)
+                val = 'R$ ' + parseFloat(d.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2});
+            var sid = String(r.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            return '<div class="fhist-item">' +
+                '<div class="fhist-item-titulo">' + (r.titulo||'(sem título)') + '</div>' +
+                '<div class="fhist-item-data">' + new Date(r.date).toLocaleString('pt-BR') + '</div>' +
+                (val ? '<div class="fhist-item-valor">📦 ' + val + '</div>' : '') +
+                '<div class="fhist-item-acoes">' +
+                    '<button class="fhist-btn-r" onclick="restaurarCalculo(\'' + sid + '\');fpFechar(\'historico\')">🔄 Restaurar</button>' +
+                    '<button class="fhist-btn-c" onclick="_fpCopiarHist(\'' + sid + '\')">📋 Copiar</button>' +
+                '</div></div>';
+        }
+
+        function _fpCopiarHist(id) {
+            var reg = _sheetsCache && _sheetsCache.find(function(r){return String(r.id)===String(id);});
+            if (!reg) { alert('Registro não encontrado'); return; }
+            var d = typeof reg.payload === 'string' ? JSON.parse(reg.payload) : (reg.payload||{});
+            if (!d.resultado) { alert('Resultado não encontrado'); return; }
+            navigator.clipboard.writeText(d.resultado).then(function() {
+                showModal('success','Copiado!','Resultado de <strong>'+(reg.titulo||'(sem título)')+'</strong><br>copiado 📋',2000);
+            });
+        }
         calcularParcelas();
     </script>
 </body>
