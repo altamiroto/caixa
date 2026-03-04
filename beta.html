@@ -453,116 +453,31 @@
         }
 
         /* Grid de checkboxes compactos no painel resultado */
-        /* ── Chips de parcelas + taxas do painel flutuante ── */
-        .float-chips-wrap {
-            margin-top: 8px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 8px;
+        /* ── Chips FAB resultado (sem label, usa div) ── */
+        .float-chips-wrap { margin-top:8px; border-top:1px solid var(--border-color); padding-top:8px; }
+        .fchip-esp-row { display:flex; gap:4px; margin-bottom:5px; }
+        .fchip-parc-row { display:grid; grid-template-columns:repeat(9,1fr); gap:3px; margin-bottom:5px; }
+        .fchip-d {
+            display:flex; align-items:center; justify-content:center;
+            padding:5px 3px; border-radius:5px; cursor:pointer;
+            background:var(--bg-primary); border:1.5px solid var(--border-color);
+            font-size:0.65rem; font-weight:700; color:var(--text-secondary);
+            user-select:none; transition:border-color .12s,background .12s,color .12s;
+            white-space:nowrap; text-align:center;
         }
-        /* Linha Pix / Total */
-        .fchip-esp-row {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 5px;
-        }
-        .fchip-esp-row label {
-            flex: 1;
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            padding: 5px 4px;
-            border-radius: 5px;
-            cursor: pointer;
-            background: var(--bg-primary);
-            border: 1.5px solid var(--border-color);
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            user-select: none;
-            transition: border-color .12s, background .12s, color .12s;
-            margin: 0;
-        }
-        .fchip-esp-row label:has(input:checked) {
-            border-color: var(--secondary-color);
-            background: rgba(33,150,243,0.12);
-            color: var(--secondary-color);
-        }
-        .fchip-esp-row input { display: none; }
-        /* Grid 9 por linha = 2 linhas para 1x-18x */
-        .fchip-parc-row {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            gap: 3px;
-            margin-bottom: 5px;
-        }
-        .fchip-parc-row label {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 2px;
-            border-radius: 5px;
-            cursor: pointer;
-            background: var(--bg-primary);
-            border: 1.5px solid var(--border-color);
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            user-select: none;
-            transition: border-color .12s, background .12s, color .12s;
-            margin: 0;
-        }
-        .fchip-parc-row label:has(input:checked) {
-            border-color: var(--primary-color);
-            background: rgba(76,175,80,0.12);
-            color: var(--primary-color);
-        }
-        .fchip-parc-row input { display: none; }
-        /* Taxas: 5 por linha, só aparece quando há marcados */
-        .ftaxa-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
-        }
-        .ftaxa-cell {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 4px 2px;
-        }
-        .ftaxa-lbl {
-            font-size: 0.58rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            line-height: 1;
-        }
-        .ftaxa-field {
-            display: flex;
-            align-items: center;
-            gap: 1px;
-        }
-        .ftaxa-field input {
-            width: 32px !important;
-            font-size: 0.63rem !important;
-            font-weight: 600;
-            border: none !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            border-radius: 0 !important;
-            background: transparent !important;
-            color: var(--text-primary) !important;
-            text-align: center;
-            outline: none;
-            padding: 0 !important;
-            -moz-appearance: textfield;
-            box-shadow: none !important;
-        }
-        .ftaxa-field input:focus { border-bottom-color: var(--primary-color) !important; }
-        .ftaxa-field input::-webkit-outer-spin-button,
-        .ftaxa-field input::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .ftaxa-field span { font-size: 0.55rem; opacity: 0.75; color: var(--text-secondary); }
+        .fchip-d:hover { border-color:var(--text-secondary); }
+        .fchip-d.ativo-parc { border-color:var(--primary-color); background:rgba(76,175,80,0.12); color:var(--primary-color); }
+        .fchip-d.ativo-esp  { border-color:var(--secondary-color); background:rgba(33,150,243,0.12); color:var(--secondary-color); }
+        .fchip-esp-row .fchip-d { flex:1; }
+        /* Taxas: 5 por linha */
+        .ftaxa-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+        .ftaxa-cell { display:flex; flex-direction:column; align-items:center; gap:2px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:5px; padding:4px 2px; }
+        .ftaxa-lbl  { font-size:0.58rem; font-weight:700; color:var(--text-secondary); line-height:1; }
+        .ftaxa-field { display:flex; align-items:center; gap:1px; }
+        .ftaxa-inp  { width:32px; font-size:0.63rem; font-weight:600; border:none; border-bottom:1px solid var(--border-color); border-radius:0; background:transparent; color:var(--text-primary); text-align:center; outline:none; padding:0; -moz-appearance:textfield; }
+        .ftaxa-inp:focus { border-bottom-color:var(--primary-color); }
+        .ftaxa-inp::-webkit-outer-spin-button, .ftaxa-inp::-webkit-inner-spin-button { -webkit-appearance:none; }
+        .ftaxa-pct  { font-size:0.55rem; opacity:0.75; color:var(--text-secondary); }
 
         /* Botão FAB pílula */
         .fab-pill {
@@ -992,81 +907,92 @@ let _currentUser = null;
 /* ════════════════════════════════════════════════════════
    FABs — ESTADO E CONTROLE
 ════════════════════════════════════════════════════════ */
-let _panelOpen = null; // 'resultado' | 'historico' | null
+let _panelOpen = null;
 
 function togglePanel(which) {
-    if (_panelOpen === which) {
-        fecharPanel(which);
-    } else {
-        // Fecha o atual se houver
-        if (_panelOpen) _fecharPanelSemToggle(_panelOpen);
-        _abrirPanel(which);
-    }
+    if (_panelOpen === which) { fecharPanel(which); return; }
+    if (_panelOpen) _fecharPanelSemToggle(_panelOpen);
+    _abrirPanel(which);
 }
-
 function _abrirPanel(which) {
     _panelOpen = which;
     document.getElementById('floatPanel' + capitalize(which)).classList.add('open');
-    document.getElementById('fab' + capitalize(which === 'resultado' ? 'Resultado' : 'Historico') + 'Arrow').classList.add('open');
+    document.getElementById('fab' + (which==='resultado'?'Resultado':'Historico') + 'Arrow').classList.add('open');
     if (which === 'resultado') {
-        initFloatParcelasGrid(); // cria checkboxes 1x-18x na primeira abertura
+        initFloatGrid();
         syncFloatResultado();
         syncFloatControls();
     } else {
         carregarHistoricoFloat();
     }
 }
-
-function fecharPanel(which) {
-    _fecharPanelSemToggle(which);
-    _panelOpen = null;
-}
-
+function fecharPanel(which) { _fecharPanelSemToggle(which); _panelOpen = null; }
 function _fecharPanelSemToggle(which) {
-    const key = which === 'resultado' ? 'Resultado' : 'Historico';
-    document.getElementById('floatPanel' + capitalize(which)).classList.remove('open');
-    document.getElementById('fab' + key + 'Arrow').classList.remove('open');
+    document.getElementById('floatPanel'+capitalize(which)).classList.remove('open');
+    document.getElementById('fab'+(which==='resultado'?'Resultado':'Historico')+'Arrow').classList.remove('open');
 }
+function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
 
-function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-
-/* ── Sync resultado textarea ── */
+/* ── Resultado textarea sync ── */
 function syncFloatResultado() {
-    const src = document.getElementById('resultado');
-    const dst = document.getElementById('floatResultadoText');
-    if (src && dst) dst.value = src.value;
+    const src=document.getElementById('resultado'), dst=document.getElementById('floatResultadoText');
+    if(src&&dst) dst.value=src.value;
 }
 
-/* ── Inicializa grid de checkboxes de parcelas no painel flutuante ── */
-function initFloatParcelasGrid() {
+/* ── Grid de chips: DIVs clicáveis (não usa label para evitar CSS global) ── */
+function initFloatGrid() {
     const esp  = document.getElementById('floatChipsEsp');
     const grid = document.getElementById('floatChipsGrid');
     if (!grid || grid.dataset.init) return;
     grid.dataset.init = '1';
 
-    // Pix e Total
+    // Pix e Total como divs
     esp.innerHTML =
-        '<label id="floatChip_pix" class="fchip-esp">' +
-          '<input type="checkbox" id="floatPixCheck">' +
-          '💸 Dinheiro/Pix' +
-        '</label>' +
-        '<label id="floatChip_total" class="fchip-esp">' +
-          '<input type="checkbox" id="floatTotalCheck">' +
-          '🧾 Total' +
-        '</label>';
-    document.getElementById('floatPixCheck').addEventListener('change', onFloatPixChange);
-    document.getElementById('floatTotalCheck').addEventListener('change', onFloatTotalChange);
+        '<div class="fchip-d" id="fchipPix"   onclick="toggleFchip(this,&quot;pix&quot;)"  >💸 Dinheiro/Pix</div>'+
+        '<div class="fchip-d" id="fchipTotal" onclick="toggleFchip(this,&quot;total&quot;)">🧾 Total</div>';
 
     // 1x–18x
-    const parcelasAtivas = new Set(getParcelas().map(String));
     let html = '';
-    for (let i = 1; i <= 18; i++) {
-        const chk = parcelasAtivas.has(String(i)) ? ' checked' : '';
-        html += `<label id="floatChip_${i}"><input type="checkbox" id="floatCb_${i}" data-p="${i}"${chk}>${i}x</label>`;
-    }
+    for (let i=1;i<=18;i++) html += `<div class="fchip-d" id="fchip_${i}" onclick="toggleFchipParc(${i})">${i}x</div>`;
     grid.innerHTML = html;
-    grid.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', onFloatParcelasCbChange));
 
+    _renderTaxasFloat();
+}
+
+/* Estado interno dos chips */
+const _fchipState = { pix: false, total: false };  // parcelas: _fchipParc Set
+const _fchipParc  = new Set();
+
+function toggleFchip(el, which) {
+    _fchipState[which] = !_fchipState[which];
+    el.classList.toggle('ativo-esp', _fchipState[which]);
+    _renderTaxasFloat();
+    _atualizarResultadoFloat();
+    enviarLog('float_toggle_'+which);
+}
+function toggleFchipParc(n) {
+    const el = document.getElementById('fchip_'+n);
+    if (_fchipParc.has(n)) { _fchipParc.delete(n); el.classList.remove('ativo-parc'); }
+    else                   { _fchipParc.add(n);    el.classList.add('ativo-parc'); }
+    _renderTaxasFloat();
+    _atualizarResultadoFloat();
+    enviarLog('float_toggle_parc');
+}
+
+function syncFloatControls() {
+    // Resetar estado
+    _fchipParc.clear();
+    _fchipState.pix   = false;
+    _fchipState.total = false;
+    // Marcar parcelas que estão no campo principal
+    getParcelas().forEach(n => _fchipParc.add(n));
+    // Atualizar visual
+    for (let i=1;i<=18;i++) {
+        const el=document.getElementById('fchip_'+i);
+        if(el) el.classList.toggle('ativo-parc', _fchipParc.has(i));
+    }
+    const ep=document.getElementById('fchipPix');   if(ep) ep.classList.remove('ativo-esp');
+    const et=document.getElementById('fchipTotal'); if(et) et.classList.remove('ativo-esp');
     _renderTaxasFloat();
 }
 
@@ -1074,180 +1000,117 @@ function _renderTaxasFloat() {
     const row = document.getElementById('floatTaxasGrid');
     if (!row) return;
     const marcados = [];
-    if (document.getElementById('floatPixCheck')?.checked)
-        marcados.push({id:'pix', label:'💸 Pix', taxa: '0.00'});
-    for (let i = 1; i <= 18; i++) {
-        if (document.getElementById('floatCb_'+i)?.checked) {
-            const t = taxasRapidas[i] !== undefined ? taxasRapidas[i] : ((taxasDeJurosPadrao[i]||0)*100).toFixed(2);
-            marcados.push({id: String(i), label: i+'x', taxa: t});
-        }
-    }
-    if (!marcados.length) { row.style.display = 'none'; return; }
-    row.style.display = 'grid';
+    if (_fchipState.pix) marcados.push({id:'pix', label:'💸 Pix', taxa:'0.00'});
+    _fchipParc.forEach(i => {
+        const t = taxasRapidas[i] !== undefined ? taxasRapidas[i] : ((taxasDeJurosPadrao[i]||0)*100).toFixed(2);
+        marcados.push({id:String(i), label:i+'x', taxa:t});
+    });
+    if (!marcados.length) { row.style.display='none'; return; }
+    row.style.display='grid';
     row.innerHTML = marcados.map(m =>
-        `<div class="ftaxa-cell">` +
-            `<span class="ftaxa-lbl">${m.label}</span>` +
-            `<div class="ftaxa-field">` +
-                `<input type="number" step="0.01" min="0" value="${m.taxa}" data-p="${m.id}" id="floatT_${m.id}">` +
-                `<span>%</span>` +
-            `</div>` +
-        `</div>`
+        `<div class="ftaxa-cell"><span class="ftaxa-lbl">${m.label}</span>`+
+        `<div class="ftaxa-field"><input class="ftaxa-inp" type="number" step="0.01" min="0" value="${m.taxa}" data-p="${m.id}"><span class="ftaxa-pct">%</span></div></div>`
     ).join('');
-    row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', function() {
-        const p = this.dataset.p;
-        if (p !== 'pix') {
-            taxasRapidas[p] = this.value;
-            const av = document.getElementById('porcentagem'+p+'x');
-            if (av) av.value = this.value;
-        }
-        _atualizarResultadoFloat();
-    }));
-}
-
-
-function syncFloatControls() {
-    const parcelasAtivas = new Set(getParcelas().map(String));
-    for (let i = 1; i <= 18; i++) {
-        const cb = document.getElementById('floatCb_' + i);
-        if (cb) cb.checked = parcelasAtivas.has(String(i));
-    }
-    const floatPix = document.getElementById('floatPixCheck');
-    const floatTot = document.getElementById('floatTotalCheck');
-    if (floatPix) floatPix.checked = document.getElementById('especificaMostrarPix')?.checked || false;
-    if (floatTot) floatTot.checked = document.getElementById('especificaMostrarTotal')?.checked || false;
-    _renderTaxasFloat();
-}
-
-function onFloatParcelasCbChange() {
-    _renderTaxasFloat();
-    _atualizarResultadoFloat();
-    enviarLog('alterou_parcelas_float');
-}
-function onFloatPixChange() {
-    _renderTaxasFloat();
-    _atualizarResultadoFloat();
-    enviarLog('alterou_opcao_pix_float');
-}
-function onFloatTotalChange() {
-    _atualizarResultadoFloat();
-    enviarLog('alterou_opcao_total_float');
+    row.querySelectorAll('.ftaxa-inp').forEach(inp => {
+        inp.addEventListener('click', e => e.stopPropagation());
+        inp.addEventListener('input', function() {
+            if (this.dataset.p !== 'pix') {
+                taxasRapidas[this.dataset.p] = this.value;
+                const av=document.getElementById('porcentagem'+this.dataset.p+'x');
+                if(av) av.value=this.value;
+            }
+            _atualizarResultadoFloat();
+        });
+    });
 }
 
 function _getConfigFloat() {
-    // Parcelas marcadas nos chips flutuantes
-    const parcelas = [];
-    for (let i = 1; i <= 18; i++) {
-        const cb = document.getElementById('floatCb_' + i);
-        if (cb && cb.checked) parcelas.push(i);
-    }
-    return { especifica: parcelas.length > 0, parcelas };
+    return { especifica: _fchipParc.size>0, parcelas: [..._fchipParc].sort((a,b)=>a-b) };
 }
 
 function _atualizarResultadoFloat() {
-    const floatDst = document.getElementById('floatResultadoText');
-    if (!floatDst) return;
-    const configFloat = _getConfigFloat();
-    const floatPixOn   = !!(document.getElementById('floatPixCheck')   && document.getElementById('floatPixCheck').checked);
-    const floatTotalOn = !!(document.getElementById('floatTotalCheck') && document.getElementById('floatTotalCheck').checked);
-    // Se nenhuma parcela e pix desmarcado → copia resultado normal
-    if (!configFloat.parcelas.length && !floatPixOn) { floatDst.value = resultadoTextarea.value; return; }
-    const entrada = parseFloat(valorEntradaInput.value) || 0;
-    const res = [];
-    // Salva estado original das checkboxes principais
-    const _origPixOff = hideDinheiroPixCheckbox.checked;
-    const _origTotal  = showTotalValueCheckbox.checked;
-    // Temporariamente usa estado dos chips flutuantes
-    hideDinheiroPixCheckbox.checked = !floatPixOn;
-    showTotalValueCheckbox.checked  = floatTotalOn;
-    if (selectedProducts.length > 0) {
-        selectedProducts.forEach((p, i) => {
-            const overrides = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
-            let name = boldProductNameCheckbox.checked ? `*${p.produto}*` : p.produto;
-            if (produtoPrefixInput.value) name = `${produtoPrefixInput.value} ${name}`;
-            const r = calcularParcelasParaUmProduto(p.preco, entrada, textoAdicionalLinhaInput.value, floatTotalOn, name, configFloat, p.preco, overrides);
-            if (r) res.push(r);
-            if (i < selectedProducts.length - 1) res.push('\n' + '━'.repeat(20));
+    const dst = document.getElementById('floatResultadoText');
+    if (!dst) return;
+    const cfg = _getConfigFloat();
+    const pixOn   = _fchipState.pix;
+    const totalOn = _fchipState.total;
+    if (!cfg.parcelas.length && !pixOn) { dst.value = resultadoTextarea.value; return; }
+    const entrada = parseFloat(valorEntradaInput.value)||0;
+    const _op=hideDinheiroPixCheckbox.checked, _ot=showTotalValueCheckbox.checked;
+    hideDinheiroPixCheckbox.checked = !pixOn;
+    showTotalValueCheckbox.checked  = totalOn;
+    const res=[];
+    if (selectedProducts.length>0) {
+        selectedProducts.forEach((p,i) => {
+            const ov=(p._idx!==undefined)?getProductAdj(p._idx):null;
+            let nm=boldProductNameCheckbox.checked?`*${p.produto}*`:p.produto;
+            if(produtoPrefixInput.value) nm=`${produtoPrefixInput.value} ${nm}`;
+            const r=calcularParcelasParaUmProduto(p.preco,entrada,textoAdicionalLinhaInput.value,totalOn,nm,cfg,p.preco,ov);
+            if(r) res.push(r);
+            if(i<selectedProducts.length-1) res.push('\n'+'━'.repeat(20));
         });
     } else {
-        const base = parseFloat(valorBaseInput.value);
-        if (!isNaN(base) && base > 0) {
-            const r = calcularParcelasParaUmProduto(base, entrada, textoAdicionalLinhaInput.value, floatTotalOn, '', configFloat, base, null);
-            if (r) res.push(r);
-        }
+        const base=parseFloat(valorBaseInput.value);
+        if(!isNaN(base)&&base>0) { const r=calcularParcelasParaUmProduto(base,entrada,textoAdicionalLinhaInput.value,totalOn,'',cfg,base,null); if(r) res.push(r); }
     }
-    // Restaura estado original
-    hideDinheiroPixCheckbox.checked = _origPixOff;
-    showTotalValueCheckbox.checked  = _origTotal;
-    let final = res;
-    if (textoCabecalhoMensagemTextarea.value) final = [`${textoCabecalhoMensagemTextarea.value}\n`, ...res];
-    if (textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
-    floatDst.value = final.join('\n');
+    hideDinheiroPixCheckbox.checked=_op; showTotalValueCheckbox.checked=_ot;
+    let final=res;
+    if(textoCabecalhoMensagemTextarea.value) final=[`${textoCabecalhoMensagemTextarea.value}\n`,...res];
+    if(textoFinalMensagemTextarea.value) final.push(`\n${textoFinalMensagemTextarea.value}`);
+    dst.value=final.join('\n');
 }
-function calcularParcelasParaUmProduto(valorBase,ent,txtAdd,showTot,nome,config,valorOriginal,overrides){
-    let res=[];let fator=parseFloat(fatorArredondamentoInput.value)||1;const emoAtivo=useEmoticonsCheckbox.checked;const emoDinheiro=emoAtivo?emoticonDinheiroInput.value:"";const emoCartao=emoAtivo?emoticonCartaoInput.value:"";
-    let valLiq=calcularValorComDesconto(valorBase,overrides);if(nome)res.push(`${nome}`);
-    const showEnt=!hideEntradaTextCheckbox.checked&&ent>0;const txtEnt=showEnt?`Entrada de R$ ${ent.toLocaleString('pt-BR',{minimumFractionDigits:2})} + `:'';const aParc=valLiq-ent;
-    const mostrarPix=config.especifica?especificaMostrarPixCb.checked:!hideDinheiroPixCheckbox.checked;const mostrarTotal=config.especifica?especificaMostrarTotalCb.checked:showTot;
-    if(valLiq>=ent){
-        if(mostrarPix){const v=arredondarParaMultiplo(valLiq/(1-getTaxa('pix')),fator);let linhaPix=`${emoDinheiro}Dinheiro/Pix: R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;if(showComparisonCheckbox.checked&&valorOriginal!==valLiq)linhaPix+=` (economize R$ ${(valorOriginal-v).toLocaleString('pt-BR',{minimumFractionDigits:2})})`;res.push(linhaPix);}
-        if(!config.especifica&&showDebitoCheckbox.checked&&ent===0){const v=arredondarParaMultiplo(valLiq/(1-getTaxa('debito')),fator);res.push(`${emoCartao}Débito: R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`);}
-        config.parcelas.forEach(p=>{const vParc=arredondarParaMultiplo((aParc/(1-getTaxa(p)))/p,fator);let linha=`${emoCartao}${txtEnt}${p}x de R$ ${vParc.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;if(mostrarTotal)linha+=` (R$ ${(ent+(vParc*p)).toLocaleString('pt-BR',{minimumFractionDigits:2})})`;if(txtAdd)linha+=` ${txtAdd}`;res.push(linha);});
+
+/* ── Histórico flutuante ── */
+async function carregarHistoricoFloat() {
+    const lista=document.getElementById('floatHistLista');
+    if (!_currentUser) {
+        lista.innerHTML=`<div class="float-hist-loading">🔑 Entre com Google para ver o histórico<br><br><button class="btn btn-primary" onclick="pedirLogin()" style="margin-top:8px;font-size:0.82rem;padding:8px 16px;min-height:34px;">Entrar com Google</button></div>`;
+        return;
     }
-    return res.join('\n');
+    if (_sheetsCache&&_sheetsCache.length) { renderHistoricoFloat(_sheetsCache); return; }
+    lista.innerHTML='<div class="float-hist-loading">⏳ Carregando...</div>';
+    try {
+        const text=await(await fetch(SHEETS_URL+'?email='+encodeURIComponent(_currentUser.email))).text();
+        const regs=JSON.parse(text);
+        if(regs.error) throw new Error(regs.error);
+        _sheetsCache=regs;
+        renderHistoricoFloat(_sheetsCache);
+    } catch(e) {
+        lista.innerHTML=`<div class="float-hist-loading" style="color:var(--danger-color);">❌ Erro: ${e.message}</div>`;
+    }
 }
 
-function copiarTexto(){const txt=resultadoTextarea.value;if(!txt)return;navigator.clipboard.writeText(txt).then(()=>{showToast('✅ Texto copiado!');enviarLog('copiou_resultado');});}
-function limparCampos(){
-    if(!confirm('⚠️ Deseja realmente limpar todos os campos?'))return;
-    valorBaseInput.value='';parcelaEspecificaInput.value='';descontoPercentualInput.value='';descontoFixoInput.value='';lucroAdicionalInput.value='';acrescimoComissaoInput.value='';acrescimoPercentualInput.value='';valorEntradaInput.value='';productListTextarea.value='';textoAdicionalLinhaInput.value='';textoCabecalhoMensagemTextarea.value='';textoFinalMensagemTextarea.value='';resultadoTextarea.value='';
-    if(typeof autoResizeResultado==='function')autoResizeResultado();
-    products=[];selectedProducts=[];productAdjustments={};productListResult.innerHTML='';discountSummary.classList.remove('active');valorBaseInput.classList.remove('has-value');parcelaEspecificaInput.classList.remove('invalid');taxasRapidas={};
-    especificaMostrarPixCb.checked=true;especificaMostrarTotalCb.checked=false;syncChipPix(true);syncChipTotal(false);atualizarVisibilidadeMiniOpcoes();calcularParcelas();
-    // Limpa flutuante também
-    const floatDst=document.getElementById('floatResultadoText');if(floatDst)floatDst.value='';
-    // Desmarca todos os checkboxes de parcelas do painel flutuante
-    for(let _i=1;_i<=18;_i++){const _c=document.getElementById('floatCb_'+_i);if(_c)_c.checked=false;} const _fp=document.getElementById('floatPixCheck');if(_fp)_fp.checked=false; _renderTaxasFloat();
-    enviarLog('limpou_campos');
+function _buildFloatHistItem(r) {
+    const dados=typeof r.payload==='string'?JSON.parse(r.payload):(r.payload||{});
+    let resumo='';
+    if(dados.usandoListaProdutos&&dados.produtosSelecionados?.length) resumo=dados.produtosSelecionados.length+' produto(s)';
+    else if(dados.valorBase) resumo='R$ '+parseFloat(dados.valorBase).toLocaleString('pt-BR',{minimumFractionDigits:2});
+    const sid=String(r.id).replace(/'/g,"\'");
+    return `<div class="float-hist-item"><div class="float-hist-titulo">${r.titulo||'(sem título)'}</div>`+
+        `<div class="float-hist-data">${new Date(r.date).toLocaleString('pt-BR')}</div>`+
+        `${resumo?`<div class="float-hist-valor">📦 ${resumo}</div>`:''}`+
+        `<div class="float-hist-acoes"><button class="btn btn-primary" onclick="restaurarCalculo('${sid}');fecharPanel('historico')">🔄 Restaurar</button>`+
+        `<button class="btn btn-secondary" onclick="copiarResultadoHistorico('${sid}')">📋 Copiar</button></div></div>`;
 }
 
-/* ── Event listeners ── */
-valorBaseInput.addEventListener('input',()=>{valorBaseInput.classList.toggle('has-value',!!valorBaseInput.value);atualizarResumoDescontos();calcularParcelas();enviarLog();});
-descontoPercentualInput.addEventListener('input',()=>{atualizarResumoDescontos();calcularParcelas();enviarLog();});
-descontoFixoInput.addEventListener('input',()=>{atualizarResumoDescontos();calcularParcelas();enviarLog();});
-lucroAdicionalInput.addEventListener('input',()=>{atualizarResumoDescontos();calcularParcelas();enviarLog();});
-acrescimoComissaoInput.addEventListener('input',()=>{atualizarResumoDescontos();calcularParcelas();enviarLog();});
-acrescimoPercentualInput.addEventListener('input',()=>{atualizarResumoDescontos();calcularParcelas();enviarLog();});
-valorEntradaInput.addEventListener('input',()=>{calcularParcelas();enviarLog();});
-fatorArredondamentoInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_arredondamento');});
-productListTextarea.addEventListener('input',()=>{enviarLog('editou_lista_produtos');});
-aiPromptTextarea.addEventListener('input',()=>{enviarLog('editou_prompt_ia');});
-hideDinheiroPixCheckbox.addEventListener('change',()=>{syncChipPix(!hideDinheiroPixCheckbox.checked);toggleDebitoPixPorcentagemInputs();calcularParcelas();enviarLog('alterou_opcao_pix');});
-showDebitoCheckbox.addEventListener('change',()=>{toggleDebitoPixPorcentagemInputs();calcularParcelas();enviarLog('alterou_opcao_debito');});
-showComparisonCheckbox.addEventListener('change',()=>{calcularParcelas();enviarLog('alterou_opcao_comparacao');});
-porcentagemPixInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_taxa_pix');});
-porcentagemDebitoInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_taxa_debito');});
-hideEntradaTextCheckbox.addEventListener('change',()=>{calcularParcelas();enviarLog('alterou_opcao_entrada');});
-showTotalValueCheckbox.addEventListener('change',()=>{syncChipTotal(showTotalValueCheckbox.checked);calcularParcelas();enviarLog('alterou_opcao_total');});
-boldProductNameCheckbox.addEventListener('change',()=>{calcularParcelas();enviarLog('alterou_negrito_produto');});
-textoAdicionalLinhaInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_texto_adicional');});
-produtoPrefixInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_prefixo');});
-textoFinalMensagemTextarea.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_texto_final');});
-textoCabecalhoMensagemTextarea.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_cabecalho');});
-emoticonDinheiroInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_emoticon');});
-emoticonCartaoInput.addEventListener('input',()=>{calcularParcelas();enviarLog('alterou_emoticon');});
-parcelaEspecificaInput.addEventListener('input',function(){
-    const parcelas=getParcelas();const raw=this.value.trim();const allValid=raw===''||(parcelas.length>0&&raw.split(',').every(s=>{const n=parseInt(s.trim());return!isNaN(n)&&n>=1&&n<=18;}));
-    this.classList.toggle('invalid',raw!==''&&!allValid);const current=new Set(parcelas.map(String));Object.keys(taxasRapidas).forEach(k=>{if(!current.has(k))delete taxasRapidas[k];});
-    atualizarVisibilidadeMiniOpcoes();calcularParcelas();
-    // Espelha checkboxes no painel flutuante
-    for (let _i=1;_i<=18;_i++){const _cb=document.getElementById('floatCb_'+_i);if(_cb)_cb.checked=parcelas.includes(_i);}
-    if(document.getElementById('floatChipsGrid')?.dataset.init) _renderTaxasFloat();
-    enviarLog();
-});
-selectAllButton.addEventListener('click',()=>{document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb=>{cb.checked=true;togglePorcentagemInput(parseInt(cb.value),true);});calcularParcelas();enviarLog('marcou_todas_parcelas');});
-deselectAllButton.addEventListener('click',()=>{document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb=>{cb.checked=false;togglePorcentagemInput(parseInt(cb.value),false);});calcularParcelas();enviarLog('desmarcou_todas_parcelas');});
+function renderHistoricoFloat(registros) {
+    const lista=document.getElementById('floatHistLista');
+    if(!registros?.length) { lista.innerHTML='<div class="float-hist-loading">📭 Nenhum registro</div>'; return; }
+    const comTit =registros.filter(r=>{const t=(r.titulo||'').trim();return t&&!/^\d{2}\/\d{2}\/\d{4}/.test(t);});
+    const autos  =registros.filter(r=>{const t=(r.titulo||'').trim();return!t||/^\d{2}\/\d{2}\/\d{4}/.test(t);});
+    let html='';
+    if(comTit.length) html+=`<div class="float-hist-secao">📌 Com título (${comTit.length})</div>`+comTit.slice(0,15).map(_buildFloatHistItem).join('');
+    if(autos.length)  html+=`<div class="float-hist-secao" style="margin-top:8px">🕓 Automáticos (${autos.length})</div>`+autos.slice(0,10).map(_buildFloatHistItem).join('');
+    if(registros.length>25) html+=`<div class="float-hist-see-all"><a onclick="fecharPanel('historico');abrirHistoricoCompleto()">Ver todos (${registros.length}) ↗</a></div>`;
+    lista.innerHTML=html;
+}
 
-calcularParcelas();
-</script>
-</body>
-</html>
+function copiarTextoFloat() {
+    const txt=document.getElementById('floatResultadoText').value;
+    if(!txt) return;
+    navigator.clipboard.writeText(txt).then(()=>{
+        const msg=document.getElementById('floatCopyMsg');
+        msg.classList.add('show'); setTimeout(()=>msg.classList.remove('show'),2000);
+        enviarLog('copiou_float');
+    });
+}
