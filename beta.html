@@ -2394,6 +2394,12 @@ Capa silicone R$ 50,00
             toggleDebitoPixPorcentagemInputs();
             calcularParcelas();
             enviarLog('alterou_opcao_pix');
+            if (_fpAberto === 'resultado' && _fpChipsOk) {
+                _fpPixOn = !hideDinheiroPixCheckbox.checked;
+                var el = document.getElementById('fpChipPix');
+                if (el) el.classList.toggle('ativo-esp', _fpPixOn);
+                _fpRenderTaxas();
+            }
         });
         showDebitoCheckbox.addEventListener('change', () => {
             toggleDebitoPixPorcentagemInputs();
@@ -2421,6 +2427,12 @@ Capa silicone R$ 50,00
             syncChipTotal(showTotalValueCheckbox.checked);
             calcularParcelas();
             enviarLog('alterou_opcao_total');
+            if (_fpAberto === 'resultado' && _fpChipsOk) {
+                _fpTotalOn = showTotalValueCheckbox.checked;
+                var el = document.getElementById('fpChipTotal');
+                if (el) el.classList.toggle('ativo-esp', _fpTotalOn);
+                _fpRenderTaxas();
+            }
         });
         boldProductNameCheckbox.addEventListener('change', () => {
             calcularParcelas();
@@ -2462,6 +2474,19 @@ Capa silicone R$ 50,00
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
             enviarLog();
+            /* Sincroniza chips do painel com o campo fixo (se painel aberto) */
+            if (_fpAberto === 'resultado' && _fpChipsOk) {
+                _fpChipsParcs.clear();
+                parcelas.forEach(function(n) { _fpChipsParcs.add(n); });
+                document.querySelectorAll('.fchip[id^="fpChipParc"]').forEach(function(el) {
+                    el.classList.remove('ativo-parc');
+                });
+                parcelas.forEach(function(n) {
+                    var el = document.getElementById('fpChipParc' + n);
+                    if (el) el.classList.add('ativo-parc');
+                });
+                _fpRenderTaxas();
+            }
         });
         selectAllButton.addEventListener('click', () => {
             document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => { cb.checked = true; togglePorcentagemInput(parseInt(cb.value), true); });
@@ -2517,8 +2542,14 @@ Capa silicone R$ 50,00
         calcularParcelas = function() {
             _fpOrigCalc.apply(this, arguments);
             if (_fpAberto === 'resultado') {
-                if (_fpChipsParcs.size === 0 && !_fpPixOn && !_fpTotalOn) { _fpSincResultado(); }
-                else { _fpRecalc(); }
+                /* Se painel está aberto e nenhum chip foi escolhido manualmente,
+                   sincroniza chips com o estado atual dos campos fixos */
+                if (_fpChipsParcs.size === 0 && !_fpPixOn && !_fpTotalOn) {
+                    _fpSincResultado();
+                } else {
+                    /* Chips marcados: apenas atualiza o resultado filtrado */
+                    _fpRecalc();
+                }
             }
         };
 
@@ -2559,19 +2590,22 @@ Capa silicone R$ 50,00
                     h += '<div class="fchip" id="fpChipParc' + i + '" onclick="_fpTogParc(' + i + ')">' + i + 'x</div>';
                 }
                 parcEl.innerHTML = h;
+                /* Restaura visual dos chips conforme estado atual (primeira vez = tudo desmarcado) */
+                _fpRestaurarVisualChips();
             }
-            /* Sempre inicia com tudo desmarcado — painel começa "neutro" */
-            _fpChipsParcs.clear();
-            _fpPixOn = false;
-            _fpTotalOn = false;
-            document.querySelectorAll('.fchip[id^="fpChipParc"]').forEach(function(el) {
-                el.classList.remove('ativo-parc');
-            });
+            /* Reabertura: apenas re-renderiza taxas para refletir estado salvo */
+            _fpRenderTaxas();
+        }
+
+        function _fpRestaurarVisualChips() {
             var chipPix = document.getElementById('fpChipPix');
             var chipTot = document.getElementById('fpChipTotal');
-            if (chipPix) chipPix.classList.remove('ativo-esp');
-            if (chipTot) chipTot.classList.remove('ativo-esp');
-            _fpRenderTaxas();
+            if (chipPix) chipPix.classList.toggle('ativo-esp', _fpPixOn);
+            if (chipTot) chipTot.classList.toggle('ativo-esp', _fpTotalOn);
+            _fpChipsParcs.forEach(function(n) {
+                var el = document.getElementById('fpChipParc' + n);
+                if (el) el.classList.add('ativo-parc');
+            });
         }
 
         function _fpTogEsp(qual) {
