@@ -1765,12 +1765,7 @@ Capa silicone R$ 50,00
             atualizarResumoDescontos();
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            /* Força repintura dos elementos fixed após scroll (fix iOS Safari) */
-            requestAnimationFrame(function() {
-                var fg = document.querySelector('.fab-group');
-                if (fg) { fg.style.display = 'none'; void fg.offsetHeight; fg.style.display = ''; }
-            });
+            window.scrollTo({ top: 0, behavior: 'instant' });
             showModal('success', 'Cálculo Restaurado!', `<strong>${tituloItem}</strong><br>Todos os dados foram carregados 🔄`, 2200);
         }
 
