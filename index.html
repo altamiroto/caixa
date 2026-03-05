@@ -1032,7 +1032,10 @@ Capa silicone R$ 50,00
     <div class="float-panel" id="fpPanel_historico">
         <div class="float-panel-header">
             <span>📚 Histórico</span>
-            <button class="float-panel-fechar" onclick="fpFechar('historico')">✕</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button class="float-panel-fechar" onclick="_fpRecarregarHistorico()" title="Recarregar histórico">🔄</button>
+                <button class="float-panel-fechar" onclick="fpFechar('historico')">✕</button>
+            </div>
         </div>
         <div class="float-panel-body">
             <div class="fhist-titulo-wrap" id="fpHistTituloWrap" style="display:none;">
@@ -1340,6 +1343,9 @@ Capa silicone R$ 50,00
         if (historicoTituloInput) {
             historicoTituloInput.addEventListener('input', () => {
                 _tituloSessao = historicoTituloInput.value.trim();
+                /* Sincroniza fixo -> flutuante */
+                var _fpT = document.getElementById('fpHistTituloInput');
+                if (_fpT && _fpT.value !== historicoTituloInput.value) _fpT.value = historicoTituloInput.value;
                 clearTimeout(_logTimer);
                 _logTimer = setTimeout(flushLog, 2000);
             });
@@ -1347,6 +1353,9 @@ Capa silicone R$ 50,00
         if (historicoComentariosTextarea) {
             historicoComentariosTextarea.addEventListener('input', () => {
                 _comentarioSessao = historicoComentariosTextarea.value.trim();
+                /* Sincroniza fixo -> flutuante */
+                var _fpC = document.getElementById('fpHistComentarioInput');
+                if (_fpC && _fpC.value !== historicoComentariosTextarea.value) _fpC.value = historicoComentariosTextarea.value;
                 clearTimeout(_logTimer);
                 _logTimer = setTimeout(flushLog, 2000);
             });
@@ -2526,7 +2535,16 @@ Capa silicone R$ 50,00
             document.getElementById('fpPanel_' + qual).classList.add('aberto');
             document.getElementById('fpArrow_' + qual).classList.add('aberto');
             if (qual === 'resultado') { _fpSincResultado(); _fpIniciarChips(); }
-            else { _fpCarregarHistorico(); }
+            else {
+                /* Sincroniza valores de título/comentário sempre que abre o painel */
+                var fixoTitulo = document.getElementById('historicoTitulo');
+                var fpTitulo   = document.getElementById('fpHistTituloInput');
+                if (fixoTitulo && fpTitulo) fpTitulo.value = fixoTitulo.value;
+                var fixoComent = document.getElementById('historicoComentarios');
+                var fpComent   = document.getElementById('fpHistComentarioInput');
+                if (fixoComent && fpComent) fpComent.value = fixoComent.value;
+                _fpCarregarHistorico();
+            }
         }
 
         function fpFechar(qual) {
@@ -2770,37 +2788,54 @@ Capa silicone R$ 50,00
             if (textoCabecalhoMensagemTextarea.value) final = [textoCabecalhoMensagemTextarea.value + '\n'].concat(res);
             if (textoFinalMensagemTextarea.value) final.push('\n' + textoFinalMensagemTextarea.value);
             dst.value = final.join('\n');
+
+            /* ── Sincroniza flutuante → fixo ─────────────────── */
+            var fixoRes = document.getElementById('resultado');
+            if (fixoRes) {
+                fixoRes.value = dst.value;
+                if (typeof autoResizeResultado === 'function') autoResizeResultado();
+            }
         }
 
         /* ── Histórico flutuante ─────────────────────────────── */
+        function _fpRecarregarHistorico() {
+            _sheetsCache = [];
+            _fpCarregarHistorico();
+        }
+
         async function _fpCarregarHistorico() {
             var lista = document.getElementById('fpHistLista');
             var tituloWrap = document.getElementById('fpHistTituloWrap');
             if (_currentUser && tituloWrap) {
                 tituloWrap.style.display = 'block';
-                /* Sincroniza campos título e comentário com o painel fixo */
+                /* Sincroniza valores flutuante com o painel fixo ao abrir */
                 var fixoTitulo = document.getElementById('historicoTitulo');
                 var fpTitulo   = document.getElementById('fpHistTituloInput');
-                if (fixoTitulo && fpTitulo && !fpTitulo.dataset.synced) {
-                    fpTitulo.dataset.synced = '1';
-                    fpTitulo.value = fixoTitulo.value;
-                    fpTitulo.addEventListener('input', function() {
-                        if (fixoTitulo) fixoTitulo.value = fpTitulo.value;
-                        _tituloSessao = fpTitulo.value.trim();
-                        clearTimeout(_logTimer);
-                        _logTimer = setTimeout(flushLog, 2000);
-                    });
-                }
+                if (fixoTitulo && fpTitulo) fpTitulo.value = fixoTitulo.value;
                 var fixoComent = document.getElementById('historicoComentarios');
                 var fpComent   = document.getElementById('fpHistComentarioInput');
-                if (fixoComent && fpComent && !fpComent.dataset.synced) {
+                if (fixoComent && fpComent) fpComent.value = fixoComent.value;
+                /* Registra listeners flutuante->fixo apenas uma vez */
+                if (!fpTitulo.dataset.synced) {
+                    fpTitulo.dataset.synced = '1';
+                    fpTitulo.addEventListener('input', function() {
+                        var cbHist = document.getElementById('toggleHistorico');
+                        if (cbHist && !cbHist.checked) { cbHist.checked = true; toggleHistoricoSection(); }
+                        var fx = document.getElementById('historicoTitulo');
+                        if (fx && fx.value !== fpTitulo.value) fx.value = fpTitulo.value;
+                        _tituloSessao = fpTitulo.value.trim();
+                        clearTimeout(_logTimer); _logTimer = setTimeout(flushLog, 2000);
+                    });
+                }
+                if (!fpComent.dataset.synced) {
                     fpComent.dataset.synced = '1';
-                    fpComent.value = fixoComent.value;
                     fpComent.addEventListener('input', function() {
-                        if (fixoComent) fixoComent.value = fpComent.value;
+                        var cbHist = document.getElementById('toggleHistorico');
+                        if (cbHist && !cbHist.checked) { cbHist.checked = true; toggleHistoricoSection(); }
+                        var fx = document.getElementById('historicoComentarios');
+                        if (fx && fx.value !== fpComent.value) fx.value = fpComent.value;
                         _comentarioSessao = fpComent.value.trim();
-                        clearTimeout(_logTimer);
-                        _logTimer = setTimeout(flushLog, 2000);
+                        clearTimeout(_logTimer); _logTimer = setTimeout(flushLog, 2000);
                     });
                 }
             }
