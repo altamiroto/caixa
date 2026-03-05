@@ -1343,6 +1343,9 @@ Capa silicone R$ 50,00
         if (historicoTituloInput) {
             historicoTituloInput.addEventListener('input', () => {
                 _tituloSessao = historicoTituloInput.value.trim();
+                /* Sincroniza fixo -> flutuante */
+                var _fpT = document.getElementById('fpHistTituloInput');
+                if (_fpT && _fpT.value !== historicoTituloInput.value) _fpT.value = historicoTituloInput.value;
                 clearTimeout(_logTimer);
                 _logTimer = setTimeout(flushLog, 2000);
             });
@@ -1350,6 +1353,9 @@ Capa silicone R$ 50,00
         if (historicoComentariosTextarea) {
             historicoComentariosTextarea.addEventListener('input', () => {
                 _comentarioSessao = historicoComentariosTextarea.value.trim();
+                /* Sincroniza fixo -> flutuante */
+                var _fpC = document.getElementById('fpHistComentarioInput');
+                if (_fpC && _fpC.value !== historicoComentariosTextarea.value) _fpC.value = historicoComentariosTextarea.value;
                 clearTimeout(_logTimer);
                 _logTimer = setTimeout(flushLog, 2000);
             });
@@ -2802,41 +2808,34 @@ Capa silicone R$ 50,00
             var tituloWrap = document.getElementById('fpHistTituloWrap');
             if (_currentUser && tituloWrap) {
                 tituloWrap.style.display = 'block';
-                /* Sincroniza campos título e comentário com o painel fixo */
+                /* Sincroniza valores flutuante com o painel fixo ao abrir */
                 var fixoTitulo = document.getElementById('historicoTitulo');
                 var fpTitulo   = document.getElementById('fpHistTituloInput');
-                if (fixoTitulo && fpTitulo && !fpTitulo.dataset.synced) {
-                    fpTitulo.dataset.synced = '1';
-                    fpTitulo.value = fixoTitulo.value;
-                    fpTitulo.addEventListener('input', function() {
-                        /* Auto-ativa o checkbox de histórico para garantir que o save funcione */
-                        var cbHist = document.getElementById('toggleHistorico');
-                        if (cbHist && !cbHist.checked) {
-                            cbHist.checked = true;
-                            toggleHistoricoSection();
-                        }
-                        if (fixoTitulo) fixoTitulo.value = fpTitulo.value;
-                        _tituloSessao = fpTitulo.value.trim();
-                        clearTimeout(_logTimer);
-                        _logTimer = setTimeout(flushLog, 2000);
-                    });
-                }
+                if (fixoTitulo && fpTitulo) fpTitulo.value = fixoTitulo.value;
                 var fixoComent = document.getElementById('historicoComentarios');
                 var fpComent   = document.getElementById('fpHistComentarioInput');
-                if (fixoComent && fpComent && !fpComent.dataset.synced) {
-                    fpComent.dataset.synced = '1';
-                    fpComent.value = fixoComent.value;
-                    fpComent.addEventListener('input', function() {
-                        /* Auto-ativa o checkbox de histórico para garantir que o save funcione */
+                if (fixoComent && fpComent) fpComent.value = fixoComent.value;
+                /* Registra listeners flutuante->fixo apenas uma vez */
+                if (!fpTitulo.dataset.synced) {
+                    fpTitulo.dataset.synced = '1';
+                    fpTitulo.addEventListener('input', function() {
                         var cbHist = document.getElementById('toggleHistorico');
-                        if (cbHist && !cbHist.checked) {
-                            cbHist.checked = true;
-                            toggleHistoricoSection();
-                        }
-                        if (fixoComent) fixoComent.value = fpComent.value;
+                        if (cbHist && !cbHist.checked) { cbHist.checked = true; toggleHistoricoSection(); }
+                        var fx = document.getElementById('historicoTitulo');
+                        if (fx && fx.value !== fpTitulo.value) fx.value = fpTitulo.value;
+                        _tituloSessao = fpTitulo.value.trim();
+                        clearTimeout(_logTimer); _logTimer = setTimeout(flushLog, 2000);
+                    });
+                }
+                if (!fpComent.dataset.synced) {
+                    fpComent.dataset.synced = '1';
+                    fpComent.addEventListener('input', function() {
+                        var cbHist = document.getElementById('toggleHistorico');
+                        if (cbHist && !cbHist.checked) { cbHist.checked = true; toggleHistoricoSection(); }
+                        var fx = document.getElementById('historicoComentarios');
+                        if (fx && fx.value !== fpComent.value) fx.value = fpComent.value;
                         _comentarioSessao = fpComent.value.trim();
-                        clearTimeout(_logTimer);
-                        _logTimer = setTimeout(flushLog, 2000);
+                        clearTimeout(_logTimer); _logTimer = setTimeout(flushLog, 2000);
                     });
                 }
             }
