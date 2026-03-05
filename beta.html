@@ -1032,7 +1032,10 @@ Capa silicone R$ 50,00
     <div class="float-panel" id="fpPanel_historico">
         <div class="float-panel-header">
             <span>📚 Histórico</span>
-            <button class="float-panel-fechar" onclick="fpFechar('historico')">✕</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button class="float-panel-fechar" onclick="_fpRecarregarHistorico()" title="Recarregar histórico">🔄</button>
+                <button class="float-panel-fechar" onclick="fpFechar('historico')">✕</button>
+            </div>
         </div>
         <div class="float-panel-body">
             <div class="fhist-titulo-wrap" id="fpHistTituloWrap" style="display:none;">
@@ -2526,7 +2529,16 @@ Capa silicone R$ 50,00
             document.getElementById('fpPanel_' + qual).classList.add('aberto');
             document.getElementById('fpArrow_' + qual).classList.add('aberto');
             if (qual === 'resultado') { _fpSincResultado(); _fpIniciarChips(); }
-            else { _fpCarregarHistorico(); }
+            else {
+                /* Sincroniza valores de título/comentário sempre que abre o painel */
+                var fixoTitulo = document.getElementById('historicoTitulo');
+                var fpTitulo   = document.getElementById('fpHistTituloInput');
+                if (fixoTitulo && fpTitulo) fpTitulo.value = fixoTitulo.value;
+                var fixoComent = document.getElementById('historicoComentarios');
+                var fpComent   = document.getElementById('fpHistComentarioInput');
+                if (fixoComent && fpComent) fpComent.value = fixoComent.value;
+                _fpCarregarHistorico();
+            }
         }
 
         function fpFechar(qual) {
@@ -2770,9 +2782,21 @@ Capa silicone R$ 50,00
             if (textoCabecalhoMensagemTextarea.value) final = [textoCabecalhoMensagemTextarea.value + '\n'].concat(res);
             if (textoFinalMensagemTextarea.value) final.push('\n' + textoFinalMensagemTextarea.value);
             dst.value = final.join('\n');
+
+            /* ── Sincroniza flutuante → fixo ─────────────────── */
+            var fixoRes = document.getElementById('resultado');
+            if (fixoRes) {
+                fixoRes.value = dst.value;
+                if (typeof autoResizeResultado === 'function') autoResizeResultado();
+            }
         }
 
         /* ── Histórico flutuante ─────────────────────────────── */
+        function _fpRecarregarHistorico() {
+            _sheetsCache = [];
+            _fpCarregarHistorico();
+        }
+
         async function _fpCarregarHistorico() {
             var lista = document.getElementById('fpHistLista');
             var tituloWrap = document.getElementById('fpHistTituloWrap');
@@ -2785,6 +2809,12 @@ Capa silicone R$ 50,00
                     fpTitulo.dataset.synced = '1';
                     fpTitulo.value = fixoTitulo.value;
                     fpTitulo.addEventListener('input', function() {
+                        /* Auto-ativa o checkbox de histórico para garantir que o save funcione */
+                        var cbHist = document.getElementById('toggleHistorico');
+                        if (cbHist && !cbHist.checked) {
+                            cbHist.checked = true;
+                            toggleHistoricoSection();
+                        }
                         if (fixoTitulo) fixoTitulo.value = fpTitulo.value;
                         _tituloSessao = fpTitulo.value.trim();
                         clearTimeout(_logTimer);
@@ -2797,6 +2827,12 @@ Capa silicone R$ 50,00
                     fpComent.dataset.synced = '1';
                     fpComent.value = fixoComent.value;
                     fpComent.addEventListener('input', function() {
+                        /* Auto-ativa o checkbox de histórico para garantir que o save funcione */
+                        var cbHist = document.getElementById('toggleHistorico');
+                        if (cbHist && !cbHist.checked) {
+                            cbHist.checked = true;
+                            toggleHistoricoSection();
+                        }
                         if (fixoComent) fixoComent.value = fpComent.value;
                         _comentarioSessao = fpComent.value.trim();
                         clearTimeout(_logTimer);
