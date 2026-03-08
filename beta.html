@@ -1611,13 +1611,16 @@ Capa silicone R$ 50,00
                 return;
             }
 
+            function _isTituloAuto(t) {
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t) || /^\d{4}-\d{2}-\d{2}T/.test(t);
+            }
             const comTitulo = _sheetsCache.filter(r => {
                 const t = String(r.titulo == null ? '' : r.titulo).trim();
-                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
+                return t && !_isTituloAuto(t);
             });
             const automaticos = _sheetsCache.filter(r => {
                 const t = String(r.titulo == null ? '' : r.titulo).trim();
-                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+                return _isTituloAuto(t);
             });
 
             let html = '';
@@ -1657,6 +1660,26 @@ Capa silicone R$ 50,00
             renderizarHistorico();
         }
 
+        /* Normaliza o campo titulo vindo do servidor:
+           o Apps Script às vezes grava o date ISO no lugar do titulo.
+           Quando isso ocorre, recuperamos o titulo de dentro do payload. */
+        function _normalizarRegistros(regs) {
+            return regs.map(function(r) {
+                var t = String(r.titulo == null ? '' : r.titulo).trim();
+                /* Se o titulo estiver vazio ou for um ISO date (ex: 2026-03-08T...) */
+                if (!t || /^\d{4}-\d{2}-\d{2}T/.test(t)) {
+                    try {
+                        var d = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
+                        /* Usa o titulo do payload se existir e não for ISO */
+                        if (d.titulo && !/^\d{4}-\d{2}-\d{2}T/.test(d.titulo)) {
+                            return Object.assign({}, r, { titulo: d.titulo });
+                        }
+                    } catch(e) {}
+                }
+                return r;
+            });
+        }
+
         async function carregarHistorico() {
             if (!_currentUser) {
                 historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">🔑</div><p>Entre com Google para ver seu histórico</p><button class="btn btn-primary" onclick="pedirLogin()" style="margin-top:12px;">Entrar com Google</button></div>';
@@ -1669,7 +1692,7 @@ Capa silicone R$ 50,00
                 const text = await (await fetch(url)).text();
                 const registros = JSON.parse(text);
                 if (registros.error) throw new Error(registros.error);
-                _sheetsCache = registros;
+                _sheetsCache = _normalizarRegistros(registros);
                 renderizarHistorico();
             } catch(e) {
                 historicoLista.innerHTML = `<div class="error-message">❌ Erro ao carregar: ${e.message}</div>`;
@@ -2911,7 +2934,7 @@ Capa silicone R$ 50,00
                 var text = await (await fetch(url)).text();
                 var regs = JSON.parse(text);
                 if (regs.error) throw new Error(regs.error);
-                _sheetsCache = regs;
+                _sheetsCache = _normalizarRegistros(regs);
                 _fpRenderHist(_sheetsCache);
             } catch(e) {
                 lista.innerHTML = '<div class="fhist-loading" style="color:var(--danger-color);">❌ ' + e.message + '</div>';
@@ -2926,11 +2949,11 @@ Capa silicone R$ 50,00
             }
             var comTit = regs.filter(function(r) {
                 var t = String(r.titulo == null ? '' : r.titulo).trim();
-                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t);
+                return t && !/^\d{2}\/\d{2}\/\d{4}/.test(t) && !/^\d{4}-\d{2}-\d{2}T/.test(t);
             });
             var auto = regs.filter(function(r) {
                 var t = String(r.titulo == null ? '' : r.titulo).trim();
-                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t);
+                return !t || /^\d{2}\/\d{2}\/\d{4}/.test(t) || /^\d{4}-\d{2}-\d{2}T/.test(t);
             });
             var html = '';
             if (comTit.length) {
