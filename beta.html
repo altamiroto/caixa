@@ -1758,6 +1758,17 @@ Capa silicone R$ 50,00
                 toggleAdvancedOptions.checked = false;
                 if (advancedOptionsDiv.classList.contains('show')) toggleAdvancedSection();
             }
+            /* Limpa título/comentário da sessão para que o próximo auto-save
+               não herde o título do registro restaurado */
+            _tituloSessao     = '';
+            _comentarioSessao = '';
+            if (historicoTituloInput)         historicoTituloInput.value         = '';
+            if (historicoComentariosTextarea) historicoComentariosTextarea.value = '';
+            var _fpT = document.getElementById('fpHistTituloInput');
+            if (_fpT) _fpT.value = '';
+            var _fpC = document.getElementById('fpHistComentarioInput');
+            if (_fpC) _fpC.value = '';
+
             enviarLog('restaurou_calculo');
             toggleVerHistorico();
             atualizarResumoDescontos();
