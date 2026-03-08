@@ -418,8 +418,11 @@
             background: var(--bg-secondary); border-radius: 20px;
             padding: 36px 44px; text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            transform: scale(0.85);
+            transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
             max-width: 340px; width: 90%;
         }
+        .feedback-overlay.show .feedback-modal { transform: scale(1); }
         .feedback-icon { font-size: 3.4rem; margin-bottom: 12px; line-height: 1; }
         .feedback-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
         .feedback-subtitle { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.5; }
@@ -485,10 +488,9 @@
 
         /* ── FABs flutuantes (resultado + histórico) ── */
         .fab-group {
-            position: fixed; bottom: max(20px, env(safe-area-inset-bottom, 20px)); right: 20px;
+            position: fixed; bottom: 20px; right: 20px;
             display: flex; flex-direction: column; align-items: flex-end;
             gap: 10px; z-index: 1100;
-            will-change: transform; -webkit-transform: translateZ(0); transform: translateZ(0);
         }
         .fab-pill {
             display: flex; align-items: center; gap: 8px;
@@ -517,13 +519,11 @@
             background: var(--bg-secondary); border: 2px solid var(--border-color);
             border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.22);
             z-index: 1099; display: flex; flex-direction: column;
-            max-height: min(680px, calc(100dvh - 150px));
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.2s ease;
-            overscroll-behavior: contain;
-            -webkit-transform: translateZ(0); transform: translateZ(0);
+            max-height: 680px;
+            opacity: 0; transform: translateY(14px) scale(0.97);
+            pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
         }
-        .float-panel.aberto { opacity: 1; pointer-events: all; }
+        .float-panel.aberto { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
         .float-panel-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 16px; border-bottom: 1px solid var(--border-color);
@@ -535,13 +535,13 @@
             transition: background 0.15s;
         }
         .float-panel-fechar:hover { background: var(--bg-primary); }
-        .float-panel-body { overflow-y: auto; padding: 12px 14px; flex: 1; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .float-panel-body { overflow-y: auto; padding: 12px 14px; flex: 1; min-height: 0; }
         /* Resultado */
         .fres-textarea {
             width: 100%; min-height: 90px; max-height: 200px;
             background: var(--bg-primary); border: 1.5px solid var(--border-color);
             border-radius: 8px; padding: 10px; font-family: 'Courier New', monospace;
-            font-size: 16px; color: var(--text-primary); resize: vertical;
+            font-size: 12px; color: var(--text-primary); resize: vertical;
         }
         .fres-textarea:focus { outline: none; border-color: var(--primary-color); }
         [data-theme="dark"] .fres-textarea { background: #1e1e1e; }
@@ -582,7 +582,7 @@
         .ftaxa-lbl { font-size: 0.56rem; font-weight: 700; color: var(--text-secondary); }
         .ftaxa-row { display: flex; align-items: center; gap: 1px; }
         .ftaxa-inp {
-            width: 44px !important; padding: 2px 3px !important; font-size: 16px !important;
+            width: 44px !important; padding: 2px 3px !important; font-size: 0.72rem !important;
             border: none !important; border-bottom: 1px solid var(--border-color) !important;
             border-radius: 0 !important; background: transparent !important;
             color: var(--text-primary) !important; text-align: center !important;
@@ -596,7 +596,7 @@
         .fhist-titulo-wrap { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .fhist-titulo-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
         .fhist-titulo-input {
-            width: 100%; padding: 7px 10px; font-size: 16px;
+            width: 100%; padding: 7px 10px; font-size: 0.82rem;
             border: 1.5px solid var(--border-color); border-radius: 7px;
             background: var(--bg-primary); color: var(--text-primary);
             outline: none; font-family: inherit; transition: border-color 0.2s;
@@ -617,12 +617,8 @@
         .fhist-ver-todos { text-align: center; margin-top: 8px; font-size: 0.78rem; }
         .fhist-ver-todos a { color: var(--secondary-color); cursor: pointer; text-decoration: underline; }
         @media (max-width: 420px) {
-            .float-panel {
-                width: calc(100vw - 24px); right: 12px;
-                bottom: 110px;
-                max-height: min(560px, calc(100dvh - 130px));
-            }
-            .fab-group { right: 12px; bottom: max(12px, env(safe-area-inset-bottom, 12px)); }
+            .float-panel { width: calc(100vw - 24px); right: 12px; }
+            .fab-group { right: 12px; bottom: 12px; }
         }
     </style>
 </head>
@@ -1257,7 +1253,12 @@ Capa silicone R$ 50,00
 
                 if (_currentUser) {
                     const agora     = new Date();
-                    const dataStr   = agora.toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'});
+                    const dd  = String(agora.getDate()).padStart(2,'0');
+                    const mm  = String(agora.getMonth()+1).padStart(2,'0');
+                    const aaaa = agora.getFullYear();
+                    const hh  = String(agora.getHours()).padStart(2,'0');
+                    const min = String(agora.getMinutes()).padStart(2,'0');
+                    const dataStr   = `${dd}/${mm}/${aaaa}, ${hh}:${min}`;
                     const tituloAuto = dataStr + (estado.num_produtos > 0 ? ' — ' + estado.num_produtos + ' produto(s)' : estado.valor_base ? ' — R$ ' + estado.valor_base : '');
                     const titulo    = _tituloSessao || tituloAuto;
                     const comentario = _comentarioSessao;
@@ -1762,7 +1763,7 @@ Capa silicone R$ 50,00
             atualizarResumoDescontos();
             atualizarVisibilidadeMiniOpcoes();
             calcularParcelas();
-            window.scrollTo({ top: 0, behavior: 'instant' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             showModal('success', 'Cálculo Restaurado!', `<strong>${tituloItem}</strong><br>Todos os dados foram carregados 🔄`, 2200);
         }
 
