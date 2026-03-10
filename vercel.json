@@ -1,15 +1,39 @@
 {
   "version": 2,
   "builds": [
-    { "src": "public/**", "use": "@vercel/static" },
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "webhook/public/**", "use": "@vercel/static" },
-    { "src": "webhook/api/**/*.js", "use": "@vercel/node" }
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "webhook/public/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "webhook/api/**/*.mjs",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/webhook/api/(.*)", "dest": "/webhook/api/$1" },
-    { "src": "/webhook(.*)", "dest": "/webhook/public/index.html" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/webhook/api/(.*)",
+      "dest": "/webhook/api/$1"
+    },
+    {
+      "src": "/webhook(.*)",
+      "dest": "/webhook/public/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
   ]
 }
