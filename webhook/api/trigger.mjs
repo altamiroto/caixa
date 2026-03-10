@@ -1,15 +1,13 @@
-import { BUTTONS } from "../config.js";
+import { BUTTONS } from "../config.mjs";
 import { jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "troque-este-segredo-em-producao");
 
-// Log em memória (para produção, substitua por banco de dados como Vercel KV ou Supabase)
 const logs = [];
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Verificar token
   const auth = req.headers.authorization?.replace("Bearer ", "");
   if (!auth) return res.status(401).json({ error: "Não autenticado" });
 
@@ -26,12 +24,10 @@ export default async function handler(req, res) {
 
   if (!button) return res.status(404).json({ error: "Botão não encontrado" });
 
-  // Chamar o webhook real (oculto do frontend)
   try {
     const webhookRes = await fetch(button.webhook, { method: "GET" });
     const success = webhookRes.ok;
 
-    // Registrar log
     const entry = {
       id: Date.now(),
       user: payload.name,
@@ -42,7 +38,7 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString(),
     };
     logs.unshift(entry);
-    if (logs.length > 200) logs.pop(); // manter só os últimos 200
+    if (logs.length > 200) logs.pop();
 
     if (success) {
       return res.status(200).json({ ok: true, message: `${button.label} acionado com sucesso!` });
