@@ -1,4 +1,4 @@
-import { USERS, SESSION_HOURS } from "../config.js";
+import { USERS, SESSION_HOURS } from "../config.mjs";
 import { SignJWT } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "troque-este-segredo-em-producao");
@@ -9,9 +9,7 @@ export default async function handler(req, res) {
   const { username, password } = req.body || {};
   const user = USERS.find(u => u.username === username && u.password === password);
 
-  if (!user) {
-    return res.status(401).json({ error: "Usuário ou senha incorretos" });
-  }
+  if (!user) return res.status(401).json({ error: "Usuário ou senha incorretos" });
 
   const token = await new SignJWT({ username: user.username, name: user.name })
     .setProtectedHeader({ alg: "HS256" })
