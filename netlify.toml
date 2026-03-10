@@ -2,3 +2,15 @@
   for = "/*"
   [headers.values]
     Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"
+
+[[redirects]]
+  from = "/webhook/api/*"
+  to = "https://caixa-kal3.vercel.app/webhook/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/webhook/*"
+  to = "https://caixa-kal3.vercel.app/webhook/:splat"
+  status = 200
+  force = true
