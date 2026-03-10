@@ -1,4 +1,4 @@
-import { BUTTONS, APP_TITLE, APP_SUBTITLE } from "../config.js";
+import { BUTTONS, APP_TITLE, APP_SUBTITLE } from "../config.mjs";
 import { jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "troque-este-segredo-em-producao");
@@ -12,7 +12,6 @@ export default async function handler(req, res) {
   try {
     const { payload } = await jwtVerify(auth, SECRET);
 
-    // Retorna botões SEM o webhook (segurança)
     const safeButtons = BUTTONS.map(({ id, label, icon, description, color, confirmMessage }) => ({
       id, label, icon, description, color, confirmMessage,
     }));
