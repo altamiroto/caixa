@@ -1,9 +1,0 @@
-{
-  "name": "webhook-panel",
-  "version": "1.0.0",
-  "description": "Painel seguro para acionar webhooks",
-  "type": "module",
-  "dependencies": {
-    "jose": "^5.2.0"
-  }
-}
