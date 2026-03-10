@@ -1,4 +1,4 @@
-import { BUTTONS } from "../../config.js";
+import { BUTTONS } from "../config.js";
 import { jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "troque-este-segredo-em-producao");
