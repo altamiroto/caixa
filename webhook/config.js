@@ -6,6 +6,7 @@ export const USERS = [
   { username: "admin",   password: "senha123",  name: "Administrador" },
   { username: "joao",    password: "joao456",   name: "João Silva"     },
   { username: "maria",   password: "maria789",  name: "Maria Souza"    },
+  { username: "aj",   password: "senha1234",  name: "Maria Souza"    },
   // Adicione mais usuários aqui:
   // { username: "nome", password: "senha", name: "Nome Completo" },
 ];
