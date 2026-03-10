@@ -1,4 +1,4 @@
-import { logs } from "./trigger.js";
+import { logs } from "./trigger.mjs";
 import { jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "troque-este-segredo-em-producao");
