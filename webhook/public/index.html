@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Controle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c28;
+      --border: #2a2a3d;
+      --text: #e8e8f0;
+      --muted: #6b6b8a;
+      --accent: #4f8ef7;
+      --green: #2ecc71;
+      --red: #e74c3c;
+      --yellow: #f1c40f;
+      --blue: #4f8ef7;
+      --purple: #9b59b6;
+
+      --color-blue: #4f8ef7;
+      --color-yellow: #f1c40f;
+      --color-red: #e74c3c;
+      --color-green: #2ecc71;
+      --color-purple: #9b59b6;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 80px rgba(79,142,247,0.06);
+      animation: fadeUp 0.5s ease;
+    }
+
+    .login-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 36px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus { border-color: var(--accent); }
+    .field input::placeholder { color: var(--muted); }
+
+    .btn-login {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-login:hover { opacity: 0.9; }
+    .btn-login:active { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-error {
+      background: rgba(231,76,60,0.1);
+      border: 1px solid rgba(231,76,60,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--red);
+      font-size: 14px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    /* ── PANEL ── */
+    #panel-screen { display: none; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .header-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .header-sep { color: var(--border); }
+
+    .header-title { font-size: 15px; font-weight: 500; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+    }
+
+    .user-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    main {
+      flex: 1;
+      padding: 32px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── BUTTONS GRID ── */
+    #buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .action-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 20px;
+      cursor: pointer;
+      text-align: left;
+      font-family: 'IBM Plex Sans', sans-serif;
+      color: var(--text);
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--btn-color, var(--accent));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .action-btn:hover {
+      border-color: var(--btn-color, var(--accent));
+      box-shadow: 0 0 24px color-mix(in srgb, var(--btn-color, var(--accent)) 20%, transparent);
+      transform: translateY(-2px);
+    }
+
+    .action-btn:hover::before { opacity: 0.04; }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+      display: block;
+      position: relative;
+    }
+
+    .btn-label {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      position: relative;
+      color: var(--btn-color, var(--text));
+    }
+
+    .btn-desc {
+      font-size: 12px;
+      color: var(--muted);
+      position: relative;
+    }
+
+    .btn-indicator {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--btn-color, var(--accent));
+      opacity: 0.4;
+    }
+
+    /* ── LOGS ── */
+    .logs-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .logs-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logs-header span { font-size: 13px; font-weight: 600; }
+
+    .btn-refresh {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      transition: color 0.2s;
+    }
+
+    .btn-refresh:hover { color: var(--text); }
+
+    #logs-list { max-height: 320px; overflow-y: auto; }
+
+    .log-entry {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .log-entry:last-child { border-bottom: none; }
+
+    .log-left { display: flex; align-items: center; gap: 10px; }
+
+    .log-status {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .log-status.ok { background: var(--green); }
+    .log-status.fail { background: var(--red); }
+
+    .log-text { font-size: 13px; }
+    .log-user { color: var(--accent); font-weight: 600; }
+    .log-action { color: var(--muted); }
+
+    .log-time {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .logs-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── MODAL ── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 380px;
+      width: 100%;
+      animation: scaleIn 0.2s ease;
+      box-shadow: 0 0 60px rgba(0,0,0,0.5);
+    }
+
+    .modal-icon { font-size: 40px; margin-bottom: 16px; text-align: center; }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+    .modal-msg { color: var(--muted); font-size: 14px; text-align: center; margin-bottom: 28px; line-height: 1.5; }
+
+    .modal-actions { display: flex; gap: 10px; }
+
+    .btn-cancel, .btn-confirm {
+      flex: 1;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+    .btn-cancel:hover { color: var(--text); }
+
+    .btn-confirm { background: var(--modal-color, var(--accent)); border: none; color: #fff; }
+    .btn-confirm:hover { opacity: 0.9; }
+    .btn-confirm:active { transform: scale(0.97); }
+    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 22px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 200;
+      transition: transform 0.3s ease, opacity 0.3s;
+      opacity: 0;
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { border-color: var(--green); }
+    #toast.error { border-color: var(--red); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 600px) {
+      header { padding: 12px 16px; }
+      .header-logo, .header-sep, .header-title { font-size: 12px; }
+      main { padding: 20px 16px; }
+      #buttons-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .action-btn { padding: 20px 16px; }
+      .login-card { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">● Sistema</div>
+    <h1 class="login-title" id="login-title">Painel de Controle</h1>
+    <p class="login-sub" id="login-sub">Acesso autorizado</p>
+
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="inp-user" placeholder="seu.usuario" autocomplete="username" />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="panel-screen">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">● Sistema</span>
+      <span class="header-sep">|</span>
+      <span class="header-title" id="header-title">Painel</span>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <div class="user-dot"></div>
+        <span id="user-name">–</span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-title">Comandos disponíveis</div>
+    <div id="buttons-grid"></div>
+
+    <div class="section-title">Histórico de acionamentos</div>
+    <div class="logs-wrap">
+      <div class="logs-header">
+        <span>Últimas ações</span>
+        <button class="btn-refresh" onclick="loadLogs()">↻ Atualizar</button>
+      </div>
+      <div id="logs-list"><div class="logs-empty">Nenhum acionamento ainda.</div></div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO -->
+<div id="modal-overlay">
+  <div class="modal">
+    <div class="modal-icon" id="modal-icon">⚡</div>
+    <div class="modal-title" id="modal-title">Confirmar ação</div>
+    <div class="modal-msg" id="modal-msg">Deseja prosseguir?</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-confirm" id="btn-confirm">Acionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+  const BASE = ""; // vazio = mesmo domínio (Vercel)
+  let TOKEN = localStorage.getItem("panel_token") || "";
+  let pendingButtonId = null;
+
+  const COLOR_MAP = {
+    blue: "var(--color-blue)",
+    yellow: "var(--color-yellow)",
+    red: "var(--color-red)",
+    green: "var(--color-green)",
+    purple: "var(--color-purple)",
+  };
+
+  // ── AUTO-LOGIN ──────────────────────────────────────────────
+  window.addEventListener("DOMContentLoaded", () => {
+    if (TOKEN) loadPanel();
+  });
+
+  // ── LOGIN ───────────────────────────────────────────────────
+  document.getElementById("inp-pass").addEventListener("keydown", e => {
+    if (e.key === "Enter") doLogin();
+  });
+
+  async function doLogin() {
+    const username = document.getElementById("inp-user").value.trim();
+    const password = document.getElementById("inp-pass").value;
+    const btn = document.getElementById("btn-login");
+    const err = document.getElementById("login-error");
+
+    if (!username || !password) { showError("Preencha todos os campos."); return; }
+
+    btn.disabled = true;
+    btn.textContent = "Entrando...";
+    err.style.display = "none";
+
+    try {
+      const res = await fetch(`${BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) { showError(data.error || "Erro ao fazer login."); return; }
+
+      TOKEN = data.token;
+      localStorage.setItem("panel_token", TOKEN);
+      await loadPanel();
+    } catch {
+      showError("Falha de conexão. Tente novamente.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("login-error");
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+
+  // ── PANEL ───────────────────────────────────────────────────
+  async function loadPanel() {
+    try {
+      const res = await fetch(`${BASE}/api/panel`, {
+        headers: { Authorization: `Bearer ${TOKEN}` },
+      });
+      if (!res.ok) { doLogout(); return; }
+
+      const data = await res.json();
+
+      document.getElementById("login-screen").style.display = "none";
+      const panel = document.getElementById("panel-screen");
+      panel.style.display = "flex";
+
+      document.getElementById("user-name").textContent = data.user.name;
+      document.getElementById("header-title").textContent = data.appTitle;
+      document.getElementById("login-title").textContent = data.appTitle;
+      document.getElementById("login-sub").textContent = data.appSubtitle;
+      document.title = data.appTitle;
+
+      renderButtons(data.buttons);
+      loadLogs();
+    } catch {
+      doLogout();
+    }
+  }
+
+  function renderButtons(buttons) {
+    const grid = document.getElementById("buttons-grid");
+    grid.innerHTML = "";
+
+    buttons.forEach(btn => {
+      const color = COLOR_MAP[btn.color] || COLOR_MAP.blue;
+      const el = document.createElement("button");
+      el.className = "action-btn";
+      el.style.setProperty("--btn-color", color);
+      el.innerHTML = `
+        <div class="btn-indicator"></div>
+        <span class="btn-icon">${btn.icon}</span>
+        <div class="btn-label">${btn.label}</div>
+        <div class="btn-desc">${btn.description}</div>
+      `;
+      el.onclick = () => openModal(btn, color);
+      grid.appendChild(el);
+    });
+  }
+
+  // ── MODAL ───────────────────────────────────────────────────
+  let pendingBtn = null;
+
+  function openModal(btn, color) {
+    pendingBtn = btn;
+    document.getElementById("modal-icon").textContent = btn.icon;
+    document.getElementById("modal-title").textContent = btn.label;
+    document.getElementById("modal-msg").textContent = btn.confirmMessage;
+    document.getElementById("modal-overlay").style.setProperty("--modal-color", color);
+    document.getElementById("modal-overlay").classList.add("active");
+
+    const confirmBtn = document.getElementById("btn-confirm");
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Acionar";
+    confirmBtn.onclick = () => triggerWebhook(btn.id);
+  }
+
+  function closeModal() {
+    document.getElementById("modal-overlay").classList.remove("active");
+    pendingBtn = null;
+  }
+
+  document.getElementById("modal-overlay").addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  // ── TRIGGER ─────────────────────────────────────────────────
+  async function triggerWebhook(buttonId) {
+    const confirmBtn = document.getElementById("btn-confirm");
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Acionando...";
+
+    try {
+      const res = await fetch(`${BASE}/api/trigger`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${TOKEN}`,
+        },
+        body: JSON.stringify({ buttonId }),
+      });
+      const data = await res.json();
+
+      closeModal();
+
+      if (res.ok) {
+        showToast("✓ " + data.message, "success");
+      } else {
+        showToast("✗ " + (data.error || "Erro ao acionar"), "error");
+      }
+
+      setTimeout(loadLogs, 800);
+    } catch {
+      closeModal();
+      showToast("✗ Falha de conexão", "error");
+    }
+  }
+
+  // ── LOGS ────────────────────────────────────────────────────
+  async function loadLogs() {
+    try {
+      const res = await fetch(`${BASE}/api/logs`, {
+        headers: { Authorization: `Bearer ${TOKEN}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      renderLogs(data.logs);
+    } catch {}
+  }
+
+  function renderLogs(logs) {
+    const el = document.getElementById("logs-list");
+    if (!logs || logs.length === 0) {
+      el.innerHTML = '<div class="logs-empty">Nenhum acionamento ainda.</div>';
+      return;
+    }
+
+    el.innerHTML = logs.map(l => {
+      const d = new Date(l.timestamp);
+      const time = d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      return `
+        <div class="log-entry">
+          <div class="log-left">
+            <div class="log-status ${l.success ? 'ok' : 'fail'}"></div>
+            <div class="log-text">
+              <span class="log-user">${l.user}</span>
+              <span class="log-action"> acionou </span>
+              <span style="font-weight:600">${l.button}</span>
+            </div>
+          </div>
+          <div class="log-time">${time}</div>
+        </div>`;
+    }).join("");
+  }
+
+  // ── TOAST ───────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type = "") {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = ""; }, 3000);
+  }
+
+  // ── LOGOUT ──────────────────────────────────────────────────
+  function doLogout() {
+    TOKEN = "";
+    localStorage.removeItem("panel_token");
+    document.getElementById("panel-screen").style.display = "none";
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("inp-user").value = "";
+    document.getElementById("inp-pass").value = "";
+  }
+</script>
+</body>
+</html>
