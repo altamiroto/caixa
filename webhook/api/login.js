@@ -1,4 +1,4 @@
-import { USERS, SESSION_HOURS } from "../../config.js";
+import { USERS, SESSION_HOURS } from "../config.js";
 import { SignJWT } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "troque-este-segredo-em-producao");
