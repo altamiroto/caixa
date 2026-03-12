@@ -2020,7 +2020,7 @@ Capa silicone R$ 50,00
             if (acrescimoPerc > 0) { const v=base*(acrescimoPerc/100); vf+=v; linhas.push(`📈 Acréscimo ${acrescimoPerc}%: +R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
             if (lucroFixo     > 0) { vf+=lucroFixo; linhas.push(`💰 Acréscimo R$: +R$ ${lucroFixo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
             if (acrescimoFix  > 0) { vf+=acrescimoFix; linhas.push(`🤝 Comissão: +R$ ${acrescimoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
-            if (descontoPerc  > 0) { const vd=vf*(descontoPerc/100); vf-=vd; linhas.push(`📉 Desconto ${descontoPerc}%: -R$ ${vd.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (descontoPerc  > 0) { const vd=base*(descontoPerc/100); vf-=vd; linhas.push(`📉 Desconto ${descontoPerc}%: -R$ ${vd.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
             if (descontoFix   > 0) { vf-=descontoFix; linhas.push(`💸 Desconto fixo: -R$ ${descontoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
             linhas.push(`<strong>✅ Final: R$ ${vf.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`);
             const dif = vf - base;
