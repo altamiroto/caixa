@@ -109,13 +109,12 @@
     .table-wrapper { overflow: hidden; border-radius: 12px; border: 1px solid var(--border-color); }
     table { width: 100%; border-collapse: collapse; }
 
-    /* REDUÇÃO DE ESPAÇAMENTOS E FONTES AQUI */
     th, td { padding: 8px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
     th {
       background: var(--bg-primary); color: var(--text-secondary); font-weight: 600; font-size: 11px;
       letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; user-select: none;
       border-bottom: 2px solid var(--border-strong); white-space: nowrap; transition: color 0.2s;
-      padding: 10px 12px; /* Header levemente maior que a linha */
+      padding: 10px 12px; 
     }
     th:hover { color: var(--primary-color); }
     th.ordenado-asc::after  { content: ' \2191'; color: var(--primary-color); }
@@ -129,12 +128,10 @@
     .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 80px; text-align: center; white-space: nowrap; }
     .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 50px; text-align: center; white-space: nowrap; }
 
-    /* Ajuste para o nome do produto e a data embaixo mais compactos */
     .tabela-produtos-base tbody tr.clicavel { cursor: pointer; }
     .tabela-produtos-base tbody tr.clicavel .prod-nome { font-size: 13px; font-weight: 600; color: var(--secondary-color); transition: color 0.2s; line-height: 1.2;}
     .tabela-produtos-base tbody tr.clicavel:hover .prod-nome { color: var(--primary-color); text-decoration: underline; text-underline-offset: 3px;}
     
-    /* Estilo da pequena data de movimentação hiper compacta */
     .ult-mov { font-size: 10px; font-weight: 500; color: var(--text-muted); margin-top: 2px; display: none; line-height: 1;}
 
     .sem-registro { color: var(--text-muted); }
@@ -149,7 +146,6 @@
     .status-msg { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 13px; font-weight: 500;}
     .status-msg.erro { color: var(--danger-color); background: rgba(192, 57, 43, 0.05); }
 
-    /* Botão Adicionar Menor */
     .btn-add {
       width: 28px; height: 28px; background: var(--bg-primary); color: var(--primary-color); 
       border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 16px; font-weight: 600;
@@ -305,7 +301,6 @@
       .layout { padding: 12px 8px 100px; }
       .section-card { padding: 12px; }
       
-      /* Redução extrema para caber tudo numa linha no Mobile */
       th, td { padding: 8px 6px; font-size: 12px; }
       .tabela-produtos-base tbody tr.clicavel .prod-nome { font-size: 12px; }
       .ult-mov { font-size: 9px; margin-top: 1px; }
@@ -692,9 +687,10 @@
 
     let _produtoAtual = null, _todasMovs = [];
 
+    // DEFINE PADRÃO DE 3 MESES
     function setDatasDefault() {
       const h = new Date(), a = new Date();
-      a.setDate(h.getDate()-15); 
+      a.setMonth(h.getMonth() - 3); // 3 Meses atrás
       document.getElementById('filtro-data-ini').value = a.toISOString().substring(0,10);
       document.getElementById('filtro-data-fim').value = h.toISOString().substring(0,10);
     }
@@ -724,47 +720,64 @@
       });
     }
 
-    async function buscarTodasPaginas(rota, di, df) {
-      const base='https://caixa-three.vercel.app/api/proxy', todos=[];
-      let pag=1, tot=1;
-      do {
-        const params=new URLSearchParams({rota:rota,loja_id:lojaIdJeta,limite:100,pagina:pag});
-        if(di) params.append('data_inicio',di);
-        if(df) params.append('data_fim',df);
-        const r=await fetch(base+'?'+params).then(function(x){return x.json();}).catch(function(){return null;});
-        if(!r||r.code!==200||!r.data) break;
-        todos.push.apply(todos,r.data);
-        tot=(r.meta&&r.meta.total_paginas)||1; pag++;
-      } while(pag<=tot);
-      return todos;
-    }
-
+    // NOVA ROTA OTIMIZADA: Busca diretamente as movimentações do produto específico!
     async function buscarMovimentacoesPeriodo(produto, di, df) {
-      const pid=String(produto.id);
-      const res=await Promise.all([buscarTodasPaginas('vendas',di,df),buscarTodasPaginas('compras',di,df)]);
-      const movs=[];
+      const pid = String(produto.id);
+      const base = 'https://caixa-three.vercel.app/api/proxy';
       
-      res[0].forEach(function(v){
-        const its=(v.produtos||[]).filter(function(p){return p.produto&&String(p.produto.produto_id)===pid;});
-        if(!its.length) return;
-        const q=its.reduce(function(s,p){return s+Number(p.produto.quantidade||1);},0);
-        const ts=v.cadastrado_em||v.data||'', pp=ts.split(' ');
-        movs.push({dataISO:pp[0]||'',hora:pp[1]?pp[1].substring(0,5):'',cliente:v.nome_cliente||'\u2014',qtd:q,descricao:'Venda n\u00ba '+v.codigo,isEntrada:false});
+      // Função auxiliar para converter YYYY-MM-DD para DD/MM/YYYY se necessário
+      const fmtDate = (d) => {
+          if(!d) return '';
+          const p = d.split('-');
+          if(p.length !== 3) return d;
+          return p[2] + '/' + p[1] + '/' + p[0];
+      };
+
+      const params = new URLSearchParams({
+          rota: 'produtos/movimentacoes_estoque/' + pid,
+          loja_id: lojaIdJeta
       });
-      res[1].forEach(function(c){
-        const its=(c.produtos||[]).filter(function(p){return p.produto&&String(p.produto.produto_id)===pid;});
-        if(!its.length) return;
-        const q=its.reduce(function(s,p){return s+Number(p.produto.quantidade||1);},0);
-        const ts=c.cadastrado_em||c.data||'', pp=ts.split(' ');
-        movs.push({dataISO:pp[0]||'',hora:pp[1]?pp[1].substring(0,5):'',cliente:c.nome_fornecedor||c.nome_cliente||'\u2014',qtd:q,descricao:'Compra n\u00ba '+(c.codigo||c.id),isEntrada:true});
-      });
+      if (di) params.append('cadastrado_inicio', fmtDate(di));
+      if (df) params.append('cadastrado_fim', fmtDate(df));
+
+      const response = await fetch(base + '?' + params.toString());
+      const r = await response.json();
       
-      if(produto.modificado_em&&produto.cadastrado_em&&produto.modificado_em!==produto.cadastrado_em){
-        const pe=produto.modificado_em.split(' '),de=pe[0];
-        if((!di||de>=di)&&(!df||de<=df)&&!movs.some(function(m){return m.dataISO===de&&m.isEntrada;}))
-          movs.push({dataISO:de,hora:pe[1]?pe[1].substring(0,5):'',cliente:'\u2014',qtd:null,descricao:'Entrada manual',isEntrada:true});
+      const movs = [];
+      if (r.code === 200 && r.data && r.data.variacoes) {
+          r.data.variacoes.forEach(v => {
+              if (v.movimentacoesEstoque) {
+                  v.movimentacoesEstoque.forEach(mWrapper => {
+                      const m = mWrapper.MovimentacoesEstoque;
+                      if (!m) return;
+                      
+                      let dataISO = '', hora = '';
+                      if (m.cadastrado_em) {
+                          const parts = m.cadastrado_em.split(' ');
+                          if (parts[0]) {
+                              const dParts = parts[0].split('/'); 
+                              if(dParts.length === 3) dataISO = dParts[2] + '-' + dParts[1] + '-' + dParts[0];
+                          }
+                          if (parts[1]) hora = parts[1].substring(0,5);
+                      }
+                      
+                      const qtdStr = m.quantidade || "0";
+                      const qtdNum = Number(qtdStr.replace(',', '.'));
+                      
+                      movs.push({
+                          dataISO: dataISO,
+                          hora: hora,
+                          cliente: m.entidade || '\u2014',
+                          qtd: qtdNum,
+                          descricao: m.descricao || (m.movimentacao === 'E' ? 'Entrada' : 'Saída'),
+                          isEntrada: m.movimentacao === 'E'
+                      });
+                  });
+              }
+          });
       }
       
+      // Ordena da mais nova para a mais velha
       movs.sort(function(a,b){return (b.dataISO+b.hora).localeCompare(a.dataISO+a.hora);});
       return movs;
     }
