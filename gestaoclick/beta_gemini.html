@@ -687,10 +687,10 @@
 
     let _produtoAtual = null, _todasMovs = [];
 
-    // DEFINE PADRÃO DE 3 MESES
+    // CONFIGURAÇÃO DE DATAS: Padrão 3 Meses
     function setDatasDefault() {
       const h = new Date(), a = new Date();
-      a.setMonth(h.getMonth() - 3); // 3 Meses atrás
+      a.setMonth(h.getMonth() - 3); 
       document.getElementById('filtro-data-ini').value = a.toISOString().substring(0,10);
       document.getElementById('filtro-data-fim').value = h.toISOString().substring(0,10);
     }
@@ -720,64 +720,97 @@
       });
     }
 
-    // NOVA ROTA OTIMIZADA: Busca diretamente as movimentações do produto específico!
-    async function buscarMovimentacoesPeriodo(produto, di, df) {
-      const pid = String(produto.id);
+    // NOVA FUNÇÃO OTIMIZADA: Com requisições em Lotes (Rate Limit respeitado) e Filtro de Datas Nativo!
+    async function buscarTodasPaginas(rota, di, df) {
       const base = 'https://caixa-three.vercel.app/api/proxy';
+      const params = new URLSearchParams({rota: rota, loja_id: lojaIdJeta, limite: 100, pagina: 1});
       
-      // Função auxiliar para converter YYYY-MM-DD para DD/MM/YYYY se necessário
-      const fmtDate = (d) => {
-          if(!d) return '';
-          const p = d.split('-');
-          if(p.length !== 3) return d;
-          return p[2] + '/' + p[1] + '/' + p[0];
-      };
+      // Aplicar filtro de datas nativo da API para vendas (Conforme documentação oficial)
+      if (rota === 'vendas') {
+          if (di) params.append('data_inicio', di); 
+          if (df) params.append('data_fim', df);    
+      }
 
-      const params = new URLSearchParams({
-          rota: 'produtos/movimentacoes_estoque/' + pid,
-          loja_id: lojaIdJeta
-      });
-      if (di) params.append('cadastrado_inicio', fmtDate(di));
-      if (df) params.append('cadastrado_fim', fmtDate(df));
-
-      const response = await fetch(base + '?' + params.toString());
-      const r = await response.json();
+      // Busca a primeira página para saber o total de páginas existentes no período
+      const res1 = await fetch(base + '?' + params).then(x => x.json()).catch(() => null);
+      if (!res1 || res1.code !== 200 || !res1.data) return [];
       
-      const movs = [];
-      if (r.code === 200 && r.data && r.data.variacoes) {
-          r.data.variacoes.forEach(v => {
-              if (v.movimentacoesEstoque) {
-                  v.movimentacoesEstoque.forEach(mWrapper => {
-                      const m = mWrapper.MovimentacoesEstoque;
-                      if (!m) return;
-                      
-                      let dataISO = '', hora = '';
-                      if (m.cadastrado_em) {
-                          const parts = m.cadastrado_em.split(' ');
-                          if (parts[0]) {
-                              const dParts = parts[0].split('/'); 
-                              if(dParts.length === 3) dataISO = dParts[2] + '-' + dParts[1] + '-' + dParts[0];
-                          }
-                          if (parts[1]) hora = parts[1].substring(0,5);
-                      }
-                      
-                      const qtdStr = m.quantidade || "0";
-                      const qtdNum = Number(qtdStr.replace(',', '.'));
-                      
-                      movs.push({
-                          dataISO: dataISO,
-                          hora: hora,
-                          cliente: m.entidade || '\u2014',
-                          qtd: qtdNum,
-                          descricao: m.descricao || (m.movimentacao === 'E' ? 'Entrada' : 'Saída'),
-                          isEntrada: m.movimentacao === 'E'
-                      });
-                  });
-              }
+      let todos = [...res1.data];
+      const tot = (res1.meta && res1.meta.total_paginas) ? res1.meta.total_paginas : 1;
+
+      // Cria a fila de páginas que precisam ser baixadas
+      const paginasRestantes = [];
+      for (let p = 2; p <= tot; p++) paginasRestantes.push(p);
+
+      const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+      // BATCHING: Dispara 3 requisições por vez e aguarda 1 segundo. Isso evita o limite "Too Many Requests" (Status 429) da documentação!
+      for (let i = 0; i < paginasRestantes.length; i += 3) {
+        const lote = paginasRestantes.slice(i, i + 3);
+        const promises = lote.map(p => {
+            const pParams = new URLSearchParams({rota: rota, loja_id: lojaIdJeta, limite: 100, pagina: p});
+            if (rota === 'vendas') {
+                if (di) pParams.append('data_inicio', di);
+                if (df) pParams.append('data_fim', df);
+            }
+            return fetch(base + '?' + pParams).then(x => x.json()).catch(() => null);
+        });
+
+        const resultadosLote = await Promise.all(promises);
+        resultadosLote.forEach(res => {
+            if (res && res.code === 200 && res.data) {
+                todos.push(...res.data);
+            }
+        });
+        
+        // Se ainda tem página na fila, espera 1 segundo para respeitar a API
+        if (i + 3 < paginasRestantes.length) {
+            await delay(1000); 
+        }
+      }
+
+      // Filtro manual de datas exclusivo para a rota de /compras (já que a doc oficial não suporta data_inicio lá)
+      if (rota === 'compras' && (di || df)) {
+          todos = todos.filter(c => {
+              const d = c.data_emissao || (c.cadastrado_em ? c.cadastrado_em.split(' ')[0] : '');
+              if (!d) return true;
+              if (di && d < di) return false;
+              if (df && d > df) return false;
+              return true;
           });
       }
+
+      return todos;
+    }
+
+    async function buscarMovimentacoesPeriodo(produto, di, df) {
+      const pid=String(produto.id);
       
-      // Ordena da mais nova para a mais velha
+      // As duas buscas rodando ao mesmo tempo (já preparadas para não quebrar limite)
+      const res=await Promise.all([buscarTodasPaginas('vendas',di,df), buscarTodasPaginas('compras',di,df)]);
+      const movs=[];
+      
+      res[0].forEach(function(v){
+        const its=(v.produtos||[]).filter(function(p){return p.produto&&String(p.produto.produto_id)===pid;});
+        if(!its.length) return;
+        const q=its.reduce(function(s,p){return s+Number(p.produto.quantidade||1);},0);
+        const ts=v.cadastrado_em||v.data||'', pp=ts.split(' ');
+        movs.push({dataISO:pp[0]||'',hora:pp[1]?pp[1].substring(0,5):'',cliente:v.nome_cliente||'\u2014',qtd:q,descricao:'Venda n\u00ba '+v.codigo,isEntrada:false});
+      });
+      res[1].forEach(function(c){
+        const its=(c.produtos||[]).filter(function(p){return p.produto&&String(p.produto.produto_id)===pid;});
+        if(!its.length) return;
+        const q=its.reduce(function(s,p){return s+Number(p.produto.quantidade||1);},0);
+        const ts=c.cadastrado_em||c.data_emissao||'', pp=ts.split(' ');
+        movs.push({dataISO:pp[0]||'',hora:pp[1]?pp[1].substring(0,5):'',cliente:c.nome_fornecedor||c.nome_cliente||'\u2014',qtd:q,descricao:'Compra n\u00ba '+(c.codigo||c.id),isEntrada:true});
+      });
+      
+      if(produto.modificado_em&&produto.cadastrado_em&&produto.modificado_em!==produto.cadastrado_em){
+        const pe=produto.modificado_em.split(' '),de=pe[0];
+        if((!di||de>=di)&&(!df||de<=df)&&!movs.some(function(m){return m.dataISO===de&&m.isEntrada;}))
+          movs.push({dataISO:de,hora:pe[1]?pe[1].substring(0,5):'',cliente:'\u2014',qtd:null,descricao:'Entrada manual',isEntrada:true});
+      }
+      
       movs.sort(function(a,b){return (b.dataISO+b.hora).localeCompare(a.dataISO+a.hora);});
       return movs;
     }
@@ -788,7 +821,8 @@
       document.getElementById('modal-titulo').textContent    = produto.nome;
       document.getElementById('modal-subtitulo').textContent = 'Estoque atual na base: '+produto.estoque+' un.';
       
-      tb.innerHTML='<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde, processando movimentações...</td></tr>';
+      // Aviso ajustado para refletir o tempo
+      tb.innerHTML='<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde... Buscando histórico (isso pode levar alguns segundos devido ao volume de dados).</td></tr>';
       document.getElementById('modal-resumo').textContent='';
       
       setDatasDefault(); 
