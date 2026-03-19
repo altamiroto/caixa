@@ -26,36 +26,51 @@
       --shadow:    0 4px 24px rgba(0,0,0,0.5);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Sora',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    html { overflow-x: hidden; }   /* garante que nada vaze para a direita */
+    body {
+      font-family:'Sora',sans-serif; background:var(--bg); color:var(--text);
+      min-height:100vh;
+      overflow-x: hidden;   /* redundante mas necessário em alguns browsers */
+      width: 100%;
+      max-width: 100vw;
+    }
 
     /* HEADER */
     header {
       background:var(--surface); border-bottom:1px solid var(--border);
-      padding:0 20px; height:58px;
+      padding:0 12px; height:58px;
       display:flex; align-items:center; justify-content:space-between;
       position:sticky; top:0; z-index:100;
       box-shadow:0 2px 16px rgba(0,0,0,0.4);
+      width:100%; max-width:100vw; overflow:hidden;
     }
-    .header-brand { display:flex; align-items:center; gap:10px; }
+    .header-brand { display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden; }
     .header-brand .logo {
-      width:32px; height:32px;
+      width:30px; height:30px; flex-shrink:0;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
-      border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;
+      border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px;
     }
-    .header-brand h1 { font-size:.95rem; font-weight:700; letter-spacing:-0.02em; }
-    .header-brand span { font-size:.74rem; color:var(--text2); font-weight:400; }
-    .header-actions { display:flex; align-items:center; gap:8px; }
+    .header-brand h1 { font-size:.9rem; font-weight:700; letter-spacing:-0.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .header-brand span { font-size:.72rem; color:var(--text2); font-weight:400; white-space:nowrap; }
+    .header-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 
     /* LAYOUT */
-    .app { display:grid; grid-template-columns:1fr 340px; height:calc(100vh - 58px); }
+    .app {
+      display:grid; grid-template-columns:1fr 340px;
+      height:calc(100vh - 58px);
+      width:100%; max-width:100vw; overflow:hidden;
+    }
     .panel-left {
-      overflow-y:hidden;   /* o scroll fica dentro do #card-tabela, nao no painel */
+      overflow-y:hidden; overflow-x:hidden;
       padding:16px; border-right:1px solid var(--border);
       display:flex; flex-direction:column; gap:13px;
+      min-width:0;   /* essencial — impede flex de espichar além do grid */
     }
     .panel-right {
-      overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:13px;
+      overflow-y:auto; overflow-x:hidden;
+      padding:16px; display:flex; flex-direction:column; gap:13px;
       background:var(--surface);
+      min-width:0;
     }
 
     /* CARDS */
@@ -96,8 +111,8 @@
     .field-label { font-size:.68rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; }
     input, select, textarea {
       background:var(--bg); border:1px solid var(--border); border-radius:7px;
-      color:var(--text); font-family:inherit; font-size:.79rem; padding:7px 9px;
-      transition:border-color .14s; width:100%;
+      color:var(--text); font-family:inherit; font-size:16px; padding:7px 9px;
+      transition:border-color .14s; width:100%; max-width:100%; box-sizing:border-box;
     }
     input:focus, select:focus, textarea:focus {
       outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);
@@ -201,7 +216,9 @@
 
     /* Popover de busca inline */
     .vincul-popover {
-      position: absolute; top: calc(100% + 4px); left: 0; z-index: 500; width: 280px;
+      position: fixed;   /* fixed em vez de absolute — fica dentro da viewport sempre */
+      z-index: 999;
+      width: min(300px, 90vw);   /* nunca maior que 90% da tela */
       background: var(--surface); border: 1px solid var(--border2);
       border-radius: 9px; box-shadow: 0 8px 32px rgba(0,0,0,.55); overflow: hidden;
     }
@@ -305,14 +322,39 @@
        MOBILE — layout de cards, sem tabela
        ══════════════════════════════════ */
     @media (max-width: 900px) {
-      .app { grid-template-columns: 1fr; height: auto; }
-      .panel-left { overflow-y: visible; height: auto; }
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+      .panel-left {
+        overflow-x: hidden;
+        overflow-y: visible;
+        height: auto;
+        width: 100%;
+        max-width: 100vw;
+        padding: 12px;
+      }
+      .panel-right {
+        overflow-x: hidden;
+        border-top: 1px solid var(--border);
+        width: 100%;
+        max-width: 100vw;
+        padding: 12px;
+      }
       #card-tabela { flex: none; min-height: 0; max-height: none; }
       #card-tabela .table-scroll { overflow: visible; }
-      .panel-right { border-top: 1px solid var(--border); }
       .api-row { grid-template-columns: 1fr; }
+      /* Botões do header menores no mobile */
+      #btn-sync-all { font-size: 12px; padding: 6px 10px; }
+      /* Esconde tabela, mostra cards */
       #card-tabela table { display: none; }
       #lista-mobile { display: flex !important; }
+      /* Cards e inputs nunca excedem a tela */
+      .card, .mcard, input, textarea, select, .vincul-pill, .mcard-vincul-btn {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
     }
 
     /* ── CARDS MOBILE ── */
@@ -1233,8 +1275,20 @@ function abrirPopoverVinculo(idx, anchorCell) {
     <div class="vincul-results"><div class="vincul-result-empty">Digite para buscar…</div></div>
     ${lista[idx].sysname ? '<div class="vincul-desvincular">✕ Desvincular produto</div>' : ''}
   `;
-  anchorCell.appendChild(pop);
+
+  // Posiciona o popover usando fixed, abaixo do elemento âncora
+  document.body.appendChild(pop);
   _popoverAtivo = pop;
+
+  const rect = anchorCell.getBoundingClientRect();
+  const popW = Math.min(300, window.innerWidth * 0.9);
+  let left = rect.left;
+  // Evita vazar pela direita
+  if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+  if (left < 8) left = 8;
+  pop.style.top  = (rect.bottom + 4) + 'px';
+  pop.style.left = left + 'px';
+  pop.style.width = popW + 'px';
 
   const searchInp = pop.querySelector('.pop-search');
   const resultsBox = pop.querySelector('.vincul-results');
