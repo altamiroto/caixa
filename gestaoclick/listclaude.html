@@ -1640,6 +1640,9 @@ async function carregarCacheProdutos(onProgress) {
 function normStr(s) {
   return s.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    // "pro +" e "pro+" → "pro plus" antes de remover símbolos
+    .replace(/\bpro\s*\+/g, 'pro plus')
+    .replace(/\+/g, ' plus ')          // "+" avulso também vira "plus"
     .replace(/[^a-z0-9\s\/]/g, ' ')
     .replace(/\s+/g, ' ').trim();
 }
@@ -1649,6 +1652,7 @@ function ehAcessorio(nome) {
 }
 
 // Qualificadores de variante — eliminatórios
+// "Plus" e "+" são equivalentes (normStr já converte + → plus)
 function extrairVariante(s) {
   const n = normStr(s);
   const vs = [];
@@ -1659,7 +1663,7 @@ function extrairVariante(s) {
   if (/\blite\b/.test(n))  vs.push('lite');
   if (/\bneo\b/.test(n))   vs.push('neo');
   if (/\bfe\b/.test(n))    vs.push('fe');
-  // Sufixo "S" colado a número: note14s, 14s — mas NÃO "5g" ou "s" solto
+  // Sufixo "S" colado a número: note14s — mas NÃO "5g" ou "s" solto
   if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
   return vs;
 }
