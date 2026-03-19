@@ -316,105 +316,64 @@
       .data-inputs { display: flex; gap: 8px; align-items: center; justify-content: space-between;}
       #modal-resumo { text-align: center; margin-left: 0; padding-top: 8px; border-top: 1px dashed var(--border-color);}
     }
-    /* ══════════════════════
-       MODAL BUSCA EM LOTE IA
-       ══════════════════════ */
+
+    /* ══ MODAL BUSCA EM LOTE IA ══ */
     #ia-lote-overlay {
-      display: none; position: fixed; inset: 0; z-index: 600;
-      background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
-      align-items: flex-start; justify-content: center;
-      padding: 16px; overflow-y: auto;
+      display:none; position:fixed; inset:0; z-index:600;
+      background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
+      align-items:flex-start; justify-content:center;
+      padding:16px; overflow-y:auto;
     }
-    #ia-lote-overlay.open { display: flex; }
+    #ia-lote-overlay.open { display:flex; }
     #ia-lote-modal {
-      background: #fff; border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.25);
-      width: 100%; max-width: 700px; margin: auto;
-      display: flex; flex-direction: column; overflow: hidden;
-      border: 2px solid #e0e0e0;
+      background:#fff; border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:100%; max-width:700px; margin:auto;
+      display:flex; flex-direction:column; overflow:hidden;
+      border:2px solid #e0e0e0;
     }
-    .ia-lote-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px; background: #fafafa;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    .ia-lote-header h2 { font-size: 15px; font-weight: 700; color: #1a1a1a; display:flex;align-items:center;gap:8px; }
-    .ia-lote-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-    .ia-lote-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b6b6b; margin-bottom: 4px; display:block; }
-    .ia-lote-ta {
-      width: 100%; min-height: 130px; max-height: 240px;
-      border: 1px solid #e0e0e0; border-radius: 8px;
-      padding: 10px 12px; font-family: 'DM Mono', monospace; font-size: 13px;
-      line-height: 1.6; resize: vertical; color: #1a1a1a; background: #f5f5f5;
-    }
-    .ia-lote-ta:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.15); }
+    .ia-lh { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:#fafafa; border-bottom:1px solid #e0e0e0; }
+    .ia-lh h2 { font-size:15px; font-weight:700; color:#1a1a1a; display:flex; align-items:center; gap:8px; }
+    .ia-lb { padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
+    .ia-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6b6b6b; margin-bottom:4px; display:block; }
+    .ia-ta { width:100%; min-height:130px; max-height:240px; border:1px solid #e0e0e0; border-radius:8px; padding:10px 12px; font-family:'DM Mono',monospace; font-size:13px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
+    .ia-ta:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
+    .ia-prompt-ta { width:100%; min-height:90px; border:1px solid #e0e0e0; border-radius:8px; padding:9px 12px; font-family:'DM Mono',monospace; font-size:12px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
+    .ia-prompt-ta:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
     .ia-prompt-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
-    .ia-lote-prompt {
-      width: 100%; min-height: 90px;
-      border: 1px solid #e0e0e0; border-radius: 8px;
-      padding: 9px 12px; font-family: 'DM Mono', monospace; font-size: 12px;
-      line-height: 1.6; resize: vertical; color: #1a1a1a; background: #f5f5f5;
-    }
-    .ia-lote-prompt:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.15); }
-    .ia-lote-btn-restaurar {
-      background: transparent; border: 1px solid #e0e0e0; border-radius: 6px;
-      color: #6b6b6b; font-size: 11px; cursor: pointer; padding: 3px 9px;
-      transition: all .12s; white-space:nowrap;
-    }
-    .ia-lote-btn-restaurar:hover { background: #f0f0f0; }
-    .ia-lote-btn-processar {
-      background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff;
-      border: none; border-radius: 8px; padding: 10px 20px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      transition: opacity .15s; align-self: flex-end;
-    }
-    .ia-lote-btn-processar:hover { opacity: .88; }
-    .ia-lote-btn-processar:disabled { opacity: .5; cursor: not-allowed; }
-    .ia-lote-erro {
-      display:none; background: #fef2f2; border: 1px solid #fca5a5;
-      border-radius: 7px; padding: 9px 12px; font-size: 12px; color: #dc2626;
-    }
-    /* Resultados */
-    #ia-lote-resultados { display:none; }
-    .ia-res-prog-outer { height: 5px; background: #e0e0e0; border-radius: 99px; overflow: hidden; margin-bottom:8px; }
-    .ia-res-prog-inner { height:100%; background:linear-gradient(90deg,#7c3aed,#a78bfa); width:0%; transition:width .3s; border-radius:99px; }
+    .ia-btn-restaurar { background:transparent; border:1px solid #e0e0e0; border-radius:6px; color:#6b6b6b; font-size:11px; cursor:pointer; padding:3px 9px; }
+    .ia-btn-restaurar:hover { background:#f0f0f0; }
+    .ia-btn-processar { background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:700; cursor:pointer; align-self:flex-end; }
+    .ia-btn-processar:disabled { opacity:.5; cursor:not-allowed; }
+    .ia-erro { display:none; background:#fef2f2; border:1px solid #fca5a5; border-radius:7px; padding:9px 12px; font-size:12px; color:#dc2626; }
+    .ia-prog-outer { height:5px; background:#e0e0e0; border-radius:99px; overflow:hidden; margin-bottom:8px; }
+    .ia-prog-inner { height:100%; background:linear-gradient(90deg,#7c3aed,#a78bfa); width:0%; transition:width .3s; border-radius:99px; }
     .ia-res-status { font-size:12px; color:#6b6b6b; margin-bottom:12px; }
-    .ia-res-grid {
-      display: flex; flex-direction: column; gap: 6px;
-      max-height: 45vh; overflow-y: auto;
-    }
-    .ia-res-item {
-      display: flex; align-items: center; gap: 10px;
-      background: #f9f9f9; border: 1px solid #e0e0e0;
-      border-radius: 9px; padding: 9px 12px; font-size: 13px;
-    }
-    .ia-res-item.sem-est { border-color: #fbbf24; background: #fffbeb; }
-    .ia-res-item.com-est { border-color: #34d399; background: #f0fdf4; }
-    .ia-res-item.nao-encontrado { border-color: #fca5a5; background: #fef2f2; }
-    .ia-res-nome { flex:1; font-weight:600; color:#1a1a1a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .ia-res-sistema { font-size:11px; color:#6b6b6b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .ia-res-badge {
-      font-size: 12px; font-weight: 700; padding: 3px 8px;
-      border-radius: 20px; white-space: nowrap; flex-shrink: 0;
-    }
-    .ia-res-badge.ok   { background: rgba(39,174,96,.12); color: #27ae60; }
-    .ia-res-badge.zero { background: rgba(192,57,43,.12);  color: #c0392b; }
-    .ia-res-badge.nf   { background: rgba(150,150,150,.1); color: #888; }
-    .ia-lote-footer {
-      display: flex; align-items: center; justify-content: space-between; gap:10px;
-      padding: 12px 18px; border-top: 1px solid #e0e0e0; background: #fafafa; flex-wrap:wrap;
-    }
-    .ia-lote-fechar {
-      background: transparent; border: 1px solid #e0e0e0; border-radius: 7px;
-      color: #6b6b6b; font-size: 13px; cursor: pointer; padding: 7px 14px; font-weight:600;
-    }
-    .ia-lote-fechar:hover { background: #f0f0f0; }
-    .ia-lote-add-todos {
-      background: #27ae60; color: #fff; border: none; border-radius: 8px;
-      padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
-      display: none; transition: opacity .15s;
-    }
-    .ia-lote-add-todos:hover { opacity: .85; }
+    .ia-res-grid { display:flex; flex-direction:column; gap:6px; max-height:45vh; overflow-y:auto; }
+    .ia-card { border:1px solid #e0e0e0; border-radius:9px; padding:9px 12px; font-size:13px; display:flex; flex-direction:column; gap:6px; background:#f9f9f9; }
+    .ia-card.com-est { border-color:#34d399; background:#f0fdf4; }
+    .ia-card.sem-est { border-color:#fbbf24; background:#fffbeb; }
+    .ia-card.nao-enc { border-color:#fca5a5; background:#fef2f2; }
+    .ia-nome { font-weight:700; color:#1a1a1a; }
+    .ia-cand-row { display:flex; align-items:center; gap:8px; padding:3px 0; border-bottom:1px solid #f0f0f0; min-width:0; }
+    .ia-cand-nome { flex:1; min-width:0; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#4a4a4a; }
+    .ia-cand-est { font-size:11px; font-weight:700; flex-shrink:0; }
+    .ia-cand-est.ok   { color:#27ae60; }
+    .ia-cand-est.zero { color:#c0392b; }
+    .ia-cand-btn { border:none; border-radius:5px; padding:2px 9px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; }
+    .ia-cand-btn.add  { background:#27ae60; color:#fff; }
+    .ia-cand-btn.dis  { background:#e0e0e0; color:#aaa; cursor:not-allowed; }
+    .ia-card-head { display:flex; align-items:center; gap:8px; }
+    .ia-badge { font-size:12px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
+    .ia-badge.ok   { background:rgba(39,174,96,.12); color:#27ae60; }
+    .ia-badge.zero { background:rgba(192,57,43,.12); color:#c0392b; }
+    .ia-badge.nf   { background:#f0f0f0; color:#888; }
+    .ia-btn-trocar { background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0; border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer; flex-shrink:0; white-space:nowrap; }
+    .ia-lote-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 18px; border-top:1px solid #e0e0e0; background:#fafafa; flex-wrap:wrap; }
+    .ia-btn-fechar { background:transparent; border:1px solid #e0e0e0; border-radius:7px; color:#6b6b6b; font-size:13px; cursor:pointer; padding:7px 14px; font-weight:600; }
+    .ia-btn-fechar:hover { background:#f0f0f0; }
+    .ia-btn-add-todos { background:#27ae60; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; display:none; }
+    .ia-btn-add-todos:hover { opacity:.85; }
   </style>
 </head>
 <body>
@@ -424,9 +383,7 @@
   <div class="layout">
 
     <div class="section-card">
-      <div class="section-title">🔍 Busca Rápida
-        <button id="btn-abrir-ia-lote" style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🤖 Busca em Lote por IA</button>
-      </div>
+      <div class="section-title" style="display:flex;align-items:center;">🔍 Busca Rápida<button id="btn-abrir-ia-lote" style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">🤖 Busca em Lote por IA</button></div>
       <div class="input-with-icon" style="margin-bottom: 10px;">
         <span class="input-icon">🔎</span>
         <input type="text" id="campo-busca" placeholder="Buscar produto pelo nome completo..." />
@@ -486,47 +443,38 @@
 
   </div>
 
+
   <!-- MODAL BUSCA EM LOTE IA -->
   <div id="ia-lote-overlay">
     <div id="ia-lote-modal">
-      <div class="ia-lote-header">
+      <div class="ia-lh">
         <h2>🤖 Busca em Lote por IA</h2>
-        <button class="ia-lote-fechar" id="ia-lote-fechar-topo">✕ Fechar</button>
+        <button class="ia-btn-fechar" id="ia-lote-fechar-topo">✕</button>
       </div>
-
-      <!-- PASSO 1: entrada -->
-      <div class="ia-lote-body" id="ia-lote-passo1">
+      <div class="ia-lb" id="ia-passo1">
         <div>
-          <span class="ia-lote-label">Cole sua lista de produtos aqui</span>
-          <textarea class="ia-lote-ta" id="ia-lote-raw" placeholder="Cole aqui a lista no formato WhatsApp, texto com produtos e preços...
-Motorola Moto G15 256gb 4G - Grafite - 755
-Realme Note 60 4/256gb - Preto/Azul - 725
-..."></textarea>
+          <span class="ia-label">Cole sua lista de produtos</span>
+          <textarea class="ia-ta" id="ia-raw" placeholder="Cole a lista aqui..."></textarea>
         </div>
         <div>
           <div class="ia-prompt-row">
-            <span class="ia-lote-label" style="margin-bottom:0;">Prompt da IA <span style="font-weight:400;font-size:10px;margin-left:4px;">(editável)</span></span>
-            <button class="ia-lote-btn-restaurar" id="ia-lote-restaurar">↺ Restaurar padrão</button>
+            <span class="ia-label" style="margin-bottom:0;">Prompt da IA</span>
+            <button class="ia-btn-restaurar" id="ia-restaurar">↺ Restaurar</button>
           </div>
-          <textarea class="ia-lote-prompt" id="ia-lote-prompt"></textarea>
+          <textarea class="ia-prompt-ta" id="ia-prompt"></textarea>
         </div>
-        <div id="ia-lote-erro" class="ia-lote-erro"></div>
-        <button class="ia-lote-btn-processar" id="ia-lote-processar">🤖 Processar e consultar estoque →</button>
+        <div id="ia-erro" class="ia-erro"></div>
+        <button class="ia-btn-processar" id="ia-processar">🤖 Processar e consultar estoque →</button>
       </div>
-
-      <!-- PASSO 2: resultados -->
-      <div class="ia-lote-body" id="ia-lote-passo2" style="display:none;">
-        <div id="ia-lote-resultados">
-          <div class="ia-res-prog-outer"><div class="ia-res-prog-inner" id="ia-res-prog"></div></div>
-          <div class="ia-res-status" id="ia-res-status">Processando…</div>
-          <div class="ia-res-grid" id="ia-res-grid"></div>
-        </div>
+      <div class="ia-lb" id="ia-passo2" style="display:none;">
+        <div class="ia-prog-outer"><div class="ia-prog-inner" id="ia-prog"></div></div>
+        <div class="ia-res-status" id="ia-status">Processando…</div>
+        <div class="ia-res-grid" id="ia-grid"></div>
       </div>
-
       <div class="ia-lote-footer">
-        <button class="ia-lote-fechar" id="ia-lote-fechar-rodape">← Fechar</button>
-        <span id="ia-lote-resumo" style="font-size:12px;color:#6b6b6b;flex:1;text-align:center;"></span>
-        <button class="ia-lote-add-todos" id="ia-lote-add-todos">🛒 Adicionar todos com estoque ao carrinho</button>
+        <button class="ia-btn-fechar" id="ia-fechar-rodape">← Fechar</button>
+        <span id="ia-resumo" style="font-size:12px;color:#6b6b6b;flex:1;text-align:center;"></span>
+        <button class="ia-btn-add-todos" id="ia-add-todos">🛒 Adicionar todos com estoque</button>
       </div>
     </div>
   </div>
@@ -1040,19 +988,24 @@ Realme Note 60 4/256gb - Preto/Azul - 725
 
     atualizarCarrinho();
 
-        // ══════════════════════════════════
-    // MOTOR DE BUSCA (mesmo do gerador de lista)
-    // ══════════════════════════════════
+    // ════════════════════════
+    // BUSCA EM LOTE POR IA
+    // ════════════════════════
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v2';
+    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em listas de produtos para revenda.\nAnalise a lista e extraia APENAS os nomes dos produtos, sem preço, sem cor, sem informações de marketing.\nMantenha: modelo, capacidade de armazenamento (ex: 256gb, 4/128gb), conectividade (4G, 5G) se estiver.\nRemova: preço, emojis, marcadores de lista, cores, datas, categorias, especificações técnicas longas.\nRetorne APENAS JSON válido, sem markdown, sem explicações.\n\nExemplo de saída:\n[\"Motorola Moto G15 256gb 4G\",\"Realme Note 60 4/256gb\",\"Samsung Galaxy A36 5G 8/256gb\",\"Redmi Note 14 Pro 5G 8/256gb\"]";
+    let _iaResultados = [];
+
+    // Declara variáveis do cache (usadas pelo motor injetado)
     let _prodCache = [];
     let _prodCacheTs = 0;
     const CACHE_TTL = 5 * 60 * 1000;
 
-function extrairMem(s) {
+    // ── Motor de busca inteligente (mesmo do gerador de lista) ──
+    function extrairMem(s) {
   const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
   return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
 }
 
-// Extrai armazenamento solo quando não há RAM/armazenamento par: "256gb", "64gb"
 function extrairStorage(s) {
   // Só pega se não houver padrão X/Y antes
   if (/\d+\s*\/\s*\d+/i.test(s)) return [];
@@ -1060,13 +1013,11 @@ function extrairStorage(s) {
     .map(m => m.replace(/\s/g,'').toLowerCase());
 }
 
-// Extrai geração de rede: "4g", "5g"
 function extrairRede(s) {
   const m = s.match(/\b(4g|5g)\b/gi);
   return m ? m.map(x => x.toLowerCase()) : [];
 }
 
-// Extrai polegadas de TV/monitor: "32", "40", "43", "50", "55", "65"
 function extrairPolegadas(s) {
   // Padrão: número seguido de " ou pol ou " antes de palavras como smart/tv/led
   const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
@@ -1074,398 +1025,80 @@ function extrairPolegadas(s) {
   return m ? m.map(x => x.match(/\d+/)[0]) : [];
 }
 
-// Score de similaridade melhorado — só avalia nome/marca/modelo,
-// NÃO pondera atributos técnicos (esses já foram filtrados)
-function melhorMatch(label, produtos) {
-  const norm = s => s
-    .toLowerCase()
+function normStr(s) {
+  return s.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    // "pro +" e "pro+" → "pro plus" antes de remover símbolos
+    .replace(/\bpro\s*\+/g, 'pro plus')
+    .replace(/\+/g, ' plus ')          // "+" avulso também vira "plus"
     .replace(/[^a-z0-9\s\/]/g, ' ')
     .replace(/\s+/g, ' ').trim();
-
-  const labelN = norm(label);
-
-  // Atributos técnicos DO LABEL — serão usados como filtro duro
-  const labelMem  = extrairMem(label);
-  const labelRede = extrairRede(label);
-  const labelPol  = extrairPolegadas(label);
-  const labelStor = extrairStorage(label);
-
-  // Tokens para score (exclui tokens técnicos já filtrados)
-  const stopTokens = new Set(['de','do','da','the','com','para','and','or','in','a','o','e']);
-  const tokens = labelN.split(/\s+/).filter(t =>
-    t.length >= 2 && !stopTokens.has(t)
-  );
-
-  let best = null, bestScore = -1;
-
-  produtos.forEach(p => {
-    const pn = p.nome;
-    const pnN = norm(pn);
-
-    // ── FILTROS ELIMINATÓRIOS ──────────────────────────
-    // 1. Memória RAM/Armazenamento (ex: 8/256 ≠ 4/128)
-    if (labelMem.length > 0) {
-      const pMem = extrairMem(pn);
-      if (pMem.length > 0) {
-        const bate = labelMem.some(m => pMem.includes(m));
-        if (!bate) return; // descarta
-      }
-    }
-
-    // 2. Armazenamento solo (ex: 64gb ≠ 128gb)
-    //    Também compara contra o segundo número de pares RAM/storage do produto
-    if (labelStor.length > 0) {
-      const pStor = extrairStorage(pn);
-      const pMem2 = extrairMem(pn); // ex: ["64/128"] → storage é o segundo número
-      // Extrai o número de armazenamento do label (ex: "64gb" → "64")
-      const labelStorNum = labelStor.map(s => s.replace(/[^\d]/g, ''));
-      // Extrai segundo número dos pares do produto (o armazenamento)
-      const pStorFromPair = pMem2.map(m => m.split('/')[1]).filter(Boolean);
-
-      if (pStor.length > 0 || pStorFromPair.length > 0) {
-        const pStorNums = [
-          ...pStor.map(s => s.replace(/[^\d]/g, '')),
-          ...pStorFromPair
-        ];
-        const bate = labelStorNum.some(n => pStorNums.includes(n));
-        if (!bate) return;
-      }
-    }
-
-    // 3. Geração de rede (4G ≠ 5G — são produtos diferentes)
-    if (labelRede.length > 0) {
-      const pRede = extrairRede(pn);
-      if (pRede.length > 0) {
-        const bate = labelRede.some(r => pRede.includes(r));
-        if (!bate) return;
-      }
-    }
-
-    // 4. Polegadas (TV 32" ≠ TV 43")
-    if (labelPol.length > 0) {
-      const pPol = extrairPolegadas(pn);
-      if (pPol.length > 0) {
-        const bate = labelPol.some(p => pPol.includes(p));
-        if (!bate) return;
-      }
-    }
-    // ──────────────────────────────────────────────────
-
-    // Score por tokens de nome/modelo (após passar nos filtros)
-    const score = tokens.reduce((s, t) => s + (pnN.includes(t) ? 1 : 0), 0) / tokens.length;
-    if (score > bestScore) { bestScore = score; best = p; }
-  });
-
-  // Threshold mínimo: pelo menos 25% dos tokens de nome devem bater
-  return bestScore >= 0.25 ? best : null;
 }
 
-// ════════════════════════════════════
-// RENDER DA REVISÃO
-// ════════════════════════════════════
-function iaRenderRevisao() {
-  const list = el('ia-rev-list');
-  list.innerHTML = '';
-
-  const total    = _iaItens.filter(i => i.type === 'product').length;
-  const comVinc  = _iaItens.filter(i => i.type === 'product' && i._vinculos?.length).length;
-  el('ia-rev-summary').textContent =
-    `${total} produto(s) · ${comVinc} vinculado(s) · ${total - comVinc} sem vínculo`;
-
-  _iaItens.forEach((item, idx) => {
-    const div = document.createElement('div');
-    div.className = 'ia-rev-item' +
-      (item._selecionado ? ' selected' : '') +
-      (item.type === 'header' ? ' type-header' : '') +
-      (item.type === 'free'   ? ' type-free'   : '');
-    div.dataset.idx = idx;
-
-    if (item.type === 'header') {
-      div.innerHTML = `
-        <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
-        <div class="ia-rev-body">
-          <div class="ia-rev-label" style="color:#a78bfa;">${esc(item.icon||'📌')} ${esc(item.label||'Seção')}</div>
-          <div style="font-size:11px;color:var(--text3);">Cabeçalho de seção</div>
-        </div>`;
-    } else if (item.type === 'free') {
-      div.innerHTML = `
-        <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
-        <div class="ia-rev-body">
-          <div class="ia-rev-label" style="color:var(--text3);font-style:italic;">${item.text||'(linha em branco)'}</div>
-        </div>`;
-    } else {
-      const vs = item._vinculos || [];
-      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
-
-      // Linha de vínculo principal
-      let vincHtml;
-      if (vs.length === 0) {
-        vincHtml = `<span class="ia-rev-vinc none">⚠ Sem vínculo — clique em Trocar</span>`;
-      } else if (vs.length === 1) {
-        vincHtml = `<span class="ia-rev-vinc ok" title="${esc(vs[0].nome)}">🔗 ${esc(vs[0].nome.substring(0,38))}${vs[0].nome.length>38?'…':''} · ${vs[0].estoque>0?'✓ '+vs[0].estoque:'⚠ '+vs[0].estoque}</span>`;
-      } else {
-        vincHtml = `<span class="ia-rev-vinc ok">🔗 ${vs.length} vínculos · Σ ${estoqueTotal} un.</span>`;
-      }
-
-      // Detalhe individual quando múltiplos
-      const detalhes = vs.length > 1
-        ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
-            ${vs.map(v => `<div style="font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;">
-              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome.substring(0,40))}</span>
-              <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};flex-shrink:0;">${v.estoque>0?'✓ '+v.estoque:'⚠ '+v.estoque}</span>
-              <button class="ia-rm-vinc" data-idx="${idx}" data-vid="${v.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;flex-shrink:0;">✕</button>
-            </div>`).join('')}
-          </div>` : '';
-
-      div.innerHTML = `
-        <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
-        <div class="ia-rev-body">
-          <div class="ia-rev-label">${esc(item.label||'(sem nome)')}</div>
-          <div class="ia-rev-meta">
-            ${item.price ? `<span class="ia-rev-price">R$ ${esc(item.price)}</span>` : ''}
-            ${vincHtml}
-            <button class="ia-rev-change" data-idx="${idx}">🔄 Trocar/Add</button>
-          </div>
-          ${detalhes}
-          <div class="ia-rev-dropdown" id="ia-dd-${idx}">
-            <input type="text" class="ia-rev-dd-search" placeholder="Buscar na API…" data-idx="${idx}" />
-            <div class="ia-rev-dd-results" id="ia-dd-res-${idx}">
-              ${iaDdItens(_prodCache.length ? [] : [], idx, vs)}
-            </div>
-          </div>
-        </div>`;
-    }
-
-    // checkbox
-    div.querySelector('.ia-rev-check').addEventListener('change', e => {
-      _iaItens[idx]._selecionado = e.target.checked;
-      div.classList.toggle('selected', e.target.checked);
-    });
-
-    // remover vínculo individual nos detalhes
-    div.querySelectorAll('.ia-rm-vinc').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const vid = btn.dataset.vid;
-        _iaItens[idx]._vinculos = (_iaItens[idx]._vinculos || []).filter(v => String(v.id) !== String(vid));
-        iaRenderRevisao();
-      });
-    });
-
-    // botão trocar/add
-    div.querySelector('.ia-rev-change')?.addEventListener('click', () => {
-      const dd = el(`ia-dd-${idx}`);
-      dd.classList.toggle('open');
-      if (dd.classList.contains('open')) {
-        const inp = dd.querySelector('.ia-rev-dd-search');
-        inp?.focus();
-        // Pré-popula com candidatos do cache pelo label
-        const cands = _prodCache.length ? buscarNoCacheLocal(item.label).slice(0,15) : [];
-        el(`ia-dd-res-${idx}`).innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
-      }
-    });
-
-    // busca no dropdown
-    div.querySelector('.ia-rev-dd-search')?.addEventListener('input', async function() {
-      const q = this.value.trim();
-      const resDiv = el(`ia-dd-res-${idx}`);
-      if (q.length < 2) {
-        const cands = _prodCache.length ? buscarNoCacheLocal(_iaItens[idx].label || '').slice(0,15) : [];
-        resDiv.innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
-        return;
-      }
-      resDiv.innerHTML = '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">⏳ Buscando…</div>';
-      // Busca no cache ou API
-      let prods = _prodCache.length ? buscarNoCacheLocal(q).slice(0,15) : [];
-      if (!prods.length) {
-        try {
-          const d = await apiGet({ nome: q });
-          if (d.code === 200 && d.data?.length) prods = d.data.slice(0,15);
-        } catch(e) {}
-      }
-      resDiv.innerHTML = prods.length
-        ? iaDdItens(prods, idx, _iaItens[idx]._vinculos || [])
-        : '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum resultado.</div>';
-    });
-
-    list.appendChild(div);
-  });
+function ehAcessorio(nome) {
+  return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
 }
 
-function iaDdItens(cands, idx, jaVinculados) {
-  if (!cands?.length) return '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum candidato. Busque acima.</div>';
-  return cands.map(p => {
-    const est = Number(p.estoque ?? 0);
-    const badgeCls = est > 0 ? 'badge-ok' : 'badge-zero';
-    const jatem = (jaVinculados||[]).some(v => String(v.id) === String(p.id));
-    return `<div class="ia-rev-dd-row${jatem?' ia-dd-jatem':''}" data-pid="${esc(p.id)}" data-pnome="${esc(p.nome)}" data-psku="${esc(p.codigo_interno||p.codigo_barra||'')}" data-pest="${est}" data-idx="${idx}">
-      <span class="ia-rev-dd-nome">${esc(p.nome)}</span>
-      <span class="ia-rev-dd-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</span>
-      <span class="badge ${badgeCls}" style="font-size:10px;padding:2px 5px;">${est>0?'✓ '+est:'⚠ '+est}</span>
-      ${jatem ? '<span style="color:var(--accent);font-size:10px;">✓</span>' : ''}
-    </div>`;
-  }).join('');
+function extrairVariante(s) {
+  const n = normStr(s);
+  const vs = [];
+  if (/\bpro\b/.test(n))   vs.push('pro');
+  if (/\bplus\b/.test(n))  vs.push('plus');
+  if (/\bultra\b/.test(n)) vs.push('ultra');
+  if (/\bmax\b/.test(n))   vs.push('max');
+  if (/\blite\b/.test(n))  vs.push('lite');
+  if (/\bneo\b/.test(n))   vs.push('neo');
+  if (/\bfe\b/.test(n))    vs.push('fe');
+  // Sufixo "S" colado a número: note14s — mas NÃO "5g" ou "s" solto
+  if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
+  return vs;
 }
 
-// Delegação de clique nos dd-rows — ADICIONA ao array de vínculos (não substitui)
-el('ia-rev-list').addEventListener('click', e => {
-  const row = e.target.closest('.ia-rev-dd-row');
-  if (!row) return;
-  const idx = +row.dataset.idx;
-  const novoVinculo = {
-    id: row.dataset.pid, nome: row.dataset.pnome,
-    sku: row.dataset.psku, estoque: +row.dataset.pest
-  };
-  const vs = _iaItens[idx]._vinculos || [];
-  // Se já existe, remove (toggle); senão adiciona
-  const existe = vs.findIndex(v => String(v.id) === String(novoVinculo.id));
-  if (existe >= 0) {
-    _iaItens[idx]._vinculos = vs.filter((_, i) => i !== existe);
-  } else {
-    _iaItens[idx]._vinculos = [...vs, novoVinculo];
-  }
-  iaRenderRevisao();
-});
-
-// Selecionar todos
-el('ia-check-all').addEventListener('change', function() {
-  _iaItens.forEach(i => i._selecionado = this.checked);
-  iaRenderRevisao();
-});
-
-// ════════════════════════════════════
-// CONFIRMAR — adiciona à lista principal
-// ════════════════════════════════════
-function iaConfirmar() {
-  const selecionados = _iaItens.filter(i => i._selecionado);
-  if (!selecionados.length) { toast('⚠️ Nenhum item selecionado'); return; }
-
-  selecionados.forEach(item => {
-    const base = { id: uid() };
-    if (item.type === 'header') {
-      lista.push({ ...base, type: 'header', icon: item.icon || '📌', label: item.label || '' });
-    } else if (item.type === 'free') {
-      lista.push({ ...base, type: 'free', text: item.text || '' });
-    } else {
-      const vs = item._vinculos || [];
-      lista.push({
-        ...base, type: 'product',
-        label:    item.label  || '',
-        price:    item.price  || '',
-        vinculos: vs,
-        sysname:  vs[0]?.nome || '',
-        sku:      vs[0]?.sku  || '',
-        prodId:   vs[0]?.id   || null,
-        estoque:  vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined,
-      });
-    }
-  });
-
-  renderTabela(); renderMobile(); atualizarPreview(); salvar();
-  iaFechar();
-  toast(`✅ ${selecionados.length} item(s) adicionados à lista!`);
+function extrairSerie(s) {
+  const n = normStr(s);
+  const series = [];
+  // Ordem importa: "redmi note" antes de "redmi"
+  if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
+  else if (/\bredmi\b/.test(n))         series.push('redmi');
+  if (/\bpoco\b/.test(n))               series.push('poco');
+  if (/\brealme\b/.test(n))             series.push('realme');
+  if (/\biphone\b/.test(n))             series.push('iphone');
+  if (/\bgalaxy\b/.test(n))             series.push('galaxy');
+  if (/\bmoto\b/.test(n))               series.push('moto');
+  if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
+  return series;
 }
 
-// ════════════════════════════════════
-// AUTO-GROW TEXTAREA
-// Faz o textarea crescer conforme o conteúdo,
-// resolvendo truncamento no desktop e mobile.
-// ════════════════════════════════════
-function autoGrow(ta) {
-  ta.style.height = 'auto';
-  ta.style.height = ta.scrollHeight + 'px';
-}
-function autoGrowAll() {
-  document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow);
+function serieCompativel(lS, pS) {
+  if (!lS.length || !pS.length) return true;
+  if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
+  if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
+  return lS.some(s => pS.includes(s));
 }
 
-// ════════════════════════════════════
-// PERSISTÊNCIA
-// ════════════════════════════════════
-function salvar() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      lista,
-      titulo:    el('lista-titulo').value,
-      cfgData:   el('cfg-data').value,
-      cfgSemEst: el('cfg-sem-estoque').value,
-      cfgPreco:  el('cfg-preco').value,
-      lojaId:    el('loja-id').value,
-      apiBase:   el('api-base').value,
-    }));
-    setSync('ok','Salvo');
-  } catch(e) { setSync('err','Erro ao salvar'); }
-}
+function tokensModelo(label) {
+  const stop = new Set(['de','do','da','com','para','a','o','e','em',
+    'smart','tv','led','oled','full','hd','4k','wi','fi',
+    'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
+    'prata','bege','vermelho','amarelo','grafite','gold','creme',
+    'titanium','aurora','marrom','laranja','vinho','preta',
+    'silver','blue','black','white','purple','gray','transparente']);
 
-function carregar() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const d = JSON.parse(raw);
-    lista = d.lista || [];
-    if (d.titulo)    el('lista-titulo').value    = d.titulo;
-    if (d.cfgData)   el('cfg-data').value        = d.cfgData;
-    if (d.cfgSemEst) el('cfg-sem-estoque').value = d.cfgSemEst;
-    if (d.cfgPreco)  el('cfg-preco').value       = d.cfgPreco;
-    if (d.lojaId)    el('loja-id').value         = d.lojaId;
-    if (d.apiBase)   el('api-base').value        = d.apiBase;
-  } catch(e) {}
-}
+  // Remove cores antes de tokenizar
+  const n = normStr(label)
+    .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
+    .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
+    .replace(/\s+/g, ' ').trim();
 
-// ════════════════════════════════════
-// UTILS
-// ════════════════════════════════════
-function el(id) { return document.getElementById(id); }
-let _tt;
-function toast(msg, dur=2600) {
-  const t = el('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), dur);
+  return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
 }
-function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').textContent=m; }
-function setApiSync(s,m){ el('sync-dot-api').className='sync-dot '+s; el('sync-text-api').textContent=m; }
-function dataHoje(){
-  const d=new Date();
-  return d.getDate().toString().padStart(2,'0')+'/'+
-         (d.getMonth()+1).toString().padStart(2,'0')+'/'+
-         d.getFullYear().toString().slice(2);
-}
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ════════════════════════════════════
-// API — usa SEMPRE o endpoint de listagem com query params
-// O proxy expõe apenas GET /produtos?loja_id=&nome=&codigo=
-// NUNCA tenta /produtos/{id} pois o proxy não suporta essa rota.
-// ════════════════════════════════════
-async function apiGet(params) {
-  const base = el('api-base').value.trim();
-  const loja = el('loja-id').value.trim();
-  const url  = new URL(base);
-  url.searchParams.set('loja_id', loja);
-  url.searchParams.set('limite', '20');
-  for (const [k,v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && String(v).trim() !== '')
-      url.searchParams.set(k, v);
-  }
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
-// ════════════════════════════════════
-// CACHE DE PRODUTOS
-// Baixa TODOS os produtos da API de uma vez
-// (paginado, respeitando rate limit).
-// Usado pelo IA import e pelo syncTodos.
-// ════════════════════════════════════
 
 async function carregarCacheProdutos(onProgress) {
   // Usa cache se ainda for válido
   if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
 
-  const base = el('api-base').value.trim();
-  const loja = el('loja-id').value.trim();
+  const base = "https://caixa-three.vercel.app/api/produtos";
+  const loja = lojaIdJeta;
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
   // Primeira página para saber total
@@ -1506,78 +1139,6 @@ async function carregarCacheProdutos(onProgress) {
   _prodCache = todos;
   _prodCacheTs = Date.now();
   return _prodCache;
-}
-
-// Normaliza string para comparação
-function normStr(s) {
-  return s.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    // "pro +" e "pro+" → "pro plus" antes de remover símbolos
-    .replace(/\bpro\s*\+/g, 'pro plus')
-    .replace(/\+/g, ' plus ')          // "+" avulso também vira "plus"
-    .replace(/[^a-z0-9\s\/]/g, ' ')
-    .replace(/\s+/g, ' ').trim();
-}
-
-function ehAcessorio(nome) {
-  return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
-}
-
-// Qualificadores de variante — eliminatórios
-// "Plus" e "+" são equivalentes (normStr já converte + → plus)
-function extrairVariante(s) {
-  const n = normStr(s);
-  const vs = [];
-  if (/\bpro\b/.test(n))   vs.push('pro');
-  if (/\bplus\b/.test(n))  vs.push('plus');
-  if (/\bultra\b/.test(n)) vs.push('ultra');
-  if (/\bmax\b/.test(n))   vs.push('max');
-  if (/\blite\b/.test(n))  vs.push('lite');
-  if (/\bneo\b/.test(n))   vs.push('neo');
-  if (/\bfe\b/.test(n))    vs.push('fe');
-  // Sufixo "S" colado a número: note14s — mas NÃO "5g" ou "s" solto
-  if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
-  return vs;
-}
-
-// Série do produto — incompatibilidade eliminatória
-function extrairSerie(s) {
-  const n = normStr(s);
-  const series = [];
-  // Ordem importa: "redmi note" antes de "redmi"
-  if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
-  else if (/\bredmi\b/.test(n))         series.push('redmi');
-  if (/\bpoco\b/.test(n))               series.push('poco');
-  if (/\brealme\b/.test(n))             series.push('realme');
-  if (/\biphone\b/.test(n))             series.push('iphone');
-  if (/\bgalaxy\b/.test(n))             series.push('galaxy');
-  if (/\bmoto\b/.test(n))               series.push('moto');
-  if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
-  return series;
-}
-
-function serieCompativel(lS, pS) {
-  if (!lS.length || !pS.length) return true;
-  if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
-  if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
-  return lS.some(s => pS.includes(s));
-}
-
-function tokensModelo(label) {
-  const stop = new Set(['de','do','da','com','para','a','o','e','em',
-    'smart','tv','led','oled','full','hd','4k','wi','fi',
-    'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
-    'prata','bege','vermelho','amarelo','grafite','gold','creme',
-    'titanium','aurora','marrom','laranja','vinho','preta',
-    'silver','blue','black','white','purple','gray','transparente']);
-
-  // Remove cores antes de tokenizar
-  const n = normStr(label)
-    .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
-    .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
-    .replace(/\s+/g, ' ').trim();
-
-  return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
 }
 
 function buscarNoCacheLocal(q) {
@@ -1813,247 +1374,197 @@ function scoreNome(label, nomeAPI) {
   return mScore * 0.7 + rScore * 0.3;
 }
 
+async function buscarEstoqueDoItem(item) {
+  const vs = await buscarVinculosDoItem(item);
+  if (!vs.length) return null;
+  const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+  return { estoque: estoqueTotal, prodId: vs[0].id };
+}
 
-
-    // ══════════════════════════════════════════
-    // BUSCA EM LOTE POR IA
-    // ══════════════════════════════════════════
-    const IA_LOTE_PROMPT_KEY = 'jeta_ia_lote_prompt_v1';
-    const IA_LOTE_PROMPT_DEFAULT =
-`Você é um assistente especializado em listas de produtos para revenda.
-Analise a lista e extraia APENAS os nomes dos produtos, sem preço, sem cor, sem memória desnecessária.
-Retorne um JSON com array de strings — cada string é o nome limpo do produto.
-Mantenha: modelo, capacidade de armazenamento (ex: 256gb, 4/128gb), conectividade (4G, 5G) se estiver.
-Remova: preço, emojis, marcadores de lista, cores, datas, categorias.
-Retorne APENAS o JSON válido, sem markdown, sem explicações.
-
-Exemplo de saída:
-["Motorola Moto G15 256gb 4G","Realme Note 60 4/256gb","Samsung Galaxy A36 5G 8/256gb","Redmi Note 14 Pro 5G 8/256gb"]`;
-
-    let _iaLoteResultados = []; // { nomeLista, nomeSistema, estoque, produtoObj }
-
-    function iaLoteGetPrompt() {
-      return localStorage.getItem(IA_LOTE_PROMPT_KEY) || IA_LOTE_PROMPT_DEFAULT;
-    }
+    // Função helper para o motor
+    function el(id) { return document.getElementById(id); }
 
     // Inicializa prompt
-    document.getElementById('ia-lote-prompt').value = iaLoteGetPrompt();
+    document.getElementById('ia-prompt').value =
+      localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT;
 
-    document.getElementById('ia-lote-prompt').addEventListener('input', function() {
-      localStorage.setItem(IA_LOTE_PROMPT_KEY, this.value);
+    document.getElementById('ia-prompt').addEventListener('input', function() {
+      localStorage.setItem(IA_PROMPT_KEY, this.value);
     });
-    document.getElementById('ia-lote-restaurar').addEventListener('click', function() {
-      document.getElementById('ia-lote-prompt').value = IA_LOTE_PROMPT_DEFAULT;
-      localStorage.setItem(IA_LOTE_PROMPT_KEY, IA_LOTE_PROMPT_DEFAULT);
+
+    document.getElementById('ia-restaurar').addEventListener('click', function() {
+      document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT;
+      localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT);
       mostrarToast('↺ Prompt restaurado');
     });
 
     // Abrir / fechar
     document.getElementById('btn-abrir-ia-lote').addEventListener('click', function() {
-      document.getElementById('ia-lote-passo1').style.display = 'flex';
-      document.getElementById('ia-lote-passo2').style.display = 'none';
-      document.getElementById('ia-lote-erro').style.display = 'none';
-      document.getElementById('ia-lote-add-todos').style.display = 'none';
-      document.getElementById('ia-lote-resumo').textContent = '';
+      document.getElementById('ia-passo1').style.display = 'flex';
+      document.getElementById('ia-passo2').style.display = 'none';
+      document.getElementById('ia-erro').style.display = 'none';
+      document.getElementById('ia-add-todos').style.display = 'none';
+      document.getElementById('ia-resumo').textContent = '';
       document.getElementById('ia-lote-overlay').classList.add('open');
-      setTimeout(function(){ document.getElementById('ia-lote-raw').focus(); }, 100);
+      setTimeout(function(){ document.getElementById('ia-raw').focus(); }, 80);
     });
+
     function fecharIaLote() {
       document.getElementById('ia-lote-overlay').classList.remove('open');
     }
     document.getElementById('ia-lote-fechar-topo').addEventListener('click', fecharIaLote);
-    document.getElementById('ia-lote-fechar-rodape').addEventListener('click', fecharIaLote);
+    document.getElementById('ia-fechar-rodape').addEventListener('click', fecharIaLote);
     document.getElementById('ia-lote-overlay').addEventListener('click', function(e) {
       if (e.target === this) fecharIaLote();
     });
 
-    // Chamar API Groq
-    async function chamarGroqLote(systemPrompt, userMessage) {
+    // Chamar Groq
+    async function chamarGroq(system, user) {
       const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt: systemPrompt, messages: userMessage })
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ systemPrompt: system, messages: user })
       });
-      if (!resp.ok) {
-        const e = await resp.json().catch(function(){ return {}; });
-        throw new Error(e.error || 'Erro HTTP ' + resp.status);
-      }
+      if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
       const d = await resp.json();
-      if (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content)
+      if (d.choices && d.choices[0] && d.choices[0].message)
         return d.choices[0].message.content.trim();
-      throw new Error('Resposta inesperada da API');
+      throw new Error('Resposta inesperada do Groq');
     }
 
-    // Busca produto usando o motor completo (mesmo da geração de lista)
-    async function buscarProdutoLote(nomeLista) {
-      const item = { label: nomeLista, sysname: '', sku: '', prodId: null };
-      // Garante cache carregado
-      if (!_prodCache.length) {
-        await carregarCacheProdutos();
-      }
-      // Retorna array de vínculos ordenados por score
-      return await buscarVinculosDoItem(item);
-    }
-
-    // Processa a lista com IA e depois busca o estoque de cada produto
-    document.getElementById('ia-lote-processar').addEventListener('click', async function() {
-      const raw = document.getElementById('ia-lote-raw').value.trim();
+    // Processar
+    document.getElementById('ia-processar').addEventListener('click', async function() {
+      const raw = document.getElementById('ia-raw').value.trim();
       if (!raw) {
-        const err = document.getElementById('ia-lote-erro');
-        err.textContent = 'Cole a lista antes de processar.';
-        err.style.display = 'block';
+        document.getElementById('ia-erro').textContent = 'Cole a lista antes de processar.';
+        document.getElementById('ia-erro').style.display = 'block';
         return;
       }
-      document.getElementById('ia-lote-erro').style.display = 'none';
-
+      document.getElementById('ia-erro').style.display = 'none';
       const btn = this;
-      btn.disabled = true; btn.textContent = '⏳ Processando com IA…';
+      btn.disabled = true; btn.textContent = '⏳ Processando…';
 
       try {
-        const prompt = document.getElementById('ia-lote-prompt').value.trim() || IA_LOTE_PROMPT_DEFAULT;
-        localStorage.setItem(IA_LOTE_PROMPT_KEY, prompt);
+        const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
+        localStorage.setItem(IA_PROMPT_KEY, prompt);
 
         // 1. IA extrai nomes
-        const resposta = await chamarGroqLote(
+        const resposta = await chamarGroq(
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
-          prompt + '\n\nLista para processar:\n' + raw
+          prompt + '\n\nLista:\n' + raw
         );
-        const jsonStr = resposta.replace(/```json|```/g, '').trim();
-        const nomes = JSON.parse(jsonStr);
-        if (!Array.isArray(nomes) || !nomes.length) throw new Error('IA não retornou uma lista válida.');
+        const nomes = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        if (!Array.isArray(nomes) || !nomes.length) throw new Error('IA não retornou lista válida.');
 
-        // 2. Muda para passo 2 e baixa catálogo
-        document.getElementById('ia-lote-passo1').style.display = 'none';
-        document.getElementById('ia-lote-passo2').style.display = 'flex';
-        document.getElementById('ia-lote-resultados').style.display = 'block';
+        // 2. Muda para passo 2
+        document.getElementById('ia-passo1').style.display = 'none';
+        document.getElementById('ia-passo2').style.display = 'flex';
 
-        const grid = document.getElementById('ia-res-grid');
-        const prog = document.getElementById('ia-res-prog');
-        const status = document.getElementById('ia-res-status');
+        const grid  = document.getElementById('ia-grid');
+        const prog  = document.getElementById('ia-prog');
+        const status = document.getElementById('ia-status');
         grid.innerHTML = '';
-        _iaLoteResultados = [];
+        _iaResultados = [];
 
-        // Baixa catálogo completo uma vez (mesmo do gerador de lista)
+        // 3. Baixa catálogo completo
         status.textContent = 'Baixando catálogo de produtos…';
         prog.style.width = '5%';
         await carregarCacheProdutos(function(pag, total) {
           prog.style.width = Math.round((pag/total)*40) + '%';
-          status.textContent = 'Catálogo: ' + pag + '/' + total + ' páginas…';
+          status.textContent = 'Catálogo: ' + pag + '/' + total + '…';
         });
 
         var comEst = 0, semEst = 0, naoAch = 0;
 
+        // 4. Resolve cada produto offline com o motor completo
         for (var i = 0; i < nomes.length; i++) {
           const nome = nomes[i];
           status.textContent = '(' + (i+1) + '/' + nomes.length + ') ' + nome.substring(0,45) + '…';
           prog.style.width = (40 + Math.round(((i+1)/nomes.length)*60)) + '%';
 
-          // Busca com o motor completo — retorna array de candidatos ordenados por score
-          const vinculos = await buscarProdutoLote(nome);
+          const vinculos = await buscarVinculosDoItem({ label: nome, sysname:'', sku:'', prodId:null });
           const card = document.createElement('div');
 
           if (!vinculos || !vinculos.length) {
-            card.className = 'ia-res-item nao-encontrado';
+            card.className = 'ia-card nao-enc';
             card.innerHTML =
-              '<div style="flex:1;min-width:0;">' +
-                '<div class="ia-res-nome">' + nome + '</div>' +
-                '<div class="ia-res-sistema" style="color:#c0392b;font-size:12px;">Não encontrado — clique em Buscar para tentar manualmente</div>' +
+              '<div class="ia-card-head">' +
+                '<span class="ia-nome">' + nome + '</span>' +
+                '<span class="ia-badge nf">N/A</span>' +
+                '<button class="ia-btn-trocar ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '">🔍 Buscar</button>' +
               '</div>' +
-              '<button class="ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '" ' +
-                'style="background:#6b6b6b;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;">🔍 Buscar</button>';
-            _iaLoteResultados.push({ nomeLista: nome, vinculos: [] });
+              '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
           } else {
-            const estoqueTotal = vinculos.reduce(function(s,v){ return s + v.estoque; }, 0);
-            const temEst = estoqueTotal > 0;
+            const total = vinculos.reduce(function(s,v){return s+v.estoque;},0);
+            const temEst = total > 0;
             if (temEst) comEst++; else semEst++;
 
-            // Linhas de candidatos — todos visíveis com botão + individual
-            var candidatosHtml = '';
+            var candidatos = '';
             vinculos.forEach(function(v) {
-              const est = v.estoque;
-              const cls = est > 0 ? 'color:#27ae60;font-weight:700;' : 'color:#c0392b;font-weight:700;';
-              candidatosHtml +=
-                '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f0f0f0;min-width:0;">' +
-                  '<div style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4a4a4a;" title="' + v.nome + '">' + v.nome + '</div>' +
-                  '<span style="font-size:11px;' + cls + 'flex-shrink:0;">' + (est>0?'✓ ':'⚠ ') + est + '</span>' +
-                  (est > 0
-                    ? '<button class="ia-add-vinculo" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + est + '" style="background:#27ae60;color:#fff;border:none;border-radius:5px;padding:2px 9px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">+</button>'
-                    : '<button style="background:#e0e0e0;color:#aaa;border:none;border-radius:5px;padding:2px 9px;font-size:12px;cursor:not-allowed;flex-shrink:0;" disabled>+</button>') +
+              candidatos +=
+                '<div class="ia-cand-row">' +
+                  '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
+                  '<span class="ia-cand-est ' + (v.estoque>0?'ok':'zero') + '">' + (v.estoque>0?'✓ ':'⚠ ') + v.estoque + '</span>' +
+                  (v.estoque > 0
+                    ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
+                    : '<button class="ia-cand-btn dis" disabled>+</button>') +
                 '</div>';
             });
 
-            card.className = 'ia-res-item ' + (temEst ? 'com-est' : 'sem-est');
-            card.style.flexDirection = 'column';
+            card.className = 'ia-card ' + (temEst?'com-est':'sem-est');
             card.innerHTML =
-              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
-                '<div class="ia-res-nome" style="flex:1;">' + nome + '</div>' +
-                '<span class="ia-res-badge ' + (temEst?'ok':'zero') + '">' + (temEst?'✓ ':'⚠ ') + estoqueTotal + '</span>' +
-                '<button class="ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '" ' +
-                  'style="background:#f0f0f0;color:#6b6b6b;border:1px solid #e0e0e0;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;">🔄 Trocar</button>' +
+              '<div class="ia-card-head">' +
+                '<span class="ia-nome">' + nome + '</span>' +
+                '<span class="ia-badge ' + (temEst?'ok':'zero') + '">' + (temEst?'✓ ':'⚠ ') + total + '</span>' +
+                '<button class="ia-btn-trocar ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '">🔄 Trocar</button>' +
               '</div>' +
-              '<div style="padding-left:2px;">' + candidatosHtml + '</div>';
-
-            _iaLoteResultados.push({ nomeLista: nome, vinculos: vinculos });
+              candidatos;
           }
-
           grid.appendChild(card);
+          _iaResultados.push({ nome: nome, vinculos: vinculos || [] });
         }
 
-        // Resumo + eventos
-        status.textContent = 'Concluído!';
-        document.getElementById('ia-lote-resumo').textContent =
-          '✅ ' + comEst + ' c/ estoque · ⚠️ ' + semEst + ' zerado · ❌ ' + naoAch + ' não encontrado';
-        if (comEst > 0) document.getElementById('ia-lote-add-todos').style.display = 'block';
-
-        grid.querySelectorAll('.ia-add-vinculo').forEach(function(btnAdd) {
-          btnAdd.addEventListener('click', function() {
-            const produtoSimulado = { id: btnAdd.dataset.pid, nome: decodeURIComponent(btnAdd.dataset.pnome), estoque: parseInt(btnAdd.dataset.pest) };
-            adicionarAoCarrinho(produtoSimulado);
-            btnAdd.textContent = '✓';
-            btnAdd.style.background = '#aaa';
-            btnAdd.disabled = true;
+        // Eventos
+        grid.querySelectorAll('.ia-add-vinc').forEach(function(b) {
+          b.addEventListener('click', function() {
+            adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
+            b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
           });
         });
-
-        grid.querySelectorAll('.ia-busca-manual').forEach(function(btnBusca) {
-          btnBusca.addEventListener('click', function() {
-            const nome = decodeURIComponent(btnBusca.dataset.nome);
+        grid.querySelectorAll('.ia-busca-manual').forEach(function(b) {
+          b.addEventListener('click', function() {
             fecharIaLote();
-            document.getElementById('campo-busca').value = nome;
+            document.getElementById('campo-busca').value = decodeURIComponent(b.dataset.nome);
             document.getElementById('btn-buscar').click();
           });
         });
 
-      } catch(e) {
-        document.getElementById('ia-lote-passo1').style.display = 'flex';
-        document.getElementById('ia-lote-passo2').style.display = 'none';
-        const err = document.getElementById('ia-lote-erro');
-        err.textContent = 'Erro: ' + e.message;
-        err.style.display = 'block';
-      }
+        status.textContent = 'Concluído!';
+        prog.style.width = '100%';
+        document.getElementById('ia-resumo').textContent =
+          '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+        if (comEst > 0) document.getElementById('ia-add-todos').style.display = 'block';
 
+      } catch(err) {
+        document.getElementById('ia-passo1').style.display = 'flex';
+        document.getElementById('ia-passo2').style.display = 'none';
+        document.getElementById('ia-erro').textContent = 'Erro: ' + err.message;
+        document.getElementById('ia-erro').style.display = 'block';
+      }
       btn.disabled = false; btn.textContent = '🤖 Processar e consultar estoque →';
     });
 
-    // Adicionar todos com estoque ao carrinho
-    document.getElementById('ia-lote-add-todos').addEventListener('click', function() {
-      var adicionados = 0;
-      _iaLoteResultados.forEach(function(r) {
-        if (r.vinculos && r.vinculos.length) {
-          // Adiciona todos os vínculos com estoque > 0
-          r.vinculos.forEach(function(v) {
-            if (v.estoque > 0) {
-              adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque });
-              adicionados++;
-            }
-          });
-        }
+    document.getElementById('ia-add-todos').addEventListener('click', function() {
+      var n = 0;
+      _iaResultados.forEach(function(r) {
+        r.vinculos.forEach(function(v) {
+          if (v.estoque > 0) { adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque }); n++; }
+        });
       });
-      mostrarToast('✅ ' + adicionados + ' produto(s) adicionados ao carrinho');
+      mostrarToast('✅ ' + n + ' produto(s) adicionados');
       fecharIaLote();
     });
-
   </script>
 </body>
 </html>
