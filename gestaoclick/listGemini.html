@@ -11,6 +11,7 @@
       --secondary: #4a4a4a;
       --success: #27ae60;
       --danger: #c0392b;
+      --warning: #f39c12;
       --bg-main: #f0f2f5;
       --bg-card: #ffffff;
       --border: #e0e0e0;
@@ -40,7 +41,7 @@
     /* Painel de Edição */
     .editor-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
     
-    .toolbar { padding: 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; background: #fafafa; flex-wrap: wrap;}
+    .toolbar { padding: 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; background: #fafafa; flex-wrap: wrap; align-items: center;}
     
     .btn {
       padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
@@ -48,8 +49,12 @@
     }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: #333; }
-    .btn-success { background: var(--success); color: white; margin-left: auto;}
+    .btn-success { background: var(--success); color: white; }
     .btn-success:hover { background: #219653; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning:hover { background: #d68910; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:hover { background: var(--bg-main); }
     .btn-icon { width: 28px; height: 28px; padding: 0; justify-content: center; background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .btn-icon:hover { background: var(--bg-main); color: var(--primary); border-color: var(--secondary); }
     .btn-danger { background: rgba(192, 57, 43, 0.1); color: var(--danger); border: none; }
@@ -62,26 +67,36 @@
         background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px;
         display: grid; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: border-color 0.2s;
     }
+    .item-card.esgotado { border-color: var(--danger); background: #fdf2f2; }
     .item-card:focus-within { border-color: var(--primary); }
     
     .item-header { display: flex; justify-content: space-between; align-items: center; }
     .item-tipo { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); background: var(--bg-main); padding: 2px 8px; border-radius: 12px; }
     .item-acoes { display: flex; gap: 4px; }
 
-    .item-grid { display: grid; gap: 8px; }
-    .grid-2 { grid-template-columns: 1fr 100px; }
-    .grid-3 { grid-template-columns: 1.5fr 1fr 100px; }
-
-    input[type="text"] {
+    input[type="text"], textarea.input-livre {
       width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
       font-size: 13px; font-family: inherit; color: var(--primary); background: var(--bg-main);
     }
-    input[type="text"]:focus { outline: none; border-color: var(--primary); background: white; }
+    input[type="text"]:focus, textarea.input-livre:focus { outline: none; border-color: var(--primary); background: white; }
+    textarea.input-livre { resize: vertical; min-height: 60px; line-height: 1.4; }
+
+    /* Estilos do Produto Selecionado / Busca */
+    .busca-container { display: flex; gap: 8px; }
+    .resultados-busca { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; max-height: 150px; overflow-y: auto;}
+    .resultado-item { font-size: 12px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center;}
+    .resultado-item:hover { border-color: var(--primary); background: var(--bg-main); }
     
-    .estoque-status { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-top: 4px;}
+    .produto-selecionado { display: flex; flex-direction: column; gap: 8px; background: white; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+    .prod-info { font-size: 13px; font-weight: 600; color: var(--primary); }
+    .prod-codigo { font-size: 11px; color: var(--text-muted); background: var(--bg-main); padding: 2px 6px; border-radius: 4px; margin-right: 6px;}
+    .prod-controles { display: flex; gap: 8px; align-items: center; }
+    .preco-input { max-width: 150px; }
+
+    .estoque-status { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;}
     .status-ok { color: var(--success); }
     .status-zero { color: var(--danger); }
-    .status-load { color: #f39c12; }
+    .status-load { color: var(--warning); }
 
     /* Painel de Visualização */
     .preview-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow); }
@@ -93,14 +108,25 @@
     .toggle-label { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
     .toggle-label input { accent-color: var(--primary); width: 16px; height: 16px; }
 
-    textarea {
+    textarea#texto-resultado {
       flex: 1; border: none; padding: 16px; font-size: 14px; font-family: inherit; resize: none;
       line-height: 1.6; color: var(--primary); background: #fff;
     }
-    textarea:focus { outline: none; }
+    textarea#texto-resultado:focus { outline: none; }
 
     .preview-footer { padding: 16px; border-top: 1px solid var(--border); }
     #btn-copiar { width: 100%; padding: 12px; font-size: 14px; justify-content: center;}
+
+    /* Modal de Log */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100;}
+    .modal-overlay.visivel { opacity: 1; pointer-events: all; }
+    .modal { background: white; width: 90%; max-width: 600px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 80vh;}
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 1.1rem; color: var(--danger); display: flex; align-items: center; gap: 8px;}
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .log-list { display: flex; flex-direction: column; gap: 8px; }
+    .log-item { padding: 12px; border: 1px solid rgba(192, 57, 43, 0.3); background: rgba(192, 57, 43, 0.05); border-radius: 6px; font-size: 13px;}
+    .log-item strong { color: var(--danger); }
 
     /* Notificações */
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--primary); color: white; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 1000; }
@@ -109,7 +135,7 @@
     @media (max-width: 768px) {
       .container { grid-template-columns: 1fr; overflow-y: auto; display: flex; flex-direction: column;}
       .editor-panel, .preview-panel { overflow: visible; flex: none; min-height: 500px;}
-      textarea { min-height: 300px; border-bottom: 1px solid var(--border);}
+      textarea#texto-resultado { min-height: 300px; border-bottom: 1px solid var(--border);}
     }
   </style>
 </head>
@@ -117,16 +143,17 @@
 
   <header>
     <h1>Gerador de Listas - JETA</h1>
-    <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Salvo automaticamente no navegador</div>
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Salvo localmente</div>
   </header>
 
   <div class="container">
     
     <div class="editor-panel">
       <div class="toolbar">
-        <button class="btn btn-primary" onclick="adicionarItem('texto')">➕ Texto/Cabeçalho</button>
+        <button class="btn btn-primary" onclick="adicionarItem('texto')">➕ Texto Livre</button>
         <button class="btn btn-primary" onclick="adicionarItem('produto')">➕ Produto</button>
-        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Estoque</button>
+        <button class="btn btn-success" style="margin-left: auto;" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Tudo</button>
+        <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas/Esgotados</button>
       </div>
       <div class="lista-container" id="lista-editor">
         </div>
@@ -140,7 +167,10 @@
             <input type="checkbox" id="chk-data" onchange="gerarTexto()"> Inserir data de hoje no topo
           </label>
           <label class="toggle-label">
-            <input type="checkbox" id="chk-ocultar" onchange="gerarTexto()"> Ocultar produtos sem estoque
+            <input type="checkbox" id="chk-codigo" onchange="gerarTexto()"> Exibir Código do Produto no texto final
+          </label>
+          <label class="toggle-label">
+            <input type="checkbox" id="chk-ocultar" onchange="gerarTexto()"> Ocultar produtos sem estoque na mensagem
           </label>
           <label class="toggle-label">
             <input type="checkbox" id="chk-destacar" onchange="gerarTexto()" checked> Destacar produtos sem estoque com "🛑 ESGOTADO"
@@ -155,20 +185,28 @@
 
   </div>
 
+  <div class="modal-overlay" id="modal-log" onclick="fecharLog(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🛑 Relatório de Faltas e Esgotados</h3>
+        <button class="btn btn-icon" onclick="document.getElementById('modal-log').classList.remove('visivel')">✖</button>
+      </div>
+      <div class="modal-body">
+        <div id="conteudo-log" class="log-list"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script>
     const LOJA_ID = "361408";
-    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_whatsapp')) || [];
+    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v2')) || [];
     let debounceTimer;
 
-    // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
       if(itensLista.length === 0) {
-        // Modelo Inicial caso esteja vazio
         itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
-        itensLista.push({ id: gerarId(), tipo: 'texto', texto: 'Ⓜ️ MOTOROLA' });
-        itensLista.push({ id: gerarId(), tipo: 'produto', nomeCustomizado: 'Motorola Moto G06 256gb 4G - Bege', preco: '650', termoBusca: 'Moto G06', estoque: null });
       }
       renderizarEditor();
     });
@@ -176,7 +214,7 @@
     function gerarId() { return Date.now().toString() + Math.floor(Math.random()*1000); }
 
     function salvarLocal() {
-      localStorage.setItem('jeta_lista_whatsapp', JSON.stringify(itensLista));
+      localStorage.setItem('jeta_lista_v2', JSON.stringify(itensLista));
       gerarTexto();
     }
 
@@ -189,11 +227,11 @@
       if(tipo === 'texto') {
         itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
       } else {
-        itensLista.push({ id: gerarId(), tipo: 'produto', nomeCustomizado: '', preco: '', termoBusca: '', estoque: null });
+        // Objeto Produto refatorado para trava de catálogo
+        itensLista.push({ id: gerarId(), tipo: 'produto', selecionado: false, idSistema: '', codigo: '', nome: '', preco: '', estoque: null });
       }
       renderizarEditor();
       salvarLocal();
-      // Scroll para o fim
       const container = document.getElementById('lista-editor');
       setTimeout(() => container.scrollTop = container.scrollHeight, 50);
     }
@@ -218,11 +256,21 @@
       salvarLocal();
     }
 
-    function atualizarDado(id, campo, valor) {
+    function atualizarTexto(id, valor) {
+      const item = itensLista.find(i => i.id === id);
+      if(item) { item.texto = valor; autoSalvar(); }
+    }
+
+    function atualizarPreco(id, valor) {
+      const item = itensLista.find(i => i.id === id);
+      if(item) { item.preco = valor; autoSalvar(); }
+    }
+
+    function limparSelecaoProduto(id) {
       const item = itensLista.find(i => i.id === id);
       if(item) {
-        item[campo] = valor;
-        autoSalvar();
+        item.selecionado = false; item.idSistema = ''; item.codigo = ''; item.nome = ''; item.preco = ''; item.estoque = null;
+        renderizarEditor(); salvarLocal();
       }
     }
 
@@ -231,8 +279,9 @@
       container.innerHTML = '';
 
       itensLista.forEach((item, index) => {
+        const esgotado = (item.tipo === 'produto' && item.selecionado && item.estoque <= 0);
         const card = document.createElement('div');
-        card.className = 'item-card';
+        card.className = `item-card ${esgotado ? 'esgotado' : ''}`;
 
         const acoesHTML = `
           <button class="btn btn-icon" onclick="moverItem(${index}, -1)" title="Subir" ${index === 0 ? 'disabled' : ''}>⬆️</button>
@@ -246,29 +295,42 @@
               <span class="item-tipo">Texto Livre</span>
               <div class="item-acoes">${acoesHTML}</div>
             </div>
-            <input type="text" placeholder="Digite o cabeçalho, categoria ou espaçamento..." value="${item.texto}" oninput="atualizarDado('${item.id}', 'texto', this.value)">
+            <textarea class="input-livre" placeholder="Digite parágrafos, quebras de linha, cabeçalhos..." oninput="atualizarTexto('${item.id}', this.value)">${item.texto}</textarea>
           `;
         } else {
-          let estoqueHTML = '<span class="estoque-status" style="color:var(--text-muted)">⚪ Estoque não verificado</span>';
-          if(item.estoque !== null) {
-              if(item.estoque > 0) estoqueHTML = `<span class="estoque-status status-ok">🟢 Em estoque: ${item.estoque} un.</span>`;
-              else estoqueHTML = `<span class="estoque-status status-zero">🔴 Sem estoque (0 un.)</span>`;
+          // CARD DE PRODUTO
+          let conteudoProduto = '';
+
+          if(!item.selecionado) {
+            conteudoProduto = `
+              <div class="busca-container">
+                <input type="text" id="input-busca-${item.id}" placeholder="Buscar produto no catálogo pelo nome ou código..." onkeypress="if(event.key === 'Enter') buscarNaAPI('${item.id}')">
+                <button class="btn btn-primary" onclick="buscarNaAPI('${item.id}')">🔍 Buscar</button>
+              </div>
+              <div id="resultados-${item.id}" class="resultados-busca"></div>
+            `;
+          } else {
+            let estoqueHTML = `<span class="estoque-status status-ok">🟢 ${item.estoque} un.</span>`;
+            if(item.estoque <= 0) estoqueHTML = `<span class="estoque-status status-zero">🔴 Esgotado (0 un.)</span>`;
+            
+            conteudoProduto = `
+              <div class="produto-selecionado">
+                <div class="prod-info"><span class="prod-codigo">${item.codigo || 'S/CÓD'}</span> ${item.nome}</div>
+                <div class="prod-controles">
+                  ${estoqueHTML}
+                  <input type="text" class="preco-input" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarPreco('${item.id}', this.value)">
+                  <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="limparSelecaoProduto('${item.id}')">Trocar Produto</button>
+                </div>
+              </div>
+            `;
           }
 
           card.innerHTML = `
             <div class="item-header">
-              <span class="item-tipo">📦 Produto</span>
+              <span class="item-tipo">📦 Produto do Catálogo</span>
               <div class="item-acoes">${acoesHTML}</div>
             </div>
-            <div class="item-grid grid-2">
-              <input type="text" placeholder="Nome que aparecerá no WhatsApp (Ex: Note 14 6/128gb - Preto)" value="${item.nomeCustomizado}" oninput="atualizarDado('${item.id}', 'nomeCustomizado', this.value)">
-              <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarDado('${item.id}', 'preco', this.value)">
-            </div>
-            <div class="item-grid grid-2" style="grid-template-columns: 1fr auto;">
-              <input type="text" placeholder="Termo de busca na nuvem (Código exato ou parte do nome no sistema)" value="${item.termoBusca}" oninput="atualizarDado('${item.id}', 'termoBusca', this.value)">
-              <button class="btn btn-primary" onclick="buscarEstoqueIndividual('${item.id}')" style="padding: 0; justify-content: center;">🔍 Consultar</button>
-            </div>
-            <div id="status-${item.id}">${estoqueHTML}</div>
+            ${conteudoProduto}
           `;
         }
         container.appendChild(card);
@@ -276,76 +338,116 @@
       gerarTexto();
     }
 
-    // BUSCA NA API RESPEITANDO O RATE LIMIT (Batching)
-    async function buscarEstoqueNaAPI(termo) {
-      if(!termo || termo.trim() === '') return null;
+    // BUSCA E SELEÇÃO DE PRODUTO
+    async function buscarNaAPI(idItem) {
+      const input = document.getElementById(`input-busca-${idItem}`);
+      const divResultados = document.getElementById(`resultados-${idItem}`);
+      const termo = input.value.trim();
+      
+      if(!termo) return;
+      divResultados.innerHTML = '<span style="font-size:12px; color:var(--text-muted)">⏳ Buscando no sistema...</span>';
+
       try {
-        // A API suporta filtro por nome ou código
-        const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=5&nome=${encodeURIComponent(termo.trim())}`);
+        const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=10&nome=${encodeURIComponent(termo)}`);
         const json = await res.json();
         
         if (json.code === 200 && json.data && json.data.length > 0) {
-            // Retorna o estoque do primeiro produto encontrado que corresponda
-            return json.data[0].estoque;
+            divResultados.innerHTML = '';
+            json.data.forEach(prod => {
+                const cod = prod.codigo_interno || prod.codigo_barra || prod.id;
+                const div = document.createElement('div');
+                div.className = 'resultado-item';
+                div.innerHTML = `
+                    <span><b>[${cod}]</b> ${prod.nome}</span>
+                    <span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}">${prod.estoque} un.</span>
+                `;
+                // Passa os dados como string segura
+                div.onclick = () => vincularProduto(idItem, prod.id, cod, prod.nome, prod.valor_venda, prod.estoque);
+                divResultados.appendChild(div);
+            });
+        } else {
+            divResultados.innerHTML = '<span style="font-size:12px; color:var(--danger)">⚠️ Nenhum produto encontrado.</span>';
         }
-        return 0; // Se não encontrou, assume 0
       } catch (e) {
-        console.error("Erro na busca:", e);
-        return null;
+        divResultados.innerHTML = '<span style="font-size:12px; color:var(--danger)">Erro na conexão.</span>';
       }
     }
 
-    async function buscarEstoqueIndividual(id) {
-        const item = itensLista.find(i => i.id === id);
-        if(!item || !item.termoBusca) { mostrarToast("Insira um termo de busca válido."); return; }
-        
-        const statusDiv = document.getElementById(`status-${id}`);
-        statusDiv.innerHTML = '<span class="estoque-status status-load">⏳ Buscando...</span>';
-        
-        const qtd = await buscarEstoqueNaAPI(item.termoBusca);
-        if(qtd !== null) {
-            item.estoque = qtd;
-            salvarLocal();
+    function vincularProduto(idItem, idSis, cod, nome, valorVenda, estoque) {
+        const item = itensLista.find(i => i.id === idItem);
+        if(item) {
+            item.selecionado = true;
+            item.idSistema = idSis;
+            item.codigo = cod;
+            item.nome = nome;
+            // Formata o preço vindo da API tirando decimais desnecessários se for inteiro
+            item.preco = parseFloat(valorVenda).toString(); 
+            item.estoque = estoque;
             renderizarEditor();
-            mostrarToast("Estoque atualizado.");
-        } else {
-            statusDiv.innerHTML = '<span class="estoque-status status-zero">⚠️ Erro ao buscar. Verifique o termo.</span>';
+            salvarLocal();
         }
     }
 
+    // SINCRONIZAÇÃO DE LOTES
     async function sincronizarEstoqueTotal() {
         const btn = document.getElementById('btn-sync');
-        const produtosAtivos = itensLista.filter(i => i.tipo === 'produto' && i.termoBusca.trim() !== '');
+        const produtosAtivos = itensLista.filter(i => i.tipo === 'produto' && i.selecionado);
         
-        if(produtosAtivos.length === 0) { mostrarToast("Nenhum produto com termo de busca preenchido."); return; }
+        if(produtosAtivos.length === 0) { mostrarToast("Nenhum produto selecionado para sincronizar."); return; }
         
         btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
-        
         const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
-        // Lotes de 3 para respeitar Limite de API
+        // Lotes de 3 requisições
         for (let i = 0; i < produtosAtivos.length; i += 3) {
             const lote = produtosAtivos.slice(i, i + 3);
             const promessas = lote.map(async (prod) => {
-                const statusDiv = document.getElementById(`status-${prod.id}`);
-                if(statusDiv) statusDiv.innerHTML = '<span class="estoque-status status-load">⏳ Atualizando...</span>';
-                
-                const qtd = await buscarEstoqueNaAPI(prod.termoBusca);
-                if(qtd !== null) prod.estoque = qtd;
+                try {
+                    // Busca diretamente pelo ID caso a API suporte, ou pelo nome exato
+                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos/${prod.idSistema}?loja_id=${LOJA_ID}`);
+                    const json = await res.json();
+                    if(json.code === 200 && json.data) {
+                        prod.estoque = json.data.estoque;
+                        // Opcional: Atualiza o nome se mudou lá no sistema
+                        prod.nome = json.data.nome; 
+                    }
+                } catch(e) { console.error(e); }
             });
 
             await Promise.all(promessas);
-            
-            // Renderiza o progresso no meio do caminho
             renderizarEditor(); 
-            
-            // Pausa 1 segundo se ainda tiver itens (Rate Limit)
             if (i + 3 < produtosAtivos.length) await delay(1000); 
         }
 
         salvarLocal();
-        btn.innerHTML = "🔄 Sincronizar Estoque"; btn.disabled = false;
+        btn.innerHTML = "🔄 Sincronizar Tudo"; btn.disabled = false;
         mostrarToast("✅ Sincronização concluída!");
+    }
+
+    // LOG DE ESGOTADOS
+    function abrirLogEsgotados() {
+        const produtosLog = itensLista.filter(i => i.tipo === 'produto' && i.selecionado && i.estoque <= 0);
+        const divLog = document.getElementById('conteudo-log');
+        
+        if(produtosLog.length === 0) {
+            divLog.innerHTML = '<p style="color: var(--success); font-weight: 600;">✅ Tudo certo! Nenhum produto da sua lista está esgotado no sistema.</p>';
+        } else {
+            let html = '<p style="margin-bottom: 12px; font-size: 14px;">Os seguintes produtos da sua lista estão sem estoque no sistema:</p>';
+            produtosLog.forEach(p => {
+                html += `<div class="log-item">
+                            <strong>[${p.codigo}]</strong> ${p.nome} <br>
+                            <span style="font-size: 11px; color: var(--text-muted)">Preço configurado: R$ ${p.preco}</span>
+                         </div>`;
+            });
+            divLog.innerHTML = html;
+        }
+        document.getElementById('modal-log').classList.add('visivel');
+    }
+
+    function fecharLog(e) {
+        if(e.target.id === 'modal-log') {
+            document.getElementById('modal-log').classList.remove('visivel');
+        }
     }
 
     // GERAÇÃO DO TEXTO
@@ -353,6 +455,7 @@
       const ocultarSemEstoque = document.getElementById('chk-ocultar').checked;
       const destacarSemEstoque = document.getElementById('chk-destacar').checked;
       const incluirData = document.getElementById('chk-data').checked;
+      const incluirCodigo = document.getElementById('chk-codigo').checked;
       const textarea = document.getElementById('texto-resultado');
       
       let linhas = [];
@@ -365,13 +468,14 @@
       itensLista.forEach(item => {
         if(item.tipo === 'texto') {
             if(item.texto.trim() !== '') linhas.push(item.texto);
-            else linhas.push(''); // Linha em branco
-        } else if (item.tipo === 'produto') {
-            const semEstoque = item.estoque !== null && item.estoque <= 0;
+            else linhas.push(''); 
+        } else if (item.tipo === 'produto' && item.selecionado) {
+            const semEstoque = item.estoque <= 0;
             
-            if (semEstoque && ocultarSemEstoque) return; // Pula a linha
+            if (semEstoque && ocultarSemEstoque) return; 
             
-            let linhaProduto = `${item.nomeCustomizado} - ${item.preco}`;
+            const textoCodigo = incluirCodigo ? `[${item.codigo}] ` : '';
+            let linhaProduto = `${textoCodigo}${item.nome} - ${item.preco}`;
             
             if (semEstoque && destacarSemEstoque) {
                 linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
