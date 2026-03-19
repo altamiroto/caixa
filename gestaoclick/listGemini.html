@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA</title>
+  <title>Gerador de Listas - JETA v5</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -90,19 +90,23 @@
     textarea.input-livre { resize: vertical; min-height: 40px; line-height: 1.4; }
     textarea.input-texto-geral { min-height: 60px; }
 
-    /* Área de Vínculo de Sistema */
+    /* Área de Vínculos Múltiplos */
     .vinculo-box { background: #fafafa; border: 1px dashed var(--border); border-radius: 6px; padding: 10px; margin-top: 4px;}
+    .vinculos-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;}
+    .vinculo-chip { 
+        background: white; border: 1px solid var(--border); padding: 4px 8px; 
+        border-radius: 4px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; 
+        color: var(--secondary); box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .vinculo-chip b { color: var(--primary); font-family: monospace; }
+    .remove-btn { color: var(--danger); cursor: pointer; font-weight: bold; padding: 0 2px;}
+    
     .busca-container { display: flex; gap: 8px; }
     .resultados-busca { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 150px; overflow-y: auto;}
     .resultado-item { font-size: 12px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center;}
     .resultado-item:hover { border-color: var(--primary); background: var(--bg-main); }
     
-    .sistema-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;}
-    .sistema-dados { display: flex; flex-direction: column; gap: 6px; flex: 1;}
-    .sistema-nome { font-size: 11px; font-weight: 600; color: var(--secondary); display: flex; align-items: flex-start; gap: 6px; white-space: normal; word-break: break-word; line-height: 1.3;}
-    .badge-cod { font-size: 10px; background: #e0e0e0; padding: 2px 6px; border-radius: 4px; color: var(--primary); font-family: monospace; flex-shrink: 0;}
-    
-    .estoque-status { font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
+    .estoque-status { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;}
     .status-ok { color: var(--success); }
     .status-zero { color: var(--danger); }
     .status-manual { color: var(--warning); }
@@ -182,7 +186,7 @@
         <button class="btn btn-outline" onclick="adicionarItem('produto')">➕ Produto</button>
         <button class="btn btn-purple" onclick="abrirModalIA()">🤖 Importar c/ IA</button>
         <div style="flex: 1;"></div>
-        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Vínculos</button>
+        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Tudo</button>
         <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
       <div class="lista-container" id="lista-editor"></div>
@@ -193,7 +197,7 @@
         <h2>Pré-visualização da Mensagem</h2>
         <div class="opcoes-toggle">
           <label class="toggle-label"><input type="checkbox" id="chk-data" onchange="salvarOpcoes()"> Inserir data de hoje no topo</label>
-          <label class="toggle-label"><input type="checkbox" id="chk-codigo" onchange="salvarOpcoes()"> Exibir Código do Sistema no texto (se vinculado)</label>
+          <label class="toggle-label"><input type="checkbox" id="chk-codigo" onchange="salvarOpcoes()"> Exibir Códigos do Sistema no texto (se vinculados)</label>
           <label class="toggle-label"><input type="checkbox" id="chk-ocultar" onchange="salvarOpcoes()"> Ocultar produtos sem estoque na mensagem</label>
           <label class="toggle-label"><input type="checkbox" id="chk-destacar" onchange="salvarOpcoes()"> Destacar produtos sem estoque com "🛑 ESGOTADO"</label>
         </div>
@@ -227,7 +231,7 @@
       
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e tentará buscar automaticamente no seu catálogo.
+            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e buscar automaticamente todas as variações/cores equivalentes no seu estoque.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
@@ -254,15 +258,15 @@
       </div>
       
       <div class="modal-body" id="body-ia-resultados" style="display: none; padding-top: 10px;">
-        <p style="font-size: 13px; font-weight: 600;">Revisão e Vínculo de Estoque:</p>
+        <p style="font-size: 13px; font-weight: 600;">Revisão e Vínculo Múltiplo de Estoque:</p>
         <div style="overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; flex: 1; max-height: 60vh;">
             <table class="ia-table">
                 <thead>
                     <tr>
                         <th style="width: 40px; text-align: center;"><input type="checkbox" id="chk-ia-todos" onchange="alternarTodosIA(this)"></th>
                         <th style="width: 35%;">Extraído pela IA</th>
-                        <th>Vínculo no Sistema (Busca)</th>
-                        <th style="width: 80px; text-align: center;">Estoque</th>
+                        <th>Vínculos no Sistema (Variações e Cores)</th>
+                        <th style="width: 80px; text-align: center;">Estoque Total</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-ia-corpo">
@@ -282,9 +286,9 @@
   <script>
     const LOJA_ID = "361408";
     
-    // Armazenamento e Cache
-    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v4')) || [];
-    let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v4')) || { data: false, codigo: false, ocultar: false, destacar: true };
+    // Armazenamento v5 (Nova estrutura de Array de vinculos)
+    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v5')) || [];
+    let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v5')) || { data: false, codigo: false, ocultar: false, destacar: true };
     let debounceTimer;
     let catalogoCompleto = []; 
     let cacheResultadosIA = []; 
@@ -307,7 +311,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     });
 
     function gerarId() { return Date.now().toString() + Math.floor(Math.random()*1000); }
-    function salvarLocal() { localStorage.setItem('jeta_lista_v4', JSON.stringify(itensLista)); gerarTexto(); }
+    function salvarLocal() { localStorage.setItem('jeta_lista_v5', JSON.stringify(itensLista)); gerarTexto(); }
     function autoSalvar() { clearTimeout(debounceTimer); debounceTimer = setTimeout(salvarLocal, 500); }
     
     function salvarOpcoes() {
@@ -317,7 +321,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
           ocultar: document.getElementById('chk-ocultar').checked,
           destacar: document.getElementById('chk-destacar').checked
       };
-      localStorage.setItem('jeta_opcoes_v4', JSON.stringify(opcoesLista));
+      localStorage.setItem('jeta_opcoes_v5', JSON.stringify(opcoesLista));
       gerarTexto();
     }
 
@@ -330,8 +334,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
       setTimeout(() => container.scrollTop = container.scrollHeight, 50);
     }
     
-    function criarObjetoProduto(nomePers = '', preco = '', vinculo = false, idSis = '', cod = '', nomeSis = '', est = null) {
-        return { id: gerarId(), tipo: 'produto', nomePersonalizado: nomePers, preco: preco, vinculado: vinculo, idSistema: idSis, codigo: cod, nomeSistema: nomeSis, estoque: est };
+    function criarObjetoProduto(nomePers = '', preco = '', arrVinculos = []) {
+        return { id: gerarId(), tipo: 'produto', nomePersonalizado: nomePers, preco: preco, vinculos: arrVinculos };
     }
     
     function removerItem(id) { itensLista = itensLista.filter(item => item.id !== id); renderizarEditor(); salvarLocal(); }
@@ -344,20 +348,30 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     
     function atualizarCampo(id, campo, valor) { const item = itensLista.find(i => i.id === id); if(item) { item[campo] = valor; autoSalvar(); } }
     
-    function desvincularProduto(id) {
-      const item = itensLista.find(i => i.id === id);
-      if(item) { item.vinculado = false; item.idSistema = ''; item.codigo = ''; item.nomeSistema = ''; item.estoque = null; renderizarEditor(); salvarLocal(); }
+    function removerVinculo(idItem, indexVinculo) {
+        const item = itensLista.find(i => i.id === idItem);
+        if(item && item.vinculos) {
+            item.vinculos.splice(indexVinculo, 1);
+            renderizarEditor(); salvarLocal();
+        }
     }
 
     function renderizarEditor() {
       const container = document.getElementById('lista-editor');
       container.innerHTML = '';
       itensLista.forEach((item, index) => {
-        const esgotado = (item.tipo === 'produto' && item.vinculado && item.estoque !== null && item.estoque <= 0);
-        const manual = (item.tipo === 'produto' && !item.vinculado);
+        let estoqueTotal = 0;
+        let isManual = (item.tipo === 'produto' && (!item.vinculos || item.vinculos.length === 0));
+        
+        if(item.tipo === 'produto' && !isManual) {
+            estoqueTotal = item.vinculos.reduce((acc, v) => acc + (parseInt(v.estoque) || 0), 0);
+        }
+        
+        const esgotado = (!isManual && estoqueTotal <= 0);
+        
         let classesCard = 'item-card';
         if (esgotado) classesCard += ' esgotado';
-        if (manual) classesCard += ' manual';
+        if (isManual) classesCard += ' manual';
 
         const card = document.createElement('div'); card.className = classesCard;
         const acoesHTML = `
@@ -372,37 +386,38 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             <textarea class="input-livre input-texto-geral" placeholder="Digite parágrafos, cabeçalhos, categorias..." oninput="atualizarCampo('${item.id}', 'texto', this.value)">${item.texto}</textarea>
           `;
         } else {
-          let boxVinculo = '';
-          if(!item.vinculado) {
-            boxVinculo = `
-              <div class="busca-container">
-                <input type="text" id="input-busca-${item.id}" placeholder="Buscar no sistema para vincular (Opcional)..." style="font-size: 12px; padding: 6px;" onkeypress="if(event.key === 'Enter') buscarNaAPI('${item.id}')">
-                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="buscarNaAPI('${item.id}')">Buscar</button>
-              </div>
-              <div id="resultados-${item.id}" class="resultados-busca"></div>
-              <div class="estoque-status status-manual" style="margin-top: 6px;">⚪ Produto Manual (Estoque não monitorado)</div>
-            `;
-          } else {
-            let estoqueHTML = `<span class="estoque-status status-ok">🟢 Em estoque: ${item.estoque} un.</span>`;
-            if(item.estoque <= 0) estoqueHTML = `<span class="estoque-status status-zero">🔴 Esgotado (0 un.)</span>`;
-            boxVinculo = `
-              <div class="sistema-info">
-                <div class="sistema-dados">
-                  <div class="sistema-nome"><span class="badge-cod">${item.codigo || 'S/CÓD'}</span> ${item.nomeSistema}</div>
-                  ${estoqueHTML}
+            
+          let vinculosHTML = '';
+          if(item.vinculos && item.vinculos.length > 0) {
+              const chips = item.vinculos.map((v, vIdx) => `
+                <div class="vinculo-chip">
+                    <b>[${v.codigo}]</b> ${v.nomeSistema} (${v.estoque} un.)
+                    <span class="remove-btn" onclick="removerVinculo('${item.id}', ${vIdx})">✖</span>
                 </div>
-                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--danger); color: var(--danger); flex-shrink: 0;" onclick="desvincularProduto('${item.id}')">Desvincular</button>
-              </div>
-            `;
+              `).join('');
+              vinculosHTML = `<div class="vinculos-list">${chips}</div>`;
           }
+
+          let estoqueTag = '';
+          if(isManual) estoqueTag = `<div class="estoque-status status-manual" style="margin-top:8px;">⚪ Manual (Sem vínculos)</div>`;
+          else if(estoqueTotal > 0) estoqueTag = `<div class="estoque-status status-ok" style="margin-top:8px;">🟢 Estoque Total Variações: ${estoqueTotal} un.</div>`;
+          else estoqueTag = `<div class="estoque-status status-zero" style="margin-top:8px;">🔴 Esgotado (0 un.)</div>`;
 
           card.innerHTML = `
             <div class="item-header"><span class="item-tipo">📦 Produto</span><div class="item-acoes">${acoesHTML}</div></div>
             <div class="grid-principal">
-              <textarea class="input-livre" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15...)" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">${item.nomePersonalizado}</textarea>
+              <textarea class="input-livre" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15 Bege/Preto...)" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">${item.nomePersonalizado}</textarea>
               <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarCampo('${item.id}', 'preco', this.value)">
             </div>
-            <div class="vinculo-box">${boxVinculo}</div>
+            <div class="vinculo-box">
+              ${vinculosHTML}
+              <div class="busca-container">
+                <input type="text" id="input-busca-${item.id}" placeholder="Buscar variação/produto para adicionar ao bloco..." style="font-size: 12px; padding: 6px;" onkeypress="if(event.key === 'Enter') buscarNaAPI('${item.id}')">
+                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="buscarNaAPI('${item.id}')">Buscar</button>
+              </div>
+              <div id="resultados-${item.id}" class="resultados-busca"></div>
+              ${estoqueTag}
+            </div>
           `;
         }
         container.appendChild(card);
@@ -429,9 +444,13 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                 div.onclick = () => {
                     const item = itensLista.find(i => i.id === idItem);
                     if(item) {
-                        item.vinculado = true; item.idSistema = prod.id; item.codigo = cod; item.nomeSistema = prod.nome; item.estoque = prod.estoque;
-                        if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
-                        if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
+                        if(!item.vinculos) item.vinculos = [];
+                        if(!item.vinculos.some(v => v.idSistema === prod.id)) {
+                            item.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
+                            if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
+                            if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
+                            input.value = '';
+                        }
                         renderizarEditor(); salvarLocal();
                     }
                 };
@@ -443,31 +462,43 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
 
     async function sincronizarEstoqueTotal() {
         const btn = document.getElementById('btn-sync');
-        const vinculados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado);
-        if(vinculados.length === 0) { mostrarToast("Não há produtos vinculados para sincronizar."); return; }
+        const produtosComVinculo = itensLista.filter(i => i.tipo === 'produto' && i.vinculos && i.vinculos.length > 0);
+        if(produtosComVinculo.length === 0) { mostrarToast("Não há produtos vinculados para sincronizar."); return; }
         
         btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
+        
+        // Coleta IDs únicos para não buscar o mesmo produto duas vezes
+        const idsSet = new Set();
+        produtosComVinculo.forEach(p => p.vinculos.forEach(v => idsSet.add(v.idSistema)));
+        const idsArray = Array.from(idsSet);
+        
         const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
-        for (let i = 0; i < vinculados.length; i += 3) {
-            const lote = vinculados.slice(i, i + 3);
-            const promessas = lote.map(async (prod) => {
+        for (let i = 0; i < idsArray.length; i += 3) {
+            const lote = idsArray.slice(i, i + 3);
+            const promessas = lote.map(async (idSis) => {
                 try {
-                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos/${prod.idSistema}?loja_id=${LOJA_ID}`);
+                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos/${idSis}?loja_id=${LOJA_ID}`);
                     const json = await res.json();
-                    if(json.code === 200 && json.data) { prod.estoque = json.data.estoque; prod.nomeSistema = json.data.nome; }
+                    if(json.code === 200 && json.data) { 
+                        // Atualiza o estoque em todas as listas
+                        produtosComVinculo.forEach(p => {
+                            const vToUpdate = p.vinculos.find(v => v.idSistema === idSis);
+                            if(vToUpdate) { vToUpdate.estoque = json.data.estoque; vToUpdate.nomeSistema = json.data.nome; }
+                        });
+                    }
                 } catch(e) {}
             });
             await Promise.all(promessas);
             renderizarEditor(); 
-            if (i + 3 < vinculados.length) await delay(1000); 
+            if (i + 3 < idsArray.length) await delay(1000); 
         }
-        salvarLocal(); btn.innerHTML = "🔄 Sincronizar Vínculos"; btn.disabled = false;
+        salvarLocal(); btn.innerHTML = "🔄 Sincronizar Tudo"; btn.disabled = false;
         mostrarToast("✅ Sincronização concluída!");
     }
 
     // ==========================================
-    // MÓDULO IA - INTELIGÊNCIA DE AUTO-VÍNCULO E BUSCA
+    // MÓDULO IA - AUTO-VÍNCULO COM MÚLTIPLAS VARIAÇÕES
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -476,11 +507,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         else { body.classList.add('visivel'); icon.textContent = '▲'; }
     }
 
-    function salvarPromptIA() {
-        localStorage.setItem('jeta_prompt_ia', document.getElementById('prompt-ia-input').value);
-    }
+    function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia', document.getElementById('prompt-ia-input').value); }
 
-    // Baixa o Catálogo Completo para a IA fazer Fuzzy Match offline
     async function carregarCatalogoCompleto() {
         if (catalogoCompleto.length > 0) return true; 
         let pag = 1; let totalPaginas = 1;
@@ -498,22 +526,32 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         } catch(e) { return false; }
     }
 
-    function encontrarMelhorVinculo(nomeExtraido) {
-        if(!nomeExtraido || catalogoCompleto.length === 0) return null;
-        let melhorMatch = null; let maiorScore = 0;
+    function encontrarMelhoresVinculos(nomeExtraido) {
+        if(!nomeExtraido || catalogoCompleto.length === 0) return [];
+        let topScore = 0;
+        const scores = [];
         
         const tokensExt = nomeExtraido.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
 
         for(let prod of catalogoCompleto) {
             const tokensProd = prod.nome.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
             let score = 0;
-            
             for(let t of tokensExt) { if(tokensProd.includes(t)) score++; }
             if (prod.nome.toLowerCase().includes(nomeExtraido.toLowerCase())) score += 5; 
 
-            if(score > maiorScore) { maiorScore = score; melhorMatch = prod; }
+            if(score > 0) scores.push({prod, score});
         }
-        return maiorScore >= Math.min(2, tokensExt.length) ? melhorMatch : null;
+        
+        if(scores.length === 0) return [];
+        
+        // Pega os que tiverem o Top Score (mesmo que tenham cores diferentes, se tiverem a mesma base terão o mesmo score)
+        scores.sort((a,b) => b.score - a.score);
+        topScore = scores[0].score;
+        
+        // Exige um mínimo de coerência para assumir auto-vínculo
+        if (topScore < Math.min(2, tokensExt.length)) return [];
+        
+        return scores.filter(s => s.score === topScore).map(s => s.prod);
     }
 
     async function abrirModalIA() {
@@ -523,7 +561,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('loader-ia').classList.remove('visivel');
         document.getElementById('btn-processar-ia').disabled = false;
         document.getElementById('modal-ia').classList.add('visivel');
-        
         carregarCatalogoCompleto(); 
     }
     
@@ -570,25 +607,21 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             return;
         }
 
-        document.getElementById('texto-loader-ia').textContent = "Cruzando produtos com o seu estoque local...";
+        document.getElementById('texto-loader-ia').textContent = "Cruzando produtos com as variações do estoque...";
         
         cacheResultadosIA = [];
-        
         produtosExtraidos.forEach((ext, index) => {
-            let objCache = { 
-                idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, 
-                vinculado: false, idSis: '', cod: '', nomeSis: '', est: null 
-            };
-
-            const melhorMatch = encontrarMelhorVinculo(ext.nome);
-            if(melhorMatch) {
-                objCache.vinculado = true;
-                objCache.idSis = melhorMatch.id;
-                objCache.cod = melhorMatch.codigo_interno || melhorMatch.codigo_barra || melhorMatch.id;
-                objCache.nomeSis = melhorMatch.nome;
-                objCache.est = melhorMatch.estoque;
-            }
+            let objCache = { idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, vinculos: [] };
+            const matches = encontrarMelhoresVinculos(ext.nome);
             
+            matches.forEach(m => {
+                objCache.vinculos.push({
+                    idSistema: m.id,
+                    codigo: m.codigo_interno || m.codigo_barra || m.id,
+                    nomeSistema: m.nome,
+                    estoque: m.estoque
+                });
+            });
             cacheResultadosIA.push(objCache);
         });
 
@@ -601,32 +634,36 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
 
         cacheResultadosIA.forEach((item, index) => {
             const tr = document.createElement('tr');
+            let estoqueTotal = 0;
             
-            let statusHTML = '<span class="status-manual">Manual</span>';
-            let vinculoHTML = '';
-
-            if(item.vinculado) {
-                statusHTML = item.est > 0 ? `<span class="status-ok">${item.est} un.</span>` : `<span class="status-zero">0 un.</span>`;
-                vinculoHTML = `
-                    <div class="sistema-info" style="flex-direction: column; gap: 6px;">
-                        <div class="sistema-nome"><span class="badge-cod">${item.cod || 'S/CÓD'}</span> ${item.nomeSis}</div>
-                        <button class="btn btn-outline" style="padding: 2px 8px; font-size: 10px; border-color: var(--danger); color: var(--danger); align-self: flex-start;" onclick="desvincularProdutoIA(${index})">Desvincular e buscar outro</button>
+            let chipsHtml = '';
+            if(item.vinculos.length > 0) {
+                estoqueTotal = item.vinculos.reduce((acc, v) => acc + (parseInt(v.estoque) || 0), 0);
+                chipsHtml = item.vinculos.map((v, vIndex) => `
+                    <div class="vinculo-chip" style="margin:2px;">
+                        [${v.codigo}] ${v.nomeSistema}
+                        <span class="remove-btn" onclick="removerVinculoIA(${index}, ${vIndex})">✖</span>
                     </div>
-                `;
-            } else {
-                vinculoHTML = `
-                    <div class="busca-container" style="flex-wrap: wrap;">
-                        <input type="text" id="input-busca-ia-${index}" placeholder="Buscar para vincular..." style="font-size: 11px; padding: 6px; min-width: 140px; flex: 1;" onkeypress="if(event.key === 'Enter') buscarNaAPIParaIA(${index})" value="${item.nomeExtraido}">
-                        <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" onclick="buscarNaAPIParaIA(${index})">🔍</button>
-                    </div>
-                    <div id="resultados-ia-${index}" class="resultados-busca"></div>
-                `;
+                `).join('');
             }
+            
+            let statusHTML = item.vinculos.length > 0 
+                ? (estoqueTotal > 0 ? `<span class="status-ok">${estoqueTotal} un.</span>` : `<span class="status-zero">0 un.</span>`) 
+                : `<span class="status-manual">Manual</span>`;
+
+            let vinculoArea = `
+                <div style="font-size:11px; margin-bottom:6px;">${chipsHtml}</div>
+                <div class="busca-container" style="flex-wrap: wrap;">
+                    <input type="text" id="input-busca-ia-${index}" placeholder="Buscar mais variações..." style="font-size: 11px; padding: 6px; min-width: 140px; flex: 1;" onkeypress="if(event.key === 'Enter') buscarNaAPIParaIA(${index})" value="${item.vinculos.length === 0 ? item.nomeExtraido : ''}">
+                    <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" onclick="buscarNaAPIParaIA(${index})">🔍</button>
+                </div>
+                <div id="resultados-ia-${index}" class="resultados-busca"></div>
+            `;
 
             tr.innerHTML = `
                 <td style="text-align: center;"><input type="checkbox" class="chk-ia-item" data-index="${index}" checked></td>
                 <td><b style="color:var(--primary); font-size:13px; display:block; margin-bottom:4px;">${item.nomeExtraido}</b><span style="color:var(--success); font-weight:600;">R$ ${item.precoExtraido}</span></td>
-                <td>${vinculoHTML}</td>
+                <td>${vinculoArea}</td>
                 <td style="text-align: center;" id="status-ia-${index}">${statusHTML}</td>
             `;
             tbody.appendChild(tr);
@@ -656,26 +693,21 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                     const div = document.createElement('div'); 
                     div.className = 'resultado-item';
                     div.innerHTML = `<span style="margin-right: 10px; font-size: 11px; line-height: 1.2;"><b>[${cod}]</b> ${prod.nome}</span><span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0; font-size: 10px;">${prod.estoque} un.</span>`;
-                    div.onclick = () => vincularProdutoIA(index, prod.id, cod, prod.nome, prod.estoque);
+                    div.onclick = () => {
+                        const itemCache = cacheResultadosIA[index];
+                        if(!itemCache.vinculos.some(v => v.idSistema === prod.id)) {
+                            itemCache.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
+                            renderizarTabelaIA();
+                        }
+                    };
                     divResultados.appendChild(div);
                 });
-            } else { 
-                divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Não encontrado.</span>'; 
-            }
-        } catch (e) { 
-            divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">Erro na busca.</span>'; 
-        }
+            } else { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Não encontrado.</span>'; }
+        } catch (e) { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">Erro na busca.</span>'; }
     }
 
-    function vincularProdutoIA(index, idSis, cod, nomeSis, estoque) {
-        let item = cacheResultadosIA[index];
-        item.vinculado = true; item.idSis = idSis; item.cod = cod; item.nomeSis = nomeSis; item.est = estoque;
-        renderizarTabelaIA();
-    }
-
-    function desvincularProdutoIA(index) {
-        let item = cacheResultadosIA[index];
-        item.vinculado = false; item.idSis = ''; item.cod = ''; item.nomeSis = ''; item.est = null;
+    function removerVinculoIA(indexExt, indexVinc) {
+        cacheResultadosIA[indexExt].vinculos.splice(indexVinc, 1);
         renderizarTabelaIA();
     }
 
@@ -690,48 +722,53 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
 
         checkboxes.forEach(chk => {
             const itemCache = cacheResultadosIA[chk.dataset.index];
-            const novoProduto = criarObjetoProduto(
-                itemCache.nomeExtraido, itemCache.precoExtraido, itemCache.vinculado, 
-                itemCache.idSis, itemCache.cod, itemCache.nomeSis, itemCache.est
-            );
+            const novoProduto = criarObjetoProduto(itemCache.nomeExtraido, itemCache.precoExtraido, [...itemCache.vinculos]);
             itensLista.push(novoProduto);
         });
 
-        renderizarEditor(); salvarLocal(); fecharModalIA(); rolarParaFim();
-        mostrarToast(`${checkboxes.length} produto(s) adicionado(s) à sua lista!`);
+        renderizarEditor(); salvarLocal(); fecharModalIA(); 
+        setTimeout(() => document.getElementById('lista-editor').scrollTop = document.getElementById('lista-editor').scrollHeight, 50);
+        mostrarToast(`${checkboxes.length} bloco(s) adicionado(s) à sua lista!`);
     }
 
     // ==========================================
-    // LOG DE ESGOTADOS E TEXTO FINAL
+    // LOG DE FALTAS E TEXTO FINAL
     // ==========================================
     function fecharModal(e, id) { if(e.target.id === id) document.getElementById(id).classList.remove('visivel'); }
 
     function abrirLogEsgotados() {
-        const esgotados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado && i.estoque !== null && i.estoque <= 0);
-        const manuais = itensLista.filter(i => i.tipo === 'produto' && !i.vinculado);
-        const divLog = document.getElementById('conteudo-log');
+        const esgotados = []; const manuais = [];
         
+        itensLista.forEach(item => {
+            if(item.tipo === 'produto') {
+                if(!item.vinculos || item.vinculos.length === 0) manuais.push(item);
+                else {
+                    const estTotal = item.vinculos.reduce((acc, v) => acc + (parseInt(v.estoque) || 0), 0);
+                    if (estTotal <= 0) esgotados.push(item);
+                }
+            }
+        });
+
+        const divLog = document.getElementById('conteudo-log');
         let html = '';
         if(esgotados.length === 0 && manuais.length === 0) {
             html = '<p style="color: var(--success); font-weight: 600;">✅ Tudo limpo! Nenhum produto esgotado ou sem vínculo.</p>';
         } else {
             if (esgotados.length > 0) {
-                html += '<p style="margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--danger);">🛑 Esgotados no sistema:</p>';
+                html += '<p style="margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--danger);">🛑 Esgotados no sistema (Soma das variações é zero):</p>';
                 esgotados.forEach(p => {
-                    const nomeMostrado = p.nomePersonalizado.trim() || p.nomeSistema;
+                    const nomeMostrado = p.nomePersonalizado.trim() || p.vinculos.map(v=>v.nomeSistema).join(' | ');
                     html += `<div class="log-item" style="margin-bottom: 8px; background: rgba(192, 57, 43, 0.05); border-color: rgba(192, 57, 43, 0.3);">
-                                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Código: <b>[${p.codigo}]</b></div>
                                 <strong style="color: var(--danger);">${nomeMostrado}</strong>
                              </div>`;
                 });
             }
             if (manuais.length > 0) {
-                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>`;
+                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem nenhum vínculo (Requer checagem manual):</p>`;
                 manuais.forEach(p => {
                     const nomeMostrado = p.nomePersonalizado.trim() || 'Produto sem nome';
                     html += `<div class="log-item" style="margin-bottom: 8px; background: rgba(243, 156, 18, 0.05); border-color: rgba(243, 156, 18, 0.3);">
-                                <strong style="color: var(--warning);">${nomeMostrado}</strong> <br>
-                                <span style="font-size: 11px; color: var(--text-muted);">Estoque não monitorado pela API.</span>
+                                <strong style="color: var(--warning);">${nomeMostrado}</strong>
                              </div>`;
                 });
             }
@@ -748,11 +785,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
       const textarea = document.getElementById('texto-resultado');
       
       let linhas = [];
-
-      if(incluirData) {
-          const hoje = new Date().toLocaleDateString('pt-BR');
-          linhas.push(`📅 *Atualizado em:* ${hoje}\n`);
-      }
+      if(incluirData) { linhas.push(`📅 *Atualizado em:* ${new Date().toLocaleDateString('pt-BR')}\n`); }
 
       itensLista.forEach(item => {
         if(item.tipo === 'texto') {
@@ -760,11 +793,19 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             else linhas.push(''); 
         } else if (item.tipo === 'produto') {
             
-            const semEstoque = (item.vinculado && item.estoque !== null && item.estoque <= 0);
+            const temVinculo = item.vinculos && item.vinculos.length > 0;
+            const estoqueTotal = temVinculo ? item.vinculos.reduce((sum, v) => sum + (parseInt(v.estoque)||0), 0) : 1;
+            const semEstoque = (temVinculo && estoqueTotal <= 0);
+            
             if (semEstoque && ocultarSemEstoque) return; 
             
-            const nomeFinal = item.nomePersonalizado.trim() !== '' ? item.nomePersonalizado.replace(/\n/g, " ") : (item.nomeSistema || 'Produto Sem Nome');
-            const textoCodigo = (incluirCodigo && item.vinculado) ? `[${item.codigo}] ` : '';
+            let nomeFinal = item.nomePersonalizado.trim() !== '' ? item.nomePersonalizado.replace(/\n/g, " ") : (temVinculo ? item.vinculos[0].nomeSistema : 'Produto Sem Nome');
+            
+            let textoCodigo = '';
+            if(incluirCodigo && temVinculo) {
+                const cods = item.vinculos.map(v => v.codigo).join(', ');
+                textoCodigo = `[${cods}] `;
+            }
             
             let linhaProduto = `${textoCodigo}${nomeFinal} - ${item.preco}`;
             if (semEstoque && destacarSemEstoque) linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
