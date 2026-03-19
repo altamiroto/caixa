@@ -925,25 +925,46 @@ const HEADER_ICONS = ['📌','Ⓜ️','✳️','❇','☑️','🍎','🔷','�
 // MODAL IA — PROMPT PADRÃO
 // ════════════════════════════════════
 const IA_PROMPT_KEY = 'jeta_ia_prompt_v1';
-const IA_PROMPT_DEFAULT = `Você é um assistente especializado em processar listas de produtos para revenda.
-Analise a lista bruta abaixo e retorne um JSON com os itens extraídos.
+const IA_PROMPT_DEFAULT = `Você é um assistente especializado em processar listas de produtos para revenda mobile/eletrônicos.
+Analise a lista bruta e retorne um JSON com os itens, seguindo estas regras ESTRITAS:
 
-Regras:
-- Identifique cabeçalhos/seções (ex: MOTOROLA, SAMSUNG, REALME) — type: "header"
-- Identifique produtos com nome e preço — type: "product"
-- Para cabeçalhos, extraia: icon (emoji que antecede, se houver), label (nome da marca/seção em maiúsculas)
-- Para produtos, extraia: label (nome limpo do produto), price (apenas o número, sem R$ ou símbolos)
-- Ignore linhas de título geral da lista (ex: "Lista EXCLUSIVA REVENDA...")
-- Linhas vazias ou separadores podem virar type: "free" com text: ""
-- Retorne APENAS JSON válido, sem markdown, sem explicações.
+CABEÇALHOS (type: "header"):
+- SOMENTE linhas que identificam uma MARCA/FABRICANTE como seção separadora
+- Exemplos válidos: "MOTOROLA", "SAMSUNG", "XIAOMI", "REALME", "APPLE"
+- Formato: linha com emoji de marca + nome da marca em maiúsculas
+- NÃO crie cabeçalho para: títulos gerais de lista, datas, categorias de produto (ex: "SmartTVs"), frases descritivas
 
-Formato esperado:
+PRODUTOS (type: "product"):
+- Cada linha/item com nome de produto e preço
+- label: nome do produto limpo (sem emojis decorativos, sem R$, sem texto de marketing)
+- price: somente o número final (ex: "650", "1499"). Se vier "R$ 1.190", extraia "1190"
+- Mantenha modelo, memória RAM/armazenamento, cor no label
+
+LINHA LIVRE (type: "free", text: ""):
+- Títulos gerais de lista (ex: "Lista EXCLUSIVA REVENDA/ATACADO (18/03/26)")
+- Linhas separadoras, linhas vazias, categorias não-marca (ex: "SmartTVs Revenda (18/03/26)")
+- Emojis de separação ou decoração sem conteúdo de produto
+
+Retorne APENAS JSON válido. Sem markdown. Sem explicações.
+
+Exemplo de entrada:
+📌 Lista EXCLUSIVA REVENDA/ATACADO (18/03/26) 📌
+Ⓜ️ MOTOROLA
+Motorola Moto G06 256gb 4G - Bege - 650
+✳️ REALME
+Realme Note 60x 64gb - Verde - 499
+📢 SmartTVs Revenda (18/03/26): 📢
+📺 Smart TV Samsung 32" HD - R$ 1190
+
+Exemplo de saída:
 [
+  {"type":"free","text":""},
   {"type":"header","icon":"Ⓜ️","label":"MOTOROLA"},
   {"type":"product","label":"Motorola Moto G06 256gb 4G - Bege","price":"650"},
-  {"type":"free","text":""},
   {"type":"header","icon":"✳️","label":"REALME"},
-  {"type":"product","label":"Realme Note 60x 64gb - Verde","price":"499"}
+  {"type":"product","label":"Realme Note 60x 64gb - Verde","price":"499"},
+  {"type":"free","text":""},
+  {"type":"product","label":"Smart TV Samsung 32\" HD","price":"1190"}
 ]`;
 
 function iaGetPrompt() {
@@ -1048,6 +1069,10 @@ function iaErro(msg) {
 
 // ════════════════════════════════════
 // PASSO 2 — BUSCAR VÍNCULOS NA API
+// Estratégia multi-tentativa por produto:
+//   1. Modelo extraído (ex: "Note 14 Pro 5G") + memória/armazenamento
+//   2. Marca + modelo curto
+//   3. Fallback: primeiras palavras relevantes
 // ════════════════════════════════════
 async function iaBuscarVinculos(itens) {
   el('ia-progress-wrap').style.display = 'flex';
@@ -1062,26 +1087,37 @@ async function iaBuscarVinculos(itens) {
 
   for (let i = 0; i < _iaItens.length; i++) {
     const item = _iaItens[i];
-    if (item.type !== 'product') { feitos++; continue; }
+    if (item.type !== 'product') continue;
 
-    el('ia-prog-txt').textContent = `Buscando "${item.label?.substring(0,30)}…" (${feitos+1}/${total})`;
-    el('ia-prog-bar').style.width = Math.round(((feitos+1)/Math.max(total,1))*100) + '%';
+    feitos++;
+    el('ia-prog-txt').textContent = `(${feitos}/${total}) ${item.label?.substring(0,35)}…`;
+    el('ia-prog-bar').style.width = Math.round((feitos / Math.max(total, 1)) * 100) + '%';
 
     try {
-      // Busca por nome (pega as primeiras palavras significativas)
-      const q = item.label.split(/\s+/).slice(0,4).join(' ');
-      const d = await apiGet({ nome: q });
-      if (d.code === 200 && d.data?.length) {
-        _iaItens[i]._candidatos = d.data.slice(0, 12);
-        // Melhor match: tenta encontrar o mais próximo pelo nome
-        const melhor = melhorMatch(item.label, d.data);
-        _iaItens[i]._vinculo = melhor;
+      const queries = gerarQueries(item.label);
+      let candidatos = [];
+      for (const q of queries) {
+        try {
+          const d = await apiGet({ nome: q });
+          if (d.code === 200 && d.data?.length) {
+            // Acumula candidatos únicos
+            d.data.forEach(p => {
+              if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
+            });
+            if (candidatos.length >= 5) break; // suficiente
+          }
+        } catch(e) { /* ignora falha de query individual */ }
+        await delay(380); // respeita rate limit entre queries
+      }
+
+      if (candidatos.length) {
+        _iaItens[i]._candidatos = candidatos.slice(0, 15);
+        _iaItens[i]._vinculo = melhorMatch(item.label, candidatos);
       }
     } catch(e) { /* sem vínculo */ }
 
-    feitos++;
-    // Respeita rate limit: 1 req por vez, delay a cada 3
-    if (feitos % 3 === 0) await delay(1100);
+    // Delay extra a cada 3 produtos para não estourar 3 req/s
+    if (feitos % 3 === 0) await delay(800);
   }
 
   el('ia-prog-bar').style.width = '100%';
@@ -1093,16 +1129,160 @@ async function iaBuscarVinculos(itens) {
   }, 400);
 }
 
+// Gera até 3 queries progressivamente mais amplas para um label
+function gerarQueries(label) {
+  const queries = [];
+
+  // 1. Remove cores e variações após " - " (ex: "- Preto/Roxo/Verde", "- Azul")
+  const semCor = label
+    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey)[\w/]*/gi, '')
+    .replace(/\s+/g, ' ').trim();
+
+  // 2. Com memória: ex "Redmi Note 14 Pro 5G 8/256gb"
+  //    Remove apenas o último segmento após " - " se ainda sobrou
+  const comMem = semCor.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+  if (comMem.length > 3) queries.push(comMem);
+
+  // 3. Sem memória RAM/armazenamento: ex "Redmi Note 14 Pro 5G"
+  const semMem = comMem
+    .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')   // 8/256gb
+    .replace(/\s+\d+(gb|tb)/gi, '')              // 256gb, 64gb
+    .replace(/\s+\d+g\b/gi, '')                  // 4G, 5G quando junto à memória
+    .replace(/\s+/g, ' ').trim();
+  if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+
+  // 4. Modelo curto: primeiras 3 palavras (ex: "Redmi Note 14")
+  const palavras = semMem.split(/\s+/);
+  if (palavras.length > 3) {
+    const curto = palavras.slice(0, 3).join(' ');
+    if (curto.length > 3) queries.push(curto);
+  }
+
+  // Fallback se tudo falhou
+  if (!queries.length) queries.push(label.split(/\s+/).slice(0, 4).join(' '));
+
+  return [...new Set(queries)];
+}
+
+// ════════════════════════════════════
+// EXTRATORES DE ATRIBUTOS TÉCNICOS
+// Usados como filtros ELIMINATÓRIOS antes do score.
+// Se o candidato tiver um atributo diferente do buscado → descartado.
+// ════════════════════════════════════
+
+// Extrai combinações de memória: "8/256", "4/128", "12/512", "3/64"
+function extrairMem(s) {
+  const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
+  return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
+}
+
+// Extrai armazenamento solo quando não há RAM/armazenamento par: "256gb", "64gb"
+function extrairStorage(s) {
+  // Só pega se não houver padrão X/Y antes
+  if (/\d+\s*\/\s*\d+/i.test(s)) return [];
+  return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || [])
+    .map(m => m.replace(/\s/g,'').toLowerCase());
+}
+
+// Extrai geração de rede: "4g", "5g"
+function extrairRede(s) {
+  const m = s.match(/\b(4g|5g)\b/gi);
+  return m ? m.map(x => x.toLowerCase()) : [];
+}
+
+// Extrai polegadas de TV/monitor: "32", "40", "43", "50", "55", "65"
+function extrairPolegadas(s) {
+  // Padrão: número seguido de " ou pol ou " antes de palavras como smart/tv/led
+  const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
+            s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
+  return m ? m.map(x => x.match(/\d+/)[0]) : [];
+}
+
+// Score de similaridade melhorado — só avalia nome/marca/modelo,
+// NÃO pondera atributos técnicos (esses já foram filtrados)
 function melhorMatch(label, produtos) {
-  // Score simples: conta palavras do label que aparecem no nome do produto
-  const words = label.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w => w.length > 2);
-  let best = null, bestScore = 0;
+  const norm = s => s
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s\/]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+
+  const labelN = norm(label);
+
+  // Atributos técnicos DO LABEL — serão usados como filtro duro
+  const labelMem  = extrairMem(label);
+  const labelRede = extrairRede(label);
+  const labelPol  = extrairPolegadas(label);
+  const labelStor = extrairStorage(label);
+
+  // Tokens para score (exclui tokens técnicos já filtrados)
+  const stopTokens = new Set(['de','do','da','the','com','para','and','or','in','a','o','e']);
+  const tokens = labelN.split(/\s+/).filter(t =>
+    t.length >= 2 && !stopTokens.has(t)
+  );
+
+  let best = null, bestScore = -1;
+
   produtos.forEach(p => {
-    const pn = p.nome.toLowerCase();
-    const score = words.reduce((s, w) => s + (pn.includes(w) ? 1 : 0), 0);
+    const pn = p.nome;
+    const pnN = norm(pn);
+
+    // ── FILTROS ELIMINATÓRIOS ──────────────────────────
+    // 1. Memória RAM/Armazenamento (ex: 8/256 ≠ 4/128)
+    if (labelMem.length > 0) {
+      const pMem = extrairMem(pn);
+      if (pMem.length > 0) {
+        const bate = labelMem.some(m => pMem.includes(m));
+        if (!bate) return; // descarta
+      }
+    }
+
+    // 2. Armazenamento solo (ex: 64gb ≠ 128gb)
+    //    Também compara contra o segundo número de pares RAM/storage do produto
+    if (labelStor.length > 0) {
+      const pStor = extrairStorage(pn);
+      const pMem2 = extrairMem(pn); // ex: ["64/128"] → storage é o segundo número
+      // Extrai o número de armazenamento do label (ex: "64gb" → "64")
+      const labelStorNum = labelStor.map(s => s.replace(/[^\d]/g, ''));
+      // Extrai segundo número dos pares do produto (o armazenamento)
+      const pStorFromPair = pMem2.map(m => m.split('/')[1]).filter(Boolean);
+
+      if (pStor.length > 0 || pStorFromPair.length > 0) {
+        const pStorNums = [
+          ...pStor.map(s => s.replace(/[^\d]/g, '')),
+          ...pStorFromPair
+        ];
+        const bate = labelStorNum.some(n => pStorNums.includes(n));
+        if (!bate) return;
+      }
+    }
+
+    // 3. Geração de rede (4G ≠ 5G — são produtos diferentes)
+    if (labelRede.length > 0) {
+      const pRede = extrairRede(pn);
+      if (pRede.length > 0) {
+        const bate = labelRede.some(r => pRede.includes(r));
+        if (!bate) return;
+      }
+    }
+
+    // 4. Polegadas (TV 32" ≠ TV 43")
+    if (labelPol.length > 0) {
+      const pPol = extrairPolegadas(pn);
+      if (pPol.length > 0) {
+        const bate = labelPol.some(p => pPol.includes(p));
+        if (!bate) return;
+      }
+    }
+    // ──────────────────────────────────────────────────
+
+    // Score por tokens de nome/modelo (após passar nos filtros)
+    const score = tokens.reduce((s, t) => s + (pnN.includes(t) ? 1 : 0), 0) / tokens.length;
     if (score > bestScore) { bestScore = score; best = p; }
   });
-  return best;
+
+  // Threshold mínimo: pelo menos 25% dos tokens de nome devem bater
+  return bestScore >= 0.25 ? best : null;
 }
 
 // ════════════════════════════════════
