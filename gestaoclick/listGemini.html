@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Listas - JETA</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a1a1a;
+      --secondary: #4a4a4a;
+      --success: #27ae60;
+      --danger: #c0392b;
+      --bg-main: #f0f2f5;
+      --bg-card: #ffffff;
+      --border: #e0e0e0;
+      --text-main: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'DM Sans', sans-serif; }
+    
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
+
+    header {
+      background: var(--bg-card); padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow);
+      z-index: 10;
+    }
+    
+    header h1 { font-size: 1.2rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px;}
+    header h1::before { content: '📝'; font-size: 1.5rem; }
+
+    .container {
+      display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; padding: 20px; flex: 1; overflow: hidden;
+    }
+
+    /* Painel de Edição */
+    .editor-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
+    
+    .toolbar { padding: 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; background: #fafafa; flex-wrap: wrap;}
+    
+    .btn {
+      padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #333; }
+    .btn-success { background: var(--success); color: white; margin-left: auto;}
+    .btn-success:hover { background: #219653; }
+    .btn-icon { width: 28px; height: 28px; padding: 0; justify-content: center; background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-icon:hover { background: var(--bg-main); color: var(--primary); border-color: var(--secondary); }
+    .btn-danger { background: rgba(192, 57, 43, 0.1); color: var(--danger); border: none; }
+    .btn-danger:hover { background: var(--danger); color: white; }
+
+    .lista-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* Itens da Lista */
+    .item-card { 
+        background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+        display: grid; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: border-color 0.2s;
+    }
+    .item-card:focus-within { border-color: var(--primary); }
+    
+    .item-header { display: flex; justify-content: space-between; align-items: center; }
+    .item-tipo { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); background: var(--bg-main); padding: 2px 8px; border-radius: 12px; }
+    .item-acoes { display: flex; gap: 4px; }
+
+    .item-grid { display: grid; gap: 8px; }
+    .grid-2 { grid-template-columns: 1fr 100px; }
+    .grid-3 { grid-template-columns: 1.5fr 1fr 100px; }
+
+    input[type="text"] {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 13px; font-family: inherit; color: var(--primary); background: var(--bg-main);
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--primary); background: white; }
+    
+    .estoque-status { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-top: 4px;}
+    .status-ok { color: var(--success); }
+    .status-zero { color: var(--danger); }
+    .status-load { color: #f39c12; }
+
+    /* Painel de Visualização */
+    .preview-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow); }
+    
+    .preview-header { padding: 16px; border-bottom: 1px solid var(--border); background: #fafafa; }
+    .preview-header h2 { font-size: 14px; color: var(--primary); margin-bottom: 12px; }
+    
+    .opcoes-toggle { display: flex; flex-direction: column; gap: 8px; }
+    .toggle-label { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+    .toggle-label input { accent-color: var(--primary); width: 16px; height: 16px; }
+
+    textarea {
+      flex: 1; border: none; padding: 16px; font-size: 14px; font-family: inherit; resize: none;
+      line-height: 1.6; color: var(--primary); background: #fff;
+    }
+    textarea:focus { outline: none; }
+
+    .preview-footer { padding: 16px; border-top: 1px solid var(--border); }
+    #btn-copiar { width: 100%; padding: 12px; font-size: 14px; justify-content: center;}
+
+    /* Notificações */
+    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--primary); color: white; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 1000; }
+    #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; overflow-y: auto; display: flex; flex-direction: column;}
+      .editor-panel, .preview-panel { overflow: visible; flex: none; min-height: 500px;}
+      textarea { min-height: 300px; border-bottom: 1px solid var(--border);}
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Gerador de Listas - JETA</h1>
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Salvo automaticamente no navegador</div>
+  </header>
+
+  <div class="container">
+    
+    <div class="editor-panel">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="adicionarItem('texto')">➕ Texto/Cabeçalho</button>
+        <button class="btn btn-primary" onclick="adicionarItem('produto')">➕ Produto</button>
+        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Estoque</button>
+      </div>
+      <div class="lista-container" id="lista-editor">
+        </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="preview-header">
+        <h2>Pré-visualização da Mensagem</h2>
+        <div class="opcoes-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" id="chk-data" onchange="gerarTexto()"> Inserir data de hoje no topo
+          </label>
+          <label class="toggle-label">
+            <input type="checkbox" id="chk-ocultar" onchange="gerarTexto()"> Ocultar produtos sem estoque
+          </label>
+          <label class="toggle-label">
+            <input type="checkbox" id="chk-destacar" onchange="gerarTexto()" checked> Destacar produtos sem estoque com "🛑 ESGOTADO"
+          </label>
+        </div>
+      </div>
+      <textarea id="texto-resultado" readonly placeholder="Sua lista aparecerá aqui..."></textarea>
+      <div class="preview-footer">
+        <button class="btn btn-primary" id="btn-copiar" onclick="copiarTexto()">📋 Copiar para WhatsApp</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const LOJA_ID = "361408";
+    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_whatsapp')) || [];
+    let debounceTimer;
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+      if(itensLista.length === 0) {
+        // Modelo Inicial caso esteja vazio
+        itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
+        itensLista.push({ id: gerarId(), tipo: 'texto', texto: 'Ⓜ️ MOTOROLA' });
+        itensLista.push({ id: gerarId(), tipo: 'produto', nomeCustomizado: 'Motorola Moto G06 256gb 4G - Bege', preco: '650', termoBusca: 'Moto G06', estoque: null });
+      }
+      renderizarEditor();
+    });
+
+    function gerarId() { return Date.now().toString() + Math.floor(Math.random()*1000); }
+
+    function salvarLocal() {
+      localStorage.setItem('jeta_lista_whatsapp', JSON.stringify(itensLista));
+      gerarTexto();
+    }
+
+    function autoSalvar() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(salvarLocal, 500);
+    }
+
+    function adicionarItem(tipo) {
+      if(tipo === 'texto') {
+        itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
+      } else {
+        itensLista.push({ id: gerarId(), tipo: 'produto', nomeCustomizado: '', preco: '', termoBusca: '', estoque: null });
+      }
+      renderizarEditor();
+      salvarLocal();
+      // Scroll para o fim
+      const container = document.getElementById('lista-editor');
+      setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+    }
+
+    function removerItem(id) {
+      itensLista = itensLista.filter(item => item.id !== id);
+      renderizarEditor();
+      salvarLocal();
+    }
+
+    function moverItem(index, direcao) {
+      if(direcao === -1 && index > 0) {
+        const temp = itensLista[index];
+        itensLista[index] = itensLista[index - 1];
+        itensLista[index - 1] = temp;
+      } else if (direcao === 1 && index < itensLista.length - 1) {
+        const temp = itensLista[index];
+        itensLista[index] = itensLista[index + 1];
+        itensLista[index + 1] = temp;
+      }
+      renderizarEditor();
+      salvarLocal();
+    }
+
+    function atualizarDado(id, campo, valor) {
+      const item = itensLista.find(i => i.id === id);
+      if(item) {
+        item[campo] = valor;
+        autoSalvar();
+      }
+    }
+
+    function renderizarEditor() {
+      const container = document.getElementById('lista-editor');
+      container.innerHTML = '';
+
+      itensLista.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        const acoesHTML = `
+          <button class="btn btn-icon" onclick="moverItem(${index}, -1)" title="Subir" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+          <button class="btn btn-icon" onclick="moverItem(${index}, 1)" title="Descer" ${index === itensLista.length - 1 ? 'disabled' : ''}>⬇️</button>
+          <button class="btn btn-icon btn-danger" onclick="removerItem('${item.id}')" title="Excluir">🗑️</button>
+        `;
+
+        if (item.tipo === 'texto') {
+          card.innerHTML = `
+            <div class="item-header">
+              <span class="item-tipo">Texto Livre</span>
+              <div class="item-acoes">${acoesHTML}</div>
+            </div>
+            <input type="text" placeholder="Digite o cabeçalho, categoria ou espaçamento..." value="${item.texto}" oninput="atualizarDado('${item.id}', 'texto', this.value)">
+          `;
+        } else {
+          let estoqueHTML = '<span class="estoque-status" style="color:var(--text-muted)">⚪ Estoque não verificado</span>';
+          if(item.estoque !== null) {
+              if(item.estoque > 0) estoqueHTML = `<span class="estoque-status status-ok">🟢 Em estoque: ${item.estoque} un.</span>`;
+              else estoqueHTML = `<span class="estoque-status status-zero">🔴 Sem estoque (0 un.)</span>`;
+          }
+
+          card.innerHTML = `
+            <div class="item-header">
+              <span class="item-tipo">📦 Produto</span>
+              <div class="item-acoes">${acoesHTML}</div>
+            </div>
+            <div class="item-grid grid-2">
+              <input type="text" placeholder="Nome que aparecerá no WhatsApp (Ex: Note 14 6/128gb - Preto)" value="${item.nomeCustomizado}" oninput="atualizarDado('${item.id}', 'nomeCustomizado', this.value)">
+              <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarDado('${item.id}', 'preco', this.value)">
+            </div>
+            <div class="item-grid grid-2" style="grid-template-columns: 1fr auto;">
+              <input type="text" placeholder="Termo de busca na nuvem (Código exato ou parte do nome no sistema)" value="${item.termoBusca}" oninput="atualizarDado('${item.id}', 'termoBusca', this.value)">
+              <button class="btn btn-primary" onclick="buscarEstoqueIndividual('${item.id}')" style="padding: 0; justify-content: center;">🔍 Consultar</button>
+            </div>
+            <div id="status-${item.id}">${estoqueHTML}</div>
+          `;
+        }
+        container.appendChild(card);
+      });
+      gerarTexto();
+    }
+
+    // BUSCA NA API RESPEITANDO O RATE LIMIT (Batching)
+    async function buscarEstoqueNaAPI(termo) {
+      if(!termo || termo.trim() === '') return null;
+      try {
+        // A API suporta filtro por nome ou código
+        const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=5&nome=${encodeURIComponent(termo.trim())}`);
+        const json = await res.json();
+        
+        if (json.code === 200 && json.data && json.data.length > 0) {
+            // Retorna o estoque do primeiro produto encontrado que corresponda
+            return json.data[0].estoque;
+        }
+        return 0; // Se não encontrou, assume 0
+      } catch (e) {
+        console.error("Erro na busca:", e);
+        return null;
+      }
+    }
+
+    async function buscarEstoqueIndividual(id) {
+        const item = itensLista.find(i => i.id === id);
+        if(!item || !item.termoBusca) { mostrarToast("Insira um termo de busca válido."); return; }
+        
+        const statusDiv = document.getElementById(`status-${id}`);
+        statusDiv.innerHTML = '<span class="estoque-status status-load">⏳ Buscando...</span>';
+        
+        const qtd = await buscarEstoqueNaAPI(item.termoBusca);
+        if(qtd !== null) {
+            item.estoque = qtd;
+            salvarLocal();
+            renderizarEditor();
+            mostrarToast("Estoque atualizado.");
+        } else {
+            statusDiv.innerHTML = '<span class="estoque-status status-zero">⚠️ Erro ao buscar. Verifique o termo.</span>';
+        }
+    }
+
+    async function sincronizarEstoqueTotal() {
+        const btn = document.getElementById('btn-sync');
+        const produtosAtivos = itensLista.filter(i => i.tipo === 'produto' && i.termoBusca.trim() !== '');
+        
+        if(produtosAtivos.length === 0) { mostrarToast("Nenhum produto com termo de busca preenchido."); return; }
+        
+        btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
+        
+        const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+        // Lotes de 3 para respeitar Limite de API
+        for (let i = 0; i < produtosAtivos.length; i += 3) {
+            const lote = produtosAtivos.slice(i, i + 3);
+            const promessas = lote.map(async (prod) => {
+                const statusDiv = document.getElementById(`status-${prod.id}`);
+                if(statusDiv) statusDiv.innerHTML = '<span class="estoque-status status-load">⏳ Atualizando...</span>';
+                
+                const qtd = await buscarEstoqueNaAPI(prod.termoBusca);
+                if(qtd !== null) prod.estoque = qtd;
+            });
+
+            await Promise.all(promessas);
+            
+            // Renderiza o progresso no meio do caminho
+            renderizarEditor(); 
+            
+            // Pausa 1 segundo se ainda tiver itens (Rate Limit)
+            if (i + 3 < produtosAtivos.length) await delay(1000); 
+        }
+
+        salvarLocal();
+        btn.innerHTML = "🔄 Sincronizar Estoque"; btn.disabled = false;
+        mostrarToast("✅ Sincronização concluída!");
+    }
+
+    // GERAÇÃO DO TEXTO
+    function gerarTexto() {
+      const ocultarSemEstoque = document.getElementById('chk-ocultar').checked;
+      const destacarSemEstoque = document.getElementById('chk-destacar').checked;
+      const incluirData = document.getElementById('chk-data').checked;
+      const textarea = document.getElementById('texto-resultado');
+      
+      let linhas = [];
+
+      if(incluirData) {
+          const hoje = new Date().toLocaleDateString('pt-BR');
+          linhas.push(`📅 *Atualizado em:* ${hoje}\n`);
+      }
+
+      itensLista.forEach(item => {
+        if(item.tipo === 'texto') {
+            if(item.texto.trim() !== '') linhas.push(item.texto);
+            else linhas.push(''); // Linha em branco
+        } else if (item.tipo === 'produto') {
+            const semEstoque = item.estoque !== null && item.estoque <= 0;
+            
+            if (semEstoque && ocultarSemEstoque) return; // Pula a linha
+            
+            let linhaProduto = `${item.nomeCustomizado} - ${item.preco}`;
+            
+            if (semEstoque && destacarSemEstoque) {
+                linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
+            }
+            
+            linhas.push(linhaProduto);
+        }
+      });
+
+      textarea.value = linhas.join('\n');
+    }
+
+    function copiarTexto() {
+      const texto = document.getElementById('texto-resultado').value;
+      if(!texto.trim()) { mostrarToast("O texto está vazio."); return; }
+      
+      navigator.clipboard.writeText(texto).then(() => {
+        const btn = document.getElementById('btn-copiar');
+        btn.innerHTML = '✅ Copiado com sucesso!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-primary');
+        setTimeout(() => {
+            btn.innerHTML = '📋 Copiar para WhatsApp';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2000);
+      });
+    }
+
+    let toastTimeout;
+    function mostrarToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('visivel');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => t.classList.remove('visivel'), 2500);
+    }
+  </script>
+</body>
+</html>
