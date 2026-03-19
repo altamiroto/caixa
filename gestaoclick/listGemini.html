@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v6 (Busca Ativa + Cores)</title>
+  <title>Gerador de Listas - JETA v7 (Exatidão Máxima)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -231,7 +231,7 @@
       
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá buscar as variações dinamicamente no seu sistema (lote por lote).
+            Cole a lista de um fornecedor ou concorrente abaixo. A IA extrairá os textos exatamente como estão e buscará os vínculos compatíveis no sistema.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
@@ -264,7 +264,7 @@
                 <thead>
                     <tr>
                         <th style="width: 40px; text-align: center;"><input type="checkbox" id="chk-ia-todos" onchange="alternarTodosIA(this)"></th>
-                        <th style="width: 35%;">Extraído pela IA</th>
+                        <th style="width: 35%;">Texto Bruto Mantido</th>
                         <th>Vínculos no Sistema (Variações e Cores)</th>
                         <th style="width: 80px; text-align: center;">Estoque Total</th>
                     </tr>
@@ -290,12 +290,21 @@
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v5')) || [];
     let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v5')) || { data: false, codigo: false, ocultar: false, destacar: true };
     let debounceTimer;
+    let catalogoCompleto = []; 
     let cacheResultadosIA = []; 
 
-    // NOVO PROMPT: Força a IA a cuspir um termo simplificado para ajudar a API a não travar na busca original
-    const PROMPT_PADRAO_IA = `Extraia todos os produtos e preços deste texto. Ignore cabeçalhos puros de marcas. 
+    // NOVO PROMPT: Força a IA a cuspir o NOME EXATO E BRUTO sem alterações
+    const PROMPT_PADRAO_IA = `Extraia todos os produtos e preços deste texto.
+REGRA DE OURO: O campo "nome" DEVE ser a CÓPIA EXATA E IDÊNTICA da linha original do produto. NÃO remova cores, capacidades (ex: 256gb), traços, nem conectivos.
 Retorne APENAS um array JSON válido. 
-O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor numérico", "busca": "Marca e Modelo principal (sem cor e sem memoria) para usar no buscador do sistema"}].`;
+O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatamente como escrito", "preco": "Valor numérico limpo"}].`;
+
+    const dicionarioCores = {
+        'black': 'preto', 'white': 'branco', 'green': 'verde', 'blue': 'azul', 
+        'yellow': 'amarelo', 'red': 'vermelho', 'gray': 'cinza', 'grey': 'cinza', 
+        'graphite': 'grafite', 'silver': 'prata', 'gold': 'dourado', 'purple': 'roxo', 
+        'morado': 'roxo', 'pink': 'rosa', 'rose': 'rosa', 'titanium': 'titanio'
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('chk-data').checked = opcoesLista.data;
@@ -303,7 +312,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
       document.getElementById('chk-ocultar').checked = opcoesLista.ocultar;
       document.getElementById('chk-destacar').checked = opcoesLista.destacar;
       
-      let promptSalvo = localStorage.getItem('jeta_prompt_ia_v6') || PROMPT_PADRAO_IA;
+      let promptSalvo = localStorage.getItem('jeta_prompt_ia_v7') || PROMPT_PADRAO_IA;
       document.getElementById('prompt-ia-input').value = promptSalvo;
 
       if(itensLista.length === 0) itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
@@ -406,7 +415,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
           card.innerHTML = `
             <div class="item-header"><span class="item-tipo">📦 Produto</span><div class="item-acoes">${acoesHTML}</div></div>
             <div class="grid-principal">
-              <textarea class="input-livre" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15 Bege/Preto...)" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">${item.nomePersonalizado}</textarea>
+              <textarea class="input-livre" placeholder="Nome original mantido..." oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">${item.nomePersonalizado}</textarea>
               <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarCampo('${item.id}', 'preco', this.value)">
             </div>
             <div class="vinculo-box">
@@ -447,6 +456,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
                         if(!item.vinculos) item.vinculos = [];
                         if(!item.vinculos.some(v => v.idSistema === prod.id)) {
                             item.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
+                            // Aqui nós só atualizamos o nome personalizado se ele estiver vazio.
+                            // Do contrário, preservamos o nome bruto intacto
                             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
                             if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
                             input.value = '';
@@ -506,28 +517,39 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
         else { body.classList.add('visivel'); icon.textContent = '▲'; }
     }
 
-    function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v6', document.getElementById('prompt-ia-input').value); }
+    function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v7', document.getElementById('prompt-ia-input').value); }
 
-    const dicionarioCores = {
-        'black': 'preto', 'white': 'branco', 'green': 'verde', 'blue': 'azul', 
-        'yellow': 'amarelo', 'red': 'vermelho', 'gray': 'cinza', 'grey': 'cinza', 
-        'graphite': 'grafite', 'silver': 'prata', 'gold': 'dourado', 'purple': 'roxo', 
-        'morado': 'roxo', 'pink': 'rosa', 'rose': 'rosa'
-    };
+    async function carregarCatalogoCompleto() {
+        if (catalogoCompleto.length > 0) return true; 
+        let pag = 1; let totalPaginas = 1;
+        try {
+            do {
+                const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=100&pagina=${pag}`);
+                const json = await res.json();
+                if(json.code === 200 && json.data) {
+                    catalogoCompleto = catalogoCompleto.concat(json.data.filter(p => p.nome));
+                    totalPaginas = json.meta.total_paginas;
+                } else { break; }
+                pag++;
+            } while (pag <= totalPaginas);
+            return true;
+        } catch(e) { return false; }
+    }
 
-    function encontrarMelhoresVinculos(nomeExtraido, candidatosAPI) {
-        if(!nomeExtraido || !candidatosAPI || candidatosAPI.length === 0) return [];
+    function encontrarMelhoresVinculos(nomeExtraido) {
+        if(!nomeExtraido || catalogoCompleto.length === 0) return [];
         
         const limparTexto = (txt) => {
             let str = txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
-                      .replace(/\b(gb|tb|ram|rom)\b/g, '')       
+                      // Removido o apagar das letras "gb" para não afetar a string
+                      // Agora apenas substituimos a palavra exata por um espaço para as capacidades virarem numéricas puras
+                      .replace(/gb|tb|ram|rom/g, ' ')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
                       .replace(/\b([a-z])\s+(\d+)\b/g, '$1$2') 
                       .replace(/\b([a-z]+)0+(\d+)\b/g, '$1$2'); 
             
             let tokens = str.split(/\s+/).filter(w => w.trim() !== '');
-            // Tradução nativa de cores de inglês para português
             return tokens.map(t => dicionarioCores[t] || t);
         };
 
@@ -541,9 +563,9 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
 
         const has5g = tokensExt.includes('5g');
 
-        // 2. Capacidades de armazenamento
-        const capacidades = ['64', '128', '256', '512', '1024', '1'];
-        const capExt = tokensExt.find(t => capacidades.includes(t) && parseInt(t) >= 64);
+        // 2. Capacidades de armazenamento EXATAS (A grande sacada)
+        const capacidades = ['32', '64', '128', '256', '512', '1024'];
+        const capExt = tokensExt.find(t => capacidades.includes(t));
 
         // 3. Modelos Estritos
         const isModelo = (t) => {
@@ -555,7 +577,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
         };
         const modelosEstritosExt = tokensExt.filter(isModelo);
 
-        for(let prod of candidatosAPI) {
+        for(let prod of catalogoCompleto) {
             const tokensProd = limparTexto(prod.nome);
             let desclassificado = false;
 
@@ -574,14 +596,14 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
             if (!has5g && prodHas5g) desclassificado = true; 
             if (desclassificado) continue;
 
-            // Cortes de Capacidade
+            // Cortes de Capacidade: Evita que 128gb se misture com 256gb
             if (capExt) {
-                const capProd = tokensProd.find(t => capacidades.includes(t) && parseInt(t) >= 64);
+                const capProd = tokensProd.find(t => capacidades.includes(t));
                 if (capProd && capExt !== capProd) desclassificado = true;
             }
             if (desclassificado) continue;
 
-            // Cortes de Modelos (Se tem X7 na busca, tem que ter no nome)
+            // Cortes de Modelos (Se tem G6 na busca, tem que ter no nome)
             for (let mod of modelosEstritosExt) {
                 if (!tokensProd.includes(mod)) {
                     desclassificado = true;
@@ -597,7 +619,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
             }
             
             // Bônus para RAM igual (Ajudar a não confundir versoes de 8gb e 12gb se a memoria interna for a mesma)
-            const ramExt = tokensExt.find(t => /^\d+$/.test(t) && parseInt(t) <= 16 && parseInt(t) >= 3);
+            const memoriasRam = ['3', '4', '6', '8', '12', '16', '24'];
+            const ramExt = tokensExt.find(t => memoriasRam.includes(t));
             if (ramExt && tokensProd.includes(ramExt)) score += 2;
 
             if (score > 0) scores.push({ prod, score });
@@ -608,7 +631,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
         scores.sort((a,b) => b.score - a.score);
         const topScore = scores[0].score;
         
-        // Retorna as variações que tiveram a nota máxima
         return scores.filter(s => s.score === topScore).map(s => s.prod);
     }
 
@@ -634,6 +656,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
         document.getElementById('btn-processar-ia').disabled = true;
         document.getElementById('loader-ia').classList.add('visivel');
         document.getElementById('texto-loader-ia').textContent = "Lendo produtos com a IA (Groq)...";
+
+        await carregarCatalogoCompleto();
 
         let produtosExtraidos = [];
         try {
@@ -662,43 +686,27 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo", "preco": "Valor n
             return;
         }
 
-        document.getElementById('texto-loader-ia').textContent = "Consultando a API do sistema e cruzando variações...";
+        document.getElementById('texto-loader-ia').textContent = "Cruzando variações com o estoque...";
         
         cacheResultadosIA = [];
-        const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
-        for (let i = 0; i < produtosExtraidos.length; i += 3) {
-            const lote = produtosExtraidos.slice(i, i + 3);
-            const promessas = lote.map(async (ext, indexInLote) => {
-                const globalIndex = i + indexInLote;
-                let objCache = { idTemp: globalIndex, nomeExtraido: ext.nome, precoExtraido: ext.preco, vinculos: [] };
-
-                try {
-                    // Pega o termo de busca inteligente sugerido pela IA ou fallback para o nome
-                    const termoBusca = ext.busca || ext.nome;
-                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=20&nome=${encodeURIComponent(termoBusca)}`);
-                    const json = await res.json();
-                    
-                    if (json.code === 200 && json.data) {
-                        const matches = encontrarMelhoresVinculos(ext.nome, json.data);
-                        matches.forEach(m => {
-                            objCache.vinculos.push({
-                                idSistema: m.id,
-                                codigo: m.codigo_interno || m.codigo_barra || m.id,
-                                nomeSistema: m.nome,
-                                estoque: m.estoque
-                            });
-                        });
-                    }
-                } catch (e) {}
-                
-                cacheResultadosIA[globalIndex] = objCache;
+        
+        produtosExtraidos.forEach((ext, index) => {
+            let objCache = { idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, vinculos: [] };
+            
+            // Agora o cruzamento pega o nome bruto com tudo preservado
+            const matches = encontrarMelhoresVinculos(ext.nome);
+            
+            matches.forEach(m => {
+                objCache.vinculos.push({
+                    idSistema: m.id,
+                    codigo: m.codigo_interno || m.codigo_barra || m.id,
+                    nomeSistema: m.nome,
+                    estoque: m.estoque
+                });
             });
-
-            await Promise.all(promessas);
-            // Pausa de 800ms para respeitar a regra de no máximo 3 requisições por segundo
-            if (i + 3 < produtosExtraidos.length) await delay(800); 
-        }
+            
+            cacheResultadosIA.push(objCache);
+        });
 
         renderizarTabelaIA();
     }
