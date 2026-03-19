@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v5.1</title>
+  <title>Gerador de Listas - JETA v5.2</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -186,7 +186,7 @@
         <button class="btn btn-outline" onclick="adicionarItem('produto')">➕ Produto</button>
         <button class="btn btn-purple" onclick="abrirModalIA()">🤖 Importar c/ IA</button>
         <div style="flex: 1;"></div>
-        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Vínculos</button>
+        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Tudo</button>
         <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
       <div class="lista-container" id="lista-editor"></div>
@@ -450,6 +450,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
                             if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
                             input.value = '';
+                            divResultados.innerHTML = '';
                         }
                         renderizarEditor(); salvarLocal();
                     }
@@ -496,7 +497,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     }
 
     // ==========================================
-    // MÓDULO IA - AUTO-VÍNCULO OTIMIZADO (PESOS SEVEROS)
+    // MÓDULO IA - CÉREBRO REFINADO (Cortes Drásticos)
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -527,53 +528,71 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     function encontrarMelhoresVinculos(nomeExtraido) {
         if(!nomeExtraido || catalogoCompleto.length === 0) return [];
         
+        // Normalização: Transforma '+' em 'plus', remove 'gb' e limpa a string
         const limparTexto = (txt) => {
             return txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
                       .replace(/gb/g, '')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
                       .split(/\s+/)
+                      .map(w => w.replace(/^([a-z]+)0+(\d+)$/, '$1$2')) // Ex: Converte g06 para g6 automaticamente
+                      // Mantém palavras, números isolados e letras únicas se forem essenciais
                       .filter(w => w.length > 1 || w === 'm' || w === 'x' || w === 's' || !isNaN(w)); 
         };
 
         const tokensExt = limparTexto(nomeExtraido);
         const scores = [];
 
+        // Identifica Modificadores Críticos
         const hasPro = tokensExt.includes('pro');
         const hasPlus = tokensExt.includes('plus');
         const hasUltra = tokensExt.includes('ultra');
         const has5g = tokensExt.includes('5g');
 
-        const modelosExt = tokensExt.filter(t => /\d/.test(t));
+        // Identifica Numeros Básicos do modelo extraído (excluindo os que vamos tratar nas regras)
+        const numerosExt = tokensExt.filter(t => /\d/.test(t) && t !== '5g' && t !== '4g');
 
         for(let prod of catalogoCompleto) {
             const tokensProd = limparTexto(prod.nome);
             let desclassificado = false;
 
+            // --- 1. REGRAS DE CORTES DRÁSTICOS ---
+            
+            // PRO, PLUS e ULTRA não perdoam
             if (hasPro !== tokensProd.includes('pro')) desclassificado = true;
             if (hasPlus !== tokensProd.includes('plus')) desclassificado = true;
             if (hasUltra !== tokensProd.includes('ultra')) desclassificado = true;
 
+            // 5G vs 4G: Se pede 5G, tem que ter. Se não pede, corta se for 5G.
             const prodHas5g = tokensProd.includes('5g');
             if (has5g && !prodHas5g) desclassificado = true;
             if (!has5g && prodHas5g) desclassificado = true; 
 
-            if (!desclassificado) {
-                for (let mod of modelosExt) {
-                    if (!tokensProd.includes(mod)) {
-                        desclassificado = true;
-                        break;
-                    }
-                }
-            }
+            // Capacidade Estrita: Se um for 128 e o outro 256, corta a mistura
+            const capacidades = ['64', '128', '256', '512', '1024'];
+            const capExt = capacidades.find(c => tokensExt.includes(c));
+            const capProd = capacidades.find(c => tokensProd.includes(c));
+            if (capExt && capProd && capExt !== capProd) desclassificado = true;
 
             if (desclassificado) continue;
 
+            // --- 2. PONTUAÇÃO (Desempate) ---
             let score = 0;
+            const numerosProd = tokensProd.filter(t => /\d/.test(t) && t !== '5g' && t !== '4g');
+
             for(let t of tokensExt) {
-                if(tokensProd.includes(t)) score++;
+                if(tokensProd.includes(t)) score += 1;
             }
             
+            // Penaliza números faltantes ou divergentes de modelo (como X6 vs X7)
+            for (let nExt of numerosExt) {
+                if (numerosProd.some(np => np === nExt || np.includes(nExt) || nExt.includes(np))) {
+                    score += 5; // Peso forte para números correspondentes
+                } else {
+                    score -= 2; // Penalidade leve para não afundar tudo se o sistema omitiu algo
+                }
+            }
+
             if (score > 0) scores.push({ prod, score });
         }
         
@@ -582,6 +601,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         scores.sort((a,b) => b.score - a.score);
         const topScore = scores[0].score;
         
+        // Retorna as variações que tiveram a nota máxima
         return scores.filter(s => s.score === topScore).map(s => s.prod);
     }
 
@@ -680,12 +700,12 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             
             let statusHTML = item.vinculos.length > 0 
                 ? (estoqueTotal > 0 ? `<span class="status-ok">${estoqueTotal} un.</span>` : `<span class="status-zero">0 un.</span>`) 
-                : `<span class="status-manual">Manual</span>`;
+                : `<span class="status-manual">Não encontrado</span>`;
 
             let vinculoArea = `
                 <div style="margin-bottom:6px;">${chipsHtml}</div>
                 <div class="busca-container" style="flex-wrap: wrap;">
-                    <input type="text" id="input-busca-ia-${index}" placeholder="Buscar variações..." style="font-size: 11px; padding: 6px; min-width: 140px; flex: 1;" onkeypress="if(event.key === 'Enter') buscarNaAPIParaIA(${index})" value="${item.vinculos.length === 0 ? item.nomeExtraido : ''}">
+                    <input type="text" id="input-busca-ia-${index}" placeholder="Buscar manualmente..." style="font-size: 11px; padding: 6px; min-width: 140px; flex: 1;" onkeypress="if(event.key === 'Enter') buscarNaAPIParaIA(${index})" value="${item.vinculos.length === 0 ? item.nomeExtraido : ''}">
                     <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" onclick="buscarNaAPIParaIA(${index})">🔍</button>
                 </div>
                 <div id="resultados-ia-${index}" class="resultados-busca"></div>
@@ -728,6 +748,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                         const itemCache = cacheResultadosIA[index];
                         if(!itemCache.vinculos.some(v => v.idSistema === prod.id)) {
                             itemCache.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
+                            input.value = '';
+                            divResultados.innerHTML = '';
                             renderizarTabelaIA();
                         }
                     };
@@ -818,7 +840,11 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
       const textarea = document.getElementById('texto-resultado');
       
       let linhas = [];
-      if(incluirData) { linhas.push(`📅 *Atualizado em:* ${new Date().toLocaleDateString('pt-BR')}\n`); }
+
+      if(incluirData) {
+          const hoje = new Date().toLocaleDateString('pt-BR');
+          linhas.push(`📅 *Atualizado em:* ${hoje}\n`);
+      }
 
       itensLista.forEach(item => {
         if(item.tipo === 'texto') {
