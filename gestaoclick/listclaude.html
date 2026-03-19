@@ -6,7 +6,28 @@
   <title>Lista WhatsApp — JETA</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
+    /* ── TEMA CLARO (padrão) ── */
     :root {
+      --bg:        #f0f2f5;
+      --surface:   #ffffff;
+      --surface2:  #f5f7fa;
+      --border:    #dde1ea;
+      --border2:   #c5ccd8;
+      --accent:    #16a34a;
+      --accent2:   #15803d;
+      --accent-dim:#16a34a18;
+      --danger:    #dc2626;
+      --danger-dim:#dc262618;
+      --warn:      #d97706;
+      --warn-dim:  #d9770618;
+      --muted:     #94a3b8;
+      --text:      #1e293b;
+      --text2:     #475569;
+      --text3:     #94a3b8;
+      --shadow:    0 4px 24px rgba(0,0,0,0.10);
+    }
+    /* ── TEMA ESCURO ── */
+    [data-theme="dark"] {
       --bg:        #0f1117;
       --surface:   #181c27;
       --surface2:  #1e2333;
@@ -25,6 +46,19 @@
       --text3:     #5a6a8a;
       --shadow:    0 4px 24px rgba(0,0,0,0.5);
     }
+    /* Botão de toggle tema */
+    #btn-tema {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      color: var(--text2);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 10px;
+      transition: all .15s;
+      line-height: 1;
+    }
+    #btn-tema:hover { background: var(--border); }
     * { margin:0; padding:0; box-sizing:border-box; }
     html { overflow-x: hidden; }   /* garante que nada vaze para a direita */
     body {
@@ -715,6 +749,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <button id="btn-tema" title="Alternar tema">🌙</button>
     <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
   </div>
 </header>
@@ -1128,41 +1163,6 @@ async function iaBuscarVinculos(itens) {
     iaRenderRevisao();
     el('ia-rev-container').style.display = 'flex';
   }, 400);
-}
-
-// Gera até 3 queries progressivamente mais amplas para um label
-function gerarQueries(label) {
-  const queries = [];
-
-  // 1. Remove cores e variações após " - " (ex: "- Preto/Roxo/Verde", "- Azul")
-  const semCor = label
-    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey)[\w/]*/gi, '')
-    .replace(/\s+/g, ' ').trim();
-
-  // 2. Com memória: ex "Redmi Note 14 Pro 5G 8/256gb"
-  //    Remove apenas o último segmento após " - " se ainda sobrou
-  const comMem = semCor.replace(/\s*[-–]\s*\S+.*$/, '').trim();
-  if (comMem.length > 3) queries.push(comMem);
-
-  // 3. Sem memória RAM/armazenamento: ex "Redmi Note 14 Pro 5G"
-  const semMem = comMem
-    .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')   // 8/256gb
-    .replace(/\s+\d+(gb|tb)/gi, '')              // 256gb, 64gb
-    .replace(/\s+\d+g\b/gi, '')                  // 4G, 5G quando junto à memória
-    .replace(/\s+/g, ' ').trim();
-  if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
-
-  // 4. Modelo curto: primeiras 3 palavras (ex: "Redmi Note 14")
-  const palavras = semMem.split(/\s+/);
-  if (palavras.length > 3) {
-    const curto = palavras.slice(0, 3).join(' ');
-    if (curto.length > 3) queries.push(curto);
-  }
-
-  // Fallback se tudo falhou
-  if (!queries.length) queries.push(label.split(/\s+/).slice(0, 4).join(' '));
-
-  return [...new Set(queries)];
 }
 
 // ════════════════════════════════════
@@ -1636,67 +1636,134 @@ async function carregarCacheProdutos(onProgress) {
   return _prodCache;
 }
 
-// Busca no cache local (sem rede)
+// Normaliza string para comparação
+function normStr(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s\/]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Extrai tokens identificadores de modelo (ignora marca, cores, stopwords)
+// Ex: "Note 14 Pro 5G 8/256gb - Preto" → ["note","14","pro","5g","8/256"]
+function tokensModelo(label) {
+  const stop = new Set(['de','do','da','com','para','a','o','e','em',
+    'smart','tv','led','oled','full','hd','4k','ultra','wi','fi',
+    'xiaomi','samsung','motorola','realme','apple','lg','tcl',
+    'philips','semp','toshiba','aoc','hisense','redmi','poco']);
+  const n = normStr(label);
+  return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
+}
+
+// Busca no cache local — retorna produtos onde os tokens do modelo batem
 function buscarNoCacheLocal(q) {
   if (!q || !_prodCache.length) return [];
-  const n = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const tokens = tokensModelo(q);
+  if (!tokens.length) return [];
+
+  // Separa tokens numéricos (modelo, memória) de alfanuméricos
+  // Tokens numéricos são mais específicos: exige que TODOS batam
+  const numTok = tokens.filter(t => /^[\d\/]+$/.test(t) || /^\d+(gb|tb)$/i.test(t));
+  const txtTok = tokens.filter(t => !/^[\d\/]+$/.test(t) && !/^\d+(gb|tb)$/i.test(t));
+
   return _prodCache.filter(p => {
-    const pn = p.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return pn.includes(n) || n.split(/\s+/).every(w => pn.includes(w));
+    const pn = normStr(p.nome);
+
+    // Todos os tokens numéricos devem estar presentes (ex: "14", "8/256", "5g")
+    if (numTok.length && !numTok.every(t => pn.includes(t))) return false;
+
+    // Pelo menos metade dos tokens de texto devem estar presentes
+    if (txtTok.length) {
+      const hits = txtTok.filter(t => pn.includes(t)).length;
+      if (hits < Math.ceil(txtTok.length * 0.5)) return false;
+    }
+    return true;
   });
 }
 
-// Retorna array de vínculos [{ id, nome, sku, estoque }] ou []
-// Busca no cache se disponível, senão faz requisição
-async function buscarVinculosDoItem(item) {
-  const pool = _prodCache.length
-    ? _prodCache  // usa cache se disponível
-    : null;
+// Gera queries progressivas para busca no cache/API
+function gerarQueries(label) {
+  const queries = [];
 
+  // Remove cor (após último " - ")
+  const semCor = label
+    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey)[\w/]*/gi, '')
+    .replace(/\s+/g, ' ').trim();
+
+  // Remove último traço e o que vem depois (cor residual)
+  const comMem = semCor.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+  if (comMem.length > 3) queries.push(comMem);
+
+  // Sem memória RAM/storage
+  const semMem = comMem
+    .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
+    .replace(/\s+\d+(gb|tb)/gi, '')
+    .replace(/\s+/g, ' ').trim();
+  if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+
+  // Só modelo (sem conectividade): "Note 14 Pro" em vez de "Note 14 Pro 5G"
+  const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g, ' ').trim();
+  if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+
+  // Modelo curto: primeiras 3 palavras significativas
+  const toks = tokensModelo(semMem);
+  if (toks.length > 2) queries.push(toks.slice(0, 3).join(' '));
+
+  if (!queries.length) queries.push(label.split(/\s+/).slice(0, 4).join(' '));
+  return [...new Set(queries.filter(Boolean))];
+}
+
+// Retorna array de vínculos [{ id, nome, sku, estoque }] ou []
+// Busca no cache usando queries progressivas geradas por gerarQueries()
+async function buscarVinculosDoItem(item) {
   let candidatos = [];
 
-  if (pool) {
-    // Busca offline no cache
-    const queries = [
-      item.sku?.trim(),
-      item.sysname?.trim(),
-      item.label?.trim(),
-    ].filter(Boolean);
+  if (_prodCache.length) {
+    // Busca offline usando queries progressivas (mais específica → mais ampla)
+    const queries = gerarQueries(item.label || item.sysname || '');
     for (const q of queries) {
       const r = buscarNoCacheLocal(q);
       r.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
-      if (candidatos.length >= 5) break;
+      // Para quando tiver candidatos suficientes (não para cedo demais — queremos variações)
+      if (candidatos.length >= 20) break;
+    }
+    // Se ainda não achou, tenta pelo sku/código
+    if (!candidatos.length && item.sku?.trim()) {
+      const skuNorm = item.sku.trim().toLowerCase();
+      const r = _prodCache.filter(p =>
+        (p.codigo_interno || '').toLowerCase() === skuNorm ||
+        (p.codigo_barra   || '').toLowerCase() === skuNorm
+      );
+      r.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
     }
   } else {
-    // Fallback: busca online
-    for (const campo of ['sku','sysname','label']) {
-      const v = item[campo]?.trim();
-      if (!v) continue;
+    // Fallback: busca online com queries progressivas
+    const queries = gerarQueries(item.label || item.sysname || '');
+    for (const q of queries) {
       try {
-        const key = campo === 'sku' ? 'codigo' : 'nome';
-        const d = await apiGet({ [key]: v });
+        const d = await apiGet({ nome: q });
         if (d.code === 200 && d.data?.length) {
           d.data.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
         }
       } catch(e) { /* ignora */ }
-      if (candidatos.length >= 5) break;
+      if (candidatos.length >= 10) break;
     }
   }
 
   if (!candidatos.length) return [];
 
-  // Aplica filtros eliminatórios + score em todos os candidatos
-  // Retorna TODOS que passam nos filtros com score ≥ 0.25 (pode ser mais de um — variações)
+  // Aplica filtros técnicos ELIMINATÓRIOS + score de nome
+  const label = item.label || item.sysname || '';
   const matches = candidatos
-    .filter(p => filtroTecnico(item.label || '', p.nome))
-    .map(p => ({ p, score: scoreNome(item.label || '', p.nome) }))
-    .filter(({ score }) => score >= 0.25)
+    .filter(p => filtroTecnico(label, p.nome))
+    .map(p => ({ p, score: scoreNome(label, p.nome) }))
+    .filter(({ score }) => score >= 0.2)   // threshold um pouco mais permissivo
     .sort((a, b) => b.score - a.score)
-    .slice(0, 10) // máximo 10 vínculos
+    .slice(0, 15)
     .map(({ p }) => ({
-      id:     p.id,
-      nome:   p.nome,
-      sku:    p.codigo_interno || p.codigo_barra || '',
+      id:      p.id,
+      nome:    p.nome,
+      sku:     p.codigo_interno || p.codigo_barra || '',
       estoque: Number(p.estoque ?? 0),
     }));
 
@@ -1725,13 +1792,11 @@ function filtroTecnico(label, nomeAPI) {
   return true;
 }
 
-// Score de nome (sem atributos técnicos)
+// Score de nome: proporção de tokens do label que aparecem no nome do produto
 function scoreNome(label, nomeAPI) {
-  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
-  const stop = new Set(['de','do','da','the','com','para','a','o','e','em','gb','tb']);
-  const tokens = norm(label).split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
+  const tokens = tokensModelo(label);
   if (!tokens.length) return 0;
-  const pn = norm(nomeAPI);
+  const pn = normStr(nomeAPI);
   return tokens.reduce((s, t) => s + (pn.includes(t) ? 1 : 0), 0) / tokens.length;
 }
 
@@ -1892,7 +1957,7 @@ function renderTabela() {
 
       const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
 
-      // Badge de estoque — mostra soma + tooltip com individuais
+      // Badge de estoque — soma total, sem "+N"
       let badgeHtml;
       if (!temVinculo) {
         badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo — clique em Nome/Código para vincular">🔗 —</span>`;
@@ -1901,19 +1966,24 @@ function renderTabela() {
       } else {
         const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero';
         const icn = estoqueTotal > 0 ? '✓' : '⚠';
-        const tip = vinculos && vinculos.length > 1
-          ? vinculos.map(v => `${v.nome.substring(0,30)}: ${v.estoque}`).join('\n')
-          : '';
-        const multi = vinculos && vinculos.length > 1
-          ? `<span style="font-size:.6rem;opacity:.7;margin-left:2px;">(${vinculos.length})</span>` : '';
-        badgeHtml = `<span class="badge ${cls}" title="${esc(tip)}">${icn} ${estoqueTotal}${multi}</span>`;
+        badgeHtml = `<span class="badge ${cls}">${icn} ${estoqueTotal}</span>`;
       }
 
-      // Célula de vínculo — mostra primeiro nome + contagem se múltiplos
-      const firstNome = vinculos ? vinculos[0].nome : (item.sysname || '');
-      const firstSku  = vinculos ? vinculos[0].sku  : (item.sku || '');
-      const multiLabel = vinculos && vinculos.length > 1
-        ? ` <span style="font-size:.65rem;color:#a78bfa;font-weight:700;">+${vinculos.length-1}</span>` : '';
+      // Célula de vínculo — lista TODOS os vínculos expandidos (sem "+N")
+      const vinculosList = vinculos
+        ? vinculos.map((v, vi) => {
+            const ecls = v.estoque > 0 ? 'color:var(--accent)' : 'color:var(--warn)';
+            return `<div style="display:flex;align-items:center;gap:4px;padding:1px 0;min-width:0;">
+              <span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(v.nome)}">${esc(v.nome)}</span>
+              <span style="font-size:11px;font-family:'JetBrains Mono',monospace;${ecls};flex-shrink:0;">${v.estoque>0?'✓':'⚠'} ${v.estoque}</span>
+              <button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;flex-shrink:0;line-height:1;" title="Remover">✕</button>
+            </div>`;
+          }).join('')
+        : (item.sysname
+            ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>`
+            : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
+
+      const temVincAtivo = vinculos ? vinculos.length > 0 : !!item.sysname;
 
       tr.innerHTML = `
         <td class="col-drag">⠿</td>
@@ -1924,19 +1994,18 @@ function renderTabela() {
           <input type="text" data-field="price" value="${esc(item.price)}"
             placeholder="650" class="mono-inp" />
         </td>
-        <td class="col-sys vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sys">
-          <div class="vincul-pill ${firstNome ? 'vinculado' : ''}" title="${firstNome ? 'Clique para editar vínculos' : 'Clique para vincular produto da API'}">
-            <span class="vincul-text ${firstNome ? '' : 'empty'}">${firstNome ? esc(firstNome.substring(0,35)) + (firstNome.length>35?'…':'') : 'Vincular…'}</span>
-            ${multiLabel}
-            <span class="vincul-icon">${firstNome ? '🔗' : '＋'}</span>
+        <td class="col-sys vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sys" style="cursor:pointer;">
+          <div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;">
+            ${vinculosList}
+            <div class="vincul-add-btn" style="font-size:11px;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:3px;margin-top:2px;opacity:.8;">
+              <span>＋ ${temVincAtivo ? 'add' : 'vincular'}</span>
+            </div>
           </div>
         </td>
-        <td class="col-sku vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sku">
-          <div class="vincul-pill ${firstSku ? 'vinculado' : ''}" title="Clique para vincular/trocar produto">
-            <span class="vincul-text ${firstSku ? 'mono-inp' : 'empty'}" style="${firstSku ? 'font-family:JetBrains Mono,monospace;font-size:.72rem;' : ''}">${firstSku ? esc(firstSku) : '—'}</span>
-          </div>
+        <td class="col-sku" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text2);">
+          ${vinculos && vinculos.length ? vinculos.map(v => `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(v.sku||'')}">${esc(v.sku||'—')}</div>`).join('') : esc(item.sku||'—')}
         </td>
-        <td class="col-stock">${badgeHtml}</td>
+        <td class="col-stock" style="text-align:center;">${badgeHtml}</td>
         <td class="col-act">
           <div style="display:flex; gap:3px; justify-content:center; align-items:center;">
             <button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button>
@@ -1997,13 +2066,31 @@ function renderTabela() {
       if (ta) autoGrow(ta);
     }, 0);
 
-    // Clique em sys OU sku abre o mesmo popover ancorado na célula sys
-    tr.querySelectorAll('.vincul-pill').forEach(pill => {
-      pill.addEventListener('click', e => {
+    // Botões ✕ de remoção de vínculo inline (na col-sys)
+    tr.querySelectorAll('.vincul-rm-inline').forEach(btn => {
+      btn.addEventListener('click', e => {
         e.stopPropagation();
-        const anchor = tr.querySelector('.vincul-cell[data-vincul-field="sys"]');
-        abrirPopoverVinculo(idx, anchor);
+        const i = +btn.dataset.idx, vi = +btn.dataset.vi;
+        const novos = (lista[i].vinculos || []).filter((_, j) => j !== vi);
+        salvarVinculos(i, novos);
       });
+    });
+
+    // Botão ＋ vincular abre o popover
+    const addBtn = tr.querySelector('.vincul-add-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const sysCell = tr.querySelector('.vincul-cell[data-vincul-field="sys"]') || tr.querySelector('.col-sys');
+        abrirPopoverVinculo(idx, sysCell);
+      });
+    }
+
+    // Clique na célula sys também abre popover (exceto nos botões ✕ e ＋)
+    tr.querySelector('.col-sys')?.addEventListener('click', e => {
+      if (e.target.closest('.vincul-rm-inline') || e.target.closest('.vincul-add-btn')) return;
+      e.stopPropagation();
+      abrirPopoverVinculo(idx, tr.querySelector('.col-sys'));
     });
 
     // Botões
@@ -2079,19 +2166,22 @@ function renderMobile() {
       } else {
         const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero';
         const icn = estoqueTotal > 0 ? '✓' : '⚠';
-        const multi = vinculos && vinculos.length > 1
-          ? `<span style="font-size:.6rem;opacity:.7;margin-left:2px;">(${vinculos.length})</span>` : '';
-        badgeHtml = `<span class="badge ${cls}">${icn} ${estoqueTotal}${multi}</span>`;
+        badgeHtml = `<span class="badge ${cls}">${icn} ${estoqueTotal}</span>`;
       }
 
-      const vincNome = vinculos ? vinculos[0].nome : (item.sysname || '');
-      const vincCod  = vinculos ? vinculos[0].sku  : (item.sku || '');
-      const vincExtra = vinculos && vinculos.length > 1
-        ? `<div style="font-size:11px;color:#a78bfa;margin-top:2px;">+${vinculos.length-1} variação(ões) · Σ ${estoqueTotal} un.</div>` : '';
-      // Estoque individual quando há múltiplos
-      const indivHtml = vinculos && vinculos.length > 1
-        ? vinculos.map(v => `<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(v.nome.substring(0,28))}… <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};">${v.estoque}</span></div>`).join('')
-        : '';
+      // Mostra TODOS os vínculos expandidos, cada um com nome + estoque individual
+      const vinculosInfoHtml = vinculos && vinculos.length
+        ? vinculos.map((v, vi) => `
+            <div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div>
+                <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);">${esc(v.sku||'—')} · <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};">${v.estoque>0?'✓ ':'⚠ '}${v.estoque}</span></div>
+              </div>
+              <button class="mcard-rm-vinc" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;">✕</button>
+            </div>`).join('')
+        : item.sysname
+          ? `<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>`
+          : '';
 
       card.innerHTML = `
         <div class="mcard-top">
@@ -2110,15 +2200,14 @@ function renderMobile() {
           <button class="mcard-sync-btn sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button>
         </div>
         <div class="mcard-vincul">
-          <div class="mcard-vincul-btn vincul-cell ${vincNome ? 'vinculado' : ''}" data-vincul-field="sys">
-            <span class="mcard-vincul-icon">${vincNome ? '🔗' : '＋'}</span>
-            <div class="mcard-vincul-info">
-              <div class="mcard-vincul-name ${vincNome ? '' : 'empty'}">${vincNome ? esc(vincNome.substring(0,35)) : 'Vincular produto…'}</div>
-              ${vincCod ? `<div class="mcard-vincul-code">${esc(vincCod)}</div>` : ''}
-              ${vincExtra}
-              ${indivHtml}
+          <div class="mcard-vincul-btn vincul-cell ${temVinculo ? 'vinculado' : ''}" data-vincul-field="sys">
+            <div style="flex:1;min-width:0;">
+              ${vinculosInfoHtml || `<span class="mcard-vincul-name empty">Vincular produto…</span>`}
             </div>
           </div>
+        </div>
+        <div style="padding-top:4px;">
+          <button class="mcard-add-vinc btn btn-ghost btn-sm" data-idx="${idx}" style="font-size:12px;padding:4px 10px;width:100%;justify-content:center;">＋ ${temVinculo ? 'Adicionar vínculo' : 'Vincular produto'}</button>
         </div>`;
     }
 
@@ -2139,6 +2228,22 @@ function renderMobile() {
     card.querySelector('.mcard-del')?.addEventListener('click', () => {
       lista.splice(idx, 1);
       renderTabela(); renderMobile(); atualizarPreview(); salvar();
+    });
+
+    // remover vínculo individual no mobile
+    card.querySelectorAll('.mcard-rm-vinc').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const i = +btn.dataset.idx, vi = +btn.dataset.vi;
+        const novos = (lista[i].vinculos || []).filter((_, j) => j !== vi);
+        salvarVinculos(i, novos);
+      });
+    });
+
+    // adicionar vínculo no mobile
+    card.querySelector('.mcard-add-vinc')?.addEventListener('click', e => {
+      e.stopPropagation();
+      abrirPopoverVinculo(idx, card.querySelector('.mcard-vincul-btn') || card);
     });
 
     // sync
@@ -2587,8 +2692,20 @@ el('ia-voltar').addEventListener('click', () => iaSetStep(1));
 el('ia-confirmar').addEventListener('click', iaConfirmar);
 
 // ════════════════════════════════════
-// INIT
+// TEMA CLARO / ESCURO
 // ════════════════════════════════════
+const TEMA_KEY = 'jeta_tema';
+function aplicarTema(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  el('btn-tema').textContent = t === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem(TEMA_KEY, t);
+}
+el('btn-tema').addEventListener('click', () => {
+  const atual = document.documentElement.getAttribute('data-theme') || 'light';
+  aplicarTema(atual === 'dark' ? 'light' : 'dark');
+});
+// Aplica tema salvo (padrão: claro)
+aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
 carregar();
 if (!el('cfg-data').value) el('cfg-data').value = dataHoje();
 renderTabela(); renderMobile();
