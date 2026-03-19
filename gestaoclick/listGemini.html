@@ -182,7 +182,7 @@
         <button class="btn btn-outline" onclick="adicionarItem('produto')">➕ Produto</button>
         <button class="btn btn-purple" onclick="abrirModalIA()">🤖 Importar c/ IA</button>
         <div style="flex: 1;"></div>
-        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar</button>
+        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Vínculos</button>
         <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
       <div class="lista-container" id="lista-editor"></div>
@@ -282,10 +282,12 @@
   <script>
     const LOJA_ID = "361408";
     
-    // Armazenamento
+    // Armazenamento e Cache
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v4')) || [];
     let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v4')) || { data: false, codigo: false, ocultar: false, destacar: true };
     let debounceTimer;
+    let catalogoCompleto = []; // Usado para a busca inteligente da IA
+    let cacheResultadosIA = []; // Usado para renderizar a tabela modal
 
     const PROMPT_PADRAO_IA = `Extraia todos os produtos e preços deste texto. Ignore cabeçalhos puros de marcas (ex: "MOTOROLA"). 
 Retorne APENAS um array JSON válido, sem NENHUM texto antes ou depois, sem crases de formatação markdown. 
@@ -455,12 +457,12 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             renderizarEditor(); 
             if (i + 3 < vinculados.length) await delay(1000); 
         }
-        salvarLocal(); btn.innerHTML = "🔄 Sincronizar"; btn.disabled = false;
+        salvarLocal(); btn.innerHTML = "🔄 Sincronizar Vínculos"; btn.disabled = false;
         mostrarToast("✅ Sincronização concluída!");
     }
 
     // ==========================================
-    // MÓDULO IA - INTEGRAÇÃO GROQ + BUSCA INDIVIDUAL
+    // MÓDULO IA - INTELIGÊNCIA DE AUTO-VÍNCULO
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -473,6 +475,44 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         localStorage.setItem('jeta_prompt_ia', document.getElementById('prompt-ia-input').value);
     }
 
+    // 1. Baixa o Catálogo Completo para a IA fazer Fuzzy Match offline (Rápido e sem bloqueios)
+    async function carregarCatalogoCompleto() {
+        if (catalogoCompleto.length > 0) return true; 
+        let pag = 1; let totalPaginas = 1;
+        try {
+            do {
+                const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=100&pagina=${pag}`);
+                const json = await res.json();
+                if(json.code === 200 && json.data) {
+                    catalogoCompleto = catalogoCompleto.concat(json.data.filter(p => p.nome));
+                    totalPaginas = json.meta.total_paginas;
+                } else { break; }
+                pag++;
+            } while (pag <= totalPaginas);
+            return true;
+        } catch(e) { return false; }
+    }
+
+    // 2. Algoritmo de cruzamento inteligente (Fuzzy Match por contagem de palavras)
+    function encontrarMelhorVinculo(nomeExtraido) {
+        if(!nomeExtraido || catalogoCompleto.length === 0) return null;
+        let melhorMatch = null; let maiorScore = 0;
+        
+        const tokensExt = nomeExtraido.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
+
+        for(let prod of catalogoCompleto) {
+            const tokensProd = prod.nome.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
+            let score = 0;
+            
+            for(let t of tokensExt) { if(tokensProd.includes(t)) score++; }
+            if (prod.nome.toLowerCase().includes(nomeExtraido.toLowerCase())) score += 5; // Bônus para texto idêntico
+
+            if(score > maiorScore) { maiorScore = score; melhorMatch = prod; }
+        }
+        // Exige um mínimo de coerência para assumir auto-vínculo
+        return maiorScore >= Math.min(2, tokensExt.length) ? melhorMatch : null;
+    }
+
     async function abrirModalIA() {
         document.getElementById('texto-ia-entrada').value = '';
         document.getElementById('body-ia-input').style.display = 'block';
@@ -480,6 +520,9 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('loader-ia').classList.remove('visivel');
         document.getElementById('btn-processar-ia').disabled = false;
         document.getElementById('modal-ia').classList.add('visivel');
+        
+        // Começa a baixar o catálogo no fundo para não atrasar a vida do usuário
+        carregarCatalogoCompleto(); 
     }
     
     function fecharModalIA() { document.getElementById('modal-ia').classList.remove('visivel'); }
@@ -488,8 +531,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('body-ia-input').style.display = 'block';
     }
 
-    let cacheResultadosIA = []; // Dados processados pela IA na tela modal
-
     async function processarListaIA() {
         const textoBruto = document.getElementById('texto-ia-entrada').value.trim();
         if(!textoBruto) { mostrarToast("Cole alguma lista para processar."); return; }
@@ -497,6 +538,9 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('btn-processar-ia').disabled = true;
         document.getElementById('loader-ia').classList.add('visivel');
         document.getElementById('texto-loader-ia').textContent = "Lendo produtos com a IA (Groq)...";
+
+        // Segura um pouquinho se o catálogo ainda estiver baixando
+        await carregarCatalogoCompleto();
 
         let produtosExtraidos = [];
         try {
@@ -525,42 +569,28 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             return;
         }
 
-        document.getElementById('texto-loader-ia').textContent = "Buscando correspondências no seu estoque...";
+        document.getElementById('texto-loader-ia').textContent = "Cruzando produtos com o seu estoque local...";
         
         cacheResultadosIA = [];
-        const delay = (ms) => new Promise(r => setTimeout(r, ms));
+        
+        // 3. Aplica o Fuzzy Match instantaneamente (Offline, sem limite de API)
+        produtosExtraidos.forEach((ext, index) => {
+            let objCache = { 
+                idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, 
+                vinculado: false, idSis: '', cod: '', nomeSis: '', est: null 
+            };
 
-        // Busca na API em lotes para tentar auto-vincular
-        for (let i = 0; i < produtosExtraidos.length; i += 3) {
-            const lote = produtosExtraidos.slice(i, i + 3);
-            const promessas = lote.map(async (ext, indexInLote) => {
-                const globalIndex = i + indexInLote;
-                let objCache = { 
-                    idTemp: globalIndex, nomeExtraido: ext.nome, precoExtraido: ext.preco, 
-                    vinculado: false, idSis: '', cod: '', nomeSis: '', est: null 
-                };
-
-                try {
-                    // Tenta a sorte buscando o nome exato extraído pela IA (limite 1)
-                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=1&nome=${encodeURIComponent(ext.nome)}`);
-                    const json = await res.json();
-                    
-                    if(json.code === 200 && json.data && json.data.length > 0) {
-                        const p = json.data[0];
-                        objCache.vinculado = true;
-                        objCache.idSis = p.id;
-                        objCache.cod = p.codigo_interno || p.codigo_barra || p.id;
-                        objCache.nomeSis = p.nome;
-                        objCache.est = p.estoque;
-                    }
-                } catch(e) {}
-                
-                cacheResultadosIA[globalIndex] = objCache;
-            });
-
-            await Promise.all(promessas);
-            if (i + 3 < produtosExtraidos.length) await delay(800); 
-        }
+            const melhorMatch = encontrarMelhorVinculo(ext.nome);
+            if(melhorMatch) {
+                objCache.vinculado = true;
+                objCache.idSis = melhorMatch.id;
+                objCache.cod = melhorMatch.codigo_interno || melhorMatch.codigo_barra || melhorMatch.id;
+                objCache.nomeSis = melhorMatch.nome;
+                objCache.est = melhorMatch.estoque;
+            }
+            
+            cacheResultadosIA.push(objCache);
+        });
 
         renderizarTabelaIA();
     }
@@ -580,7 +610,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                 vinculoHTML = `
                     <div class="sistema-info" style="flex-direction: column; gap: 6px;">
                         <div class="sistema-nome"><span class="badge-cod">${item.cod || 'S/CÓD'}</span> ${item.nomeSis}</div>
-                        <button class="btn btn-outline" style="padding: 2px 8px; font-size: 10px; border-color: var(--danger); color: var(--danger); align-self: flex-start;" onclick="desvincularProdutoIA(${index})">Desvincular</button>
+                        <button class="btn btn-outline" style="padding: 2px 8px; font-size: 10px; border-color: var(--danger); color: var(--danger); align-self: flex-start;" onclick="desvincularProdutoIA(${index})">Desvincular e buscar outro</button>
                     </div>
                 `;
             } else {
@@ -609,7 +639,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('chk-ia-todos').checked = true;
     }
 
-    // Busca manual dentro da tabela da IA
+    // Busca manual dentro da tabela da IA (Caso o Fuzzy Match erre ou não encontre)
     async function buscarNaAPIParaIA(index) {
         const input = document.getElementById(`input-busca-ia-${index}`);
         const divResultados = document.getElementById(`resultados-ia-${index}`);
@@ -673,7 +703,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     }
 
     // ==========================================
-    // LOG E TEXTO FINAL
+    // LOG DE ESGOTADOS E TEXTO FINAL
     // ==========================================
     function fecharModal(e, id) { if(e.target.id === id) document.getElementById(id).classList.remove('visivel'); }
 
@@ -697,7 +727,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                 });
             }
             if (manuais.length > 0) {
-                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>`;
+                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>';
                 manuais.forEach(p => {
                     const nomeMostrado = p.nomePersonalizado.trim() || 'Produto sem nome';
                     html += `<div class="log-item" style="margin-bottom: 8px; background: rgba(243, 156, 18, 0.05); border-color: rgba(243, 156, 18, 0.3);">
