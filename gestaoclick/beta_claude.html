@@ -1040,6 +1040,781 @@ Realme Note 60 4/256gb - Preto/Azul - 725
 
     atualizarCarrinho();
 
+        // ══════════════════════════════════
+    // MOTOR DE BUSCA (mesmo do gerador de lista)
+    // ══════════════════════════════════
+    let _prodCache = [];
+    let _prodCacheTs = 0;
+    const CACHE_TTL = 5 * 60 * 1000;
+
+function extrairMem(s) {
+  const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
+  return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
+}
+
+// Extrai armazenamento solo quando não há RAM/armazenamento par: "256gb", "64gb"
+function extrairStorage(s) {
+  // Só pega se não houver padrão X/Y antes
+  if (/\d+\s*\/\s*\d+/i.test(s)) return [];
+  return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || [])
+    .map(m => m.replace(/\s/g,'').toLowerCase());
+}
+
+// Extrai geração de rede: "4g", "5g"
+function extrairRede(s) {
+  const m = s.match(/\b(4g|5g)\b/gi);
+  return m ? m.map(x => x.toLowerCase()) : [];
+}
+
+// Extrai polegadas de TV/monitor: "32", "40", "43", "50", "55", "65"
+function extrairPolegadas(s) {
+  // Padrão: número seguido de " ou pol ou " antes de palavras como smart/tv/led
+  const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
+            s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
+  return m ? m.map(x => x.match(/\d+/)[0]) : [];
+}
+
+// Score de similaridade melhorado — só avalia nome/marca/modelo,
+// NÃO pondera atributos técnicos (esses já foram filtrados)
+function melhorMatch(label, produtos) {
+  const norm = s => s
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s\/]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+
+  const labelN = norm(label);
+
+  // Atributos técnicos DO LABEL — serão usados como filtro duro
+  const labelMem  = extrairMem(label);
+  const labelRede = extrairRede(label);
+  const labelPol  = extrairPolegadas(label);
+  const labelStor = extrairStorage(label);
+
+  // Tokens para score (exclui tokens técnicos já filtrados)
+  const stopTokens = new Set(['de','do','da','the','com','para','and','or','in','a','o','e']);
+  const tokens = labelN.split(/\s+/).filter(t =>
+    t.length >= 2 && !stopTokens.has(t)
+  );
+
+  let best = null, bestScore = -1;
+
+  produtos.forEach(p => {
+    const pn = p.nome;
+    const pnN = norm(pn);
+
+    // ── FILTROS ELIMINATÓRIOS ──────────────────────────
+    // 1. Memória RAM/Armazenamento (ex: 8/256 ≠ 4/128)
+    if (labelMem.length > 0) {
+      const pMem = extrairMem(pn);
+      if (pMem.length > 0) {
+        const bate = labelMem.some(m => pMem.includes(m));
+        if (!bate) return; // descarta
+      }
+    }
+
+    // 2. Armazenamento solo (ex: 64gb ≠ 128gb)
+    //    Também compara contra o segundo número de pares RAM/storage do produto
+    if (labelStor.length > 0) {
+      const pStor = extrairStorage(pn);
+      const pMem2 = extrairMem(pn); // ex: ["64/128"] → storage é o segundo número
+      // Extrai o número de armazenamento do label (ex: "64gb" → "64")
+      const labelStorNum = labelStor.map(s => s.replace(/[^\d]/g, ''));
+      // Extrai segundo número dos pares do produto (o armazenamento)
+      const pStorFromPair = pMem2.map(m => m.split('/')[1]).filter(Boolean);
+
+      if (pStor.length > 0 || pStorFromPair.length > 0) {
+        const pStorNums = [
+          ...pStor.map(s => s.replace(/[^\d]/g, '')),
+          ...pStorFromPair
+        ];
+        const bate = labelStorNum.some(n => pStorNums.includes(n));
+        if (!bate) return;
+      }
+    }
+
+    // 3. Geração de rede (4G ≠ 5G — são produtos diferentes)
+    if (labelRede.length > 0) {
+      const pRede = extrairRede(pn);
+      if (pRede.length > 0) {
+        const bate = labelRede.some(r => pRede.includes(r));
+        if (!bate) return;
+      }
+    }
+
+    // 4. Polegadas (TV 32" ≠ TV 43")
+    if (labelPol.length > 0) {
+      const pPol = extrairPolegadas(pn);
+      if (pPol.length > 0) {
+        const bate = labelPol.some(p => pPol.includes(p));
+        if (!bate) return;
+      }
+    }
+    // ──────────────────────────────────────────────────
+
+    // Score por tokens de nome/modelo (após passar nos filtros)
+    const score = tokens.reduce((s, t) => s + (pnN.includes(t) ? 1 : 0), 0) / tokens.length;
+    if (score > bestScore) { bestScore = score; best = p; }
+  });
+
+  // Threshold mínimo: pelo menos 25% dos tokens de nome devem bater
+  return bestScore >= 0.25 ? best : null;
+}
+
+// ════════════════════════════════════
+// RENDER DA REVISÃO
+// ════════════════════════════════════
+function iaRenderRevisao() {
+  const list = el('ia-rev-list');
+  list.innerHTML = '';
+
+  const total    = _iaItens.filter(i => i.type === 'product').length;
+  const comVinc  = _iaItens.filter(i => i.type === 'product' && i._vinculos?.length).length;
+  el('ia-rev-summary').textContent =
+    `${total} produto(s) · ${comVinc} vinculado(s) · ${total - comVinc} sem vínculo`;
+
+  _iaItens.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'ia-rev-item' +
+      (item._selecionado ? ' selected' : '') +
+      (item.type === 'header' ? ' type-header' : '') +
+      (item.type === 'free'   ? ' type-free'   : '');
+    div.dataset.idx = idx;
+
+    if (item.type === 'header') {
+      div.innerHTML = `
+        <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
+        <div class="ia-rev-body">
+          <div class="ia-rev-label" style="color:#a78bfa;">${esc(item.icon||'📌')} ${esc(item.label||'Seção')}</div>
+          <div style="font-size:11px;color:var(--text3);">Cabeçalho de seção</div>
+        </div>`;
+    } else if (item.type === 'free') {
+      div.innerHTML = `
+        <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
+        <div class="ia-rev-body">
+          <div class="ia-rev-label" style="color:var(--text3);font-style:italic;">${item.text||'(linha em branco)'}</div>
+        </div>`;
+    } else {
+      const vs = item._vinculos || [];
+      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+
+      // Linha de vínculo principal
+      let vincHtml;
+      if (vs.length === 0) {
+        vincHtml = `<span class="ia-rev-vinc none">⚠ Sem vínculo — clique em Trocar</span>`;
+      } else if (vs.length === 1) {
+        vincHtml = `<span class="ia-rev-vinc ok" title="${esc(vs[0].nome)}">🔗 ${esc(vs[0].nome.substring(0,38))}${vs[0].nome.length>38?'…':''} · ${vs[0].estoque>0?'✓ '+vs[0].estoque:'⚠ '+vs[0].estoque}</span>`;
+      } else {
+        vincHtml = `<span class="ia-rev-vinc ok">🔗 ${vs.length} vínculos · Σ ${estoqueTotal} un.</span>`;
+      }
+
+      // Detalhe individual quando múltiplos
+      const detalhes = vs.length > 1
+        ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
+            ${vs.map(v => `<div style="font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;">
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome.substring(0,40))}</span>
+              <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};flex-shrink:0;">${v.estoque>0?'✓ '+v.estoque:'⚠ '+v.estoque}</span>
+              <button class="ia-rm-vinc" data-idx="${idx}" data-vid="${v.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;flex-shrink:0;">✕</button>
+            </div>`).join('')}
+          </div>` : '';
+
+      div.innerHTML = `
+        <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
+        <div class="ia-rev-body">
+          <div class="ia-rev-label">${esc(item.label||'(sem nome)')}</div>
+          <div class="ia-rev-meta">
+            ${item.price ? `<span class="ia-rev-price">R$ ${esc(item.price)}</span>` : ''}
+            ${vincHtml}
+            <button class="ia-rev-change" data-idx="${idx}">🔄 Trocar/Add</button>
+          </div>
+          ${detalhes}
+          <div class="ia-rev-dropdown" id="ia-dd-${idx}">
+            <input type="text" class="ia-rev-dd-search" placeholder="Buscar na API…" data-idx="${idx}" />
+            <div class="ia-rev-dd-results" id="ia-dd-res-${idx}">
+              ${iaDdItens(_prodCache.length ? [] : [], idx, vs)}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // checkbox
+    div.querySelector('.ia-rev-check').addEventListener('change', e => {
+      _iaItens[idx]._selecionado = e.target.checked;
+      div.classList.toggle('selected', e.target.checked);
+    });
+
+    // remover vínculo individual nos detalhes
+    div.querySelectorAll('.ia-rm-vinc').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const vid = btn.dataset.vid;
+        _iaItens[idx]._vinculos = (_iaItens[idx]._vinculos || []).filter(v => String(v.id) !== String(vid));
+        iaRenderRevisao();
+      });
+    });
+
+    // botão trocar/add
+    div.querySelector('.ia-rev-change')?.addEventListener('click', () => {
+      const dd = el(`ia-dd-${idx}`);
+      dd.classList.toggle('open');
+      if (dd.classList.contains('open')) {
+        const inp = dd.querySelector('.ia-rev-dd-search');
+        inp?.focus();
+        // Pré-popula com candidatos do cache pelo label
+        const cands = _prodCache.length ? buscarNoCacheLocal(item.label).slice(0,15) : [];
+        el(`ia-dd-res-${idx}`).innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
+      }
+    });
+
+    // busca no dropdown
+    div.querySelector('.ia-rev-dd-search')?.addEventListener('input', async function() {
+      const q = this.value.trim();
+      const resDiv = el(`ia-dd-res-${idx}`);
+      if (q.length < 2) {
+        const cands = _prodCache.length ? buscarNoCacheLocal(_iaItens[idx].label || '').slice(0,15) : [];
+        resDiv.innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
+        return;
+      }
+      resDiv.innerHTML = '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">⏳ Buscando…</div>';
+      // Busca no cache ou API
+      let prods = _prodCache.length ? buscarNoCacheLocal(q).slice(0,15) : [];
+      if (!prods.length) {
+        try {
+          const d = await apiGet({ nome: q });
+          if (d.code === 200 && d.data?.length) prods = d.data.slice(0,15);
+        } catch(e) {}
+      }
+      resDiv.innerHTML = prods.length
+        ? iaDdItens(prods, idx, _iaItens[idx]._vinculos || [])
+        : '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum resultado.</div>';
+    });
+
+    list.appendChild(div);
+  });
+}
+
+function iaDdItens(cands, idx, jaVinculados) {
+  if (!cands?.length) return '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum candidato. Busque acima.</div>';
+  return cands.map(p => {
+    const est = Number(p.estoque ?? 0);
+    const badgeCls = est > 0 ? 'badge-ok' : 'badge-zero';
+    const jatem = (jaVinculados||[]).some(v => String(v.id) === String(p.id));
+    return `<div class="ia-rev-dd-row${jatem?' ia-dd-jatem':''}" data-pid="${esc(p.id)}" data-pnome="${esc(p.nome)}" data-psku="${esc(p.codigo_interno||p.codigo_barra||'')}" data-pest="${est}" data-idx="${idx}">
+      <span class="ia-rev-dd-nome">${esc(p.nome)}</span>
+      <span class="ia-rev-dd-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</span>
+      <span class="badge ${badgeCls}" style="font-size:10px;padding:2px 5px;">${est>0?'✓ '+est:'⚠ '+est}</span>
+      ${jatem ? '<span style="color:var(--accent);font-size:10px;">✓</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// Delegação de clique nos dd-rows — ADICIONA ao array de vínculos (não substitui)
+el('ia-rev-list').addEventListener('click', e => {
+  const row = e.target.closest('.ia-rev-dd-row');
+  if (!row) return;
+  const idx = +row.dataset.idx;
+  const novoVinculo = {
+    id: row.dataset.pid, nome: row.dataset.pnome,
+    sku: row.dataset.psku, estoque: +row.dataset.pest
+  };
+  const vs = _iaItens[idx]._vinculos || [];
+  // Se já existe, remove (toggle); senão adiciona
+  const existe = vs.findIndex(v => String(v.id) === String(novoVinculo.id));
+  if (existe >= 0) {
+    _iaItens[idx]._vinculos = vs.filter((_, i) => i !== existe);
+  } else {
+    _iaItens[idx]._vinculos = [...vs, novoVinculo];
+  }
+  iaRenderRevisao();
+});
+
+// Selecionar todos
+el('ia-check-all').addEventListener('change', function() {
+  _iaItens.forEach(i => i._selecionado = this.checked);
+  iaRenderRevisao();
+});
+
+// ════════════════════════════════════
+// CONFIRMAR — adiciona à lista principal
+// ════════════════════════════════════
+function iaConfirmar() {
+  const selecionados = _iaItens.filter(i => i._selecionado);
+  if (!selecionados.length) { toast('⚠️ Nenhum item selecionado'); return; }
+
+  selecionados.forEach(item => {
+    const base = { id: uid() };
+    if (item.type === 'header') {
+      lista.push({ ...base, type: 'header', icon: item.icon || '📌', label: item.label || '' });
+    } else if (item.type === 'free') {
+      lista.push({ ...base, type: 'free', text: item.text || '' });
+    } else {
+      const vs = item._vinculos || [];
+      lista.push({
+        ...base, type: 'product',
+        label:    item.label  || '',
+        price:    item.price  || '',
+        vinculos: vs,
+        sysname:  vs[0]?.nome || '',
+        sku:      vs[0]?.sku  || '',
+        prodId:   vs[0]?.id   || null,
+        estoque:  vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined,
+      });
+    }
+  });
+
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
+  iaFechar();
+  toast(`✅ ${selecionados.length} item(s) adicionados à lista!`);
+}
+
+// ════════════════════════════════════
+// AUTO-GROW TEXTAREA
+// Faz o textarea crescer conforme o conteúdo,
+// resolvendo truncamento no desktop e mobile.
+// ════════════════════════════════════
+function autoGrow(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+function autoGrowAll() {
+  document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow);
+}
+
+// ════════════════════════════════════
+// PERSISTÊNCIA
+// ════════════════════════════════════
+function salvar() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      lista,
+      titulo:    el('lista-titulo').value,
+      cfgData:   el('cfg-data').value,
+      cfgSemEst: el('cfg-sem-estoque').value,
+      cfgPreco:  el('cfg-preco').value,
+      lojaId:    el('loja-id').value,
+      apiBase:   el('api-base').value,
+    }));
+    setSync('ok','Salvo');
+  } catch(e) { setSync('err','Erro ao salvar'); }
+}
+
+function carregar() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    lista = d.lista || [];
+    if (d.titulo)    el('lista-titulo').value    = d.titulo;
+    if (d.cfgData)   el('cfg-data').value        = d.cfgData;
+    if (d.cfgSemEst) el('cfg-sem-estoque').value = d.cfgSemEst;
+    if (d.cfgPreco)  el('cfg-preco').value       = d.cfgPreco;
+    if (d.lojaId)    el('loja-id').value         = d.lojaId;
+    if (d.apiBase)   el('api-base').value        = d.apiBase;
+  } catch(e) {}
+}
+
+// ════════════════════════════════════
+// UTILS
+// ════════════════════════════════════
+function el(id) { return document.getElementById(id); }
+let _tt;
+function toast(msg, dur=2600) {
+  const t = el('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), dur);
+}
+function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').textContent=m; }
+function setApiSync(s,m){ el('sync-dot-api').className='sync-dot '+s; el('sync-text-api').textContent=m; }
+function dataHoje(){
+  const d=new Date();
+  return d.getDate().toString().padStart(2,'0')+'/'+
+         (d.getMonth()+1).toString().padStart(2,'0')+'/'+
+         d.getFullYear().toString().slice(2);
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ════════════════════════════════════
+// API — usa SEMPRE o endpoint de listagem com query params
+// O proxy expõe apenas GET /produtos?loja_id=&nome=&codigo=
+// NUNCA tenta /produtos/{id} pois o proxy não suporta essa rota.
+// ════════════════════════════════════
+async function apiGet(params) {
+  const base = el('api-base').value.trim();
+  const loja = el('loja-id').value.trim();
+  const url  = new URL(base);
+  url.searchParams.set('loja_id', loja);
+  url.searchParams.set('limite', '20');
+  for (const [k,v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && String(v).trim() !== '')
+      url.searchParams.set(k, v);
+  }
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ════════════════════════════════════
+// CACHE DE PRODUTOS
+// Baixa TODOS os produtos da API de uma vez
+// (paginado, respeitando rate limit).
+// Usado pelo IA import e pelo syncTodos.
+// ════════════════════════════════════
+
+async function carregarCacheProdutos(onProgress) {
+  // Usa cache se ainda for válido
+  if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
+
+  const base = el('api-base').value.trim();
+  const loja = el('loja-id').value.trim();
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  // Primeira página para saber total
+  const url1 = new URL(base);
+  url1.searchParams.set('loja_id', loja);
+  url1.searchParams.set('limite', '100');
+  url1.searchParams.set('pagina', '1');
+  const r1 = await fetch(url1.toString());
+  if (!r1.ok) throw new Error('HTTP ' + r1.status);
+  const d1 = await r1.json();
+  if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+
+  const totalPaginas = d1.meta?.total_paginas || 1;
+  let todos = [...(d1.data || [])];
+
+  if (onProgress) onProgress(1, totalPaginas, todos.length);
+
+  // Páginas restantes em lotes de 3 (rate limit)
+  for (let p = 2; p <= totalPaginas; p++) {
+    const url = new URL(base);
+    url.searchParams.set('loja_id', loja);
+    url.searchParams.set('limite', '100');
+    url.searchParams.set('pagina', p);
+    try {
+      const r = await fetch(url.toString());
+      if (r.ok) {
+        const d = await r.json();
+        if (d.code === 200 && d.data) todos = todos.concat(d.data);
+      }
+    } catch(e) { /* ignora página com falha */ }
+
+    if (onProgress) onProgress(p, totalPaginas, todos.length);
+
+    // Delay a cada 3 páginas
+    if ((p - 1) % 3 === 0) await delay(1100);
+  }
+
+  _prodCache = todos;
+  _prodCacheTs = Date.now();
+  return _prodCache;
+}
+
+// Normaliza string para comparação
+function normStr(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    // "pro +" e "pro+" → "pro plus" antes de remover símbolos
+    .replace(/\bpro\s*\+/g, 'pro plus')
+    .replace(/\+/g, ' plus ')          // "+" avulso também vira "plus"
+    .replace(/[^a-z0-9\s\/]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function ehAcessorio(nome) {
+  return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
+}
+
+// Qualificadores de variante — eliminatórios
+// "Plus" e "+" são equivalentes (normStr já converte + → plus)
+function extrairVariante(s) {
+  const n = normStr(s);
+  const vs = [];
+  if (/\bpro\b/.test(n))   vs.push('pro');
+  if (/\bplus\b/.test(n))  vs.push('plus');
+  if (/\bultra\b/.test(n)) vs.push('ultra');
+  if (/\bmax\b/.test(n))   vs.push('max');
+  if (/\blite\b/.test(n))  vs.push('lite');
+  if (/\bneo\b/.test(n))   vs.push('neo');
+  if (/\bfe\b/.test(n))    vs.push('fe');
+  // Sufixo "S" colado a número: note14s — mas NÃO "5g" ou "s" solto
+  if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
+  return vs;
+}
+
+// Série do produto — incompatibilidade eliminatória
+function extrairSerie(s) {
+  const n = normStr(s);
+  const series = [];
+  // Ordem importa: "redmi note" antes de "redmi"
+  if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
+  else if (/\bredmi\b/.test(n))         series.push('redmi');
+  if (/\bpoco\b/.test(n))               series.push('poco');
+  if (/\brealme\b/.test(n))             series.push('realme');
+  if (/\biphone\b/.test(n))             series.push('iphone');
+  if (/\bgalaxy\b/.test(n))             series.push('galaxy');
+  if (/\bmoto\b/.test(n))               series.push('moto');
+  if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
+  return series;
+}
+
+function serieCompativel(lS, pS) {
+  if (!lS.length || !pS.length) return true;
+  if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
+  if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
+  return lS.some(s => pS.includes(s));
+}
+
+function tokensModelo(label) {
+  const stop = new Set(['de','do','da','com','para','a','o','e','em',
+    'smart','tv','led','oled','full','hd','4k','wi','fi',
+    'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
+    'prata','bege','vermelho','amarelo','grafite','gold','creme',
+    'titanium','aurora','marrom','laranja','vinho','preta',
+    'silver','blue','black','white','purple','gray','transparente']);
+
+  // Remove cores antes de tokenizar
+  const n = normStr(label)
+    .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
+    .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
+    .replace(/\s+/g, ' ').trim();
+
+  return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
+}
+
+function buscarNoCacheLocal(q) {
+  if (!q || !_prodCache.length) return [];
+  const tokens = tokensModelo(q);
+  if (!tokens.length) return [];
+
+  // Memória: X/Y ou X/Ygb
+  const memTok   = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t));
+  const storTok  = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t));
+  const redeTok  = tokens.filter(t => /^(4g|5g)$/i.test(t));
+  // Alfanumérico de modelo (g15, note14, x7, c75, a36) — NÃO inclui 4g/5g
+  const modelTok = tokens.filter(t =>
+    /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+    !/^(4g|5g|gb|tb)$/i.test(t) &&
+    !memTok.includes(t));
+  // Número puro de modelo (14, 15, 60)
+  const numTok = tokens.filter(t =>
+    /^\d+$/.test(t) && t.length >= 2 &&
+    !memTok.includes(t) && !storTok.includes(t));
+  const txtTok = tokens.filter(t =>
+    !memTok.includes(t) && !storTok.includes(t) &&
+    !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
+
+  const lV = extrairVariante(q);
+  const lS = extrairSerie(q);
+
+  return _prodCache.filter(p => {
+    if (ehAcessorio(p.nome)) return false;
+    const pn = normStr(p.nome);
+
+    // Série incompatível: redmi ≠ redmi-note, realme ≠ poco
+    if (lS.length) {
+      const pS = extrairSerie(p.nome);
+      if (!serieCompativel(lS, pS)) return false;
+    }
+
+    // Variante incompatível: PRO, Plus, S, Ultra, Max
+    const pV = extrairVariante(p.nome);
+    if (lV.includes('pro')      !== pV.includes('pro'))      return false;
+    if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false;
+    for (const v of ['plus','ultra','max']) {
+      if (lV.includes(v) !== pV.includes(v)) return false;
+    }
+
+    // Memória: "8/256" ou "8/256gb" presentes como substring
+    if (memTok.length && !memTok.every(t => {
+      const base = t.replace(/(gb|tb)$/i,'');
+      return pn.includes(base);
+    })) return false;
+
+    // Storage solo
+    if (storTok.length && !storTok.every(t => {
+      const n = t.replace(/[^\d]/g,'');
+      return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
+    })) return false;
+
+    // Conectividade: filtro BIDIRECIONAL apenas para smartphones
+    // TVs, iPads e tablets não têm 4G/5G — não aplicar esse filtro
+    const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
+    const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
+    const pTem5g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
+    const pTem4g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
+    if (redeTok.length) {
+      // Label especifica rede → produto deve ter a mesma
+      if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
+    } else if (ehSmartphone) {
+      // Smartphone sem rede explícita → rejeita se produto tem 5G ou 4G
+      if (pTem5g || pTem4g) return false;
+    }
+
+    // Modelo alfanumérico: palavra inteira
+    if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+
+    // Número puro: palavra inteira
+    if (numTok.length && !numTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+
+    // Tokens de texto: ≥ 50%
+    if (txtTok.length) {
+      const hits = txtTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length;
+      if (hits < Math.ceil(txtTok.length * 0.5)) return false;
+    }
+    return true;
+  });
+}
+
+function gerarQueries(label) {
+  const queries = [];
+
+  // Remove informações de marketing e especificações técnicas longas que não existem no sistema
+  // Ex: "Gaming Hub, HDR com comando de Voz", "HDR10, HDMI, USB, Dolby Audio, Wi-Fi"
+  let limpo = label
+    .replace(/,\s*[^,]{10,}/g, '')          // Remove segmentos longos após vírgula
+    .replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '')
+    .replace(/\s+/g, ' ').trim();
+
+  // Remove cor
+  limpo = limpo
+    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '')
+    .replace(/\s+/g, ' ').trim();
+
+  // Remove último traço e o que vem depois
+  const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+  if (comMem.length > 3) queries.push(comMem);
+
+  // Sem memória/storage
+  const semMem = comMem
+    .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
+    .replace(/\s+\d+(gb|tb)/gi, '')
+    .replace(/\s+/g, ' ').trim();
+  if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+
+  // Sem conectividade
+  const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
+  if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+
+  // Query curta para TVs: marca + polegadas + modelo (ex: "Samsung 43" U8100")
+  const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
+  if (tvMatch) {
+    const marca = tvMatch[1].trim();
+    const pol   = tvMatch[2];
+    const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
+    const cod = codMatch ? codMatch[1] : '';
+    const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
+    if (qTV.length > 3) queries.push(qTV);
+    queries.push((marca + ' ' + pol + '"').trim());
+  }
+
+  // Query baseada em código de modelo para TVs (U8100F, 43S5045, 32PHG)
+  const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
+  if (codModelo) {
+    codModelo.forEach(cod => {
+      if (cod.length >= 4) queries.push(cod);
+    });
+  }
+
+  // Extra: marca principal + polegadas para qualquer TV
+  const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
+  if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
+
+  // Query para iPad/tablet: "ipad 10 64gb" → "ipad 64gb" ou "ipad 10"
+  if (/\bipad\b/i.test(label)) {
+    const gen = label.match(/\bipad\s+(\d+)\b/i);
+    const mem = label.match(/\b(\d+)\s*gb\b/i);
+    if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
+    if (gen)        queries.push(`ipad ${gen[1]}`);
+    queries.push('ipad');
+  }
+
+  if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
+  return [...new Set(queries.filter(q => q.length > 2))];
+}
+
+async function buscarVinculosDoItem(item) {
+  let candidatos = [];
+  if (_prodCache.length) {
+    const queries = gerarQueries(item.label || item.sysname || '');
+    for (const q of queries) {
+      buscarNoCacheLocal(q).forEach(p => {
+        if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
+      });
+      if (candidatos.length >= 30) break;
+    }
+    if (!candidatos.length && item.sku?.trim()) {
+      const skuN = item.sku.trim().toLowerCase();
+      _prodCache.filter(p =>
+        (p.codigo_interno||'').toLowerCase() === skuN ||
+        (p.codigo_barra||'').toLowerCase() === skuN
+      ).forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+    }
+  } else {
+    const queries = gerarQueries(item.label || item.sysname || '');
+    for (const q of queries) {
+      try {
+        const d = await apiGet({ nome: q });
+        if (d.code === 200 && d.data?.length)
+          d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+      } catch(e) {}
+      if (candidatos.length >= 10) break;
+    }
+  }
+  if (!candidatos.length) return [];
+  const label = item.label || item.sysname || '';
+  // Threshold mais permissivo para TVs e tablets (nomes muito diferentes entre lista e sistema)
+  const ehTV      = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
+  const threshold = ehTV ? 0.20 : 0.55;
+  return candidatos
+    .filter(p => !ehAcessorio(p.nome))
+    .filter(p => filtroTecnico(label, p.nome))
+    .map(p => ({ p, score: scoreNome(label, p.nome) }))
+    .filter(({ score }) => score >= threshold)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(({ p }) => ({
+      id: p.id, nome: p.nome,
+      sku: p.codigo_interno || p.codigo_barra || '',
+      estoque: Number(p.estoque ?? 0),
+    }));
+}
+
+function filtroTecnico(label, nomeAPI) {
+  const lMem=extrairMem(label), pMem=extrairMem(nomeAPI);
+  const lRede=extrairRede(label), pRede=extrairRede(nomeAPI);
+  const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
+  const lStor=extrairStorage(label);
+  if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
+  // Conectividade bidirecional — apenas para smartphones (TVs/iPads nunca têm 4G/5G)
+  const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
+  if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
+  if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
+  if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
+  if (lStor.length) {
+    const pMem2=extrairMem(nomeAPI);
+    const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,''));
+    const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];
+    if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false;
+  }
+  return true;
+}
+
+function scoreNome(label, nomeAPI) {
+  const tokens = tokensModelo(label);
+  if (!tokens.length) return 0;
+  const pn = normStr(nomeAPI);
+  const modelTok = tokens.filter(t =>
+    /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+    !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
+  const restTok = tokens.filter(t => !modelTok.includes(t));
+  const mScore = modelTok.length
+    ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1;
+  const rScore = restTok.length
+    ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
+  return mScore * 0.7 + rScore * 0.3;
+}
+
+
+
     // ══════════════════════════════════════════
     // BUSCA EM LOTE POR IA
     // ══════════════════════════════════════════
@@ -1109,23 +1884,15 @@ Exemplo de saída:
       throw new Error('Resposta inesperada da API');
     }
 
-    // Busca produto no proxy pelo nome (retorna melhor match ou null)
-    async function buscarProdutoLote(nome) {
-      try {
-        // Usa buscarProdutos existente — pega até 5 resultados
-        const url = new URL("https://caixa-three.vercel.app/api/produtos");
-        url.searchParams.append("loja_id", lojaIdJeta);
-        url.searchParams.append("limite", "5");
-        // Query: remove cores, pega parte principal do nome
-        const q = nome
-          .replace(/\s*-\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|grafite|gold)[\w/]*/gi, '')
-          .replace(/\s*-\s*\S+.*$/, '').trim();
-        url.searchParams.append("nome", q || nome);
-        const d = await (await fetch(url.toString())).json();
-        if (d.code !== 200 || !d.data || !d.data.length) return null;
-        // Retorna o primeiro resultado (API já faz o match pelo nome)
-        return d.data[0];
-      } catch(e) { return null; }
+    // Busca produto usando o motor completo (mesmo da geração de lista)
+    async function buscarProdutoLote(nomeLista) {
+      const item = { label: nomeLista, sysname: '', sku: '', prodId: null };
+      // Garante cache carregado
+      if (!_prodCache.length) {
+        await carregarCacheProdutos();
+      }
+      // Retorna array de vínculos ordenados por score
+      return await buscarVinculosDoItem(item);
     }
 
     // Processa a lista com IA e depois busca o estoque de cada produto
@@ -1155,7 +1922,7 @@ Exemplo de saída:
         const nomes = JSON.parse(jsonStr);
         if (!Array.isArray(nomes) || !nomes.length) throw new Error('IA não retornou uma lista válida.');
 
-        // 2. Muda para passo 2
+        // 2. Muda para passo 2 e baixa catálogo
         document.getElementById('ia-lote-passo1').style.display = 'none';
         document.getElementById('ia-lote-passo2').style.display = 'flex';
         document.getElementById('ia-lote-resultados').style.display = 'block';
@@ -1166,65 +1933,95 @@ Exemplo de saída:
         grid.innerHTML = '';
         _iaLoteResultados = [];
 
-        const delay = function(ms){ return new Promise(function(r){ setTimeout(r,ms); }); };
-        let comEst = 0, semEst = 0, naoAch = 0;
+        // Baixa catálogo completo uma vez (mesmo do gerador de lista)
+        status.textContent = 'Baixando catálogo de produtos…';
+        prog.style.width = '5%';
+        await carregarCacheProdutos(function(pag, total) {
+          prog.style.width = Math.round((pag/total)*40) + '%';
+          status.textContent = 'Catálogo: ' + pag + '/' + total + ' páginas…';
+        });
+
+        var comEst = 0, semEst = 0, naoAch = 0;
 
         for (var i = 0; i < nomes.length; i++) {
           const nome = nomes[i];
-          status.textContent = '(' + (i+1) + '/' + nomes.length + ') Buscando: ' + nome.substring(0,40) + '…';
-          prog.style.width = Math.round(((i+1)/nomes.length)*100) + '%';
+          status.textContent = '(' + (i+1) + '/' + nomes.length + ') ' + nome.substring(0,45) + '…';
+          prog.style.width = (40 + Math.round(((i+1)/nomes.length)*60)) + '%';
 
-          const produto = await buscarProdutoLote(nome);
-          const item = document.createElement('div');
+          // Busca com o motor completo — retorna array de candidatos ordenados por score
+          const vinculos = await buscarProdutoLote(nome);
+          const card = document.createElement('div');
 
-          if (!produto) {
-            item.className = 'ia-res-item nao-encontrado';
-            item.innerHTML =
+          if (!vinculos || !vinculos.length) {
+            card.className = 'ia-res-item nao-encontrado';
+            card.innerHTML =
               '<div style="flex:1;min-width:0;">' +
                 '<div class="ia-res-nome">' + nome + '</div>' +
-                '<div class="ia-res-sistema" style="color:#c0392b;">Não encontrado no sistema</div>' +
+                '<div class="ia-res-sistema" style="color:#c0392b;font-size:12px;">Não encontrado — clique em Buscar para tentar manualmente</div>' +
               '</div>' +
-              '<span class="ia-res-badge nf">— N/A</span>';
-            _iaLoteResultados.push({ nomeLista: nome, nomeSistema: null, estoque: 0, produtoObj: null });
+              '<button class="ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '" ' +
+                'style="background:#6b6b6b;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;">🔍 Buscar</button>';
+            _iaLoteResultados.push({ nomeLista: nome, vinculos: [] });
             naoAch++;
           } else {
-            const est = Number(produto.estoque || 0);
-            item.className = 'ia-res-item ' + (est > 0 ? 'com-est' : 'sem-est');
-            item.innerHTML =
-              '<div style="flex:1;min-width:0;">' +
-                '<div class="ia-res-nome" title="' + nome + '">' + nome + '</div>' +
-                '<div class="ia-res-sistema" title="' + produto.nome + '">🔗 ' + produto.nome + '</div>' +
-              '</div>' +
-              '<span class="ia-res-badge ' + (est>0?'ok':'zero') + '">' + (est>0?'✓ '+est:'⚠ '+est) + '</span>' +
-              (est > 0
-                ? '<button class="btn-add-lote" data-id="' + produto.id + '" style="background:#27ae60;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">+</button>'
-                : '<button style="background:#e0e0e0;color:#aaa;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:not-allowed;flex-shrink:0;" disabled>+</button>');
-            _iaLoteResultados.push({ nomeLista: nome, nomeSistema: produto.nome, estoque: est, produtoObj: produto });
-            if (est > 0) comEst++; else semEst++;
-          }
-          grid.appendChild(item);
+            const estoqueTotal = vinculos.reduce(function(s,v){ return s + v.estoque; }, 0);
+            const temEst = estoqueTotal > 0;
+            if (temEst) comEst++; else semEst++;
 
-          // Respeita rate limit: delay a cada 3 buscas
-          if ((i+1) % 3 === 0 && i+1 < nomes.length) await delay(1100);
+            // Linhas de candidatos — todos visíveis com botão + individual
+            var candidatosHtml = '';
+            vinculos.forEach(function(v) {
+              const est = v.estoque;
+              const cls = est > 0 ? 'color:#27ae60;font-weight:700;' : 'color:#c0392b;font-weight:700;';
+              candidatosHtml +=
+                '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f0f0f0;min-width:0;">' +
+                  '<div style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4a4a4a;" title="' + v.nome + '">' + v.nome + '</div>' +
+                  '<span style="font-size:11px;' + cls + 'flex-shrink:0;">' + (est>0?'✓ ':'⚠ ') + est + '</span>' +
+                  (est > 0
+                    ? '<button class="ia-add-vinculo" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + est + '" style="background:#27ae60;color:#fff;border:none;border-radius:5px;padding:2px 9px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">+</button>'
+                    : '<button style="background:#e0e0e0;color:#aaa;border:none;border-radius:5px;padding:2px 9px;font-size:12px;cursor:not-allowed;flex-shrink:0;" disabled>+</button>') +
+                '</div>';
+            });
+
+            card.className = 'ia-res-item ' + (temEst ? 'com-est' : 'sem-est');
+            card.style.flexDirection = 'column';
+            card.innerHTML =
+              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+                '<div class="ia-res-nome" style="flex:1;">' + nome + '</div>' +
+                '<span class="ia-res-badge ' + (temEst?'ok':'zero') + '">' + (temEst?'✓ ':'⚠ ') + estoqueTotal + '</span>' +
+                '<button class="ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '" ' +
+                  'style="background:#f0f0f0;color:#6b6b6b;border:1px solid #e0e0e0;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;flex-shrink:0;white-space:nowrap;">🔄 Trocar</button>' +
+              '</div>' +
+              '<div style="padding-left:2px;">' + candidatosHtml + '</div>';
+
+            _iaLoteResultados.push({ nomeLista: nome, vinculos: vinculos });
+          }
+
+          grid.appendChild(card);
         }
 
-        // Resumo final
+        // Resumo + eventos
         status.textContent = 'Concluído!';
         document.getElementById('ia-lote-resumo').textContent =
-          '✅ ' + comEst + ' com estoque · ⚠️ ' + semEst + ' zerado · ❌ ' + naoAch + ' não encontrado';
+          '✅ ' + comEst + ' c/ estoque · ⚠️ ' + semEst + ' zerado · ❌ ' + naoAch + ' não encontrado';
         if (comEst > 0) document.getElementById('ia-lote-add-todos').style.display = 'block';
 
-        // Event listeners nos botões de adicionar individuais
-        grid.querySelectorAll('.btn-add-lote').forEach(function(btnAdd) {
+        grid.querySelectorAll('.ia-add-vinculo').forEach(function(btnAdd) {
           btnAdd.addEventListener('click', function() {
-            const prodId = btnAdd.dataset.id;
-            const res = _iaLoteResultados.find(function(r){ return r.produtoObj && String(r.produtoObj.id) === String(prodId); });
-            if (res && res.produtoObj) {
-              adicionarAoCarrinho(res.produtoObj);
-              btnAdd.textContent = '✓';
-              btnAdd.style.background = '#aaa';
-              btnAdd.disabled = true;
-            }
+            const produtoSimulado = { id: btnAdd.dataset.pid, nome: decodeURIComponent(btnAdd.dataset.pnome), estoque: parseInt(btnAdd.dataset.pest) };
+            adicionarAoCarrinho(produtoSimulado);
+            btnAdd.textContent = '✓';
+            btnAdd.style.background = '#aaa';
+            btnAdd.disabled = true;
+          });
+        });
+
+        grid.querySelectorAll('.ia-busca-manual').forEach(function(btnBusca) {
+          btnBusca.addEventListener('click', function() {
+            const nome = decodeURIComponent(btnBusca.dataset.nome);
+            fecharIaLote();
+            document.getElementById('campo-busca').value = nome;
+            document.getElementById('btn-buscar').click();
           });
         });
 
@@ -1243,9 +2040,14 @@ Exemplo de saída:
     document.getElementById('ia-lote-add-todos').addEventListener('click', function() {
       var adicionados = 0;
       _iaLoteResultados.forEach(function(r) {
-        if (r.produtoObj && r.estoque > 0) {
-          adicionarAoCarrinho(r.produtoObj);
-          adicionados++;
+        if (r.vinculos && r.vinculos.length) {
+          // Adiciona todos os vínculos com estoque > 0
+          r.vinculos.forEach(function(v) {
+            if (v.estoque > 0) {
+              adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque });
+              adicionados++;
+            }
+          });
         }
       });
       mostrarToast('✅ ' + adicionados + ' produto(s) adicionados ao carrinho');
