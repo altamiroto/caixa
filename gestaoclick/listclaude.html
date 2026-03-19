@@ -276,35 +276,228 @@
     ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 
-    /* ─── MOBILE RETRATO: oculta colunas extras, nome nao trunca ─── */
-    @media (max-width:768px) and (orientation:portrait) {
-      .app { grid-template-columns:1fr; height:auto; min-height:calc(100vh - 58px); }
-      .panel-left { height:auto; overflow-y:visible; }
-      #card-tabela { min-height:300px; max-height:60vh; }
-      .panel-right { border-top:1px solid var(--border); }
-      .api-row { grid-template-columns:1fr; }
-      /* Oculta colunas nao essenciais no retrato */
-      .col-sys, .col-sku { display:none; }
-      /* Nome sempre visivel e quebra linha */
-      td.col-label { white-space:normal; word-break:break-word; max-width:140px; }
+    /* ══════════════════════════════════
+       MOBILE — layout de cards, sem tabela
+       ══════════════════════════════════ */
+    @media (max-width: 900px) {
+
+      /* Painel único empilhado, scroll na página toda */
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .panel-left {
+        overflow-y: visible;
+        height: auto;
+      }
+      /* card-tabela no mobile não precisa de altura fixa — cresce com o conteúdo */
+      #card-tabela {
+        flex: none;
+        min-height: 0;
+        max-height: none;
+      }
+      #card-tabela .table-scroll {
+        overflow: visible;
+      }
+      .panel-right {
+        border-top: 1px solid var(--border);
+      }
+      .api-row { grid-template-columns: 1fr; }
+
+      /* ── ESCONDE a tabela HTML no mobile ── */
+      #card-tabela table { display: none; }
+
+      /* ── MOSTRA o container de cards mobile ── */
+      #lista-mobile { display: flex !important; }
+
     }
 
-    /* ─── MOBILE PAISAGEM: mostra todas as colunas com scroll horizontal ─── */
-    @media (max-width:1024px) and (orientation:landscape) {
-      .app { grid-template-columns:1fr; height:auto; min-height:calc(100vh - 58px); }
-      .panel-left { height:auto; overflow-y:visible; }
-      #card-tabela { min-height:300px; max-height:55vh; }
-      .panel-right { border-top:1px solid var(--border); }
-      .api-row { grid-template-columns:1fr 1fr; }
-      /* Todas as colunas aparecem, tabela rola horizontalmente */
-      .col-sys, .col-sku { display:table-cell; }
-      .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-      td.col-label { white-space:normal; word-break:break-word; max-width:130px; }
+    /* ── CARDS MOBILE: cada item é um bloco ── */
+    #lista-mobile {
+      display: none; /* oculto no desktop */
+      flex-direction: column;
+      gap: 0;
     }
 
-    /* ─── TABLET / DESKTOP ─── */
-    @media (min-width:769px) {
-      td.col-label { white-space:normal; word-break:break-word; }
+    .mcard {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      transition: background .12s;
+    }
+    .mcard:last-child { border-bottom: none; }
+    .mcard.mcard-header {
+      background: rgba(37,211,102,.04);
+      border-bottom: 2px solid var(--border2);
+    }
+    .mcard.mcard-free {
+      background: rgba(255,255,255,.015);
+      border-left: 3px dashed var(--border2);
+    }
+    .mcard.mcard-sem-estoque {
+      border-left: 3px solid var(--warn);
+    }
+
+    /* Linha de drag + nome (topo do card) */
+    .mcard-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .mcard-drag {
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: grab;
+      padding-top: 2px;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+    .mcard-drag:active { cursor: grabbing; }
+    .mcard-name-wrap { flex: 1; min-width: 0; }
+    .mcard-name-wrap input {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 3px 5px;
+      width: 100%;
+      white-space: normal;
+      word-break: break-word;
+      /* força input a crescer com o conteúdo no mobile */
+      height: auto;
+      min-height: 28px;
+    }
+    .mcard-name-wrap input:focus {
+      background: var(--bg);
+      border-color: var(--accent);
+      outline: none;
+    }
+    .mcard-del {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: color .12s;
+    }
+    .mcard-del:hover { color: var(--danger); }
+
+    /* Linha de meta: preço + estoque */
+    .mcard-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .mcard-price-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+    }
+    .mcard-price-wrap label {
+      font-size: .65rem;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .mcard-price-wrap input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .82rem;
+      font-weight: 600;
+      width: 70px;
+      padding: 2px 0;
+    }
+    .mcard-price-wrap input:focus { outline: none; }
+
+    /* Linha de vínculo */
+    .mcard-vincul {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mcard-vincul-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 1px dashed var(--border2);
+      border-radius: 7px;
+      padding: 5px 9px;
+      cursor: pointer;
+      transition: border-color .12s;
+      min-width: 0;
+      position: relative;
+    }
+    .mcard-vincul-btn.vinculado {
+      border-style: solid;
+      border-color: var(--border2);
+    }
+    .mcard-vincul-btn:hover,
+    .mcard-vincul-btn:active {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+    .mcard-vincul-icon { font-size: .8rem; flex-shrink: 0; }
+    .mcard-vincul-info { flex: 1; min-width: 0; }
+    .mcard-vincul-name {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mcard-vincul-name.empty { color: var(--text3); font-style: italic; }
+    .mcard-vincul-code {
+      font-size: .65rem;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mcard-sync-btn {
+      background: transparent;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: .8rem;
+      cursor: pointer;
+      padding: 5px 7px;
+      flex-shrink: 0;
+      transition: background .12s;
+    }
+    .mcard-sync-btn:hover { background: var(--surface2); }
+
+    /* header card no mobile */
+    .mcard-header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* drag-over highlight no mobile */
+    .mcard.drag-over-mobile {
+      outline: 2px dashed var(--accent);
+      outline-offset: -2px;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -408,6 +601,8 @@
           </thead>
           <tbody id="tbody-lista"></tbody>
         </table>
+        <!-- Container mobile: visível apenas em telas ≤900px via CSS -->
+        <div id="lista-mobile"></div>
       </div>
       <div id="empty-table" class="empty-state">
         <div class="icon">📭</div>
@@ -617,7 +812,7 @@ async function syncItem(idx) {
     setSync('err','Erro: '+e.message);
     toast('❌ '+e.message);
   }
-  renderTabela(); atualizarPreview(); salvar();
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
 }
 
 // ════════════════════════════════════
@@ -658,7 +853,7 @@ async function syncTodos() {
     if ((i+1) % 3 === 0 && i+1 < targets.length) await delay(1100);
   }
 
-  renderTabela(); atualizarPreview(); salvar();
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
   wrap.style.display = 'none'; bar.style.width = '0%';
   btn.disabled = false; btn.textContent = '🔄 Atualizar Estoque';
   setSync('ok',`${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' erro':''}`);
@@ -796,7 +991,7 @@ function renderTabela() {
       const moved = lista.splice(dragSrcIdx,1)[0];
       lista.splice(idx,0,moved);
       dragSrcIdx = null;
-      renderTabela(); atualizarPreview(); salvar();
+      renderTabela(); renderMobile(); atualizarPreview(); salvar();
     });
 
     // Inputs inline (apenas label, price, text — sysname/sku são somente leitura via popover)
@@ -819,13 +1014,182 @@ function renderTabela() {
     // Botões
     tr.querySelector('.del-btn')?.addEventListener('click', e => {
       lista.splice(parseInt(e.currentTarget.dataset.idx),1);
-      renderTabela(); atualizarPreview(); salvar();
+      renderTabela(); renderMobile(); atualizarPreview(); salvar();
     });
     tr.querySelector('.sync-btn')?.addEventListener('click', e => {
       syncItem(parseInt(e.currentTarget.dataset.idx));
     });
 
     tbody.appendChild(tr);
+  });
+}
+
+// ════════════════════════════════════
+// RENDER MOBILE (cards empilhados)
+// Chamado junto com renderTabela — o CSS
+// decide qual versão mostrar por breakpoint.
+// ════════════════════════════════════
+function renderMobile() {
+  const cont = el('lista-mobile');
+  if (!cont) return;
+  cont.innerHTML = '';
+
+  if (lista.length === 0) return;
+
+  lista.forEach((item, idx) => {
+    const card = document.createElement('div');
+
+    if (item.type === 'header') {
+      card.className = 'mcard mcard-header';
+      const iconOpts = HEADER_ICONS.map(v =>
+        `<option value="${esc(v)}" ${item.icon===v?'selected':''}>${v}</option>`
+      ).join('');
+      card.innerHTML = `
+        <div class="mcard-header-row">
+          <span class="mcard-drag">⠿</span>
+          <select class="hdr-icon-sel" data-field="icon" style="width:48px;">${iconOpts}</select>
+          <input type="text" data-field="label" value="${esc(item.label)}"
+            placeholder="Ex: MOTOROLA"
+            style="flex:1;font-weight:700;font-size:.85rem;background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 5px;color:var(--text);" />
+          <button class="mcard-del" data-idx="${idx}">✕</button>
+        </div>`;
+
+    } else if (item.type === 'free') {
+      card.className = 'mcard mcard-free';
+      card.innerHTML = `
+        <div class="mcard-top">
+          <span class="mcard-drag">⠿</span>
+          <div style="flex:1;">
+            <textarea data-field="text" rows="2"
+              style="width:100%;resize:vertical;background:transparent;border:1px solid transparent;border-radius:5px;padding:4px 5px;color:var(--text);font-family:inherit;font-size:.82rem;"
+              placeholder="Texto livre…">${esc(item.text||'')}</textarea>
+          </div>
+          <button class="mcard-del" data-idx="${idx}">✕</button>
+        </div>`;
+
+    } else {
+      const semEst = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
+      card.className = 'mcard' + (semEst ? ' mcard-sem-estoque' : '');
+
+      const temVinculo = !!(item.prodId || (item.sku&&item.sku.trim()) || (item.sysname&&item.sysname.trim()));
+      let badgeHtml;
+      if (!temVinculo) {
+        badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo">🔗 —</span>`;
+      } else if (item.estoque === undefined || item.estoque === null) {
+        badgeHtml = `<span class="badge badge-unknown">? —</span>`;
+      } else if (item.estoque > 0) {
+        badgeHtml = `<span class="badge badge-ok">✓ ${item.estoque}</span>`;
+      } else {
+        badgeHtml = `<span class="badge badge-zero">⚠ ${item.estoque}</span>`;
+      }
+
+      const vincNome = item.sysname || '';
+      const vincCod  = item.sku     || '';
+
+      card.innerHTML = `
+        <div class="mcard-top">
+          <span class="mcard-drag">⠿</span>
+          <div class="mcard-name-wrap">
+            <input type="text" data-field="label" value="${esc(item.label)}" placeholder="Nome na mensagem" />
+          </div>
+          <button class="mcard-del" data-idx="${idx}">✕</button>
+        </div>
+        <div class="mcard-meta">
+          <div class="mcard-price-wrap">
+            <label>R$</label>
+            <input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" />
+          </div>
+          ${badgeHtml}
+          <button class="mcard-sync-btn sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button>
+        </div>
+        <div class="mcard-vincul">
+          <div class="mcard-vincul-btn vincul-cell ${vincNome ? 'vinculado' : ''}" data-vincul-field="sys">
+            <span class="mcard-vincul-icon">${vincNome ? '🔗' : '＋'}</span>
+            <div class="mcard-vincul-info">
+              <div class="mcard-vincul-name ${vincNome ? '' : 'empty'}">${vincNome ? esc(vincNome) : 'Vincular produto…'}</div>
+              ${vincCod ? `<div class="mcard-vincul-code">${esc(vincCod)}</div>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // inputs: persistir no estado
+    card.querySelectorAll('[data-field]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        lista[idx][inp.dataset.field] = inp.value;
+        atualizarPreview(); salvar();
+      });
+    });
+
+    // del
+    card.querySelector('.mcard-del')?.addEventListener('click', () => {
+      lista.splice(idx, 1);
+      renderTabela(); renderMobile(); atualizarPreview(); salvar();
+    });
+
+    // sync
+    card.querySelector('.sync-btn')?.addEventListener('click', () => syncItem(idx));
+
+    // vincul: abre popover ancorado no botão
+    const vincBtn = card.querySelector('.mcard-vincul-btn');
+    if (vincBtn) {
+      vincBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        abrirPopoverVinculo(idx, vincBtn);
+      });
+    }
+
+    // Touch drag & drop para mobile
+    const dragHandle = card.querySelector('.mcard-drag');
+    if (dragHandle) {
+      let touchStartY = 0, touchDragIdx = null, placeholder = null;
+
+      dragHandle.addEventListener('touchstart', e => {
+        touchStartY = e.touches[0].clientY;
+        touchDragIdx = idx;
+        card.style.opacity = '.5';
+        e.preventDefault();
+      }, { passive: false });
+
+      dragHandle.addEventListener('touchmove', e => {
+        if (touchDragIdx === null) return;
+        e.preventDefault();
+        const y = e.touches[0].clientY;
+        // Encontra o card embaixo do toque
+        card.style.pointerEvents = 'none';
+        const target = document.elementFromPoint(e.touches[0].clientX, y);
+        card.style.pointerEvents = '';
+        const targetCard = target?.closest('.mcard');
+        document.querySelectorAll('.mcard').forEach(c => c.classList.remove('drag-over-mobile'));
+        if (targetCard && targetCard !== card) {
+          targetCard.classList.add('drag-over-mobile');
+        }
+      }, { passive: false });
+
+      dragHandle.addEventListener('touchend', e => {
+        if (touchDragIdx === null) return;
+        card.style.opacity = '';
+        const y = e.changedTouches[0].clientY;
+        card.style.pointerEvents = 'none';
+        const target = document.elementFromPoint(e.changedTouches[0].clientX, y);
+        card.style.pointerEvents = '';
+        const targetCard = target?.closest('.mcard[data-midx]');
+        document.querySelectorAll('.mcard').forEach(c => c.classList.remove('drag-over-mobile'));
+
+        if (targetCard) {
+          const toIdx = parseInt(targetCard.dataset.midx);
+          if (!isNaN(toIdx) && toIdx !== touchDragIdx) {
+            const moved = lista.splice(touchDragIdx, 1)[0];
+            lista.splice(toIdx, 0, moved);
+            renderTabela(); renderMobile(); atualizarPreview(); salvar();
+          }
+        }
+        touchDragIdx = null;
+      });
+    }
+
+    card.dataset.midx = idx;
+    cont.appendChild(card);
   });
 }
 
@@ -873,7 +1237,7 @@ function abrirPopoverVinculo(idx, anchorCell) {
     lista[idx].prodId  = null;
     lista[idx].estoque = undefined;
     fecharPopover();
-    renderTabela(); atualizarPreview(); salvar();
+    renderTabela(); renderMobile(); atualizarPreview(); salvar();
   });
 
   pop.addEventListener('click', e => e.stopPropagation());
@@ -916,7 +1280,7 @@ function renderResultadosPopover(produtos, resultsBox, idx) {
       lista[idx].prodId  = p.id;
       lista[idx].estoque = est;
       fecharPopover();
-      renderTabela(); atualizarPreview(); salvar();
+      renderTabela(); renderMobile(); atualizarPreview(); salvar();
       toast('🔗 Produto vinculado: ' + p.nome.substring(0, 40));
     });
     resultsBox.appendChild(row);
@@ -1035,7 +1399,7 @@ function adicionarDaAPI(p) {
     prodId:  p.id,
     estoque: Number(p.estoque ?? 0),
   });
-  renderTabela(); atualizarPreview(); salvar();
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
   toast('✅ Produto adicionado');
 }
 
@@ -1044,7 +1408,7 @@ function adicionarDaAPI(p) {
 // ════════════════════════════════════
 el('btn-add-manual').addEventListener('click', () => {
   lista.push({ id:uid(), type:'product', label:'', price:'', sysname:'', sku:'', prodId:null, estoque:undefined });
-  renderTabela(); atualizarPreview(); salvar();
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
   setTimeout(() => {
     const rows = el('tbody-lista').querySelectorAll('tr:not(.row-header):not(.row-free)');
     rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus();
@@ -1053,7 +1417,7 @@ el('btn-add-manual').addEventListener('click', () => {
 
 el('btn-add-header').addEventListener('click', () => {
   lista.push({ id:uid(), type:'header', label:'', icon:'📌' });
-  renderTabela(); atualizarPreview(); salvar();
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
   setTimeout(() => {
     const rows = el('tbody-lista').querySelectorAll('tr.row-header');
     rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus();
@@ -1062,7 +1426,7 @@ el('btn-add-header').addEventListener('click', () => {
 
 el('btn-add-free').addEventListener('click', () => {
   lista.push({ id:uid(), type:'free', text:'' });
-  renderTabela(); atualizarPreview(); salvar();
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
   setTimeout(() => {
     const rows = el('tbody-lista').querySelectorAll('tr.row-free');
     rows[rows.length-1]?.querySelector('textarea')?.focus();
@@ -1088,7 +1452,7 @@ el('btn-copiar').addEventListener('click', () => {
 // ════════════════════════════════════
 el('btn-limpar-lista').addEventListener('click', () => {
   if (!lista.length || !confirm('Limpar toda a lista?')) return;
-  lista = []; renderTabela(); atualizarPreview(); salvar();
+  lista = []; renderTabela(); renderMobile(); atualizarPreview(); salvar();
   toast('🗑️ Lista limpa');
 });
 
@@ -1136,7 +1500,7 @@ document.addEventListener('click', e => {
 // ════════════════════════════════════
 carregar();
 if (!el('cfg-data').value) el('cfg-data').value = dataHoje();
-renderTabela();
+renderTabela(); renderMobile();
 atualizarPreview();
 </script>
 </body>
