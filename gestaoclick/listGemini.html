@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v8 (Eficiência Máxima)</title>
+  <title>Gerador de Listas - JETA v9 (Inteligência 4G/5G)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -312,7 +312,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
       document.getElementById('chk-ocultar').checked = opcoesLista.ocultar;
       document.getElementById('chk-destacar').checked = opcoesLista.destacar;
       
-      let promptSalvo = localStorage.getItem('jeta_prompt_ia_v8') || PROMPT_PADRAO_IA;
+      let promptSalvo = localStorage.getItem('jeta_prompt_ia_v9') || PROMPT_PADRAO_IA;
       document.getElementById('prompt-ia-input').value = promptSalvo;
 
       if(itensLista.length === 0) itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
@@ -456,6 +456,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
                         if(!item.vinculos) item.vinculos = [];
                         if(!item.vinculos.some(v => v.idSistema === prod.id)) {
                             item.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
+                            // Atualizamos o nome só se estiver vazio
                             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
                             if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
                             input.value = '';
@@ -515,8 +516,9 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         else { body.classList.add('visivel'); icon.textContent = '▲'; }
     }
 
-    function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v7', document.getElementById('prompt-ia-input').value); }
+    function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v9', document.getElementById('prompt-ia-input').value); }
 
+    // DOWNLOAD REAL DO CATÁLOGO
     async function carregarCatalogoCompleto() {
         catalogoCompleto = []; 
         let pag = 1; 
@@ -555,8 +557,8 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const limparTexto = (txt) => {
             let str = txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
-                      // Nova regra: Remove gb, tb, ram e rom preservando os números soltos
-                      .replace(/gb|tb|ram|rom/g, ' ')       
+                      // O SEGREDO 1: removemos palavras auxiliares, MAS DEIXAMOS OS NÚMEROS E AS LETRAS "G" E "B" INTACTAS
+                      .replace(/\b(ram|rom)\b/g, ' ')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
                       .replace(/\b([a-z])\s+(\d+)\b/g, '$1$2') 
                       .replace(/\b([a-z]+)0+(\d+)\b/g, '$1$2'); 
@@ -568,18 +570,21 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const tokensExt = limparTexto(nomeExtraido);
         const scores = [];
 
+        // 1. Chaves Estritas
         const chavesEstritas = ['pro', 'plus', 'ultra', 'note', 'lite', 'fe', 'se', 'power'];
         const temChaveExt = {};
         chavesEstritas.forEach(c => temChaveExt[c] = tokensExt.includes(c));
 
+        // 2. Identificação de Redes
         const has5g = tokensExt.includes('5g');
         const has4g = tokensExt.includes('4g');
 
-        // Capacidades de armazenamento EXATAS (Nenhuma chance de 128 se passar por 256)
-        const capacidades = ['32', '64', '128', '256', '512', '1024'];
+        // 3. Capacidades de armazenamento EXATAS (128gb, 256gb, etc)
+        // Ao invez de procurar '256', procuramos se o número tem 'gb' junto ou solto
+        const capacidades = ['32', '64', '128', '256', '512', '1024', '32gb', '64gb', '128gb', '256gb', '512gb', '1tb'];
         const capExt = tokensExt.find(t => capacidades.includes(t));
 
-        // Modelos Estritos
+        // 4. Modelos Estritos
         const isModelo = (t) => {
             if (t === '5g' || t === '4g' || capacidades.includes(t) || chavesEstritas.includes(t)) return false;
             if (!/\d/.test(t)) return false;
@@ -597,7 +602,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             const tokensProd = limparTexto(prod.nome);
             let desclassificado = false;
 
-            // Cortes de Chave Estrita
+            // Cortes de Chave Estrita (Pro, Plus, Note)
             for (let chave of chavesEstritas) {
                 if (temChaveExt[chave] !== tokensProd.includes(chave)) {
                     desclassificado = true;
@@ -606,22 +611,25 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             }
             if (desclassificado) continue;
 
-            // Cortes de 5G vs 4G (Só corta se a contradição for direta)
+            // O SEGREDO 2: Contradição Direta 5G vs 4G
             const prodHas5g = tokensProd.includes('5g');
             const prodHas4g = tokensProd.includes('4g');
             
-            if (has5g && !prodHas5g) desclassificado = true;
-            if (has4g && !prodHas4g) desclassificado = true; 
+            // Só corta se a lista pediu uma coisa, e o sistema afirmar EXATAMENTE O OPOSTO.
+            // Se a lista pediu 4G, e o sistema não diz nada (nem 4G nem 5G), ELE PASSA!
+            if (has5g && prodHas4g) desclassificado = true;
+            if (has4g && prodHas5g) desclassificado = true; 
             if (desclassificado) continue;
 
             // Cortes de Capacidade
             if (capExt) {
                 const capProd = tokensProd.find(t => capacidades.includes(t));
-                if (capProd && capExt !== capProd) desclassificado = true;
+                // O segredo 3: Se o sistema diz 128 e vc quer 256, corta. Se o sistema não diz capacidade, passa!
+                if (capProd && capExt.replace('gb','') !== capProd.replace('gb','')) desclassificado = true;
             }
             if (desclassificado) continue;
 
-            // Cortes de Modelos
+            // Cortes de Modelos (Se tem G6 na busca, tem que ter no nome)
             for (let mod of modelosEstritosExt) {
                 if (!tokensProd.includes(mod)) {
                     desclassificado = true;
@@ -630,15 +638,20 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             }
             if (desclassificado) continue;
 
-            // Pontuação
+            // --- Sobreviveu aos cortes! Vamos pontuar ---
             let score = 0;
             for(let t of tokensExt) {
                 if(tokensProd.includes(t)) score += 1;
             }
             
-            const memoriasRam = ['3', '4', '6', '8', '12', '16', '24'];
-            const ramExt = tokensExt.find(t => memoriasRam.includes(t));
-            if (ramExt && tokensProd.includes(ramExt)) score += 2;
+            // Bônus se eles concordam ativamente sobre 4g ou 5g
+            if (has5g && prodHas5g) score += 3;
+            if (has4g && prodHas4g) score += 3;
+
+            // Penalidade: se o sistema tem 5G mas a lista não pediu, ou vice versa
+            // Isso garante que se existe uma versão "limpa", ela vence a versão com sufixo.
+            if (!has5g && prodHas5g) score -= 3;
+            if (!has4g && prodHas4g) score -= 3;
 
             if (score > 0) scores.push({ prod, score });
         }
