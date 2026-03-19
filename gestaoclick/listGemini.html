@@ -186,7 +186,7 @@
         <button class="btn btn-outline" onclick="adicionarItem('produto')">➕ Produto</button>
         <button class="btn btn-purple" onclick="abrirModalIA()">🤖 Importar c/ IA</button>
         <div style="flex: 1;"></div>
-        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Tudo</button>
+        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Vínculos</button>
         <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
       <div class="lista-container" id="lista-editor"></div>
@@ -524,45 +524,57 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         } catch(e) { return false; }
     }
 
-    // Algoritmo refinado para evitar falsos positivos
     function encontrarMelhoresVinculos(nomeExtraido) {
         if(!nomeExtraido || catalogoCompleto.length === 0) return [];
-        const scores = [];
         
-        // Mantém sinais que são importantes (como + para PRO+ ou / para 8/256)
-        const normalizar = (txt) => txt.toLowerCase().replace(/[^a-z0-9\/\s\+]/g, ' ').split(/\s+/).filter(w => w.length > 1);
-        const tokensExt = normalizar(nomeExtraido);
+        const limparTexto = (txt) => {
+            return txt.toLowerCase()
+                      .replace(/\+/g, ' plus ') 
+                      .replace(/gb/g, '')       
+                      .replace(/[^a-z0-9\s]/g, ' ') 
+                      .split(/\s+/)
+                      .filter(w => w.length > 1 || w === 'm' || w === 'x' || w === 's' || !isNaN(w)); 
+        };
+
+        const tokensExt = limparTexto(nomeExtraido);
+        const scores = [];
+
+        const hasPro = tokensExt.includes('pro');
+        const hasPlus = tokensExt.includes('plus');
+        const hasUltra = tokensExt.includes('ultra');
+        const has5g = tokensExt.includes('5g');
+
+        const modelosExt = tokensExt.filter(t => /\d/.test(t));
 
         for(let prod of catalogoCompleto) {
-            const tokensProd = normalizar(prod.nome);
-            let score = 0;
-            let penalty = 0;
+            const tokensProd = limparTexto(prod.nome);
+            let desclassificado = false;
 
-            for(let t of tokensExt) {
-                // Tokens críticos são aqueles que contêm números (ex: X7, 14, 256gb)
-                const isCritical = /\d/.test(t); 
-                
-                const match = tokensProd.some(tp => tp === t || (t.length > 3 && tp.includes(t)) || (tp.length > 3 && t.includes(tp)));
-                
-                if (match) {
-                    score += isCritical ? 5 : 1;
-                } else {
-                    // Se tem número, não achou correspondência no produto, aplicamos penalidade.
-                    // Ignoramos a barra '/' na penalidade porque "8/256gb" as vezes está escrito diferente, mas "X7" não.
-                    if (isCritical && !t.includes('/')) penalty += 10;
+            if (hasPro !== tokensProd.includes('pro')) desclassificado = true;
+            if (hasPlus !== tokensProd.includes('plus')) desclassificado = true;
+            if (hasUltra !== tokensProd.includes('ultra')) desclassificado = true;
+
+            const prodHas5g = tokensProd.includes('5g');
+            if (has5g && !prodHas5g) desclassificado = true;
+            if (!has5g && prodHas5g) desclassificado = true; 
+
+            if (!desclassificado) {
+                for (let mod of modelosExt) {
+                    if (!tokensProd.includes(mod)) {
+                        desclassificado = true;
+                        break;
+                    }
                 }
             }
 
-            // Penalidades Severas para Modificadores de Modelo
-            const modificadores = ['pro', 'plus', '+', '5g', '4g'];
-            modificadores.forEach(palavra => {
-                const extHas = tokensExt.includes(palavra);
-                const prodHas = tokensProd.includes(palavra);
-                if (extHas !== prodHas) penalty += 10; // Corta se um for PRO e o outro não
-            });
+            if (desclassificado) continue;
 
-            const finalScore = score - penalty;
-            if(finalScore > 0) scores.push({prod, score: finalScore});
+            let score = 0;
+            for(let t of tokensExt) {
+                if(tokensProd.includes(t)) score++;
+            }
+            
+            if (score > 0) scores.push({ prod, score });
         }
         
         if(scores.length === 0) return [];
@@ -570,7 +582,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         scores.sort((a,b) => b.score - a.score);
         const topScore = scores[0].score;
         
-        // Pega as variações que tiverem pontuação máxima
         return scores.filter(s => s.score === topScore).map(s => s.prod);
     }
 
@@ -742,7 +753,9 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
 
         checkboxes.forEach(chk => {
             const itemCache = cacheResultadosIA[chk.dataset.index];
-            const novoProduto = criarObjetoProduto(itemCache.nomeExtraido, itemCache.precoExtraido, [...itemCache.vinculos]);
+            const novoProduto = criarObjetoProduto(
+                itemCache.nomeExtraido, itemCache.precoExtraido, [...itemCache.vinculos]
+            );
             itensLista.push(novoProduto);
         });
 
