@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v5</title>
+  <title>Gerador de Listas - JETA v5.1</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -231,7 +231,7 @@
       
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e buscar automaticamente todas as variações/cores equivalentes no seu estoque.
+            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e buscar automaticamente todas as variações equivalentes no seu estoque.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
@@ -286,7 +286,7 @@
   <script>
     const LOJA_ID = "361408";
     
-    // Armazenamento v5 (Nova estrutura de Array de vinculos)
+    // Armazenamento
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v5')) || [];
     let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v5')) || { data: false, codigo: false, ocultar: false, destacar: true };
     let debounceTimer;
@@ -391,7 +391,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
           if(item.vinculos && item.vinculos.length > 0) {
               const chips = item.vinculos.map((v, vIdx) => `
                 <div class="vinculo-chip">
-                    <b>[${v.codigo}]</b> ${v.nomeSistema} (${v.estoque} un.)
+                    <b>[${v.codigo}]</b> ${v.nomeSistema} <span style="color:${v.estoque>0?'var(--success)':'var(--danger)'}; font-weight:bold;">(${v.estoque} un.)</span>
                     <span class="remove-btn" onclick="removerVinculo('${item.id}', ${vIdx})">✖</span>
                 </div>
               `).join('');
@@ -467,7 +467,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         
         btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
         
-        // Coleta IDs únicos para não buscar o mesmo produto duas vezes
         const idsSet = new Set();
         produtosComVinculo.forEach(p => p.vinculos.forEach(v => idsSet.add(v.idSistema)));
         const idsArray = Array.from(idsSet);
@@ -481,7 +480,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                     const res = await fetch(`https://caixa-three.vercel.app/api/produtos/${idSis}?loja_id=${LOJA_ID}`);
                     const json = await res.json();
                     if(json.code === 200 && json.data) { 
-                        // Atualiza o estoque em todas as listas
                         produtosComVinculo.forEach(p => {
                             const vToUpdate = p.vinculos.find(v => v.idSistema === idSis);
                             if(vToUpdate) { vToUpdate.estoque = json.data.estoque; vToUpdate.nomeSistema = json.data.nome; }
@@ -498,7 +496,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     }
 
     // ==========================================
-    // MÓDULO IA - AUTO-VÍNCULO COM MÚLTIPLAS VARIAÇÕES
+    // MÓDULO IA - AUTO-VÍNCULO OTIMIZADO (PESOS SEVEROS)
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -526,31 +524,53 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         } catch(e) { return false; }
     }
 
+    // Algoritmo refinado para evitar falsos positivos
     function encontrarMelhoresVinculos(nomeExtraido) {
         if(!nomeExtraido || catalogoCompleto.length === 0) return [];
-        let topScore = 0;
         const scores = [];
         
-        const tokensExt = nomeExtraido.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
+        // Mantém sinais que são importantes (como + para PRO+ ou / para 8/256)
+        const normalizar = (txt) => txt.toLowerCase().replace(/[^a-z0-9\/\s\+]/g, ' ').split(/\s+/).filter(w => w.length > 1);
+        const tokensExt = normalizar(nomeExtraido);
 
         for(let prod of catalogoCompleto) {
-            const tokensProd = prod.nome.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
+            const tokensProd = normalizar(prod.nome);
             let score = 0;
-            for(let t of tokensExt) { if(tokensProd.includes(t)) score++; }
-            if (prod.nome.toLowerCase().includes(nomeExtraido.toLowerCase())) score += 5; 
+            let penalty = 0;
 
-            if(score > 0) scores.push({prod, score});
+            for(let t of tokensExt) {
+                // Tokens críticos são aqueles que contêm números (ex: X7, 14, 256gb)
+                const isCritical = /\d/.test(t); 
+                
+                const match = tokensProd.some(tp => tp === t || (t.length > 3 && tp.includes(t)) || (tp.length > 3 && t.includes(tp)));
+                
+                if (match) {
+                    score += isCritical ? 5 : 1;
+                } else {
+                    // Se tem número, não achou correspondência no produto, aplicamos penalidade.
+                    // Ignoramos a barra '/' na penalidade porque "8/256gb" as vezes está escrito diferente, mas "X7" não.
+                    if (isCritical && !t.includes('/')) penalty += 10;
+                }
+            }
+
+            // Penalidades Severas para Modificadores de Modelo
+            const modificadores = ['pro', 'plus', '+', '5g', '4g'];
+            modificadores.forEach(palavra => {
+                const extHas = tokensExt.includes(palavra);
+                const prodHas = tokensProd.includes(palavra);
+                if (extHas !== prodHas) penalty += 10; // Corta se um for PRO e o outro não
+            });
+
+            const finalScore = score - penalty;
+            if(finalScore > 0) scores.push({prod, score: finalScore});
         }
         
         if(scores.length === 0) return [];
         
-        // Pega os que tiverem o Top Score (mesmo que tenham cores diferentes, se tiverem a mesma base terão o mesmo score)
         scores.sort((a,b) => b.score - a.score);
-        topScore = scores[0].score;
+        const topScore = scores[0].score;
         
-        // Exige um mínimo de coerência para assumir auto-vínculo
-        if (topScore < Math.min(2, tokensExt.length)) return [];
-        
+        // Pega as variações que tiverem pontuação máxima
         return scores.filter(s => s.score === topScore).map(s => s.prod);
     }
 
@@ -640,8 +660,8 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             if(item.vinculos.length > 0) {
                 estoqueTotal = item.vinculos.reduce((acc, v) => acc + (parseInt(v.estoque) || 0), 0);
                 chipsHtml = item.vinculos.map((v, vIndex) => `
-                    <div class="vinculo-chip" style="margin:2px;">
-                        [${v.codigo}] ${v.nomeSistema}
+                    <div class="vinculo-chip" style="margin:2px; display:inline-flex; align-items:center; gap:4px; font-size:10px;">
+                        <b>[${v.codigo}]</b> ${v.nomeSistema} <span style="color:${v.estoque>0?'var(--success)':'var(--danger)'}; font-weight:bold;">(${v.estoque} un.)</span>
                         <span class="remove-btn" onclick="removerVinculoIA(${index}, ${vIndex})">✖</span>
                     </div>
                 `).join('');
@@ -652,9 +672,9 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                 : `<span class="status-manual">Manual</span>`;
 
             let vinculoArea = `
-                <div style="font-size:11px; margin-bottom:6px;">${chipsHtml}</div>
+                <div style="margin-bottom:6px;">${chipsHtml}</div>
                 <div class="busca-container" style="flex-wrap: wrap;">
-                    <input type="text" id="input-busca-ia-${index}" placeholder="Buscar mais variações..." style="font-size: 11px; padding: 6px; min-width: 140px; flex: 1;" onkeypress="if(event.key === 'Enter') buscarNaAPIParaIA(${index})" value="${item.vinculos.length === 0 ? item.nomeExtraido : ''}">
+                    <input type="text" id="input-busca-ia-${index}" placeholder="Buscar variações..." style="font-size: 11px; padding: 6px; min-width: 140px; flex: 1;" onkeypress="if(event.key === 'Enter') buscarNaAPIParaIA(${index})" value="${item.vinculos.length === 0 ? item.nomeExtraido : ''}">
                     <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" onclick="buscarNaAPIParaIA(${index})">🔍</button>
                 </div>
                 <div id="resultados-ia-${index}" class="resultados-busca"></div>
