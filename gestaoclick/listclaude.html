@@ -23,365 +23,194 @@
       --text:      #e2e8f8;
       --text2:     #8896b8;
       --text3:     #5a6a8a;
-      --radius:    10px;
       --shadow:    0 4px 24px rgba(0,0,0,0.5);
     }
-
     * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Sora',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-    body {
-      font-family: 'Sora', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ─── HEADER ─── */
+    /* HEADER */
     header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      height: 58px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+      background:var(--surface); border-bottom:1px solid var(--border);
+      padding:0 20px; height:58px;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100;
+      box-shadow:0 2px 16px rgba(0,0,0,0.4);
     }
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .header-brand { display:flex; align-items:center; gap:10px; }
     .header-brand .logo {
-      width: 32px; height: 32px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
+      width:32px; height:32px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;
     }
-    .header-brand h1 {
-      font-size: .95rem;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.02em;
-    }
-    .header-brand span {
-      font-size: .75rem;
-      color: var(--text2);
-      font-weight: 400;
-    }
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .header-brand h1 { font-size:.95rem; font-weight:700; letter-spacing:-0.02em; }
+    .header-brand span { font-size:.74rem; color:var(--text2); font-weight:400; }
+    .header-actions { display:flex; align-items:center; gap:8px; }
 
-    /* ─── LAYOUT ─── */
-    .app {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 0;
-      height: calc(100vh - 58px);
-    }
+    /* LAYOUT */
+    .app { display:grid; grid-template-columns:1fr 340px; height:calc(100vh - 58px); }
     .panel-left {
-      overflow-y: auto;
-      padding: 20px;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      overflow-y:auto; padding:16px; border-right:1px solid var(--border);
+      display:flex; flex-direction:column; gap:13px;
     }
     .panel-right {
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      background: var(--surface);
+      overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:13px;
+      background:var(--surface);
     }
 
-    /* ─── CARDS ─── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-    }
+    /* CARDS */
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:11px; overflow:hidden; }
     .card-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--surface2);
+      padding:9px 13px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--surface2);
     }
     .card-title {
-      font-size: .8rem;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+      color:var(--text2); display:flex; align-items:center; gap:7px;
     }
-    .card-title .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: inline-block;
-    }
+    .card-title .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
 
-    /* ─── BOTÕES ─── */
+    /* BUTTONS */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: .8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .18s;
-      white-space: nowrap;
+      display:inline-flex; align-items:center; justify-content:center; gap:5px;
+      padding:7px 12px; border:none; border-radius:7px;
+      font-family:inherit; font-size:.77rem; font-weight:600;
+      cursor:pointer; transition:all .14s; white-space:nowrap;
     }
-    .btn:hover { transform: translateY(-1px); }
-    .btn:active { transform: none; }
-    .btn-green  { background: var(--accent);   color: #000; }
-    .btn-green:hover { background: #2eee72; }
-    .btn-ghost  { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
-    .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--text2); }
-    .btn-danger { background: var(--danger-dim); border: 1px solid var(--danger); color: var(--danger); }
-    .btn-danger:hover { background: var(--danger); color: #fff; }
-    .btn-sm { padding: 5px 10px; font-size: .75rem; border-radius: 6px; }
-    .btn-icon { padding: 6px; border-radius: 6px; }
+    .btn:hover  { transform:translateY(-1px); }
+    .btn:active { transform:none; }
+    .btn-green  { background:var(--accent); color:#000; }
+    .btn-green:hover { background:#2eee72; }
+    .btn-ghost  { background:transparent; border:1px solid var(--border2); color:var(--text2); }
+    .btn-ghost:hover { background:var(--surface2); color:var(--text); border-color:var(--text2); }
+    .btn-danger { background:var(--danger-dim); border:1px solid var(--danger); color:var(--danger); }
+    .btn-danger:hover { background:var(--danger); color:#fff; }
+    .btn-sm   { padding:5px 9px; font-size:.73rem; border-radius:6px; }
+    .btn-icon { padding:0; width:26px; height:26px; border-radius:5px; flex-shrink:0; }
+    .btn[disabled] { opacity:.4; pointer-events:none; }
 
-    /* ─── API CONFIG ─── */
-    .api-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      padding: 14px;
-    }
-    .field-group { display: flex; flex-direction: column; gap: 5px; }
-    .field-label { font-size: .72rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; }
+    /* FIELDS */
+    .api-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:13px; }
+    .field-group { display:flex; flex-direction:column; gap:5px; }
+    .field-label { font-size:.68rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; }
     input, select, textarea {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .78rem;
-      padding: 8px 10px;
-      transition: border-color .15s;
-      width: 100%;
+      background:var(--bg); border:1px solid var(--border); border-radius:7px;
+      color:var(--text); font-family:inherit; font-size:.79rem; padding:7px 9px;
+      transition:border-color .14s; width:100%;
     }
     input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-dim);
+      outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);
     }
-    input::placeholder { color: var(--text3); }
+    input::placeholder, textarea::placeholder { color:var(--text3); }
 
-    /* ─── TABELA ─── */
-    .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    /* TABLE */
+    .table-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.78rem; }
     thead th {
-      padding: 9px 10px;
-      background: var(--surface2);
-      font-size: .7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--text2);
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
+      padding:7px 7px; background:var(--surface2);
+      font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+      color:var(--text2); border-bottom:1px solid var(--border);
+      white-space:nowrap; position:sticky; top:0; z-index:2;
     }
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background .15s;
+    tbody tr { border-bottom:1px solid var(--border); transition:background .12s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:var(--surface2); }
+
+    tr.row-sem-estoque td:nth-child(2) { border-left:2px solid var(--warn); }
+    tr.row-header  { background:rgba(37,211,102,.04) !important; border-bottom:2px solid var(--border2); }
+    tr.row-free td { background:rgba(255,255,255,.015); }
+    tr.row-free td:nth-child(2) { border-left:2px dashed var(--border2); }
+
+    td { padding:4px 6px; vertical-align:middle; }
+
+    td input, td textarea {
+      background:transparent; border:1px solid transparent;
+      padding:4px 5px; border-radius:5px;
+      font-family:'Sora',sans-serif; font-size:.78rem; color:var(--text);
+      width:100%; min-width:0; resize:none;
     }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--surface2); }
-
-    /* row states */
-    tbody tr.sem-estoque td { opacity: .6; }
-    tbody tr.sem-estoque td:first-child { border-left: 3px solid var(--warn); }
-    tbody tr.header-row td { background: var(--surface2) !important; }
-    tbody tr.header-row { border-bottom: 2px solid var(--border2); }
-
-    td { padding: 7px 8px; vertical-align: middle; }
-
-    /* inline inputs on table */
-    td input {
-      background: transparent;
-      border: 1px solid transparent;
-      padding: 5px 6px;
-      border-radius: 5px;
-      font-family: 'Sora', sans-serif;
-      font-size: .8rem;
-      color: var(--text);
-      width: 100%;
-      min-width: 0;
+    td input:focus, td textarea:focus {
+      background:var(--bg); border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim);
     }
-    td input:focus {
-      background: var(--bg);
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-dim);
+    td input::placeholder, td textarea::placeholder { color:var(--text3); }
+    .mono-inp { font-family:'JetBrains Mono',monospace !important; font-size:.74rem !important; }
+
+    .col-drag  { width:24px; text-align:center; color:var(--muted); user-select:none; cursor:grab; }
+    .col-drag:active { cursor:grabbing; }
+    .col-label { min-width:120px; }
+    .col-price { width:76px; }
+    .col-sys   { min-width:100px; }
+    .col-sku   { width:86px; }
+    .col-stock { width:72px; text-align:center; }
+    .col-act   { width:56px; text-align:center; }
+
+    .badge {
+      display:inline-flex; align-items:center; gap:3px;
+      padding:2px 6px; border-radius:20px;
+      font-size:.67rem; font-weight:700; white-space:nowrap;
+      font-family:'JetBrains Mono',monospace;
     }
-    td input::placeholder { color: var(--text3); }
+    .badge-ok      { background:rgba(37,211,102,.12); color:var(--accent); border:1px solid rgba(37,211,102,.25); }
+    .badge-zero    { background:var(--warn-dim); color:var(--warn); border:1px solid rgba(243,156,18,.3); }
+    .badge-unknown { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
 
-    /* col widths */
-    .col-drag   { width: 28px; text-align: center; cursor: grab; color: var(--muted); font-size: 1rem; }
-    .col-label  { min-width: 140px; }
-    .col-price  { width: 90px; }
-    .col-sku    { width: 130px; }
-    .col-stock  { width: 80px; text-align: center; }
-    .col-actions{ width: 64px; text-align: center; }
-
-    .estoque-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 7px;
-      border-radius: 20px;
-      font-size: .7rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .badge-ok   { background: rgba(37,211,102,.15); color: var(--accent); border: 1px solid rgba(37,211,102,.3); }
-    .badge-zero { background: var(--warn-dim); color: var(--warn); border: 1px solid rgba(243,156,18,.3); }
-    .badge-unknown { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-
-    .header-type-select {
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: .78rem;
-      padding: 4px 6px;
-      width: 100%;
+    .hdr-icon-sel {
+      background:var(--surface2); border:1px solid var(--border2);
+      border-radius:5px; color:var(--text); font-size:.8rem;
+      padding:3px 4px; width:54px; flex-shrink:0;
     }
 
-    /* ─── TOOLBAR ─── */
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      align-items: center;
-      background: var(--surface2);
-    }
-
-    /* ─── PREVIEW ─── */
-    .preview-box {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .75rem;
-      line-height: 1.7;
-      color: var(--text);
-      white-space: pre-wrap;
-      min-height: 200px;
-      max-height: 50vh;
-      overflow-y: auto;
-      word-break: break-word;
-    }
-    .preview-empty {
-      color: var(--text3);
-      font-style: italic;
-      font-family: 'Sora', sans-serif;
-    }
-
-    /* ─── SYNC STATUS ─── */
+    /* SYNC BAR */
     .sync-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      font-size: .75rem;
-      font-weight: 500;
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; gap:7px;
+      padding:5px 12px; font-size:.71rem; font-weight:500;
+      background:var(--surface2); border-bottom:1px solid var(--border);
     }
-    .sync-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
-      flex-shrink: 0;
-    }
-    .sync-dot.ok     { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-    .sync-dot.err    { background: var(--danger); }
-    .sync-dot.loading { background: var(--warn); animation: pulse 1s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-    #sync-text { color: var(--text2); }
+    .sync-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+    .sync-dot.ok      { background:var(--accent); box-shadow:0 0 5px var(--accent); }
+    .sync-dot.err     { background:var(--danger); }
+    .sync-dot.loading { background:var(--warn); animation:pulse .9s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+    #sync-text { color:var(--text2); }
 
-    /* ─── DATE HEADER INPUT ─── */
-    .date-input-inline {
-      background: var(--bg);
-      border: 1px dashed var(--border2);
-      border-radius: 5px;
-      color: var(--text);
-      font-family: 'Sora', sans-serif;
-      font-size: .85rem;
-      font-weight: 700;
-      padding: 5px 8px;
-      letter-spacing: .01em;
-    }
+    #sync-progress-wrap { height:3px; background:var(--border); display:none; }
+    #sync-progress-bar  { height:100%; background:var(--accent); width:0%; transition:width .25s; }
 
-    /* ─── TOAST ─── */
+    /* PREVIEW */
+    .preview-box {
+      background:var(--bg); border:1px solid var(--border); border-radius:9px;
+      padding:12px; font-family:'JetBrains Mono',monospace; font-size:.73rem;
+      line-height:1.85; color:var(--text); white-space:pre-wrap;
+      min-height:180px; word-break:break-word;
+    }
+    .preview-empty { color:var(--text3); font-style:italic; font-family:'Sora',sans-serif; }
+
+    /* TOAST */
     #toast {
-      position: fixed;
-      bottom: 20px; left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      color: var(--text);
-      padding: 10px 20px;
-      border-radius: 30px;
-      font-size: .8rem;
-      font-weight: 600;
-      box-shadow: var(--shadow);
-      opacity: 0;
-      pointer-events: none;
-      transition: all .25s;
-      z-index: 9999;
+      position:fixed; bottom:18px; left:50%;
+      transform:translateX(-50%) translateY(10px);
+      background:var(--surface2); border:1px solid var(--border2);
+      color:var(--text); padding:8px 18px; border-radius:28px;
+      font-size:.77rem; font-weight:600; box-shadow:var(--shadow);
+      opacity:0; pointer-events:none; transition:all .22s; z-index:9999;
     }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    /* ─── EMPTY STATE ─── */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text3);
-    }
-    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
-    .empty-state p { font-size: .85rem; }
+    .empty-state { text-align:center; padding:36px 20px; color:var(--text3); }
+    .empty-state .icon { font-size:2rem; margin-bottom:8px; }
+    .empty-state p { font-size:.82rem; line-height:1.6; }
 
-    /* ─── DRAG OVER ─── */
-    tr.drag-over { outline: 2px dashed var(--accent); }
+    tr.drag-over { outline:2px dashed var(--accent); outline-offset:-1px; }
 
-    /* ─── SCROLLBAR ─── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 
-    /* ─── MOBILE ─── */
-    @media (max-width: 768px) {
-      .app { grid-template-columns: 1fr; height: auto; }
-      .panel-right { border-top: 1px solid var(--border); }
-      .api-row { grid-template-columns: 1fr; }
-      .col-sku { display: none; }
+    @media (max-width:768px) {
+      .app { grid-template-columns:1fr; height:auto; }
+      .panel-right { border-top:1px solid var(--border); }
+      .api-row { grid-template-columns:1fr; }
+      .col-sys, .col-sku { display:none; }
     }
   </style>
 </head>
@@ -396,365 +225,447 @@
     </div>
   </div>
   <div class="header-actions">
-    <button class="btn btn-ghost btn-sm" id="btn-sync-all" title="Atualizar estoque de todos os produtos vinculados">🔄 Atualizar Estoque</button>
+    <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
   </div>
 </header>
 
 <div class="app">
 
-  <!-- ═══ COLUNA ESQUERDA ═══ -->
+  <!-- ═══ ESQUERDA ═══ -->
   <div class="panel-left">
 
     <!-- API Config -->
-    <div class="card" id="card-api">
+    <div class="card">
       <div class="card-header">
         <span class="card-title"><span class="dot"></span>Configuração da API</span>
         <button class="btn btn-ghost btn-sm" id="btn-toggle-api">▾ Recolher</button>
       </div>
       <div id="api-body">
         <div class="api-row">
-          <div class="field-group" style="grid-column: 1 / -1;">
+          <div class="field-group" style="grid-column:1/-1;">
             <span class="field-label">Proxy URL</span>
-            <input type="text" id="api-base" value="https://caixa-three.vercel.app/api/produtos" placeholder="https://caixa-three.vercel.app/api/produtos" />
+            <input type="text" id="api-base" value="https://caixa-three.vercel.app/api/produtos" />
           </div>
           <div class="field-group">
             <span class="field-label">Loja ID</span>
-            <input type="text" id="loja-id" value="361408" placeholder="361408" />
+            <input type="text" id="loja-id" value="361408" />
           </div>
           <div class="field-group">
             <span class="field-label">Título da Lista</span>
             <input type="text" id="lista-titulo" placeholder="Lista EXCLUSIVA REVENDA/ATACADO" />
           </div>
         </div>
-        <div style="padding: 0 14px 14px; display:flex; gap:8px; align-items:center;">
-          <button class="btn btn-green btn-sm" id="btn-test-api">⚡ Testar conexão</button>
-          <div class="sync-bar" style="flex:1; border:none; padding:0; background:transparent;">
+        <div style="padding:0 13px 13px; display:flex; gap:8px; align-items:center;">
+          <button class="btn btn-ghost btn-sm" id="btn-test-api">⚡ Testar conexão</button>
+          <div style="display:flex; align-items:center; gap:6px; font-size:.71rem;">
             <div class="sync-dot" id="sync-dot-api"></div>
-            <span id="sync-text-api">Não testado</span>
+            <span id="sync-text-api" style="color:var(--text2);">Não testado</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Busca de produto -->
+    <!-- Adicionar -->
     <div class="card">
       <div class="card-header">
-        <span class="card-title"><span class="dot"></span>Adicionar Linha</span>
+        <span class="card-title"><span class="dot"></span>Adicionar Item</span>
       </div>
-      <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="busca-produto" placeholder="Buscar produto na API pelo nome ou código..." style="flex:1;" />
+      <div style="padding:12px; display:flex; flex-direction:column; gap:9px;">
+        <div style="display:flex; gap:7px;">
+          <input type="text" id="busca-produto" placeholder="Buscar produto na API pelo nome…" style="flex:1;" />
           <button class="btn btn-green btn-sm" id="btn-buscar-prod">🔍</button>
         </div>
         <div id="resultados-busca" style="display:none;"></div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <span style="font-size:.75rem; color:var(--text3);">ou adicionar manualmente:</span>
-          <button class="btn btn-ghost btn-sm" id="btn-add-manual">+ Produto manual</button>
-          <button class="btn btn-ghost btn-sm" id="btn-add-header">+ Cabeçalho</button>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <span style="font-size:.71rem; color:var(--text3);">Manual:</span>
+          <button class="btn btn-ghost btn-sm" id="btn-add-manual">＋ Produto</button>
+          <button class="btn btn-ghost btn-sm" id="btn-add-header">＋ Cabeçalho</button>
+          <button class="btn btn-ghost btn-sm" id="btn-add-free">＋ Linha livre</button>
         </div>
       </div>
     </div>
 
-    <!-- Tabela de itens -->
+    <!-- Tabela -->
     <div class="card" style="flex:1;">
       <div class="card-header">
         <span class="card-title"><span class="dot"></span>Itens da Lista</span>
         <div style="display:flex; gap:6px; align-items:center;">
-          <span id="count-badge" style="font-size:.72rem; color:var(--text3);">0 itens</span>
-          <button class="btn btn-danger btn-sm" id="btn-limpar-lista" title="Limpar toda a lista">🗑️</button>
+          <span id="count-badge" style="font-size:.7rem; color:var(--text3);"></span>
+          <button class="btn btn-danger btn-sm btn-icon" id="btn-limpar-lista" title="Limpar lista">🗑️</button>
         </div>
       </div>
       <div class="sync-bar">
-        <div class="sync-dot" id="sync-dot"></div>
+        <div class="sync-dot ok" id="sync-dot"></div>
         <span id="sync-text">Salvo localmente</span>
       </div>
+      <div id="sync-progress-wrap"><div id="sync-progress-bar"></div></div>
       <div class="table-scroll">
-        <table id="tabela-lista">
+        <table>
           <thead>
             <tr>
-              <th class="col-drag"></th>
+              <th class="col-drag">⠿</th>
               <th class="col-label">Nome na Lista</th>
               <th class="col-price">Preço</th>
-              <th class="col-sku">Produto no Sistema</th>
+              <th class="col-sys">Nome no Sistema</th>
+              <th class="col-sku">Código</th>
               <th class="col-stock">Estoque</th>
-              <th class="col-actions"></th>
+              <th class="col-act"></th>
             </tr>
           </thead>
-          <tbody id="tbody-lista">
-            <!-- Itens renderizados aqui -->
-          </tbody>
+          <tbody id="tbody-lista"></tbody>
         </table>
       </div>
-      <div id="empty-table" class="empty-state" style="display:none;">
+      <div id="empty-table" class="empty-state">
         <div class="icon">📭</div>
-        <p>Nenhum item na lista ainda.<br>Adicione produtos ou cabeçalhos acima.</p>
+        <p>Lista vazia.<br>Adicione produtos ou cabeçalhos acima.</p>
       </div>
     </div>
 
   </div>
 
-  <!-- ═══ COLUNA DIREITA ═══ -->
+  <!-- ═══ DIREITA ═══ -->
   <div class="panel-right">
 
-    <!-- Configurações do Preview -->
     <div class="card">
       <div class="card-header">
         <span class="card-title"><span class="dot"></span>Configurações</span>
       </div>
-      <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <div style="padding:13px; display:flex; flex-direction:column; gap:10px;">
         <div class="field-group">
           <span class="field-label">Data da lista</span>
-          <input type="text" id="cfg-data" placeholder="18/03/26" style="font-family:'Sora',sans-serif;" />
+          <input type="text" id="cfg-data" placeholder="ex: 18/03/26" style="font-family:'Sora',sans-serif;" />
         </div>
         <div class="field-group">
-          <span class="field-label">Mostrar produtos sem estoque</span>
+          <span class="field-label">Produtos sem estoque no preview</span>
           <select id="cfg-sem-estoque">
-            <option value="incluir">Incluir (destacado)</option>
-            <option value="ocultar">Ocultar da lista</option>
+            <option value="ocultar">Ocultar da lista final</option>
+            <option value="incluir">Incluir normalmente</option>
           </select>
         </div>
         <div class="field-group">
           <span class="field-label">Formato do preço</span>
           <select id="cfg-preco">
-            <option value="numero">Somente número (ex: 650)</option>
+            <option value="numero">Só número (ex: 650)</option>
             <option value="reais">Com R$ (ex: R$ 650)</option>
           </select>
         </div>
       </div>
     </div>
 
-    <!-- Preview -->
-    <div class="card" style="flex:1;">
+    <div class="card" style="flex:1; display:flex; flex-direction:column;">
       <div class="card-header">
         <span class="card-title"><span class="dot"></span>Preview WhatsApp</span>
         <button class="btn btn-green btn-sm" id="btn-copiar">📋 Copiar</button>
       </div>
-      <div style="padding:14px; display:flex; flex-direction:column; gap:10px; height:100%;">
+      <div style="padding:13px; flex:1; overflow-y:auto;">
         <div id="preview-box" class="preview-box">
-          <span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens...</span>
+          <span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span>
         </div>
       </div>
     </div>
 
   </div>
-
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 // ESTADO
-// ══════════════════════════════════════════════════
-const STORAGE_KEY = 'jeta_lista_wpp_v2';
-
-let lista = []; // array de objetos
+// ════════════════════════════════════
+const STORAGE_KEY = 'jeta_lista_wpp_v3';
+let lista = [];
 let dragSrcIdx = null;
 
-// Ícones dos cabeçalhos
-const HEADER_ICONS = {
-  'motorola': 'Ⓜ️',
-  'samsung':  '❇',
-  'xiaomi':   '☑️',
-  'realme':   '✳️',
-  'apple':    '🍎',
-  'lg':       '🔷',
-  'custom':   '📌',
-};
+const HEADER_ICONS = ['📌','Ⓜ️','✳️','❇','☑️','🍎','🔷','🟥','🟩','⭐','🔹','▪️'];
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 // PERSISTÊNCIA
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 function salvar() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       lista,
-      titulo: el('lista-titulo').value,
-      cfgData: el('cfg-data').value,
-      cfgSemEstoque: el('cfg-sem-estoque').value,
-      cfgPreco: el('cfg-preco').value,
-      lojaId: el('loja-id').value,
-      apiBase: el('api-base').value,
+      titulo:    el('lista-titulo').value,
+      cfgData:   el('cfg-data').value,
+      cfgSemEst: el('cfg-sem-estoque').value,
+      cfgPreco:  el('cfg-preco').value,
+      lojaId:    el('loja-id').value,
+      apiBase:   el('api-base').value,
     }));
-    setSync('ok', 'Salvo');
-  } catch(e) {
-    setSync('err', 'Erro ao salvar');
-  }
+    setSync('ok','Salvo');
+  } catch(e) { setSync('err','Erro ao salvar'); }
 }
 
 function carregar() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    const data = JSON.parse(raw);
-    lista = data.lista || [];
-    if (data.titulo)        el('lista-titulo').value    = data.titulo;
-    if (data.cfgData)       el('cfg-data').value        = data.cfgData;
-    if (data.cfgSemEstoque) el('cfg-sem-estoque').value = data.cfgSemEstoque;
-    if (data.cfgPreco)      el('cfg-preco').value       = data.cfgPreco;
-    if (data.lojaId)        el('loja-id').value         = data.lojaId;
-    if (data.apiBase)       el('api-base').value        = data.apiBase;
+    const d = JSON.parse(raw);
+    lista = d.lista || [];
+    if (d.titulo)    el('lista-titulo').value    = d.titulo;
+    if (d.cfgData)   el('cfg-data').value        = d.cfgData;
+    if (d.cfgSemEst) el('cfg-sem-estoque').value = d.cfgSemEst;
+    if (d.cfgPreco)  el('cfg-preco').value       = d.cfgPreco;
+    if (d.lojaId)    el('loja-id').value         = d.lojaId;
+    if (d.apiBase)   el('api-base').value        = d.apiBase;
   } catch(e) {}
 }
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 // UTILS
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 function el(id) { return document.getElementById(id); }
-
-let toastTimer;
-function toast(msg, dur=2500) {
-  const t = el('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+let _tt;
+function toast(msg, dur=2600) {
+  const t = el('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), dur);
 }
-
-function setSync(state, msg) {
-  const dot = el('sync-dot');
-  dot.className = 'sync-dot ' + state;
-  el('sync-text').textContent = msg;
+function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').textContent=m; }
+function setApiSync(s,m){ el('sync-dot-api').className='sync-dot '+s; el('sync-text-api').textContent=m; }
+function dataHoje(){
+  const d=new Date();
+  return d.getDate().toString().padStart(2,'0')+'/'+
+         (d.getMonth()+1).toString().padStart(2,'0')+'/'+
+         d.getFullYear().toString().slice(2);
 }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function setApiSync(state, msg) {
-  const dot = el('sync-dot-api');
-  dot.className = 'sync-dot ' + state;
-  el('sync-text-api').textContent = msg;
-}
-
-function dataHoje() {
-  const d = new Date();
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const yy = String(d.getFullYear()).slice(2);
-  return dd+'/'+mm+'/'+yy;
-}
-
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-
-// ══════════════════════════════════════════════════
-// API
-// ══════════════════════════════════════════════════
-async function buscarProdutosAPI(nome) {
-  const base  = el('api-base').value.trim();
-  const loja  = el('loja-id').value.trim();
-  const url   = new URL(base);
-  url.searchParams.set('loja_id', loja);
-  url.searchParams.set('limite', '20');
-  if (nome) url.searchParams.set('nome', nome);
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
-}
-
-async function buscarPorCodigo(codigo) {
+// ════════════════════════════════════
+// API — usa SEMPRE o endpoint de listagem com query params
+// O proxy expõe apenas GET /produtos?loja_id=&nome=&codigo=
+// NUNCA tenta /produtos/{id} pois o proxy não suporta essa rota.
+// ════════════════════════════════════
+async function apiGet(params) {
   const base = el('api-base').value.trim();
   const loja = el('loja-id').value.trim();
   const url  = new URL(base);
   url.searchParams.set('loja_id', loja);
-  url.searchParams.set('codigo', codigo);
-  url.searchParams.set('limite', '5');
+  url.searchParams.set('limite', '20');
+  for (const [k,v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && String(v).trim() !== '')
+      url.searchParams.set(k, v);
+  }
   const res = await fetch(url.toString());
-  if (!res.ok) return null;
-  const d = await res.json();
-  if (d.code === 200 && d.data && d.data.length) return d.data[0];
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// Retorna { estoque, prodId } ou null
+// Estratégia: código > nome no sistema > nome na lista
+// Em cada passo, se temos prodId tenta casar pelo id antes de pegar o primeiro resultado
+async function buscarEstoqueDoItem(item) {
+  // 1. Por código interno (mais preciso — evita ambiguidade de nome)
+  if (item.sku && item.sku.trim()) {
+    try {
+      const d = await apiGet({ codigo: item.sku.trim() });
+      if (d.code === 200 && d.data && d.data.length) {
+        const match = (item.prodId && d.data.find(p => String(p.id) === String(item.prodId)))
+                   || d.data[0];
+        return { estoque: Number(match.estoque ?? 0), prodId: match.id };
+      }
+    } catch(e) { /* continua para próxima estratégia */ }
+  }
+  // 2. Por nome no sistema
+  if (item.sysname && item.sysname.trim()) {
+    try {
+      const d = await apiGet({ nome: item.sysname.trim() });
+      if (d.code === 200 && d.data && d.data.length) {
+        const match = (item.prodId && d.data.find(p => String(p.id) === String(item.prodId)))
+                   || d.data.find(p => p.nome === item.sysname)
+                   || d.data[0];
+        return { estoque: Number(match.estoque ?? 0), prodId: match.id };
+      }
+    } catch(e) { /* continua */ }
+  }
+  // 3. Por nome na lista (fallback)
+  if (item.label && item.label.trim()) {
+    try {
+      const d = await apiGet({ nome: item.label.trim() });
+      if (d.code === 200 && d.data && d.data.length) {
+        const match = (item.prodId && d.data.find(p => String(p.id) === String(item.prodId)))
+                   || d.data[0];
+        return { estoque: Number(match.estoque ?? 0), prodId: match.id };
+      }
+    } catch(e) { /* nenhuma estratégia funcionou */ }
+  }
   return null;
 }
 
-async function buscarEstoquePorId(prodId) {
-  // GET /produtos/{id}
-  const base = el('api-base').value.trim().replace(/\/$/, '');
-  const url  = base + '/' + prodId + '?loja_id=' + el('loja-id').value.trim();
-  const res  = await fetch(url);
-  if (!res.ok) return null;
-  const d = await res.json();
-  if (d.code === 200 && d.data) return Number(d.data.estoque ?? d.data[0]?.estoque ?? 0);
-  return null;
+// ════════════════════════════════════
+// SYNC INDIVIDUAL
+// ════════════════════════════════════
+async function syncItem(idx) {
+  const item = lista[idx];
+  if (!item || item.type !== 'product') return;
+  const temVinculo = item.prodId || (item.sku&&item.sku.trim()) || (item.sysname&&item.sysname.trim()) || (item.label&&item.label.trim());
+  if (!temVinculo) { toast('⚠️ Preencha código, nome no sistema ou nome na lista'); return; }
+
+  // spinner visual na badge
+  const row = el('tbody-lista').querySelector(`tr[data-idx="${idx}"]`);
+  const badge = row && row.querySelector('.badge');
+  if (badge) { badge.textContent = '…'; badge.className = 'badge badge-unknown'; }
+  setSync('loading','Atualizando…');
+
+  try {
+    const r = await buscarEstoqueDoItem(item);
+    if (r !== null) {
+      lista[idx].estoque = r.estoque;
+      if (r.prodId) lista[idx].prodId = r.prodId;
+      setSync('ok','Atualizado ✓');
+    } else {
+      setSync('err','Não encontrado na API');
+      toast('⚠️ Produto não encontrado na API');
+    }
+  } catch(e) {
+    setSync('err','Erro: '+e.message);
+    toast('❌ '+e.message);
+  }
+  renderTabela(); atualizarPreview(); salvar();
 }
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
+// SYNC TODOS (botão header)
+// ════════════════════════════════════
+async function syncTodos() {
+  const targets = lista
+    .map((item,idx)=>({item,idx}))
+    .filter(({item}) => item.type === 'product' &&
+      (item.prodId || (item.sku&&item.sku.trim()) || (item.sysname&&item.sysname.trim()) || (item.label&&item.label.trim())));
+
+  if (!targets.length) { toast('Nenhum produto vinculável na lista'); return; }
+
+  const btn = el('btn-sync-all');
+  btn.disabled = true; btn.textContent = '⏳ Atualizando…';
+
+  const wrap = el('sync-progress-wrap');
+  const bar  = el('sync-progress-bar');
+  wrap.style.display = 'block'; bar.style.width = '0%';
+
+  setSync('loading',`0 / ${targets.length}`);
+
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  let ok = 0, err = 0;
+
+  for (let i = 0; i < targets.length; i++) {
+    const { item, idx } = targets[i];
+    try {
+      const r = await buscarEstoqueDoItem(item);
+      if (r !== null) { lista[idx].estoque = r.estoque; if(r.prodId) lista[idx].prodId=r.prodId; ok++; }
+      else err++;
+    } catch(e) { err++; }
+
+    bar.style.width = Math.round(((i+1)/targets.length)*100)+'%';
+    setSync('loading',`${i+1} / ${targets.length}…`);
+
+    // respeita 3 req/s
+    if ((i+1) % 3 === 0 && i+1 < targets.length) await delay(1100);
+  }
+
+  renderTabela(); atualizarPreview(); salvar();
+  wrap.style.display = 'none'; bar.style.width = '0%';
+  btn.disabled = false; btn.textContent = '🔄 Atualizar Estoque';
+  setSync('ok',`${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' erro':''}`);
+  toast(`🔄 ${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' erro':''}`);
+}
+
+// ════════════════════════════════════
 // RENDER TABELA
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 function renderTabela() {
   const tbody = el('tbody-lista');
   tbody.innerHTML = '';
 
-  const prodCount = lista.filter(i => i.type !== 'header').length;
-  el('count-badge').textContent = prodCount + ' produto' + (prodCount !== 1 ? 's' : '');
-
-  if (lista.length === 0) {
-    el('empty-table').style.display = 'block';
-    return;
-  }
-  el('empty-table').style.display = 'none';
+  const nProd = lista.filter(i=>i.type==='product').length;
+  el('count-badge').textContent = nProd + ' produto'+(nProd!==1?'s':'');
+  el('empty-table').style.display = lista.length === 0 ? 'block' : 'none';
 
   lista.forEach((item, idx) => {
     const tr = document.createElement('tr');
     tr.dataset.idx = idx;
 
+    // ── CABEÇALHO ──
     if (item.type === 'header') {
-      tr.className = 'header-row';
+      tr.className = 'row-header';
+      const iconOpts = HEADER_ICONS.map(v =>
+        `<option value="${esc(v)}" ${item.icon===v?'selected':''}>${v}</option>`
+      ).join('');
       tr.innerHTML = `
-        <td class="col-drag" draggable="true">⠿</td>
-        <td colspan="3" style="padding:0;">
-          <div style="display:flex; align-items:center; gap:8px; padding:6px 8px;">
-            <select class="header-type-select" data-field="icon" style="width:58px;">
-              ${Object.entries(HEADER_ICONS).map(([k,v]) =>
-                `<option value="${v}" ${item.icon===v?'selected':''}>${v}</option>`
-              ).join('')}
-            </select>
-            <input class="date-input-inline" type="text" data-field="label"
-              value="${item.label||''}" placeholder="Ex: MOTOROLA" style="flex:1; font-family:'Sora',sans-serif;" />
+        <td class="col-drag">⠿</td>
+        <td colspan="5" style="padding:4px 6px;">
+          <div style="display:flex; align-items:center; gap:7px;">
+            <select class="hdr-icon-sel" data-field="icon">${iconOpts}</select>
+            <input type="text" data-field="label" value="${esc(item.label)}"
+              placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" />
           </div>
         </td>
-        <td class="col-stock"></td>
-        <td class="col-actions">
+        <td class="col-act" style="text-align:center;">
           <button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button>
         </td>`;
+
+    // ── LINHA LIVRE ──
+    } else if (item.type === 'free') {
+      tr.className = 'row-free';
+      tr.innerHTML = `
+        <td class="col-drag">⠿</td>
+        <td colspan="5" style="padding:4px 6px;">
+          <textarea data-field="text" rows="2"
+            style="min-height:34px; resize:vertical;"
+            placeholder="Texto livre — pode ser multilinha ou vazio (linha em branco na mensagem)…">${esc(item.text||'')}</textarea>
+        </td>
+        <td class="col-act" style="text-align:center;">
+          <button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button>
+        </td>`;
+
+    // ── PRODUTO ──
     } else {
-      // produto
-      const temEstoque = item.estoque === undefined || item.estoque === null;
-      const semEstoque  = !temEstoque && item.estoque <= 0;
-      if (semEstoque) tr.className = 'sem-estoque';
+      const semEst = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
+      if (semEst) tr.className = 'row-sem-estoque';
 
       let badgeHtml;
       if (item.estoque === undefined || item.estoque === null) {
-        badgeHtml = `<span class="estoque-badge badge-unknown" title="Sem vínculo com API">—</span>`;
+        badgeHtml = `<span class="badge badge-unknown">—</span>`;
       } else if (item.estoque > 0) {
-        badgeHtml = `<span class="estoque-badge badge-ok">✓ ${item.estoque}</span>`;
+        badgeHtml = `<span class="badge badge-ok">✓ ${item.estoque}</span>`;
       } else {
-        badgeHtml = `<span class="estoque-badge badge-zero">⚠ ${item.estoque}</span>`;
+        badgeHtml = `<span class="badge badge-zero">⚠ ${item.estoque}</span>`;
       }
 
       tr.innerHTML = `
-        <td class="col-drag" draggable="true">⠿</td>
+        <td class="col-drag">⠿</td>
         <td class="col-label">
-          <input type="text" data-field="label" value="${esc(item.label||'')}" placeholder="Nome na mensagem" />
+          <input type="text" data-field="label" value="${esc(item.label)}" placeholder="Nome na mensagem" />
         </td>
         <td class="col-price">
-          <input type="text" data-field="price" value="${esc(item.price||'')}" placeholder="ex: 650" style="font-family:'JetBrains Mono',monospace;" />
+          <input type="text" data-field="price" value="${esc(item.price)}"
+            placeholder="650" class="mono-inp" />
+        </td>
+        <td class="col-sys">
+          <input type="text" data-field="sysname" value="${esc(item.sysname)}"
+            placeholder="Nome no sistema" />
         </td>
         <td class="col-sku">
-          <input type="text" data-field="sku" value="${esc(item.sku||'')}" placeholder="Nome/código no sistema" />
+          <input type="text" data-field="sku" value="${esc(item.sku)}"
+            placeholder="Código" class="mono-inp" />
         </td>
-        <td class="col-stock" style="text-align:center;">
-          ${badgeHtml}
-        </td>
-        <td class="col-actions" style="display:flex; gap:4px; align-items:center; justify-content:center;">
-          <button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque deste produto">🔄</button>
-          <button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button>
+        <td class="col-stock">${badgeHtml}</td>
+        <td class="col-act">
+          <div style="display:flex; gap:3px; justify-content:center; align-items:center;">
+            <button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque deste produto">🔄</button>
+            <button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button>
+          </div>
         </td>`;
     }
 
-    // Drag & Drop
-    tr.querySelector('[draggable="true"]').addEventListener('dragstart', e => {
-      dragSrcIdx = idx;
-      tr.style.opacity = '.4';
-      e.dataTransfer.effectAllowed = 'move';
+    // Drag & drop
+    const handle = tr.querySelector('.col-drag');
+    handle.setAttribute('draggable','true');
+    handle.addEventListener('dragstart', e => {
+      dragSrcIdx = idx; tr.style.opacity = '.4'; e.dataTransfer.effectAllowed = 'move';
     });
-    tr.querySelector('[draggable="true"]').addEventListener('dragend', () => {
-      tr.style.opacity = '1';
+    handle.addEventListener('dragend', () => {
+      tr.style.opacity = '';
       document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over'));
     });
     tr.addEventListener('dragover', e => {
@@ -763,152 +674,75 @@ function renderTabela() {
       tr.classList.add('drag-over');
     });
     tr.addEventListener('drop', e => {
-      e.preventDefault();
-      tr.classList.remove('drag-over');
+      e.preventDefault(); tr.classList.remove('drag-over');
       if (dragSrcIdx === null || dragSrcIdx === idx) return;
-      const moved = lista.splice(dragSrcIdx, 1)[0];
-      lista.splice(idx, 0, moved);
+      const moved = lista.splice(dragSrcIdx,1)[0];
+      lista.splice(idx,0,moved);
       dragSrcIdx = null;
-      renderTabela();
-      atualizarPreview();
-      salvar();
+      renderTabela(); atualizarPreview(); salvar();
     });
 
     // Inputs inline
-    tr.querySelectorAll('input[data-field], select[data-field]').forEach(inp => {
+    tr.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
         lista[idx][inp.dataset.field] = inp.value;
-        atualizarPreview();
-        salvar();
+        atualizarPreview(); salvar();
       });
     });
 
-    // Del btn
+    // Botões
     tr.querySelector('.del-btn')?.addEventListener('click', e => {
-      const i = parseInt(e.currentTarget.dataset.idx);
-      lista.splice(i, 1);
-      renderTabela();
-      atualizarPreview();
-      salvar();
+      lista.splice(parseInt(e.currentTarget.dataset.idx),1);
+      renderTabela(); atualizarPreview(); salvar();
     });
-
-    // Sync individual
-    tr.querySelector('.sync-btn')?.addEventListener('click', async e => {
-      const i = parseInt(e.currentTarget.dataset.idx);
-      await syncItem(i);
+    tr.querySelector('.sync-btn')?.addEventListener('click', e => {
+      syncItem(parseInt(e.currentTarget.dataset.idx));
     });
 
     tbody.appendChild(tr);
   });
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ══════════════════════════════════════════════════
-// SYNC DE ESTOQUE
-// ══════════════════════════════════════════════════
-async function syncItem(idx) {
-  const item = lista[idx];
-  if (!item || item.type === 'header') return;
-  if (!item.prodId && !item.sku) return;
-
-  setSync('loading', 'Atualizando...');
-  try {
-    let estoque = null;
-    if (item.prodId) {
-      estoque = await buscarEstoquePorId(item.prodId);
-    }
-    if (estoque === null && item.sku) {
-      const prod = await buscarPorCodigo(item.sku);
-      if (prod) {
-        item.prodId = prod.id;
-        estoque = Number(prod.estoque ?? 0);
-      }
-    }
-    if (estoque !== null) {
-      lista[idx].estoque = estoque;
-      renderTabela();
-      atualizarPreview();
-      salvar();
-      setSync('ok', 'Atualizado');
-    } else {
-      setSync('err', 'Produto não encontrado');
-    }
-  } catch(e) {
-    setSync('err', 'Erro: ' + e.message);
-  }
-}
-
-async function syncTodos() {
-  const items = lista.filter(i => i.type !== 'header' && (i.prodId || i.sku));
-  if (!items.length) { toast('Nenhum produto vinculado à API'); return; }
-
-  setSync('loading', 'Atualizando todos...');
-  const delay = ms => new Promise(r => setTimeout(r, ms));
-  let ok = 0, err = 0;
-
-  for (let i = 0; i < lista.length; i++) {
-    const item = lista[i];
-    if (item.type === 'header' || (!item.prodId && !item.sku)) continue;
-    try {
-      let estoque = null;
-      if (item.prodId) estoque = await buscarEstoquePorId(item.prodId);
-      if (estoque === null && item.sku) {
-        const prod = await buscarPorCodigo(item.sku);
-        if (prod) { item.prodId = prod.id; estoque = Number(prod.estoque ?? 0); }
-      }
-      if (estoque !== null) { lista[i].estoque = estoque; ok++; }
-      else err++;
-    } catch(e) { err++; }
-    await delay(400); // respeitar rate limit
-  }
-
-  renderTabela();
-  atualizarPreview();
-  salvar();
-  setSync('ok', `Atualizado: ${ok} ok${err?' / '+err+' erro':''}`);
-  toast(`🔄 ${ok} produto(s) atualizados`);
-}
-
-// ══════════════════════════════════════════════════
-// PREVIEW
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
+// PREVIEW — indicação de estoque NUNCA aparece no preview.
+// Produto sem estoque é simplesmente omitido (se configurado)
+// ou incluído normalmente sem nenhuma marcação.
+// ════════════════════════════════════
 function atualizarPreview() {
-  const box   = el('preview-box');
-  const titulo = el('lista-titulo').value.trim();
-  const data  = el('cfg-data').value.trim() || dataHoje();
-  const semEst = el('cfg-sem-estoque').value;
-  const fmtPreco = el('cfg-preco').value;
+  const box    = el('preview-box');
+  const titulo = el('lista-titulo').value.trim() || 'Lista EXCLUSIVA REVENDA/ATACADO';
+  const data   = el('cfg-data').value.trim() || dataHoje();
+  const semEst = el('cfg-sem-estoque').value; // 'ocultar' ou 'incluir'
+  const fmt    = el('cfg-preco').value;
 
   if (lista.length === 0) {
-    box.innerHTML = '<span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens...</span>';
+    box.innerHTML = '<span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span>';
     return;
   }
 
-  let linhas = [];
-
-  // Cabeçalho geral
-  const tituloFinal = titulo || 'Lista EXCLUSIVA REVENDA/ATACADO';
-  linhas.push(`📌 *\`${tituloFinal} (${data}):\`* 📌`);
+  const linhas = [];
+  linhas.push(`📌 *\`${titulo} (${data}):\`* 📌`);
 
   lista.forEach(item => {
     if (item.type === 'header') {
       const icon  = item.icon  || '📌';
-      const label = item.label || 'SEÇÃO';
-      linhas.push(`${icon} *\`${label.toUpperCase()}\``+'`');
+      const label = (item.label || 'SEÇÃO').toUpperCase();
+      linhas.push(`${icon} *\`${label}\`*`);
+
+    } else if (item.type === 'free') {
+      // Texto livre exatamente como digitado — vazio = linha em branco intencional
+      linhas.push(item.text || '');
+
     } else {
+      // Produto: sem estoque conhecido e configurado para ocultar → pula linha
       const semEstoque = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
       if (semEstoque && semEst === 'ocultar') return;
 
+      // Linha limpa, SEM qualquer indicação de estoque
       let linha = item.label || '(sem nome)';
       if (item.price) {
-        const preco = fmtPreco === 'reais' ? 'R$ ' + item.price : item.price;
+        const preco = fmt === 'reais' ? 'R$ ' + item.price : item.price;
         linha += ' - ' + preco;
-      }
-      if (semEstoque) {
-        linha = '~' + linha + '~ ⚠️';
       }
       linhas.push(linha);
     }
@@ -917,189 +751,165 @@ function atualizarPreview() {
   box.textContent = linhas.join('\n');
 }
 
-// ══════════════════════════════════════════════════
-// BUSCA DE PRODUTO
-// ══════════════════════════════════════════════════
-let buscaTimer;
+// ════════════════════════════════════
+// BUSCA NA API
+// ════════════════════════════════════
+let _bt;
 el('busca-produto').addEventListener('input', () => {
-  clearTimeout(buscaTimer);
+  clearTimeout(_bt);
   const q = el('busca-produto').value.trim();
-  if (q.length < 2) { el('resultados-busca').style.display = 'none'; return; }
-  buscaTimer = setTimeout(() => executarBusca(q), 500);
+  if (q.length < 2) { el('resultados-busca').style.display='none'; return; }
+  _bt = setTimeout(() => executarBusca(q), 450);
 });
-
 el('btn-buscar-prod').addEventListener('click', () => {
-  const q = el('busca-produto').value.trim();
-  if (q) executarBusca(q);
+  const q = el('busca-produto').value.trim(); if (q) executarBusca(q);
+});
+el('busca-produto').addEventListener('keydown', e => {
+  if (e.key==='Enter') { e.preventDefault(); const q=el('busca-produto').value.trim(); if(q) executarBusca(q); }
 });
 
 async function executarBusca(q) {
   const box = el('resultados-busca');
   box.style.display = 'block';
-  box.innerHTML = '<div style="padding:10px; color:var(--text3); font-size:.8rem;">⏳ Buscando...</div>';
+  box.innerHTML = '<div style="padding:9px 12px; color:var(--text3); font-size:.77rem;">⏳ Buscando…</div>';
   try {
-    const d = await buscarProdutosAPI(q);
+    const d = await apiGet({ nome: q });
     if (!d || d.code !== 200 || !d.data || !d.data.length) {
-      box.innerHTML = '<div style="padding:10px; color:var(--text3); font-size:.8rem;">Nenhum produto encontrado.</div>';
+      box.innerHTML = '<div style="padding:9px 12px; color:var(--text3); font-size:.77rem;">Nenhum resultado.</div>';
       return;
     }
     box.innerHTML = '';
     const ul = document.createElement('div');
     ul.style.cssText = 'max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg);';
-    d.data.slice(0,15).forEach(p => {
+    d.data.slice(0,20).forEach(p => {
       const row = document.createElement('div');
-      row.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.8rem;';
+      row.style.cssText = 'padding:7px 11px; cursor:pointer; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.77rem; transition:background .1s;';
+      const est = Number(p.estoque ?? 0);
       row.innerHTML = `
-        <div>
-          <div style="font-weight:600; color:var(--text);">${esc(p.nome)}</div>
-          <div style="font-size:.72rem; color:var(--text3);">${p.codigo_interno||p.codigo_barra||'—'}</div>
+        <div style="min-width:0;">
+          <div style="font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(p.nome)}</div>
+          <div style="font-size:.67rem; color:var(--text3); font-family:'JetBrains Mono',monospace;">${esc(p.codigo_interno||p.codigo_barra||'—')}</div>
         </div>
-        <span class="estoque-badge ${p.estoque > 0 ? 'badge-ok' : 'badge-zero'}">${p.estoque > 0 ? '✓ '+p.estoque : '⚠ '+p.estoque}</span>`;
-      row.addEventListener('mouseenter', () => row.style.background = 'var(--surface2)');
-      row.addEventListener('mouseleave', () => row.style.background = '');
-      row.addEventListener('click', () => {
-        adicionarDaAPI(p);
-        el('busca-produto').value = '';
-        box.style.display = 'none';
-      });
+        <span class="badge ${est>0?'badge-ok':'badge-zero'}">${est>0?'✓ '+est:'⚠ '+est}</span>`;
+      row.addEventListener('mouseenter', () => row.style.background='var(--surface2)');
+      row.addEventListener('mouseleave', () => row.style.background='');
+      row.addEventListener('click', () => { adicionarDaAPI(p); el('busca-produto').value=''; box.style.display='none'; });
       ul.appendChild(row);
     });
     box.appendChild(ul);
   } catch(e) {
-    box.innerHTML = `<div style="padding:10px; color:var(--danger); font-size:.8rem;">Erro: ${e.message}</div>`;
+    box.innerHTML = `<div style="padding:9px 12px; color:var(--danger); font-size:.77rem;">❌ ${esc(e.message)}</div>`;
   }
 }
 
 function adicionarDaAPI(p) {
   lista.push({
-    id: uid(),
-    type: 'product',
-    label: p.nome,
-    price: String(Math.round(p.valor_venda || 0)) || '',
-    sku: p.codigo_interno || p.codigo_barra || '',
-    prodId: p.id,
+    id:      uid(), type:'product',
+    label:   p.nome,
+    price:   p.valor_venda ? String(Math.round(Number(p.valor_venda))) : '',
+    sysname: p.nome,
+    sku:     p.codigo_interno || p.codigo_barra || '',
+    prodId:  p.id,
     estoque: Number(p.estoque ?? 0),
   });
-  renderTabela();
-  atualizarPreview();
-  salvar();
+  renderTabela(); atualizarPreview(); salvar();
   toast('✅ Produto adicionado');
 }
 
-// ══════════════════════════════════════════════════
-// ADICIONAR MANUAL / CABEÇALHO
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
+// ADICIONAR MANUAL / CABEÇALHO / LIVRE
+// ════════════════════════════════════
 el('btn-add-manual').addEventListener('click', () => {
-  lista.push({ id: uid(), type: 'product', label: '', price: '', sku: '', prodId: null, estoque: undefined });
-  renderTabela();
-  atualizarPreview();
-  salvar();
-  // Focar no último input de label
+  lista.push({ id:uid(), type:'product', label:'', price:'', sysname:'', sku:'', prodId:null, estoque:undefined });
+  renderTabela(); atualizarPreview(); salvar();
   setTimeout(() => {
-    const rows = el('tbody-lista').querySelectorAll('tr:not(.header-row)');
-    if (rows.length) {
-      const lastInput = rows[rows.length-1].querySelector('input[data-field="label"]');
-      if (lastInput) lastInput.focus();
-    }
-  }, 50);
+    const rows = el('tbody-lista').querySelectorAll('tr:not(.row-header):not(.row-free)');
+    rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus();
+  }, 40);
 });
 
 el('btn-add-header').addEventListener('click', () => {
-  lista.push({ id: uid(), type: 'header', label: '', icon: '📌' });
-  renderTabela();
-  atualizarPreview();
-  salvar();
+  lista.push({ id:uid(), type:'header', label:'', icon:'📌' });
+  renderTabela(); atualizarPreview(); salvar();
   setTimeout(() => {
-    const rows = el('tbody-lista').querySelectorAll('tr.header-row');
-    if (rows.length) {
-      const lastInput = rows[rows.length-1].querySelector('input[data-field="label"]');
-      if (lastInput) lastInput.focus();
-    }
-  }, 50);
+    const rows = el('tbody-lista').querySelectorAll('tr.row-header');
+    rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus();
+  }, 40);
 });
 
-// ══════════════════════════════════════════════════
-// COPIAR PREVIEW
-// ══════════════════════════════════════════════════
+el('btn-add-free').addEventListener('click', () => {
+  lista.push({ id:uid(), type:'free', text:'' });
+  renderTabela(); atualizarPreview(); salvar();
+  setTimeout(() => {
+    const rows = el('tbody-lista').querySelectorAll('tr.row-free');
+    rows[rows.length-1]?.querySelector('textarea')?.focus();
+  }, 40);
+});
+
+// ════════════════════════════════════
+// COPIAR
+// ════════════════════════════════════
 el('btn-copiar').addEventListener('click', () => {
   const text = el('preview-box').textContent;
-  if (!text || text.includes('A lista aparecerá')) { toast('⚠️ Lista vazia'); return; }
+  if (!text || text.includes('aparecerá aqui')) { toast('⚠️ Lista vazia'); return; }
   navigator.clipboard.writeText(text).then(() => {
     toast('✅ Copiado para a área de transferência!');
-    const btn = el('btn-copiar');
-    const orig = btn.innerHTML;
+    const btn = el('btn-copiar'), orig = btn.innerHTML;
     btn.innerHTML = '✅ Copiado!';
-    btn.style.background = 'var(--accent2)';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
+    setTimeout(() => btn.innerHTML = orig, 2000);
   }).catch(() => toast('Erro ao copiar'));
 });
 
-// ══════════════════════════════════════════════════
-// LIMPAR LISTA
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
+// LIMPAR
+// ════════════════════════════════════
 el('btn-limpar-lista').addEventListener('click', () => {
-  if (!lista.length) return;
-  if (!confirm('Tem certeza que deseja limpar toda a lista?')) return;
-  lista = [];
-  renderTabela();
-  atualizarPreview();
-  salvar();
+  if (!lista.length || !confirm('Limpar toda a lista?')) return;
+  lista = []; renderTabela(); atualizarPreview(); salvar();
   toast('🗑️ Lista limpa');
 });
 
-// ══════════════════════════════════════════════════
-// TESTE DE API
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
+// SYNC ALL / TESTAR API
+// ════════════════════════════════════
+el('btn-sync-all').addEventListener('click', syncTodos);
 el('btn-test-api').addEventListener('click', async () => {
-  setApiSync('loading', 'Testando...');
+  setApiSync('loading','Testando…');
   try {
-    const d = await buscarProdutosAPI('');
+    const d = await apiGet({});
     if (d.code === 200) {
-      setApiSync('ok', `Conectado! ${d.meta?.total_registros || 0} produtos encontrados`);
-      toast('✅ API conectada com sucesso!');
-    } else {
-      setApiSync('err', 'Resposta inesperada: ' + d.code);
-    }
-  } catch(e) {
-    setApiSync('err', 'Falha: ' + e.message);
-  }
+      setApiSync('ok',`OK · ${d.meta?.total_registros??'?'} produtos`);
+      toast('✅ API conectada!');
+    } else { setApiSync('err','Código: '+d.code); }
+  } catch(e) { setApiSync('err','Falha: '+e.message); }
 });
 
-// ══════════════════════════════════════════════════
-// SYNC ALL
-// ══════════════════════════════════════════════════
-el('btn-sync-all').addEventListener('click', syncTodos);
-
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 // TOGGLE API CARD
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 el('btn-toggle-api').addEventListener('click', () => {
   const body = el('api-body');
-  const btn  = el('btn-toggle-api');
-  const collapsed = body.style.display === 'none';
-  body.style.display = collapsed ? '' : 'none';
-  btn.textContent = collapsed ? '▾ Recolher' : '▸ Expandir';
+  const col  = body.style.display === 'none';
+  body.style.display = col ? '' : 'none';
+  el('btn-toggle-api').textContent = col ? '▾ Recolher' : '▸ Expandir';
 });
 
-// ══════════════════════════════════════════════════
-// LISTENERS DE CONFIG
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
+// LISTENERS CONFIG
+// ════════════════════════════════════
 ['lista-titulo','cfg-data','cfg-sem-estoque','cfg-preco'].forEach(id => {
-  el(id).addEventListener('input', () => { atualizarPreview(); salvar(); });
+  el(id).addEventListener('input',  () => { atualizarPreview(); salvar(); });
   el(id).addEventListener('change', () => { atualizarPreview(); salvar(); });
 });
 
-// Fechar busca ao clicar fora
 document.addEventListener('click', e => {
-  const box = el('resultados-busca');
-  if (!el('busca-produto').contains(e.target) && !box.contains(e.target)) {
-    box.style.display = 'none';
-  }
+  if (!el('busca-produto').contains(e.target) && !el('resultados-busca').contains(e.target))
+    el('resultados-busca').style.display = 'none';
 });
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════
 carregar();
 if (!el('cfg-data').value) el('cfg-data').value = dataHoje();
 renderTabela();
