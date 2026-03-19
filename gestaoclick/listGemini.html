@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v8 (Varredura Total)</title>
+  <title>Gerador de Listas - JETA v8 (Eficiência Máxima)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -312,7 +312,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
       document.getElementById('chk-ocultar').checked = opcoesLista.ocultar;
       document.getElementById('chk-destacar').checked = opcoesLista.destacar;
       
-      let promptSalvo = localStorage.getItem('jeta_prompt_ia_v7') || PROMPT_PADRAO_IA;
+      let promptSalvo = localStorage.getItem('jeta_prompt_ia_v8') || PROMPT_PADRAO_IA;
       document.getElementById('prompt-ia-input').value = promptSalvo;
 
       if(itensLista.length === 0) itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
@@ -442,7 +442,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
       
       divResultados.innerHTML = '<span style="font-size:11px; color:var(--text-muted)">⏳ Buscando...</span>';
       try {
-        const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=10&nome=${encodeURIComponent(termo)}`);
+        const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=20&nome=${encodeURIComponent(termo)}`);
         const json = await res.json();
         if (json.code === 200 && json.data && json.data.length > 0) {
             divResultados.innerHTML = '';
@@ -456,8 +456,6 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
                         if(!item.vinculos) item.vinculos = [];
                         if(!item.vinculos.some(v => v.idSistema === prod.id)) {
                             item.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
-                            // Aqui nós só atualizamos o nome personalizado se ele estiver vazio.
-                            // Do contrário, preservamos o nome bruto intacto
                             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
                             if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
                             input.value = '';
@@ -519,9 +517,8 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
 
     function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v7', document.getElementById('prompt-ia-input').value); }
 
-    // DOWNLOAD REAL DO CATÁLOGO (Página por Página) COM INDICADOR
     async function carregarCatalogoCompleto() {
-        catalogoCompleto = []; // Limpa cache para garantir que puxe tudo fresco
+        catalogoCompleto = []; 
         let pag = 1; 
         let temMais = true;
         const loaderText = document.getElementById('texto-loader-ia');
@@ -535,12 +532,10 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
                 if(json.code === 200 && json.data && json.data.length > 0) {
                     catalogoCompleto = catalogoCompleto.concat(json.data.filter(p => p.nome));
                     
-                    // Se veio menos de 100, significa que é a última página
                     if(json.data.length < 100) {
                         temMais = false;
                     } else {
                         pag++;
-                        // Pausa vital de 350ms para não bloquear a API
                         await new Promise(resolve => setTimeout(resolve, 350)); 
                     }
                 } else { 
@@ -560,8 +555,8 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const limparTexto = (txt) => {
             let str = txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
-                      // Substitui as palavras exatas de memória por espaço para virarem números soltos
-                      .replace(/\b(gb|tb|ram|rom)\b/g, ' ')       
+                      // Nova regra: Remove gb, tb, ram e rom preservando os números soltos
+                      .replace(/gb|tb|ram|rom/g, ' ')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
                       .replace(/\b([a-z])\s+(\d+)\b/g, '$1$2') 
                       .replace(/\b([a-z]+)0+(\d+)\b/g, '$1$2'); 
@@ -573,23 +568,22 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const tokensExt = limparTexto(nomeExtraido);
         const scores = [];
 
-        // 1. Chaves Estritas
         const chavesEstritas = ['pro', 'plus', 'ultra', 'note', 'lite', 'fe', 'se', 'power'];
         const temChaveExt = {};
         chavesEstritas.forEach(c => temChaveExt[c] = tokensExt.includes(c));
 
         const has5g = tokensExt.includes('5g');
+        const has4g = tokensExt.includes('4g');
 
-        // 2. Capacidades de armazenamento EXATAS
+        // Capacidades de armazenamento EXATAS (Nenhuma chance de 128 se passar por 256)
         const capacidades = ['32', '64', '128', '256', '512', '1024'];
         const capExt = tokensExt.find(t => capacidades.includes(t));
 
-        // 3. Modelos Estritos
+        // Modelos Estritos
         const isModelo = (t) => {
             if (t === '5g' || t === '4g' || capacidades.includes(t) || chavesEstritas.includes(t)) return false;
             if (!/\d/.test(t)) return false;
             if (/[a-z]/.test(t) && /\d/.test(t)) return true; 
-            // Somente trata números como modelo (ex 14) se não for RAM típica
             if (/^\d+$/.test(t)) {
                 const num = parseInt(t);
                 if ([1, 2, 3, 4, 6, 8, 12, 16, 24].includes(num)) return false;
@@ -603,7 +597,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             const tokensProd = limparTexto(prod.nome);
             let desclassificado = false;
 
-            // Cortes de Chave Estrita (Pro, Plus, Note)
+            // Cortes de Chave Estrita
             for (let chave of chavesEstritas) {
                 if (temChaveExt[chave] !== tokensProd.includes(chave)) {
                     desclassificado = true;
@@ -612,20 +606,22 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             }
             if (desclassificado) continue;
 
-            // Cortes de 5G
+            // Cortes de 5G vs 4G (Só corta se a contradição for direta)
             const prodHas5g = tokensProd.includes('5g');
+            const prodHas4g = tokensProd.includes('4g');
+            
             if (has5g && !prodHas5g) desclassificado = true;
-            if (!has5g && prodHas5g) desclassificado = true; 
+            if (has4g && !prodHas4g) desclassificado = true; 
             if (desclassificado) continue;
 
-            // Cortes de Capacidade: Evita que 128gb se misture com 256gb
+            // Cortes de Capacidade
             if (capExt) {
                 const capProd = tokensProd.find(t => capacidades.includes(t));
                 if (capProd && capExt !== capProd) desclassificado = true;
             }
             if (desclassificado) continue;
 
-            // Cortes de Modelos (Se tem G6 na busca, tem que ter no nome)
+            // Cortes de Modelos
             for (let mod of modelosEstritosExt) {
                 if (!tokensProd.includes(mod)) {
                     desclassificado = true;
@@ -634,13 +630,12 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             }
             if (desclassificado) continue;
 
-            // --- Sobreviveu aos cortes! Vamos pontuar ---
+            // Pontuação
             let score = 0;
             for(let t of tokensExt) {
                 if(tokensProd.includes(t)) score += 1;
             }
             
-            // Bônus para RAM igual (Ajudar a não confundir versoes de 8gb e 12gb se a memoria interna for a mesma)
             const memoriasRam = ['3', '4', '6', '8', '12', '16', '24'];
             const ramExt = tokensExt.find(t => memoriasRam.includes(t));
             if (ramExt && tokensProd.includes(ramExt)) score += 2;
@@ -706,7 +701,6 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             return;
         }
 
-        // AGORA SIM FAZ O DOWNLOAD DA API VENDO AS PÁGINAS NO TEXTO
         await carregarCatalogoCompleto();
 
         document.getElementById('texto-loader-ia').textContent = "Cruzando variações com o estoque...";
@@ -716,7 +710,6 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         produtosExtraidos.forEach((ext, index) => {
             let objCache = { idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, vinculos: [] };
             
-            // O cruzamento pega o nome bruto com tudo preservado
             const matches = encontrarMelhoresVinculos(ext.nome);
             
             matches.forEach(m => {
@@ -790,7 +783,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         
         divResultados.innerHTML = '<span style="font-size:11px; color:var(--text-muted)">⏳ Buscando...</span>';
         try {
-            const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=5&nome=${encodeURIComponent(termo)}`);
+            const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=20&nome=${encodeURIComponent(termo)}`);
             const json = await res.json();
             if (json.code === 200 && json.data && json.data.length > 0) {
                 divResultados.innerHTML = '';
