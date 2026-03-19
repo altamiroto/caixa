@@ -286,8 +286,8 @@
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v4')) || [];
     let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v4')) || { data: false, codigo: false, ocultar: false, destacar: true };
     let debounceTimer;
-    let catalogoCompleto = []; // Usado para a busca inteligente da IA
-    let cacheResultadosIA = []; // Usado para renderizar a tabela modal
+    let catalogoCompleto = []; 
+    let cacheResultadosIA = []; 
 
     const PROMPT_PADRAO_IA = `Extraia todos os produtos e preços deste texto. Ignore cabeçalhos puros de marcas (ex: "MOTOROLA"). 
 Retorne APENAS um array JSON válido, sem NENHUM texto antes ou depois, sem crases de formatação markdown. 
@@ -329,16 +329,21 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
       const container = document.getElementById('lista-editor');
       setTimeout(() => container.scrollTop = container.scrollHeight, 50);
     }
+    
     function criarObjetoProduto(nomePers = '', preco = '', vinculo = false, idSis = '', cod = '', nomeSis = '', est = null) {
         return { id: gerarId(), tipo: 'produto', nomePersonalizado: nomePers, preco: preco, vinculado: vinculo, idSistema: idSis, codigo: cod, nomeSistema: nomeSis, estoque: est };
     }
+    
     function removerItem(id) { itensLista = itensLista.filter(item => item.id !== id); renderizarEditor(); salvarLocal(); }
+    
     function moverItem(index, direcao) {
       if(direcao === -1 && index > 0) { const temp = itensLista[index]; itensLista[index] = itensLista[index - 1]; itensLista[index - 1] = temp; }
       else if (direcao === 1 && index < itensLista.length - 1) { const temp = itensLista[index]; itensLista[index] = itensLista[index + 1]; itensLista[index + 1] = temp; }
       renderizarEditor(); salvarLocal();
     }
+    
     function atualizarCampo(id, campo, valor) { const item = itensLista.find(i => i.id === id); if(item) { item[campo] = valor; autoSalvar(); } }
+    
     function desvincularProduto(id) {
       const item = itensLista.find(i => i.id === id);
       if(item) { item.vinculado = false; item.idSistema = ''; item.codigo = ''; item.nomeSistema = ''; item.estoque = null; renderizarEditor(); salvarLocal(); }
@@ -462,7 +467,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     }
 
     // ==========================================
-    // MÓDULO IA - INTELIGÊNCIA DE AUTO-VÍNCULO
+    // MÓDULO IA - INTELIGÊNCIA DE AUTO-VÍNCULO E BUSCA
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -475,7 +480,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         localStorage.setItem('jeta_prompt_ia', document.getElementById('prompt-ia-input').value);
     }
 
-    // 1. Baixa o Catálogo Completo para a IA fazer Fuzzy Match offline (Rápido e sem bloqueios)
+    // Baixa o Catálogo Completo para a IA fazer Fuzzy Match offline
     async function carregarCatalogoCompleto() {
         if (catalogoCompleto.length > 0) return true; 
         let pag = 1; let totalPaginas = 1;
@@ -493,7 +498,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         } catch(e) { return false; }
     }
 
-    // 2. Algoritmo de cruzamento inteligente (Fuzzy Match por contagem de palavras)
     function encontrarMelhorVinculo(nomeExtraido) {
         if(!nomeExtraido || catalogoCompleto.length === 0) return null;
         let melhorMatch = null; let maiorScore = 0;
@@ -505,11 +509,10 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
             let score = 0;
             
             for(let t of tokensExt) { if(tokensProd.includes(t)) score++; }
-            if (prod.nome.toLowerCase().includes(nomeExtraido.toLowerCase())) score += 5; // Bônus para texto idêntico
+            if (prod.nome.toLowerCase().includes(nomeExtraido.toLowerCase())) score += 5; 
 
             if(score > maiorScore) { maiorScore = score; melhorMatch = prod; }
         }
-        // Exige um mínimo de coerência para assumir auto-vínculo
         return maiorScore >= Math.min(2, tokensExt.length) ? melhorMatch : null;
     }
 
@@ -521,7 +524,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('btn-processar-ia').disabled = false;
         document.getElementById('modal-ia').classList.add('visivel');
         
-        // Começa a baixar o catálogo no fundo para não atrasar a vida do usuário
         carregarCatalogoCompleto(); 
     }
     
@@ -539,7 +541,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('loader-ia').classList.add('visivel');
         document.getElementById('texto-loader-ia').textContent = "Lendo produtos com a IA (Groq)...";
 
-        // Segura um pouquinho se o catálogo ainda estiver baixando
         await carregarCatalogoCompleto();
 
         let produtosExtraidos = [];
@@ -573,7 +574,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         
         cacheResultadosIA = [];
         
-        // 3. Aplica o Fuzzy Match instantaneamente (Offline, sem limite de API)
         produtosExtraidos.forEach((ext, index) => {
             let objCache = { 
                 idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, 
@@ -639,7 +639,6 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         document.getElementById('chk-ia-todos').checked = true;
     }
 
-    // Busca manual dentro da tabela da IA (Caso o Fuzzy Match erre ou não encontre)
     async function buscarNaAPIParaIA(index) {
         const input = document.getElementById(`input-busca-ia-${index}`);
         const divResultados = document.getElementById(`resultados-ia-${index}`);
@@ -727,7 +726,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
                 });
             }
             if (manuais.length > 0) {
-                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>';
+                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>`;
                 manuais.forEach(p => {
                     const nomeMostrado = p.nomePersonalizado.trim() || 'Produto sem nome';
                     html += `<div class="log-item" style="margin-bottom: 8px; background: rgba(243, 156, 18, 0.05); border-color: rgba(243, 156, 18, 0.3);">
