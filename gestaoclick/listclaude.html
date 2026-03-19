@@ -139,10 +139,60 @@
     .col-drag:active { cursor:grabbing; }
     .col-label { min-width:120px; }
     .col-price { width:76px; }
-    .col-sys   { min-width:100px; }
-    .col-sku   { width:86px; }
+    .col-sys   { min-width:110px; }
+    .col-sku   { width:90px; }
     .col-stock { width:72px; text-align:center; }
     .col-act   { width:56px; text-align:center; }
+
+    /* Célula de vínculo (somente leitura, clicável) */
+    .vincul-cell { position: relative; }
+    .col-sys .vincul-pill,
+    .col-sku .vincul-pill { cursor: pointer; }
+    .vincul-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 7px; border-radius: 6px; cursor: pointer;
+      border: 1px dashed var(--border2); background: transparent;
+      transition: background .12s, border-color .12s;
+      min-height: 28px; width: 100%;
+    }
+    .vincul-pill:hover { background: var(--surface2); border-color: var(--accent); }
+    .vincul-pill.vinculado { border-style: solid; border-color: var(--border2); }
+    .vincul-pill.vinculado:hover { border-color: var(--accent); }
+    .vincul-text {
+      font-size: .73rem; color: var(--text); white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
+    }
+    .vincul-text.empty { color: var(--text3); font-style: italic; }
+    .vincul-icon { font-size: .7rem; color: var(--text3); flex-shrink: 0; }
+
+    /* Popover de busca inline */
+    .vincul-popover {
+      position: absolute; top: calc(100% + 4px); left: 0; z-index: 500; width: 280px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 9px; box-shadow: 0 8px 32px rgba(0,0,0,.55); overflow: hidden;
+    }
+    .vincul-popover input {
+      border: none; border-bottom: 1px solid var(--border); border-radius: 0;
+      padding: 8px 11px; background: var(--surface2);
+    }
+    .vincul-popover input:focus { box-shadow: none; border-color: var(--accent); }
+    .vincul-results { max-height: 180px; overflow-y: auto; }
+    .vincul-result-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 11px; cursor: pointer; border-bottom: 1px solid var(--border);
+      transition: background .1s; font-size: .75rem;
+    }
+    .vincul-result-row:last-child { border-bottom: none; }
+    .vincul-result-row:hover { background: var(--surface2); }
+    .vincul-result-nome { font-weight: 600; color: var(--text); }
+    .vincul-result-cod  { font-size: .67rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
+    .vincul-result-empty { padding: 10px 11px; color: var(--text3); font-size: .75rem; }
+    .vincul-desvincular {
+      padding: 6px 11px; border-top: 1px solid var(--border); font-size: .71rem;
+      color: var(--danger); cursor: pointer; background: var(--surface2); text-align: center;
+      transition: background .1s;
+    }
+    .vincul-desvincular:hover { background: var(--danger-dim); }
 
     .badge {
       display:inline-flex; align-items:center; gap:3px;
@@ -641,13 +691,16 @@ function renderTabela() {
           <input type="text" data-field="price" value="${esc(item.price)}"
             placeholder="650" class="mono-inp" />
         </td>
-        <td class="col-sys">
-          <input type="text" data-field="sysname" value="${esc(item.sysname)}"
-            placeholder="Nome no sistema" />
+        <td class="col-sys vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sys">
+          <div class="vincul-pill ${item.sysname ? 'vinculado' : ''}" title="${item.sysname ? 'Clique para substituir o vínculo' : 'Clique para vincular produto da API'}">
+            <span class="vincul-text ${item.sysname ? '' : 'empty'}">${item.sysname ? esc(item.sysname) : 'Vincular…'}</span>
+            <span class="vincul-icon">${item.sysname ? '🔗' : '＋'}</span>
+          </div>
         </td>
-        <td class="col-sku">
-          <input type="text" data-field="sku" value="${esc(item.sku)}"
-            placeholder="Código" class="mono-inp" />
+        <td class="col-sku vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sku">
+          <div class="vincul-pill ${item.sku ? 'vinculado' : ''}" title="Clique para vincular/trocar produto">
+            <span class="vincul-text ${item.sku ? 'mono-inp' : 'empty'}" style="${item.sku ? 'font-family:JetBrains Mono,monospace;font-size:.72rem;' : ''}">${item.sku ? esc(item.sku) : '—'}</span>
+          </div>
         </td>
         <td class="col-stock">${badgeHtml}</td>
         <td class="col-act">
@@ -682,11 +735,20 @@ function renderTabela() {
       renderTabela(); atualizarPreview(); salvar();
     });
 
-    // Inputs inline
+    // Inputs inline (apenas label, price, text — sysname/sku são somente leitura via popover)
     tr.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
         lista[idx][inp.dataset.field] = inp.value;
         atualizarPreview(); salvar();
+      });
+    });
+
+    // Clique em sys OU sku abre o mesmo popover ancorado na célula sys
+    tr.querySelectorAll('.vincul-pill').forEach(pill => {
+      pill.addEventListener('click', e => {
+        e.stopPropagation();
+        const anchor = tr.querySelector('.vincul-cell[data-vincul-field="sys"]');
+        abrirPopoverVinculo(idx, anchor);
       });
     });
 
@@ -702,6 +764,103 @@ function renderTabela() {
     tbody.appendChild(tr);
   });
 }
+
+// ════════════════════════════════════
+// POPOVER DE VÍNCULO
+// ════════════════════════════════════
+let _popoverAtivo = null;
+
+function fecharPopover() {
+  if (_popoverAtivo) { _popoverAtivo.remove(); _popoverAtivo = null; }
+}
+
+function abrirPopoverVinculo(idx, anchorCell) {
+  fecharPopover();
+
+  const pop = document.createElement('div');
+  pop.className = 'vincul-popover';
+  pop.innerHTML = `
+    <input type="text" class="pop-search" placeholder="Buscar produto no sistema…" autocomplete="off" />
+    <div class="vincul-results"><div class="vincul-result-empty">Digite para buscar…</div></div>
+    ${lista[idx].sysname ? '<div class="vincul-desvincular">✕ Desvincular produto</div>' : ''}
+  `;
+  anchorCell.appendChild(pop);
+  _popoverAtivo = pop;
+
+  const searchInp = pop.querySelector('.pop-search');
+  const resultsBox = pop.querySelector('.vincul-results');
+  searchInp.focus();
+
+  let _t;
+  searchInp.addEventListener('input', () => {
+    clearTimeout(_t);
+    const q = searchInp.value.trim();
+    if (q.length < 2) {
+      resultsBox.innerHTML = '<div class="vincul-result-empty">Digite ao menos 2 caracteres…</div>';
+      return;
+    }
+    resultsBox.innerHTML = '<div class="vincul-result-empty">⏳ Buscando…</div>';
+    _t = setTimeout(() => executarBuscaPopover(q, resultsBox, idx), 380);
+  });
+
+  pop.querySelector('.vincul-desvincular')?.addEventListener('click', () => {
+    lista[idx].sysname = '';
+    lista[idx].sku     = '';
+    lista[idx].prodId  = null;
+    lista[idx].estoque = undefined;
+    fecharPopover();
+    renderTabela(); atualizarPreview(); salvar();
+  });
+
+  pop.addEventListener('click', e => e.stopPropagation());
+}
+
+async function executarBuscaPopover(q, resultsBox, idx) {
+  try {
+    const d = await apiGet({ nome: q });
+    if (!d || d.code !== 200 || !d.data || !d.data.length) {
+      // tenta por código também
+      const d2 = await apiGet({ codigo: q });
+      if (!d2 || d2.code !== 200 || !d2.data || !d2.data.length) {
+        resultsBox.innerHTML = '<div class="vincul-result-empty">Nenhum produto encontrado.</div>';
+        return;
+      }
+      renderResultadosPopover(d2.data, resultsBox, idx);
+      return;
+    }
+    renderResultadosPopover(d.data, resultsBox, idx);
+  } catch(e) {
+    resultsBox.innerHTML = `<div class="vincul-result-empty" style="color:var(--danger);">Erro: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderResultadosPopover(produtos, resultsBox, idx) {
+  resultsBox.innerHTML = '';
+  produtos.slice(0, 20).forEach(p => {
+    const est = Number(p.estoque ?? 0);
+    const row = document.createElement('div');
+    row.className = 'vincul-result-row';
+    row.innerHTML = `
+      <div style="min-width:0; flex:1; overflow:hidden;">
+        <div class="vincul-result-nome" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.nome)}</div>
+        <div class="vincul-result-cod">${esc(p.codigo_interno || p.codigo_barra || '—')}</div>
+      </div>
+      <span class="badge ${est > 0 ? 'badge-ok' : 'badge-zero'}" style="flex-shrink:0;">${est > 0 ? '✓ ' + est : '⚠ ' + est}</span>`;
+    row.addEventListener('click', () => {
+      lista[idx].sysname = p.nome;
+      lista[idx].sku     = p.codigo_interno || p.codigo_barra || '';
+      lista[idx].prodId  = p.id;
+      lista[idx].estoque = est;
+      fecharPopover();
+      renderTabela(); atualizarPreview(); salvar();
+      toast('🔗 Produto vinculado: ' + p.nome.substring(0, 40));
+    });
+    resultsBox.appendChild(row);
+  });
+}
+
+// Fechar popover ao clicar fora
+document.addEventListener('click', () => fecharPopover());
 
 // ════════════════════════════════════
 // PREVIEW — indicação de estoque NUNCA aparece no preview.
@@ -905,6 +1064,7 @@ el('btn-toggle-api').addEventListener('click', () => {
 document.addEventListener('click', e => {
   if (!el('busca-produto').contains(e.target) && !el('resultados-busca').contains(e.target))
     el('resultados-busca').style.display = 'none';
+  // fecharPopover() is handled globally above
 });
 
 // ════════════════════════════════════
