@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v7 (Exatidão Máxima)</title>
+  <title>Gerador de Listas - JETA v8 (Varredura Total)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -231,7 +231,7 @@
       
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A IA extrairá os textos exatamente como estão e buscará os vínculos compatíveis no sistema.
+            Cole a lista de um fornecedor ou concorrente abaixo. A ferramenta varrerá seu estoque completo para encontrar as correspondências.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
@@ -248,7 +248,7 @@
 
         <div class="loader-ia" id="loader-ia">
             <div class="spinner"></div>
-            <span id="texto-loader-ia">Extraindo dados com a IA...</span>
+            <span id="texto-loader-ia" style="text-align: center; max-width: 80%;">Iniciando processo...</span>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
@@ -508,7 +508,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
     }
 
     // ==========================================
-    // MÓDULO IA - CÉREBRO REFINADO (Cortes Drásticos + Tradução)
+    // MÓDULO IA - VARREDURA COMPLETA DA API
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -519,21 +519,39 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
 
     function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v7', document.getElementById('prompt-ia-input').value); }
 
+    // DOWNLOAD REAL DO CATÁLOGO (Página por Página) COM INDICADOR
     async function carregarCatalogoCompleto() {
-        if (catalogoCompleto.length > 0) return true; 
-        let pag = 1; let totalPaginas = 1;
+        catalogoCompleto = []; // Limpa cache para garantir que puxe tudo fresco
+        let pag = 1; 
+        let temMais = true;
+        const loaderText = document.getElementById('texto-loader-ia');
+        
         try {
-            do {
+            while(temMais) {
+                loaderText.textContent = `Baixando catálogo do sistema (Lendo página ${pag})...`;
                 const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=100&pagina=${pag}`);
                 const json = await res.json();
-                if(json.code === 200 && json.data) {
+                
+                if(json.code === 200 && json.data && json.data.length > 0) {
                     catalogoCompleto = catalogoCompleto.concat(json.data.filter(p => p.nome));
-                    totalPaginas = json.meta.total_paginas;
-                } else { break; }
-                pag++;
-            } while (pag <= totalPaginas);
+                    
+                    // Se veio menos de 100, significa que é a última página
+                    if(json.data.length < 100) {
+                        temMais = false;
+                    } else {
+                        pag++;
+                        // Pausa vital de 350ms para não bloquear a API
+                        await new Promise(resolve => setTimeout(resolve, 350)); 
+                    }
+                } else { 
+                    temMais = false; 
+                }
+            }
             return true;
-        } catch(e) { return false; }
+        } catch(e) { 
+            console.error("Erro ao puxar API completa:", e);
+            return false; 
+        }
     }
 
     function encontrarMelhoresVinculos(nomeExtraido) {
@@ -542,9 +560,8 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const limparTexto = (txt) => {
             let str = txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
-                      // Removido o apagar das letras "gb" para não afetar a string
-                      // Agora apenas substituimos a palavra exata por um espaço para as capacidades virarem numéricas puras
-                      .replace(/gb|tb|ram|rom/g, ' ')       
+                      // Substitui as palavras exatas de memória por espaço para virarem números soltos
+                      .replace(/\b(gb|tb|ram|rom)\b/g, ' ')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
                       .replace(/\b([a-z])\s+(\d+)\b/g, '$1$2') 
                       .replace(/\b([a-z]+)0+(\d+)\b/g, '$1$2'); 
@@ -563,7 +580,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
 
         const has5g = tokensExt.includes('5g');
 
-        // 2. Capacidades de armazenamento EXATAS (A grande sacada)
+        // 2. Capacidades de armazenamento EXATAS
         const capacidades = ['32', '64', '128', '256', '512', '1024'];
         const capExt = tokensExt.find(t => capacidades.includes(t));
 
@@ -572,7 +589,12 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             if (t === '5g' || t === '4g' || capacidades.includes(t) || chavesEstritas.includes(t)) return false;
             if (!/\d/.test(t)) return false;
             if (/[a-z]/.test(t) && /\d/.test(t)) return true; 
-            if (/^\d+$/.test(t) && parseInt(t) > 8) return true; 
+            // Somente trata números como modelo (ex 14) se não for RAM típica
+            if (/^\d+$/.test(t)) {
+                const num = parseInt(t);
+                if ([1, 2, 3, 4, 6, 8, 12, 16, 24].includes(num)) return false;
+                return true;
+            }
             return false;
         };
         const modelosEstritosExt = tokensExt.filter(isModelo);
@@ -657,8 +679,6 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         document.getElementById('loader-ia').classList.add('visivel');
         document.getElementById('texto-loader-ia').textContent = "Lendo produtos com a IA (Groq)...";
 
-        await carregarCatalogoCompleto();
-
         let produtosExtraidos = [];
         try {
             const promptUsuario = document.getElementById('prompt-ia-input').value;
@@ -686,6 +706,9 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             return;
         }
 
+        // AGORA SIM FAZ O DOWNLOAD DA API VENDO AS PÁGINAS NO TEXTO
+        await carregarCatalogoCompleto();
+
         document.getElementById('texto-loader-ia').textContent = "Cruzando variações com o estoque...";
         
         cacheResultadosIA = [];
@@ -693,7 +716,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         produtosExtraidos.forEach((ext, index) => {
             let objCache = { idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, vinculos: [] };
             
-            // Agora o cruzamento pega o nome bruto com tudo preservado
+            // O cruzamento pega o nome bruto com tudo preservado
             const matches = encontrarMelhoresVinculos(ext.nome);
             
             matches.forEach(m => {
