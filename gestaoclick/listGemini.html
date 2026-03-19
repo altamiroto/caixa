@@ -12,6 +12,7 @@
       --success: #27ae60;
       --danger: #c0392b;
       --warning: #f39c12;
+      --purple: #6f42c1;
       --bg-main: #f0f2f5;
       --bg-card: #ffffff;
       --border: #e0e0e0;
@@ -41,11 +42,11 @@
     /* Painel de Edição */
     .editor-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
     
-    .toolbar { padding: 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; background: #fafafa; flex-wrap: wrap; align-items: center;}
+    .toolbar { padding: 16px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; background: #fafafa; flex-wrap: wrap; align-items: center;}
     
     .btn {
       padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: #333; }
@@ -53,12 +54,15 @@
     .btn-success:hover { background: #219653; }
     .btn-warning { background: var(--warning); color: white; }
     .btn-warning:hover { background: #d68910; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-purple:hover { background: #5a32a3; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
     .btn-outline:hover { background: var(--bg-main); }
     .btn-icon { width: 28px; height: 28px; padding: 0; justify-content: center; background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .btn-icon:hover { background: var(--bg-main); color: var(--primary); border-color: var(--secondary); }
     .btn-danger { background: rgba(192, 57, 43, 0.1); color: var(--danger); border: none; }
     .btn-danger:hover { background: var(--danger); color: white; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .lista-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 
@@ -92,7 +96,6 @@
     .resultados-busca { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 150px; overflow-y: auto;}
     .resultado-item { font-size: 12px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center;}
     .resultado-item:hover { border-color: var(--primary); background: var(--bg-main); }
-    .resultado-item span { white-space: normal; word-break: break-word; } /* Correção texto busca mobile */
     
     .sistema-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;}
     .sistema-dados { display: flex; flex-direction: column; gap: 6px; flex: 1;}
@@ -103,7 +106,6 @@
     .status-ok { color: var(--success); }
     .status-zero { color: var(--danger); }
     .status-manual { color: var(--warning); }
-    .status-load { color: var(--primary); }
 
     /* Painel de Visualização */
     .preview-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow); }
@@ -124,25 +126,39 @@
     .preview-footer { padding: 16px; border-top: 1px solid var(--border); }
     #btn-copiar { width: 100%; padding: 12px; font-size: 14px; justify-content: center;}
 
-    /* Modal de Log */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100;}
+    /* Modal Generico */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100; backdrop-filter: blur(3px);}
     .modal-overlay.visivel { opacity: 1; pointer-events: all; }
-    .modal { background: white; width: 90%; max-width: 600px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 80vh;}
-    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal { background: white; width: 90%; max-width: 700px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh;}
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: var(--radius) var(--radius) 0 0;}
     .modal-header h3 { font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 8px;}
-    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px;}
+    
+    /* Log Específico */
     .log-list { display: flex; flex-direction: column; gap: 8px; }
     .log-item { padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;}
 
-    /* Notificações */
+    /* Tabela Modal IA */
+    .ia-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;}
+    .ia-table th, .ia-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    .ia-table th { background: #f8f9fa; font-weight: 700; position: sticky; top: 0;}
+    .ia-table tr:hover { background: #f9f9f9; }
+    .ia-table input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+
+    .loader-ia { display: none; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; font-size: 14px; font-weight: 600; color: var(--purple);}
+    .loader-ia.visivel { display: flex; }
+    .spinner { border: 3px solid rgba(111, 66, 193, 0.2); border-top: 3px solid var(--purple); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--primary); color: white; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 1000; }
     #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     @media (max-width: 768px) {
       .container { grid-template-columns: 1fr; overflow-y: auto; display: flex; flex-direction: column;}
       .editor-panel, .preview-panel { overflow: visible; flex: none; min-height: 500px;}
-      .grid-principal { grid-template-columns: 1fr; } /* No mobile, nome e preço ficam em linhas separadas */
+      .grid-principal { grid-template-columns: 1fr; }
       textarea#texto-resultado { min-height: 300px; border-bottom: 1px solid var(--border);}
+      .ia-table th:nth-child(3), .ia-table td:nth-child(3) { display: none; } /* Oculta nome sis no mobile */
     }
   </style>
 </head>
@@ -157,9 +173,11 @@
     
     <div class="editor-panel">
       <div class="toolbar">
-        <button class="btn btn-primary" onclick="adicionarItem('texto')">➕ Texto Livre</button>
-        <button class="btn btn-primary" onclick="adicionarItem('produto')">➕ Produto</button>
-        <button class="btn btn-success" style="margin-left: auto;" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Vínculos</button>
+        <button class="btn btn-outline" onclick="adicionarItem('texto')">➕ Texto Livre</button>
+        <button class="btn btn-outline" onclick="adicionarItem('produto')">➕ Produto</button>
+        <button class="btn btn-purple" onclick="abrirModalIA()">🤖 Importar c/ IA</button>
+        
+        <div style="flex: 1;"></div> <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar</button>
         <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
       <div class="lista-container" id="lista-editor">
@@ -192,7 +210,7 @@
 
   </div>
 
-  <div class="modal-overlay" id="modal-log" onclick="fecharLog(event)">
+  <div class="modal-overlay" id="modal-log" onclick="fecharModal(event, 'modal-log')">
     <div class="modal">
       <div class="modal-header">
         <h3>Relatório de Produtos</h3>
@@ -204,21 +222,66 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-ia" onclick="fecharModal(event, 'modal-ia')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="color: var(--purple);">🤖 Importador de Listas com IA</h3>
+        <button class="btn btn-icon" onclick="fecharModalIA()">✖</button>
+      </div>
+      <div class="modal-body" id="body-ia-input">
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
+            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos, buscar automaticamente no seu estoque e preparar os cards para você adicionar à sua lista.
+        </p>
+        <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
+        
+        <div class="loader-ia" id="loader-ia">
+            <div class="spinner"></div>
+            <span id="texto-loader-ia">Extraindo dados com a IA...</span>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button class="btn btn-outline" onclick="fecharModalIA()">Cancelar</button>
+            <button class="btn btn-purple" id="btn-processar-ia" onclick="processarListaIA()">Analisar Produtos</button>
+        </div>
+      </div>
+      
+      <div class="modal-body" id="body-ia-resultados" style="display: none;">
+        <p style="font-size: 13px; font-weight: 600;">Resultados do Cruzamento de Estoque:</p>
+        <div style="overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; flex: 1;">
+            <table class="ia-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;"><input type="checkbox" id="chk-ia-todos" onchange="alternarTodosIA(this)"></th>
+                        <th>Nome Extraído / Preço</th>
+                        <th>Vínculo Sistema</th>
+                        <th>Estoque</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-ia-corpo">
+                    </tbody>
+            </table>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <button class="btn btn-outline" onclick="voltarInputIA()">Voltar</button>
+            <button class="btn btn-success" onclick="adicionarProdutosIA()">Adicionar Selecionados à Lista</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script>
     const LOJA_ID = "361408";
-    
-    // Recupera Itens e Opções
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v3')) || [];
     let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v3')) || {
         data: false, codigo: false, ocultar: false, destacar: true
     };
     
     let debounceTimer;
+    let cacheResultadosIA = []; // Armazena temporariamente a analise da IA
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Aplica as opções salvas nos checkboxes
       document.getElementById('chk-data').checked = opcoesLista.data;
       document.getElementById('chk-codigo').checked = opcoesLista.codigo;
       document.getElementById('chk-ocultar').checked = opcoesLista.ocultar;
@@ -257,22 +320,24 @@
       if(tipo === 'texto') {
         itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
       } else {
-        itensLista.push({ 
-            id: gerarId(), 
-            tipo: 'produto', 
-            nomePersonalizado: '', 
-            preco: '', 
-            vinculado: false, 
-            idSistema: '', 
-            codigo: '', 
-            nomeSistema: '', 
-            estoque: null 
-        });
+        itensLista.push(criarObjetoProduto());
       }
       renderizarEditor();
       salvarLocal();
-      const container = document.getElementById('lista-editor');
-      setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+      rolarParaFim();
+    }
+
+    function criarObjetoProduto(nomePers = '', preco = '', vinculo = false, idSis = '', cod = '', nomeSis = '', est = null) {
+        return { 
+            id: gerarId(), tipo: 'produto', 
+            nomePersonalizado: nomePers, preco: preco, 
+            vinculado: vinculo, idSistema: idSis, codigo: cod, nomeSistema: nomeSis, estoque: est 
+        };
+    }
+
+    function rolarParaFim() {
+        const container = document.getElementById('lista-editor');
+        setTimeout(() => container.scrollTop = container.scrollHeight, 50);
     }
 
     function removerItem(id) {
@@ -339,7 +404,6 @@
           `;
         } else {
           let boxVinculo = '';
-
           if(!item.vinculado) {
             boxVinculo = `
               <div class="busca-container">
@@ -383,7 +447,7 @@
       gerarTexto();
     }
 
-    // BUSCA NA API (Somente para vinculação)
+    // BUSCA NA API (Manual do Card)
     async function buscarNaAPI(idItem) {
       const input = document.getElementById(`input-busca-${idItem}`);
       const divResultados = document.getElementById(`resultados-${idItem}`);
@@ -420,17 +484,10 @@
     function vincularProduto(idItem, idSis, cod, nomeSis, valorVenda, estoque) {
         const item = itensLista.find(i => i.id === idItem);
         if(item) {
-            item.vinculado = true;
-            item.idSistema = idSis;
-            item.codigo = cod;
-            item.nomeSistema = nomeSis;
-            item.estoque = estoque;
-            
+            item.vinculado = true; item.idSistema = idSis; item.codigo = cod; item.nomeSistema = nomeSis; item.estoque = estoque;
             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = nomeSis;
             if(!item.preco.trim()) item.preco = parseFloat(valorVenda).toString(); 
-
-            renderizarEditor();
-            salvarLocal();
+            renderizarEditor(); salvarLocal();
         }
     }
 
@@ -454,9 +511,8 @@
                         prod.estoque = json.data.estoque;
                         prod.nomeSistema = json.data.nome; 
                     }
-                } catch(e) { console.error(e); }
+                } catch(e) {}
             });
-
             await Promise.all(promessas);
             renderizarEditor(); 
             if (i + 3 < vinculados.length) await delay(1000); 
@@ -467,6 +523,164 @@
         mostrarToast("✅ Sincronização concluída!");
     }
 
+    // ==========================================
+    // MÓDULO IA - GROQ + ESTOQUE
+    // ==========================================
+    function fecharModal(e, id) { if(e.target.id === id) document.getElementById(id).classList.remove('visivel'); }
+    
+    function abrirModalIA() {
+        document.getElementById('texto-ia-entrada').value = '';
+        document.getElementById('body-ia-input').style.display = 'block';
+        document.getElementById('body-ia-resultados').style.display = 'none';
+        document.getElementById('loader-ia').classList.remove('visivel');
+        document.getElementById('btn-processar-ia').disabled = false;
+        document.getElementById('modal-ia').classList.add('visivel');
+    }
+    
+    function fecharModalIA() { document.getElementById('modal-ia').classList.remove('visivel'); }
+    function voltarInputIA() {
+        document.getElementById('body-ia-resultados').style.display = 'none';
+        document.getElementById('body-ia-input').style.display = 'block';
+    }
+
+    async function processarListaIA() {
+        const textoBruto = document.getElementById('texto-ia-entrada').value.trim();
+        if(!textoBruto) { mostrarToast("Cole alguma lista para processar."); return; }
+
+        document.getElementById('btn-processar-ia').disabled = true;
+        document.getElementById('loader-ia').classList.add('visivel');
+        document.getElementById('texto-loader-ia').textContent = "Lendo e estruturando produtos (IA)...";
+
+        // 1. CHAMA O GROQ
+        let produtosExtraidos = [];
+        try {
+            const prompt = `Extraia todos os produtos e preços deste texto. Ignore cabeçalhos puros de marcas (ex: "MOTOROLA"). 
+            Retorne APENAS um array JSON válido, sem NENHUM texto antes ou depois, sem crases de formatação markdown. 
+            O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco": "Valor numérico limpo, apenas numeros e virgula"}]. 
+            \n\nLista:\n${textoBruto}`;
+
+            const response = await fetch('https://caixa-kal3.vercel.app/api/groq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systemPrompt: 'Você é um extrator de dados JSON. Retorne apenas JSON válido.',
+                    messages: prompt
+                })
+            });
+            
+            const data = await response.json();
+            let jsonString = data.choices[0].message.content.trim();
+            // Limpa possiveis formatações de markdown que a IA possa enviar
+            jsonString = jsonString.replace(/```json/gi, '').replace(/```/g, '').trim();
+            produtosExtraidos = JSON.parse(jsonString);
+
+        } catch (e) {
+            console.error(e);
+            mostrarToast("Erro na IA. Verifique se o formato enviado tem produtos.");
+            document.getElementById('loader-ia').classList.remove('visivel');
+            document.getElementById('btn-processar-ia').disabled = false;
+            return;
+        }
+
+        // 2. CRUZA COM O ESTOQUE (Em Lotes de 3)
+        document.getElementById('texto-loader-ia').textContent = "Cruzando produtos com o seu estoque...";
+        cacheResultadosIA = [];
+        const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+        for (let i = 0; i < produtosExtraidos.length; i += 3) {
+            const lote = produtosExtraidos.slice(i, i + 3);
+            const promessas = lote.map(async (ext) => {
+                let objCache = { 
+                    nomeExtraido: ext.nome, precoExtraido: ext.preco, 
+                    vinculado: false, idSis: '', cod: '', nomeSis: '', est: null 
+                };
+
+                try {
+                    // Tenta buscar o nome extraido cru na API
+                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=1&nome=${encodeURIComponent(ext.nome)}`);
+                    const json = await res.json();
+                    
+                    if(json.code === 200 && json.data && json.data.length > 0) {
+                        const p = json.data[0];
+                        objCache.vinculado = true;
+                        objCache.idSis = p.id;
+                        objCache.cod = p.codigo_interno || p.codigo_barra || p.id;
+                        objCache.nomeSis = p.nome;
+                        objCache.est = p.estoque;
+                    }
+                } catch(e) {}
+                
+                cacheResultadosIA.push(objCache);
+            });
+
+            await Promise.all(promessas);
+            if (i + 3 < produtosExtraidos.length) await delay(800); // Pausa API
+        }
+
+        renderizarTabelaIA();
+    }
+
+    function renderizarTabelaIA() {
+        const tbody = document.getElementById('tabela-ia-corpo');
+        tbody.innerHTML = '';
+
+        cacheResultadosIA.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            
+            let statusEstoque = '<span class="status-manual">Não encontrado</span>';
+            let nomeVinculo = '<span style="color: var(--text-muted);">Sem vínculo</span>';
+            
+            if(item.vinculado) {
+                statusEstoque = item.est > 0 ? `<span class="status-ok">${item.est} un.</span>` : `<span class="status-zero">0 un.</span>`;
+                nomeVinculo = `<b>[${item.cod}]</b> ${item.nomeSis}`;
+            }
+
+            tr.innerHTML = `
+                <td style="text-align: center;"><input type="checkbox" class="chk-ia-item" data-index="${index}" checked></td>
+                <td><b>${item.nomeExtraido}</b><br><span style="color:var(--success);">R$ ${item.precoExtraido}</span></td>
+                <td><div style="font-size: 11px;">${nomeVinculo}</div></td>
+                <td><b>${statusEstoque}</b></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('loader-ia').classList.remove('visivel');
+        document.getElementById('body-ia-input').style.display = 'none';
+        document.getElementById('body-ia-resultados').style.display = 'flex';
+        document.getElementById('btn-processar-ia').disabled = false;
+        document.getElementById('chk-ia-todos').checked = true;
+    }
+
+    function alternarTodosIA(source) {
+        const checkboxes = document.querySelectorAll('.chk-ia-item');
+        checkboxes.forEach(chk => chk.checked = source.checked);
+    }
+
+    function adicionarProdutosIA() {
+        const checkboxes = document.querySelectorAll('.chk-ia-item:checked');
+        if(checkboxes.length === 0) { mostrarToast("Selecione ao menos 1 produto."); return; }
+
+        checkboxes.forEach(chk => {
+            const itemCache = cacheResultadosIA[chk.dataset.index];
+            const novoProduto = criarObjetoProduto(
+                itemCache.nomeExtraido, 
+                itemCache.precoExtraido, 
+                itemCache.vinculado, 
+                itemCache.idSis, 
+                itemCache.cod, 
+                itemCache.nomeSis, 
+                itemCache.est
+            );
+            itensLista.push(novoProduto);
+        });
+
+        renderizarEditor();
+        salvarLocal();
+        fecharModalIA();
+        rolarParaFim();
+        mostrarToast(`${checkboxes.length} produto(s) adicionado(s) à sua lista!`);
+    }
+
     // LOG DE ESGOTADOS E MANUAIS
     function abrirLogEsgotados() {
         const esgotados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado && i.estoque !== null && i.estoque <= 0);
@@ -474,11 +688,9 @@
         const divLog = document.getElementById('conteudo-log');
         
         let html = '';
-
         if(esgotados.length === 0 && manuais.length === 0) {
             html = '<p style="color: var(--success); font-weight: 600;">✅ Tudo limpo! Nenhum produto esgotado ou sem vínculo.</p>';
         } else {
-            // Seção de Esgotados
             if (esgotados.length > 0) {
                 html += '<p style="margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--danger);">🛑 Esgotados no sistema:</p>';
                 esgotados.forEach(p => {
@@ -489,8 +701,6 @@
                              </div>`;
                 });
             }
-
-            // Seção de Manuais (Sem vínculo)
             if (manuais.length > 0) {
                 html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>`;
                 manuais.forEach(p => {
@@ -502,15 +712,8 @@
                 });
             }
         }
-        
         divLog.innerHTML = html;
         document.getElementById('modal-log').classList.add('visivel');
-    }
-
-    function fecharLog(e) {
-        if(e.target.id === 'modal-log') {
-            document.getElementById('modal-log').classList.remove('visivel');
-        }
     }
 
     // GERAÇÃO DO TEXTO FINAL
@@ -535,7 +738,6 @@
         } else if (item.tipo === 'produto') {
             
             const semEstoque = (item.vinculado && item.estoque !== null && item.estoque <= 0);
-            
             if (semEstoque && ocultarSemEstoque) return; 
             
             const nomeFinal = item.nomePersonalizado.trim() !== '' ? item.nomePersonalizado.replace(/\n/g, " ") : (item.nomeSistema || 'Produto Sem Nome');
@@ -550,7 +752,6 @@
             linhas.push(linhaProduto);
         }
       });
-
       textarea.value = linhas.join('\n');
     }
 
