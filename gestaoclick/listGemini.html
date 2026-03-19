@@ -75,14 +75,16 @@
     .item-tipo { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); background: var(--bg-main); padding: 2px 8px; border-radius: 12px; }
     .item-acoes { display: flex; gap: 4px; }
 
-    .grid-principal { display: grid; grid-template-columns: 1fr 100px; gap: 10px; }
+    .grid-principal { display: grid; grid-template-columns: 1fr 100px; gap: 10px; align-items: start; }
     
     input[type="text"], textarea.input-livre {
       width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
       font-size: 13px; font-family: inherit; color: var(--primary); background: var(--bg-main);
     }
     input[type="text"]:focus, textarea.input-livre:focus { outline: none; border-color: var(--primary); background: white; }
-    textarea.input-livre { resize: vertical; min-height: 60px; line-height: 1.4; }
+    
+    textarea.input-livre { resize: vertical; min-height: 40px; line-height: 1.4; }
+    textarea.input-texto-geral { min-height: 60px; }
 
     /* Área de Vínculo de Sistema */
     .vinculo-box { background: #fafafa; border: 1px dashed var(--border); border-radius: 6px; padding: 10px; margin-top: 4px;}
@@ -90,11 +92,12 @@
     .resultados-busca { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 150px; overflow-y: auto;}
     .resultado-item { font-size: 12px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center;}
     .resultado-item:hover { border-color: var(--primary); background: var(--bg-main); }
+    .resultado-item span { white-space: normal; word-break: break-word; } /* Correção texto busca mobile */
     
-    .sistema-info { display: flex; justify-content: space-between; align-items: center; }
-    .sistema-dados { display: flex; flex-direction: column; gap: 4px; }
-    .sistema-nome { font-size: 11px; font-weight: 600; color: var(--secondary); display: flex; align-items: center; gap: 6px;}
-    .badge-cod { font-size: 10px; background: #e0e0e0; padding: 2px 6px; border-radius: 4px; color: var(--primary); font-family: monospace;}
+    .sistema-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;}
+    .sistema-dados { display: flex; flex-direction: column; gap: 6px; flex: 1;}
+    .sistema-nome { font-size: 11px; font-weight: 600; color: var(--secondary); display: flex; align-items: flex-start; gap: 6px; white-space: normal; word-break: break-word; line-height: 1.3;}
+    .badge-cod { font-size: 10px; background: #e0e0e0; padding: 2px 6px; border-radius: 4px; color: var(--primary); font-family: monospace; flex-shrink: 0;}
     
     .estoque-status { font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
     .status-ok { color: var(--success); }
@@ -126,11 +129,10 @@
     .modal-overlay.visivel { opacity: 1; pointer-events: all; }
     .modal { background: white; width: 90%; max-width: 600px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 80vh;}
     .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .modal-header h3 { font-size: 1.1rem; color: var(--danger); display: flex; align-items: center; gap: 8px;}
+    .modal-header h3 { font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 8px;}
     .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
     .log-list { display: flex; flex-direction: column; gap: 8px; }
-    .log-item { padding: 12px; border: 1px solid rgba(192, 57, 43, 0.3); background: rgba(192, 57, 43, 0.05); border-radius: 6px; font-size: 13px;}
-    .log-item strong { color: var(--danger); }
+    .log-item { padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;}
 
     /* Notificações */
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--primary); color: white; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 1000; }
@@ -139,6 +141,7 @@
     @media (max-width: 768px) {
       .container { grid-template-columns: 1fr; overflow-y: auto; display: flex; flex-direction: column;}
       .editor-panel, .preview-panel { overflow: visible; flex: none; min-height: 500px;}
+      .grid-principal { grid-template-columns: 1fr; } /* No mobile, nome e preço ficam em linhas separadas */
       textarea#texto-resultado { min-height: 300px; border-bottom: 1px solid var(--border);}
     }
   </style>
@@ -168,16 +171,16 @@
         <h2>Pré-visualização da Mensagem</h2>
         <div class="opcoes-toggle">
           <label class="toggle-label">
-            <input type="checkbox" id="chk-data" onchange="gerarTexto()"> Inserir data de hoje no topo
+            <input type="checkbox" id="chk-data" onchange="salvarOpcoes()"> Inserir data de hoje no topo
           </label>
           <label class="toggle-label">
-            <input type="checkbox" id="chk-codigo" onchange="gerarTexto()"> Exibir Código do Sistema no texto (se vinculado)
+            <input type="checkbox" id="chk-codigo" onchange="salvarOpcoes()"> Exibir Código do Sistema no texto (se vinculado)
           </label>
           <label class="toggle-label">
-            <input type="checkbox" id="chk-ocultar" onchange="gerarTexto()"> Ocultar produtos sem estoque na mensagem
+            <input type="checkbox" id="chk-ocultar" onchange="salvarOpcoes()"> Ocultar produtos sem estoque na mensagem
           </label>
           <label class="toggle-label">
-            <input type="checkbox" id="chk-destacar" onchange="gerarTexto()" checked> Destacar produtos sem estoque com "🛑 ESGOTADO"
+            <input type="checkbox" id="chk-destacar" onchange="salvarOpcoes()"> Destacar produtos sem estoque com "🛑 ESGOTADO"
           </label>
         </div>
       </div>
@@ -192,7 +195,7 @@
   <div class="modal-overlay" id="modal-log" onclick="fecharLog(event)">
     <div class="modal">
       <div class="modal-header">
-        <h3>🛑 Relatório de Faltas (Itens Vinculados)</h3>
+        <h3>Relatório de Produtos</h3>
         <button class="btn btn-icon" onclick="document.getElementById('modal-log').classList.remove('visivel')">✖</button>
       </div>
       <div class="modal-body">
@@ -205,10 +208,22 @@
 
   <script>
     const LOJA_ID = "361408";
+    
+    // Recupera Itens e Opções
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v3')) || [];
+    let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v3')) || {
+        data: false, codigo: false, ocultar: false, destacar: true
+    };
+    
     let debounceTimer;
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Aplica as opções salvas nos checkboxes
+      document.getElementById('chk-data').checked = opcoesLista.data;
+      document.getElementById('chk-codigo').checked = opcoesLista.codigo;
+      document.getElementById('chk-ocultar').checked = opcoesLista.ocultar;
+      document.getElementById('chk-destacar').checked = opcoesLista.destacar;
+
       if(itensLista.length === 0) {
         itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
       }
@@ -222,6 +237,17 @@
       gerarTexto();
     }
 
+    function salvarOpcoes() {
+      opcoesLista = {
+          data: document.getElementById('chk-data').checked,
+          codigo: document.getElementById('chk-codigo').checked,
+          ocultar: document.getElementById('chk-ocultar').checked,
+          destacar: document.getElementById('chk-destacar').checked
+      };
+      localStorage.setItem('jeta_opcoes_v3', JSON.stringify(opcoesLista));
+      gerarTexto();
+    }
+
     function autoSalvar() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(salvarLocal, 500);
@@ -231,7 +257,6 @@
       if(tipo === 'texto') {
         itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
       } else {
-        // Novo formato: Nome livre independente do sistema
         itensLista.push({ 
             id: gerarId(), 
             tipo: 'produto', 
@@ -288,7 +313,6 @@
       container.innerHTML = '';
 
       itensLista.forEach((item, index) => {
-        // Estilização do card dependendo do status de estoque e vínculo
         const esgotado = (item.tipo === 'produto' && item.vinculado && item.estoque !== null && item.estoque <= 0);
         const manual = (item.tipo === 'produto' && !item.vinculado);
         
@@ -311,10 +335,9 @@
               <span class="item-tipo">Texto Livre / Quebra de linha</span>
               <div class="item-acoes">${acoesHTML}</div>
             </div>
-            <textarea class="input-livre" placeholder="Digite parágrafos, cabeçalhos, categorias..." oninput="atualizarCampo('${item.id}', 'texto', this.value)">${item.texto}</textarea>
+            <textarea class="input-livre input-texto-geral" placeholder="Digite parágrafos, cabeçalhos, categorias..." oninput="atualizarCampo('${item.id}', 'texto', this.value)">${item.texto}</textarea>
           `;
         } else {
-          // PRODUTO (NOME LIVRE SEMPRE EDITÁVEL)
           let boxVinculo = '';
 
           if(!item.vinculado) {
@@ -336,7 +359,7 @@
                   <div class="sistema-nome"><span class="badge-cod">${item.codigo || 'S/CÓD'}</span> ${item.nomeSistema}</div>
                   ${estoqueHTML}
                 </div>
-                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--danger); color: var(--danger);" onclick="desvincularProduto('${item.id}')">Desvincular</button>
+                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--danger); color: var(--danger); flex-shrink: 0;" onclick="desvincularProduto('${item.id}')">Desvincular</button>
               </div>
             `;
           }
@@ -347,7 +370,7 @@
               <div class="item-acoes">${acoesHTML}</div>
             </div>
             <div class="grid-principal">
-              <input type="text" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15...)" value="${item.nomePersonalizado}" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">
+              <textarea class="input-livre" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15...)" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">${item.nomePersonalizado}</textarea>
               <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarCampo('${item.id}', 'preco', this.value)">
             </div>
             <div class="vinculo-box">
@@ -380,10 +403,9 @@
                 const div = document.createElement('div');
                 div.className = 'resultado-item';
                 div.innerHTML = `
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px;"><b>[${cod}]</b> ${prod.nome}</span>
+                    <span style="margin-right: 10px;"><b>[${cod}]</b> ${prod.nome}</span>
                     <span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0;">${prod.estoque} un.</span>
                 `;
-                // Passa dados para vinculação
                 div.onclick = () => vincularProduto(idItem, prod.id, cod, prod.nome, prod.valor_venda, prod.estoque);
                 divResultados.appendChild(div);
             });
@@ -404,7 +426,6 @@
             item.nomeSistema = nomeSis;
             item.estoque = estoque;
             
-            // Auto-preenchimento inteligente: se o nome na lista ou preço estiver vazio, copia do sistema
             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = nomeSis;
             if(!item.preco.trim()) item.preco = parseFloat(valorVenda).toString(); 
 
@@ -413,7 +434,7 @@
         }
     }
 
-    // SINCRONIZAÇÃO DE ESTOQUE (Somente itens vinculados)
+    // SINCRONIZAÇÃO DE ESTOQUE
     async function sincronizarEstoqueTotal() {
         const btn = document.getElementById('btn-sync');
         const vinculados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado);
@@ -423,7 +444,6 @@
         btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
         const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
-        // Lotes de 3 requisições (Evita bloqueio da API)
         for (let i = 0; i < vinculados.length; i += 3) {
             const lote = vinculados.slice(i, i + 3);
             const promessas = lote.map(async (prod) => {
@@ -432,7 +452,7 @@
                     const json = await res.json();
                     if(json.code === 200 && json.data) {
                         prod.estoque = json.data.estoque;
-                        prod.nomeSistema = json.data.nome; // Mantém o nome do sistema atualizado internamente
+                        prod.nomeSistema = json.data.nome; 
                     }
                 } catch(e) { console.error(e); }
             });
@@ -444,28 +464,46 @@
 
         salvarLocal();
         btn.innerHTML = "🔄 Sincronizar Vínculos"; btn.disabled = false;
-        mostrarToast("✅ Sincronização de estoque concluída!");
+        mostrarToast("✅ Sincronização concluída!");
     }
 
-    // LOG DE ESGOTADOS
+    // LOG DE ESGOTADOS E MANUAIS
     function abrirLogEsgotados() {
-        // Filtra apenas produtos que estão vinculados E zerados
-        const esgotados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado && i.estoque <= 0);
+        const esgotados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado && i.estoque !== null && i.estoque <= 0);
+        const manuais = itensLista.filter(i => i.tipo === 'produto' && !i.vinculado);
         const divLog = document.getElementById('conteudo-log');
         
-        if(esgotados.length === 0) {
-            divLog.innerHTML = '<p style="color: var(--success); font-weight: 600;">✅ Nenhum produto vinculado está esgotado no sistema.</p><p style="font-size:12px; color:var(--text-muted); margin-top: 8px;">Nota: Produtos adicionados manualmente não são monitorados.</p>';
+        let html = '';
+
+        if(esgotados.length === 0 && manuais.length === 0) {
+            html = '<p style="color: var(--success); font-weight: 600;">✅ Tudo limpo! Nenhum produto esgotado ou sem vínculo.</p>';
         } else {
-            let html = '<p style="margin-bottom: 12px; font-size: 13px;">Os seguintes produtos da sua lista constam sem estoque no sistema:</p>';
-            esgotados.forEach(p => {
-                const nomeMostrado = p.nomePersonalizado || p.nomeSistema;
-                html += `<div class="log-item">
-                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Código: <b>[${p.codigo}]</b></div>
-                            <strong>${nomeMostrado}</strong> <br>
-                         </div>`;
-            });
-            divLog.innerHTML = html;
+            // Seção de Esgotados
+            if (esgotados.length > 0) {
+                html += '<p style="margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--danger);">🛑 Esgotados no sistema:</p>';
+                esgotados.forEach(p => {
+                    const nomeMostrado = p.nomePersonalizado.trim() || p.nomeSistema;
+                    html += `<div class="log-item" style="margin-bottom: 8px; background: rgba(192, 57, 43, 0.05); border-color: rgba(192, 57, 43, 0.3);">
+                                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Código: <b>[${p.codigo}]</b></div>
+                                <strong style="color: var(--danger);">${nomeMostrado}</strong>
+                             </div>`;
+                });
+            }
+
+            // Seção de Manuais (Sem vínculo)
+            if (manuais.length > 0) {
+                html += `<p style="margin-top: 16px; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--warning);">⚠️ Sem vínculo (Requer checagem manual):</p>`;
+                manuais.forEach(p => {
+                    const nomeMostrado = p.nomePersonalizado.trim() || 'Produto sem nome';
+                    html += `<div class="log-item" style="margin-bottom: 8px; background: rgba(243, 156, 18, 0.05); border-color: rgba(243, 156, 18, 0.3);">
+                                <strong style="color: var(--warning);">${nomeMostrado}</strong> <br>
+                                <span style="font-size: 11px; color: var(--text-muted);">Estoque não monitorado pela API.</span>
+                             </div>`;
+                });
+            }
         }
+        
+        divLog.innerHTML = html;
         document.getElementById('modal-log').classList.add('visivel');
     }
 
@@ -475,7 +513,7 @@
         }
     }
 
-    // GERAÇÃO DO TEXTO
+    // GERAÇÃO DO TEXTO FINAL
     function gerarTexto() {
       const ocultarSemEstoque = document.getElementById('chk-ocultar').checked;
       const destacarSemEstoque = document.getElementById('chk-destacar').checked;
@@ -498,16 +536,13 @@
             
             const semEstoque = (item.vinculado && item.estoque !== null && item.estoque <= 0);
             
-            // Se estiver sem estoque e a opção de ocultar estiver ativa, ignora a linha
             if (semEstoque && ocultarSemEstoque) return; 
             
-            // Define qual nome usar (Prioriza o personalizado)
-            const nomeFinal = item.nomePersonalizado.trim() !== '' ? item.nomePersonalizado : (item.nomeSistema || 'Produto Sem Nome');
-            
+            const nomeFinal = item.nomePersonalizado.trim() !== '' ? item.nomePersonalizado.replace(/\n/g, " ") : (item.nomeSistema || 'Produto Sem Nome');
             const textoCodigo = (incluirCodigo && item.vinculado) ? `[${item.codigo}] ` : '';
+            
             let linhaProduto = `${textoCodigo}${nomeFinal} - ${item.preco}`;
             
-            // Aplica formatação de esgotado, se necessário
             if (semEstoque && destacarSemEstoque) {
                 linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
             }
