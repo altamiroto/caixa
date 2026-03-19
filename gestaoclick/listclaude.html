@@ -1644,35 +1644,67 @@ function normStr(s) {
     .replace(/\s+/g, ' ').trim();
 }
 
-// Extrai tokens identificadores de modelo (ignora marca, cores, stopwords)
-// Ex: "Note 14 Pro 5G 8/256gb - Preto" → ["note","14","pro","5g","8/256"]
+// Detecta acessórios — nunca devem ser vinculados a um celular/TV
+function ehAcessorio(nome) {
+  return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película)\b/i.test(nome);
+}
+
+// Tokens identificadores do modelo: remove marca, cor, stopwords genéricas
+// Mantém: modelo alfanumérico (G15, Note14, A36), memória (8/256), conectividade (5g)
 function tokensModelo(label) {
   const stop = new Set(['de','do','da','com','para','a','o','e','em',
     'smart','tv','led','oled','full','hd','4k','ultra','wi','fi',
     'xiaomi','samsung','motorola','realme','apple','lg','tcl',
-    'philips','semp','toshiba','aoc','hisense','redmi','poco']);
+    'philips','semp','toshiba','aoc','hisense','redmi','poco',
+    'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
+    'prata','bege','vermelho','amarelo','grafite','gold','creme',
+    'titanium','aurora','marrom','laranja','vinho']);
   const n = normStr(label);
   return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
 }
 
-// Busca no cache local — retorna produtos onde os tokens do modelo batem
+// Busca no cache com critérios ESTRITOS:
+// - Rejeita acessórios imediatamente
+// - Tokens alfanuméricos de modelo (G15, Note14) devem bater como PALAVRA INTEIRA
+// - Tokens de memória/rede devem estar presentes
+// - ≥ 50% dos tokens de texto devem bater
 function buscarNoCacheLocal(q) {
   if (!q || !_prodCache.length) return [];
   const tokens = tokensModelo(q);
   if (!tokens.length) return [];
 
-  // Separa tokens numéricos (modelo, memória) de alfanuméricos
-  // Tokens numéricos são mais específicos: exige que TODOS batam
-  const numTok = tokens.filter(t => /^[\d\/]+$/.test(t) || /^\d+(gb|tb)$/i.test(t));
-  const txtTok = tokens.filter(t => !/^[\d\/]+$/.test(t) && !/^\d+(gb|tb)$/i.test(t));
+  const memTok   = tokens.filter(t => /^\d+\/\d+$/.test(t));
+  const storTok  = tokens.filter(t => /^\d+(gb|tb)$/i.test(t));
+  const redeTok  = tokens.filter(t => /^(4g|5g)$/i.test(t));
+  // Token alfanumérico de modelo: mistura letra+número — muito específico
+  const modelTok = tokens.filter(t =>
+    /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+    !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
+  const txtTok   = tokens.filter(t =>
+    !memTok.includes(t) && !storTok.includes(t) &&
+    !redeTok.includes(t) && !modelTok.includes(t));
 
   return _prodCache.filter(p => {
+    if (ehAcessorio(p.nome)) return false;
     const pn = normStr(p.nome);
 
-    // Todos os tokens numéricos devem estar presentes (ex: "14", "8/256", "5g")
-    if (numTok.length && !numTok.every(t => pn.includes(t))) return false;
+    // Memória exata: "8/256" deve estar no nome
+    if (memTok.length && !memTok.every(t => pn.includes(t))) return false;
 
-    // Pelo menos metade dos tokens de texto devem estar presentes
+    // Storage solo
+    if (storTok.length && !storTok.every(t => {
+      const n = t.replace(/[^\d]/g, '');
+      return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
+    })) return false;
+
+    // Conectividade: palavra inteira (4g não bate 14g)
+    if (redeTok.length && !redeTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+
+    // Modelo alfanumérico: PALAVRA INTEIRA obrigatória
+    // G15 não pode bater "G15/G35" nem "G150"
+    if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+
+    // Tokens de texto: ≥ 50%
     if (txtTok.length) {
       const hits = txtTok.filter(t => pn.includes(t)).length;
       if (hits < Math.ceil(txtTok.length * 0.5)) return false;
@@ -1681,124 +1713,104 @@ function buscarNoCacheLocal(q) {
   });
 }
 
-// Gera queries progressivas para busca no cache/API
+// Gera queries progressivas para busca
 function gerarQueries(label) {
   const queries = [];
-
-  // Remove cor (após último " - ")
   const semCor = label
     .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey)[\w/]*/gi, '')
     .replace(/\s+/g, ' ').trim();
-
-  // Remove último traço e o que vem depois (cor residual)
   const comMem = semCor.replace(/\s*[-–]\s*\S+.*$/, '').trim();
   if (comMem.length > 3) queries.push(comMem);
-
-  // Sem memória RAM/storage
   const semMem = comMem
     .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
     .replace(/\s+\d+(gb|tb)/gi, '')
     .replace(/\s+/g, ' ').trim();
   if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
-
-  // Só modelo (sem conectividade): "Note 14 Pro" em vez de "Note 14 Pro 5G"
-  const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g, ' ').trim();
+  const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
   if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
-
-  // Modelo curto: primeiras 3 palavras significativas
-  const toks = tokensModelo(semMem);
-  if (toks.length > 2) queries.push(toks.slice(0, 3).join(' '));
-
-  if (!queries.length) queries.push(label.split(/\s+/).slice(0, 4).join(' '));
+  if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
   return [...new Set(queries.filter(Boolean))];
 }
 
-// Retorna array de vínculos [{ id, nome, sku, estoque }] ou []
-// Busca no cache usando queries progressivas geradas por gerarQueries()
+// Retorna vínculos com score ≥ 0.55 — só produtos muito próximos do label
 async function buscarVinculosDoItem(item) {
   let candidatos = [];
-
   if (_prodCache.length) {
-    // Busca offline usando queries progressivas (mais específica → mais ampla)
     const queries = gerarQueries(item.label || item.sysname || '');
     for (const q of queries) {
-      const r = buscarNoCacheLocal(q);
-      r.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
-      // Para quando tiver candidatos suficientes (não para cedo demais — queremos variações)
-      if (candidatos.length >= 20) break;
+      buscarNoCacheLocal(q).forEach(p => {
+        if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
+      });
+      if (candidatos.length >= 30) break;
     }
-    // Se ainda não achou, tenta pelo sku/código
     if (!candidatos.length && item.sku?.trim()) {
-      const skuNorm = item.sku.trim().toLowerCase();
-      const r = _prodCache.filter(p =>
-        (p.codigo_interno || '').toLowerCase() === skuNorm ||
-        (p.codigo_barra   || '').toLowerCase() === skuNorm
-      );
-      r.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
+      const skuN = item.sku.trim().toLowerCase();
+      _prodCache.filter(p =>
+        (p.codigo_interno||'').toLowerCase() === skuN ||
+        (p.codigo_barra||'').toLowerCase() === skuN
+      ).forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
     }
   } else {
-    // Fallback: busca online com queries progressivas
     const queries = gerarQueries(item.label || item.sysname || '');
     for (const q of queries) {
       try {
         const d = await apiGet({ nome: q });
-        if (d.code === 200 && d.data?.length) {
-          d.data.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
-        }
-      } catch(e) { /* ignora */ }
+        if (d.code === 200 && d.data?.length)
+          d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+      } catch(e) {}
       if (candidatos.length >= 10) break;
     }
   }
-
   if (!candidatos.length) return [];
-
-  // Aplica filtros técnicos ELIMINATÓRIOS + score de nome
   const label = item.label || item.sysname || '';
-  const matches = candidatos
+  return candidatos
+    .filter(p => !ehAcessorio(p.nome))
     .filter(p => filtroTecnico(label, p.nome))
     .map(p => ({ p, score: scoreNome(label, p.nome) }))
-    .filter(({ score }) => score >= 0.2)   // threshold um pouco mais permissivo
+    .filter(({ score }) => score >= 0.55)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 15)
+    .slice(0, 8)
     .map(({ p }) => ({
-      id:      p.id,
-      nome:    p.nome,
-      sku:     p.codigo_interno || p.codigo_barra || '',
+      id: p.id, nome: p.nome,
+      sku: p.codigo_interno || p.codigo_barra || '',
       estoque: Number(p.estoque ?? 0),
     }));
-
-  return matches;
 }
 
-// Filtro técnico: retorna false se atributos incompatíveis
+// Filtro técnico: rejeita se atributos incompatíveis (memória, rede, polegadas)
 function filtroTecnico(label, nomeAPI) {
-  const lMem  = extrairMem(label);   const pMem  = extrairMem(nomeAPI);
-  const lRede = extrairRede(label);  const pRede = extrairRede(nomeAPI);
-  const lPol  = extrairPolegadas(label); const pPol = extrairPolegadas(nomeAPI);
-  const lStor = extrairStorage(label);
-
-  if (lMem.length && pMem.length && !lMem.some(m => pMem.includes(m))) return false;
-  if (lRede.length && pRede.length && !lRede.some(r => pRede.includes(r))) return false;
-  if (lPol.length && pPol.length && !lPol.some(p => pPol.includes(p))) return false;
+  const lMem=extrairMem(label), pMem=extrairMem(nomeAPI);
+  const lRede=extrairRede(label), pRede=extrairRede(nomeAPI);
+  const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
+  const lStor=extrairStorage(label);
+  if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
+  if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
+  if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
   if (lStor.length) {
-    const pMem2 = extrairMem(nomeAPI);
-    const lStorNum = lStor.map(s => s.replace(/[^\d]/g,''));
-    const pStorNums = [
-      ...extrairStorage(nomeAPI).map(s => s.replace(/[^\d]/g,'')),
-      ...pMem2.map(m => m.split('/')[1]).filter(Boolean),
-    ];
-    if (pStorNums.length && !lStorNum.some(n => pStorNums.includes(n))) return false;
+    const pMem2=extrairMem(nomeAPI);
+    const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,''));
+    const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];
+    if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false;
   }
   return true;
 }
 
-// Score de nome: proporção de tokens do label que aparecem no nome do produto
+// Score ponderado: modelo alfanumérico (70%) + restante (30%)
 function scoreNome(label, nomeAPI) {
   const tokens = tokensModelo(label);
   if (!tokens.length) return 0;
   const pn = normStr(nomeAPI);
-  return tokens.reduce((s, t) => s + (pn.includes(t) ? 1 : 0), 0) / tokens.length;
+  const modelTok = tokens.filter(t =>
+    /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+    !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
+  const restTok = tokens.filter(t => !modelTok.includes(t));
+  const mScore = modelTok.length
+    ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1;
+  const rScore = restTok.length
+    ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
+  return mScore * 0.7 + rScore * 0.3;
 }
+
 
 // Compatibilidade retroativa: retorna um único { estoque, prodId } ou null
 async function buscarEstoqueDoItem(item) {
