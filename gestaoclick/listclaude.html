@@ -1763,20 +1763,17 @@ function buscarNoCacheLocal(q) {
       return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
     })) return false;
 
-    // Conectividade: filtro BIDIRECIONAL
-    // - Label com 5G → produto deve ter 5G (já existia)
-    // - Label SEM conectividade E produto com 5G → rejeita
-    //   (Note 14 4G e Note 14 5G são SKUs completamente distintos)
-    const pRedeTok = normStr(p.nome).match(/\b(4g|5g)\b/gi);
-    const pTem5g   = pRedeTok && pRedeTok.some(r => r.toLowerCase() === '5g');
-    const pTem4g   = pRedeTok && pRedeTok.some(r => r.toLowerCase() === '4g');
+    // Conectividade: filtro BIDIRECIONAL apenas para smartphones
+    // TVs, iPads e tablets não têm 4G/5G — não aplicar esse filtro
+    const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
+    const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
+    const pTem5g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
+    const pTem4g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
     if (redeTok.length) {
       // Label especifica rede → produto deve ter a mesma
       if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
-    } else {
-      // Label NÃO especifica rede → rejeita se produto tem 5G OU 4G explícito
-      // Exceção: se o próprio modelo só existe em 5G no catálogo, deixamos passar
-      // Regra prática: se produto tem "5g" ou "4g" na string, é um SKU diferente
+    } else if (ehSmartphone) {
+      // Smartphone sem rede explícita → rejeita se produto tem 5G ou 4G
       if (pTem5g || pTem4g) return false;
     }
 
@@ -1797,20 +1794,69 @@ function buscarNoCacheLocal(q) {
 
 function gerarQueries(label) {
   const queries = [];
-  const semCor = label
-    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey)[\w/]*/gi, '')
+
+  // Remove informações de marketing e especificações técnicas longas que não existem no sistema
+  // Ex: "Gaming Hub, HDR com comando de Voz", "HDR10, HDMI, USB, Dolby Audio, Wi-Fi"
+  let limpo = label
+    .replace(/,\s*[^,]{10,}/g, '')          // Remove segmentos longos após vírgula
+    .replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '')
     .replace(/\s+/g, ' ').trim();
-  const comMem = semCor.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+
+  // Remove cor
+  limpo = limpo
+    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '')
+    .replace(/\s+/g, ' ').trim();
+
+  // Remove último traço e o que vem depois
+  const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
   if (comMem.length > 3) queries.push(comMem);
+
+  // Sem memória/storage
   const semMem = comMem
     .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
     .replace(/\s+\d+(gb|tb)/gi, '')
     .replace(/\s+/g, ' ').trim();
   if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+
+  // Sem conectividade
   const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
   if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+
+  // Query curta para TVs: marca + polegadas + modelo (ex: "Samsung 43" U8100")
+  const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
+  if (tvMatch) {
+    const marca = tvMatch[1].trim();
+    const pol   = tvMatch[2];
+    const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
+    const cod = codMatch ? codMatch[1] : '';
+    const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
+    if (qTV.length > 3) queries.push(qTV);
+    queries.push((marca + ' ' + pol + '"').trim());
+  }
+
+  // Query baseada em código de modelo para TVs (U8100F, 43S5045, 32PHG)
+  const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
+  if (codModelo) {
+    codModelo.forEach(cod => {
+      if (cod.length >= 4) queries.push(cod);
+    });
+  }
+
+  // Extra: marca principal + polegadas para qualquer TV
+  const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
+  if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
+
+  // Query para iPad/tablet: "ipad 10 64gb" → "ipad 64gb" ou "ipad 10"
+  if (/\bipad\b/i.test(label)) {
+    const gen = label.match(/\bipad\s+(\d+)\b/i);
+    const mem = label.match(/\b(\d+)\s*gb\b/i);
+    if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
+    if (gen)        queries.push(`ipad ${gen[1]}`);
+    queries.push('ipad');
+  }
+
   if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
-  return [...new Set(queries.filter(Boolean))];
+  return [...new Set(queries.filter(q => q.length > 2))];
 }
 
 async function buscarVinculosDoItem(item) {
@@ -1843,11 +1889,14 @@ async function buscarVinculosDoItem(item) {
   }
   if (!candidatos.length) return [];
   const label = item.label || item.sysname || '';
+  // Threshold mais permissivo para TVs e tablets (nomes muito diferentes entre lista e sistema)
+  const ehTV      = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
+  const threshold = ehTV ? 0.20 : 0.55;
   return candidatos
     .filter(p => !ehAcessorio(p.nome))
     .filter(p => filtroTecnico(label, p.nome))
     .map(p => ({ p, score: scoreNome(label, p.nome) }))
-    .filter(({ score }) => score >= 0.55)
+    .filter(({ score }) => score >= threshold)
     .sort((a, b) => b.score - a.score)
     .slice(0, 8)
     .map(({ p }) => ({
@@ -1863,9 +1912,10 @@ function filtroTecnico(label, nomeAPI) {
   const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
   const lStor=extrairStorage(label);
   if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
-  // Conectividade bidirecional: label sem rede + produto com 5G/4G → rejeita
+  // Conectividade bidirecional — apenas para smartphones (TVs/iPads nunca têm 4G/5G)
+  const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
   if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
-  if (!lRede.length && pRede.length) return false;
+  if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
   if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
   if (lStor.length) {
     const pMem2=extrairMem(nomeAPI);
