@@ -691,6 +691,15 @@
     }
     .ia-sel-all { font-size: 12px; color: var(--text2); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
 
+    .vincul-active-list { max-height: 120px; overflow-y: auto; }
+    .vincul-active-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 11px; border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .vincul-active-row:last-child { border-bottom: none; }
+    .ia-dd-jatem { opacity: .55; }
+
     .btn-ia { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
     .btn-ia:hover { background: linear-gradient(135deg,#6d28d9,#4338ca); }
   </style>
@@ -1078,12 +1087,25 @@ async function iaBuscarVinculos(itens) {
   el('ia-progress-wrap').style.display = 'flex';
   el('ia-rev-container').style.display = 'none';
 
-  const delay = ms => new Promise(r => setTimeout(r, ms));
-  const produtos = itens.filter(i => i.type === 'product');
-  _iaItens = itens.map(i => ({ ...i, _vinculo: null, _candidatos: [], _selecionado: true }));
+  _iaItens = itens.map(i => ({ ...i, _vinculos: [], _selecionado: true }));
 
-  let feitos = 0;
+  // 1. Baixa catálogo completo uma única vez
+  el('ia-prog-txt').textContent = 'Baixando catálogo de produtos…';
+  el('ia-prog-bar').style.width = '5%';
+  try {
+    await carregarCacheProdutos((pag, total) => {
+      el('ia-prog-bar').style.width = Math.round((pag/total)*40) + '%';
+      el('ia-prog-txt').textContent = `Catálogo: página ${pag}/${total}…`;
+    });
+  } catch(e) {
+    // Se falhar, continua com buscas individuais
+    console.warn('Cache falhou, usando busca individual:', e.message);
+  }
+
+  // 2. Resolve vínculos por produto offline
+  const produtos = _iaItens.filter(i => i.type === 'product');
   const total = produtos.length;
+  let feitos = 0;
 
   for (let i = 0; i < _iaItens.length; i++) {
     const item = _iaItens[i];
@@ -1091,33 +1113,12 @@ async function iaBuscarVinculos(itens) {
 
     feitos++;
     el('ia-prog-txt').textContent = `(${feitos}/${total}) ${item.label?.substring(0,35)}…`;
-    el('ia-prog-bar').style.width = Math.round((feitos / Math.max(total, 1)) * 100) + '%';
+    el('ia-prog-bar').style.width = (40 + Math.round((feitos/Math.max(total,1))*60)) + '%';
 
     try {
-      const queries = gerarQueries(item.label);
-      let candidatos = [];
-      for (const q of queries) {
-        try {
-          const d = await apiGet({ nome: q });
-          if (d.code === 200 && d.data?.length) {
-            // Acumula candidatos únicos
-            d.data.forEach(p => {
-              if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
-            });
-            if (candidatos.length >= 5) break; // suficiente
-          }
-        } catch(e) { /* ignora falha de query individual */ }
-        await delay(380); // respeita rate limit entre queries
-      }
-
-      if (candidatos.length) {
-        _iaItens[i]._candidatos = candidatos.slice(0, 15);
-        _iaItens[i]._vinculo = melhorMatch(item.label, candidatos);
-      }
+      const vs = await buscarVinculosDoItem(item);
+      _iaItens[i]._vinculos = vs;
     } catch(e) { /* sem vínculo */ }
-
-    // Delay extra a cada 3 produtos para não estourar 3 req/s
-    if (feitos % 3 === 0) await delay(800);
   }
 
   el('ia-prog-bar').style.width = '100%';
@@ -1292,8 +1293,8 @@ function iaRenderRevisao() {
   const list = el('ia-rev-list');
   list.innerHTML = '';
 
-  const total = _iaItens.filter(i => i.type === 'product').length;
-  const comVinc = _iaItens.filter(i => i.type === 'product' && i._vinculo).length;
+  const total    = _iaItens.filter(i => i.type === 'product').length;
+  const comVinc  = _iaItens.filter(i => i.type === 'product' && i._vinculos?.length).length;
   el('ia-rev-summary').textContent =
     `${total} produto(s) · ${comVinc} vinculado(s) · ${total - comVinc} sem vínculo`;
 
@@ -1319,10 +1320,28 @@ function iaRenderRevisao() {
           <div class="ia-rev-label" style="color:var(--text3);font-style:italic;">${item.text||'(linha em branco)'}</div>
         </div>`;
     } else {
-      const v = item._vinculo;
-      const vincHtml = v
-        ? `<span class="ia-rev-vinc ok" title="${esc(v.nome)}">🔗 ${esc(v.nome.substring(0,40))}${v.nome.length>40?'…':''}</span>`
-        : `<span class="ia-rev-vinc none">⚠ Sem vínculo — clique em Trocar</span>`;
+      const vs = item._vinculos || [];
+      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+
+      // Linha de vínculo principal
+      let vincHtml;
+      if (vs.length === 0) {
+        vincHtml = `<span class="ia-rev-vinc none">⚠ Sem vínculo — clique em Trocar</span>`;
+      } else if (vs.length === 1) {
+        vincHtml = `<span class="ia-rev-vinc ok" title="${esc(vs[0].nome)}">🔗 ${esc(vs[0].nome.substring(0,38))}${vs[0].nome.length>38?'…':''} · ${vs[0].estoque>0?'✓ '+vs[0].estoque:'⚠ '+vs[0].estoque}</span>`;
+      } else {
+        vincHtml = `<span class="ia-rev-vinc ok">🔗 ${vs.length} vínculos · Σ ${estoqueTotal} un.</span>`;
+      }
+
+      // Detalhe individual quando múltiplos
+      const detalhes = vs.length > 1
+        ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
+            ${vs.map(v => `<div style="font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;">
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome.substring(0,40))}</span>
+              <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};flex-shrink:0;">${v.estoque>0?'✓ '+v.estoque:'⚠ '+v.estoque}</span>
+              <button class="ia-rm-vinc" data-idx="${idx}" data-vid="${v.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;flex-shrink:0;">✕</button>
+            </div>`).join('')}
+          </div>` : '';
 
       div.innerHTML = `
         <input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
@@ -1331,12 +1350,13 @@ function iaRenderRevisao() {
           <div class="ia-rev-meta">
             ${item.price ? `<span class="ia-rev-price">R$ ${esc(item.price)}</span>` : ''}
             ${vincHtml}
-            <button class="ia-rev-change" data-idx="${idx}">🔄 Trocar</button>
+            <button class="ia-rev-change" data-idx="${idx}">🔄 Trocar/Add</button>
           </div>
+          ${detalhes}
           <div class="ia-rev-dropdown" id="ia-dd-${idx}">
             <input type="text" class="ia-rev-dd-search" placeholder="Buscar na API…" data-idx="${idx}" />
             <div class="ia-rev-dd-results" id="ia-dd-res-${idx}">
-              ${iaDdItens(item._candidatos, idx)}
+              ${iaDdItens(_prodCache.length ? [] : [], idx, vs)}
             </div>
           </div>
         </div>`;
@@ -1348,12 +1368,26 @@ function iaRenderRevisao() {
       div.classList.toggle('selected', e.target.checked);
     });
 
-    // botão trocar
+    // remover vínculo individual nos detalhes
+    div.querySelectorAll('.ia-rm-vinc').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const vid = btn.dataset.vid;
+        _iaItens[idx]._vinculos = (_iaItens[idx]._vinculos || []).filter(v => String(v.id) !== String(vid));
+        iaRenderRevisao();
+      });
+    });
+
+    // botão trocar/add
     div.querySelector('.ia-rev-change')?.addEventListener('click', () => {
       const dd = el(`ia-dd-${idx}`);
       dd.classList.toggle('open');
       if (dd.classList.contains('open')) {
-        dd.querySelector('.ia-rev-dd-search')?.focus();
+        const inp = dd.querySelector('.ia-rev-dd-search');
+        inp?.focus();
+        // Pré-popula com candidatos do cache pelo label
+        const cands = _prodCache.length ? buscarNoCacheLocal(item.label).slice(0,15) : [];
+        el(`ia-dd-res-${idx}`).innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
       }
     });
 
@@ -1362,52 +1396,60 @@ function iaRenderRevisao() {
       const q = this.value.trim();
       const resDiv = el(`ia-dd-res-${idx}`);
       if (q.length < 2) {
-        resDiv.innerHTML = iaDdItens(_iaItens[idx]._candidatos, idx);
+        const cands = _prodCache.length ? buscarNoCacheLocal(_iaItens[idx].label || '').slice(0,15) : [];
+        resDiv.innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
         return;
       }
       resDiv.innerHTML = '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">⏳ Buscando…</div>';
-      try {
-        const d = await apiGet({ nome: q });
-        if (d.code === 200 && d.data?.length) {
-          _iaItens[idx]._candidatos = d.data.slice(0,12);
-          resDiv.innerHTML = iaDdItens(d.data.slice(0,12), idx);
-        } else {
-          resDiv.innerHTML = '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum resultado.</div>';
-        }
-      } catch(e) {
-        resDiv.innerHTML = `<div style="padding:6px 10px;color:var(--danger);font-size:12px;">${esc(e.message)}</div>`;
+      // Busca no cache ou API
+      let prods = _prodCache.length ? buscarNoCacheLocal(q).slice(0,15) : [];
+      if (!prods.length) {
+        try {
+          const d = await apiGet({ nome: q });
+          if (d.code === 200 && d.data?.length) prods = d.data.slice(0,15);
+        } catch(e) {}
       }
+      resDiv.innerHTML = prods.length
+        ? iaDdItens(prods, idx, _iaItens[idx]._vinculos || [])
+        : '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum resultado.</div>';
     });
 
     list.appendChild(div);
   });
 }
 
-function iaDdItens(cands, idx) {
+function iaDdItens(cands, idx, jaVinculados) {
   if (!cands?.length) return '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum candidato. Busque acima.</div>';
   return cands.map(p => {
     const est = Number(p.estoque ?? 0);
     const badgeCls = est > 0 ? 'badge-ok' : 'badge-zero';
-    return `<div class="ia-rev-dd-row" data-pid="${esc(p.id)}" data-pnome="${esc(p.nome)}" data-psku="${esc(p.codigo_interno||p.codigo_barra||'')}" data-pest="${est}" data-idx="${idx}">
+    const jatem = (jaVinculados||[]).some(v => String(v.id) === String(p.id));
+    return `<div class="ia-rev-dd-row${jatem?' ia-dd-jatem':''}" data-pid="${esc(p.id)}" data-pnome="${esc(p.nome)}" data-psku="${esc(p.codigo_interno||p.codigo_barra||'')}" data-pest="${est}" data-idx="${idx}">
       <span class="ia-rev-dd-nome">${esc(p.nome)}</span>
       <span class="ia-rev-dd-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</span>
       <span class="badge ${badgeCls}" style="font-size:10px;padding:2px 5px;">${est>0?'✓ '+est:'⚠ '+est}</span>
+      ${jatem ? '<span style="color:var(--accent);font-size:10px;">✓</span>' : ''}
     </div>`;
   }).join('');
 }
 
-// Delegação de clique nos dd-rows (dentro da rev-list)
+// Delegação de clique nos dd-rows — ADICIONA ao array de vínculos (não substitui)
 el('ia-rev-list').addEventListener('click', e => {
   const row = e.target.closest('.ia-rev-dd-row');
   if (!row) return;
   const idx = +row.dataset.idx;
-  _iaItens[idx]._vinculo = {
+  const novoVinculo = {
     id: row.dataset.pid, nome: row.dataset.pnome,
-    codigo_interno: row.dataset.psku, estoque: +row.dataset.pest
+    sku: row.dataset.psku, estoque: +row.dataset.pest
   };
-  // fecha dropdown
-  el(`ia-dd-${idx}`)?.classList.remove('open');
-  // re-renderiza só esse item
+  const vs = _iaItens[idx]._vinculos || [];
+  // Se já existe, remove (toggle); senão adiciona
+  const existe = vs.findIndex(v => String(v.id) === String(novoVinculo.id));
+  if (existe >= 0) {
+    _iaItens[idx]._vinculos = vs.filter((_, i) => i !== existe);
+  } else {
+    _iaItens[idx]._vinculos = [...vs, novoVinculo];
+  }
   iaRenderRevisao();
 });
 
@@ -1431,15 +1473,16 @@ function iaConfirmar() {
     } else if (item.type === 'free') {
       lista.push({ ...base, type: 'free', text: item.text || '' });
     } else {
-      const v = item._vinculo;
+      const vs = item._vinculos || [];
       lista.push({
         ...base, type: 'product',
-        label:   item.label  || '',
-        price:   item.price  || '',
-        sysname: v?.nome     || '',
-        sku:     v?.codigo_interno || v?.codigo_barra || '',
-        prodId:  v?.id       || null,
-        estoque: v ? Number(v.estoque ?? null) : undefined,
+        label:    item.label  || '',
+        price:    item.price  || '',
+        vinculos: vs,
+        sysname:  vs[0]?.nome || '',
+        sku:      vs[0]?.sku  || '',
+        prodId:   vs[0]?.id   || null,
+        estoque:  vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined,
       });
     }
   });
@@ -1535,45 +1578,169 @@ async function apiGet(params) {
   return res.json();
 }
 
-// Retorna { estoque, prodId } ou null
-// Estratégia: código > nome no sistema > nome na lista
-// Em cada passo, se temos prodId tenta casar pelo id antes de pegar o primeiro resultado
+// ════════════════════════════════════
+// CACHE DE PRODUTOS
+// Baixa TODOS os produtos da API de uma vez
+// (paginado, respeitando rate limit).
+// Usado pelo IA import e pelo syncTodos.
+// ════════════════════════════════════
+let _prodCache = [];          // array com todos os produtos
+let _prodCacheTs = 0;         // timestamp da última carga
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+async function carregarCacheProdutos(onProgress) {
+  // Usa cache se ainda for válido
+  if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
+
+  const base = el('api-base').value.trim();
+  const loja = el('loja-id').value.trim();
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  // Primeira página para saber total
+  const url1 = new URL(base);
+  url1.searchParams.set('loja_id', loja);
+  url1.searchParams.set('limite', '100');
+  url1.searchParams.set('pagina', '1');
+  const r1 = await fetch(url1.toString());
+  if (!r1.ok) throw new Error('HTTP ' + r1.status);
+  const d1 = await r1.json();
+  if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+
+  const totalPaginas = d1.meta?.total_paginas || 1;
+  let todos = [...(d1.data || [])];
+
+  if (onProgress) onProgress(1, totalPaginas, todos.length);
+
+  // Páginas restantes em lotes de 3 (rate limit)
+  for (let p = 2; p <= totalPaginas; p++) {
+    const url = new URL(base);
+    url.searchParams.set('loja_id', loja);
+    url.searchParams.set('limite', '100');
+    url.searchParams.set('pagina', p);
+    try {
+      const r = await fetch(url.toString());
+      if (r.ok) {
+        const d = await r.json();
+        if (d.code === 200 && d.data) todos = todos.concat(d.data);
+      }
+    } catch(e) { /* ignora página com falha */ }
+
+    if (onProgress) onProgress(p, totalPaginas, todos.length);
+
+    // Delay a cada 3 páginas
+    if ((p - 1) % 3 === 0) await delay(1100);
+  }
+
+  _prodCache = todos;
+  _prodCacheTs = Date.now();
+  return _prodCache;
+}
+
+// Busca no cache local (sem rede)
+function buscarNoCacheLocal(q) {
+  if (!q || !_prodCache.length) return [];
+  const n = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return _prodCache.filter(p => {
+    const pn = p.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return pn.includes(n) || n.split(/\s+/).every(w => pn.includes(w));
+  });
+}
+
+// Retorna array de vínculos [{ id, nome, sku, estoque }] ou []
+// Busca no cache se disponível, senão faz requisição
+async function buscarVinculosDoItem(item) {
+  const pool = _prodCache.length
+    ? _prodCache  // usa cache se disponível
+    : null;
+
+  let candidatos = [];
+
+  if (pool) {
+    // Busca offline no cache
+    const queries = [
+      item.sku?.trim(),
+      item.sysname?.trim(),
+      item.label?.trim(),
+    ].filter(Boolean);
+    for (const q of queries) {
+      const r = buscarNoCacheLocal(q);
+      r.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
+      if (candidatos.length >= 5) break;
+    }
+  } else {
+    // Fallback: busca online
+    for (const campo of ['sku','sysname','label']) {
+      const v = item[campo]?.trim();
+      if (!v) continue;
+      try {
+        const key = campo === 'sku' ? 'codigo' : 'nome';
+        const d = await apiGet({ [key]: v });
+        if (d.code === 200 && d.data?.length) {
+          d.data.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
+        }
+      } catch(e) { /* ignora */ }
+      if (candidatos.length >= 5) break;
+    }
+  }
+
+  if (!candidatos.length) return [];
+
+  // Aplica filtros eliminatórios + score em todos os candidatos
+  // Retorna TODOS que passam nos filtros com score ≥ 0.25 (pode ser mais de um — variações)
+  const matches = candidatos
+    .filter(p => filtroTecnico(item.label || '', p.nome))
+    .map(p => ({ p, score: scoreNome(item.label || '', p.nome) }))
+    .filter(({ score }) => score >= 0.25)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10) // máximo 10 vínculos
+    .map(({ p }) => ({
+      id:     p.id,
+      nome:   p.nome,
+      sku:    p.codigo_interno || p.codigo_barra || '',
+      estoque: Number(p.estoque ?? 0),
+    }));
+
+  return matches;
+}
+
+// Filtro técnico: retorna false se atributos incompatíveis
+function filtroTecnico(label, nomeAPI) {
+  const lMem  = extrairMem(label);   const pMem  = extrairMem(nomeAPI);
+  const lRede = extrairRede(label);  const pRede = extrairRede(nomeAPI);
+  const lPol  = extrairPolegadas(label); const pPol = extrairPolegadas(nomeAPI);
+  const lStor = extrairStorage(label);
+
+  if (lMem.length && pMem.length && !lMem.some(m => pMem.includes(m))) return false;
+  if (lRede.length && pRede.length && !lRede.some(r => pRede.includes(r))) return false;
+  if (lPol.length && pPol.length && !lPol.some(p => pPol.includes(p))) return false;
+  if (lStor.length) {
+    const pMem2 = extrairMem(nomeAPI);
+    const lStorNum = lStor.map(s => s.replace(/[^\d]/g,''));
+    const pStorNums = [
+      ...extrairStorage(nomeAPI).map(s => s.replace(/[^\d]/g,'')),
+      ...pMem2.map(m => m.split('/')[1]).filter(Boolean),
+    ];
+    if (pStorNums.length && !lStorNum.some(n => pStorNums.includes(n))) return false;
+  }
+  return true;
+}
+
+// Score de nome (sem atributos técnicos)
+function scoreNome(label, nomeAPI) {
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  const stop = new Set(['de','do','da','the','com','para','a','o','e','em','gb','tb']);
+  const tokens = norm(label).split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
+  if (!tokens.length) return 0;
+  const pn = norm(nomeAPI);
+  return tokens.reduce((s, t) => s + (pn.includes(t) ? 1 : 0), 0) / tokens.length;
+}
+
+// Compatibilidade retroativa: retorna um único { estoque, prodId } ou null
 async function buscarEstoqueDoItem(item) {
-  // 1. Por código interno (mais preciso — evita ambiguidade de nome)
-  if (item.sku && item.sku.trim()) {
-    try {
-      const d = await apiGet({ codigo: item.sku.trim() });
-      if (d.code === 200 && d.data && d.data.length) {
-        const match = (item.prodId && d.data.find(p => String(p.id) === String(item.prodId)))
-                   || d.data[0];
-        return { estoque: Number(match.estoque ?? 0), prodId: match.id };
-      }
-    } catch(e) { /* continua para próxima estratégia */ }
-  }
-  // 2. Por nome no sistema
-  if (item.sysname && item.sysname.trim()) {
-    try {
-      const d = await apiGet({ nome: item.sysname.trim() });
-      if (d.code === 200 && d.data && d.data.length) {
-        const match = (item.prodId && d.data.find(p => String(p.id) === String(item.prodId)))
-                   || d.data.find(p => p.nome === item.sysname)
-                   || d.data[0];
-        return { estoque: Number(match.estoque ?? 0), prodId: match.id };
-      }
-    } catch(e) { /* continua */ }
-  }
-  // 3. Por nome na lista (fallback)
-  if (item.label && item.label.trim()) {
-    try {
-      const d = await apiGet({ nome: item.label.trim() });
-      if (d.code === 200 && d.data && d.data.length) {
-        const match = (item.prodId && d.data.find(p => String(p.id) === String(item.prodId)))
-                   || d.data[0];
-        return { estoque: Number(match.estoque ?? 0), prodId: match.id };
-      }
-    } catch(e) { /* nenhuma estratégia funcionou */ }
-  }
-  return null;
+  const vs = await buscarVinculosDoItem(item);
+  if (!vs.length) return null;
+  const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+  return { estoque: estoqueTotal, prodId: vs[0].id };
 }
 
 // ════════════════════════════════════
@@ -1582,23 +1749,24 @@ async function buscarEstoqueDoItem(item) {
 async function syncItem(idx) {
   const item = lista[idx];
   if (!item || item.type !== 'product') return;
-  const temVinculo = item.prodId || (item.sku&&item.sku.trim()) || (item.sysname&&item.sysname.trim()) || (item.label&&item.label.trim());
-  if (!temVinculo) { toast('⚠️ Preencha código, nome no sistema ou nome na lista'); return; }
 
-  // spinner visual na badge
-  const row = el('tbody-lista').querySelector(`tr[data-idx="${idx}"]`);
-  const badge = row && row.querySelector('.badge');
-  if (badge) { badge.textContent = '…'; badge.className = 'badge badge-unknown'; }
   setSync('loading','Atualizando…');
-
   try {
-    const r = await buscarEstoqueDoItem(item);
-    if (r !== null) {
-      lista[idx].estoque = r.estoque;
-      if (r.prodId) lista[idx].prodId = r.prodId;
-      setSync('ok','Atualizado ✓');
+    // Garante cache carregado
+    if (!_prodCache.length) {
+      setSync('loading','Baixando catálogo…');
+      await carregarCacheProdutos();
+    }
+    const vs = await buscarVinculosDoItem(item);
+    if (vs.length) {
+      lista[idx].vinculos = vs;
+      lista[idx].estoque  = vs.reduce((s, v) => s + v.estoque, 0);
+      lista[idx].prodId   = vs[0].id;
+      lista[idx].sysname  = vs[0].nome;
+      lista[idx].sku      = vs[0].sku;
+      setSync('ok', vs.length > 1 ? `${vs.length} variações ✓` : 'Atualizado ✓');
     } else {
-      setSync('err','Não encontrado na API');
+      setSync('err','Não encontrado');
       toast('⚠️ Produto não encontrado na API');
     }
   } catch(e) {
@@ -1609,48 +1777,60 @@ async function syncItem(idx) {
 }
 
 // ════════════════════════════════════
-// SYNC TODOS (botão header)
+// SYNC TODOS — baixa catálogo uma vez, resolve tudo offline
 // ════════════════════════════════════
 async function syncTodos() {
   const targets = lista
-    .map((item,idx)=>({item,idx}))
-    .filter(({item}) => item.type === 'product' &&
-      (item.prodId || (item.sku&&item.sku.trim()) || (item.sysname&&item.sysname.trim()) || (item.label&&item.label.trim())));
+    .map((item,idx) => ({item,idx}))
+    .filter(({item}) => item.type === 'product');
 
-  if (!targets.length) { toast('Nenhum produto vinculável na lista'); return; }
+  if (!targets.length) { toast('Nenhum produto na lista'); return; }
 
   const btn = el('btn-sync-all');
-  btn.disabled = true; btn.textContent = '⏳ Atualizando…';
-
+  btn.disabled = true; btn.textContent = '⏳ Carregando…';
   const wrap = el('sync-progress-wrap');
   const bar  = el('sync-progress-bar');
   wrap.style.display = 'block'; bar.style.width = '0%';
+  setSync('loading','Baixando catálogo completo…');
 
-  setSync('loading',`0 / ${targets.length}`);
+  try {
+    // 1. Baixa TODOS os produtos de uma vez
+    await carregarCacheProdutos((pag, total, qtd) => {
+      btn.textContent = `⏳ Catálogo ${pag}/${total} (${qtd} produtos)`;
+      bar.style.width = Math.round((pag/total)*50) + '%'; // primeiros 50% = download
+    });
 
-  const delay = ms => new Promise(r => setTimeout(r, ms));
-  let ok = 0, err = 0;
+    setSync('loading',`Resolvendo ${targets.length} produto(s)…`);
 
-  for (let i = 0; i < targets.length; i++) {
-    const { item, idx } = targets[i];
-    try {
-      const r = await buscarEstoqueDoItem(item);
-      if (r !== null) { lista[idx].estoque = r.estoque; if(r.prodId) lista[idx].prodId=r.prodId; ok++; }
-      else err++;
-    } catch(e) { err++; }
+    // 2. Resolve vínculos offline (sem chamadas de rede adicionais)
+    let ok = 0, err = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const { item, idx } = targets[i];
+      const vs = await buscarVinculosDoItem(item);
+      if (vs.length) {
+        lista[idx].vinculos = vs;
+        lista[idx].estoque  = vs.reduce((s, v) => s + v.estoque, 0);
+        lista[idx].prodId   = vs[0].id;
+        lista[idx].sysname  = vs[0].nome;
+        lista[idx].sku      = vs[0].sku;
+        ok++;
+      } else { err++; }
 
-    bar.style.width = Math.round(((i+1)/targets.length)*100)+'%';
-    setSync('loading',`${i+1} / ${targets.length}…`);
+      bar.style.width = (50 + Math.round(((i+1)/targets.length)*50)) + '%';
+      setSync('loading',`${i+1}/${targets.length} resolvidos…`);
+    }
 
-    // respeita 3 req/s
-    if ((i+1) % 3 === 0 && i+1 < targets.length) await delay(1100);
+    renderTabela(); renderMobile(); atualizarPreview(); salvar();
+    setSync('ok', `${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' sem vínculo':''}`);
+    toast(`🔄 ${ok} produto(s) atualizados`);
+
+  } catch(e) {
+    setSync('err','Erro: '+e.message);
+    toast('❌ Erro: '+e.message);
   }
 
-  renderTabela(); renderMobile(); atualizarPreview(); salvar();
   wrap.style.display = 'none'; bar.style.width = '0%';
   btn.disabled = false; btn.textContent = '🔄 Atualizar Estoque';
-  setSync('ok',`${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' erro':''}`);
-  toast(`🔄 ${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' erro':''}`);
 }
 
 // ════════════════════════════════════
@@ -1703,22 +1883,37 @@ function renderTabela() {
 
     // ── PRODUTO ──
     } else {
-      const semEst = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
+      const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
+      const estoqueTotal = vinculos
+        ? vinculos.reduce((s, v) => s + v.estoque, 0)
+        : (item.estoque ?? null);
+      const semEst = estoqueTotal !== null && estoqueTotal !== undefined && estoqueTotal <= 0;
       if (semEst) tr.className = 'row-sem-estoque';
 
+      const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
+
+      // Badge de estoque — mostra soma + tooltip com individuais
       let badgeHtml;
-      const temVinculo = !!(item.prodId || (item.sku && item.sku.trim()) || (item.sysname && item.sysname.trim()));
       if (!temVinculo) {
-        // Sem nenhum vínculo com a API — sinal explícito
-        badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo com a API — clique em Nome/Código para vincular">🔗 —</span>`;
-      } else if (item.estoque === undefined || item.estoque === null) {
-        // Tem vínculo mas estoque ainda não foi consultado
-        badgeHtml = `<span class="badge badge-unknown" title="Vínculo definido — clique em 🔄 para atualizar estoque">? —</span>`;
-      } else if (item.estoque > 0) {
-        badgeHtml = `<span class="badge badge-ok">✓ ${item.estoque}</span>`;
+        badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo — clique em Nome/Código para vincular">🔗 —</span>`;
+      } else if (estoqueTotal === null || estoqueTotal === undefined) {
+        badgeHtml = `<span class="badge badge-unknown" title="Clique em 🔄 para atualizar">? —</span>`;
       } else {
-        badgeHtml = `<span class="badge badge-zero">⚠ ${item.estoque}</span>`;
+        const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero';
+        const icn = estoqueTotal > 0 ? '✓' : '⚠';
+        const tip = vinculos && vinculos.length > 1
+          ? vinculos.map(v => `${v.nome.substring(0,30)}: ${v.estoque}`).join('\n')
+          : '';
+        const multi = vinculos && vinculos.length > 1
+          ? `<span style="font-size:.6rem;opacity:.7;margin-left:2px;">(${vinculos.length})</span>` : '';
+        badgeHtml = `<span class="badge ${cls}" title="${esc(tip)}">${icn} ${estoqueTotal}${multi}</span>`;
       }
+
+      // Célula de vínculo — mostra primeiro nome + contagem se múltiplos
+      const firstNome = vinculos ? vinculos[0].nome : (item.sysname || '');
+      const firstSku  = vinculos ? vinculos[0].sku  : (item.sku || '');
+      const multiLabel = vinculos && vinculos.length > 1
+        ? ` <span style="font-size:.65rem;color:#a78bfa;font-weight:700;">+${vinculos.length-1}</span>` : '';
 
       tr.innerHTML = `
         <td class="col-drag">⠿</td>
@@ -1730,20 +1925,21 @@ function renderTabela() {
             placeholder="650" class="mono-inp" />
         </td>
         <td class="col-sys vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sys">
-          <div class="vincul-pill ${item.sysname ? 'vinculado' : ''}" title="${item.sysname ? 'Clique para substituir o vínculo' : 'Clique para vincular produto da API'}">
-            <span class="vincul-text ${item.sysname ? '' : 'empty'}">${item.sysname ? esc(item.sysname) : 'Vincular…'}</span>
-            <span class="vincul-icon">${item.sysname ? '🔗' : '＋'}</span>
+          <div class="vincul-pill ${firstNome ? 'vinculado' : ''}" title="${firstNome ? 'Clique para editar vínculos' : 'Clique para vincular produto da API'}">
+            <span class="vincul-text ${firstNome ? '' : 'empty'}">${firstNome ? esc(firstNome.substring(0,35)) + (firstNome.length>35?'…':'') : 'Vincular…'}</span>
+            ${multiLabel}
+            <span class="vincul-icon">${firstNome ? '🔗' : '＋'}</span>
           </div>
         </td>
         <td class="col-sku vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sku">
-          <div class="vincul-pill ${item.sku ? 'vinculado' : ''}" title="Clique para vincular/trocar produto">
-            <span class="vincul-text ${item.sku ? 'mono-inp' : 'empty'}" style="${item.sku ? 'font-family:JetBrains Mono,monospace;font-size:.72rem;' : ''}">${item.sku ? esc(item.sku) : '—'}</span>
+          <div class="vincul-pill ${firstSku ? 'vinculado' : ''}" title="Clique para vincular/trocar produto">
+            <span class="vincul-text ${firstSku ? 'mono-inp' : 'empty'}" style="${firstSku ? 'font-family:JetBrains Mono,monospace;font-size:.72rem;' : ''}">${firstSku ? esc(firstSku) : '—'}</span>
           </div>
         </td>
         <td class="col-stock">${badgeHtml}</td>
         <td class="col-act">
           <div style="display:flex; gap:3px; justify-content:center; align-items:center;">
-            <button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque deste produto">🔄</button>
+            <button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button>
             <button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button>
           </div>
         </td>`;
@@ -1867,23 +2063,35 @@ function renderMobile() {
         </div>`;
 
     } else {
-      const semEst = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
+      const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
+      const estoqueTotal = vinculos
+        ? vinculos.reduce((s, v) => s + v.estoque, 0)
+        : (item.estoque ?? null);
+      const semEst = estoqueTotal !== null && estoqueTotal !== undefined && estoqueTotal <= 0;
       card.className = 'mcard' + (semEst ? ' mcard-sem-estoque' : '');
 
-      const temVinculo = !!(item.prodId || (item.sku&&item.sku.trim()) || (item.sysname&&item.sysname.trim()));
+      const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
       let badgeHtml;
       if (!temVinculo) {
-        badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo">🔗 —</span>`;
-      } else if (item.estoque === undefined || item.estoque === null) {
+        badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`;
+      } else if (estoqueTotal === null || estoqueTotal === undefined) {
         badgeHtml = `<span class="badge badge-unknown">? —</span>`;
-      } else if (item.estoque > 0) {
-        badgeHtml = `<span class="badge badge-ok">✓ ${item.estoque}</span>`;
       } else {
-        badgeHtml = `<span class="badge badge-zero">⚠ ${item.estoque}</span>`;
+        const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero';
+        const icn = estoqueTotal > 0 ? '✓' : '⚠';
+        const multi = vinculos && vinculos.length > 1
+          ? `<span style="font-size:.6rem;opacity:.7;margin-left:2px;">(${vinculos.length})</span>` : '';
+        badgeHtml = `<span class="badge ${cls}">${icn} ${estoqueTotal}${multi}</span>`;
       }
 
-      const vincNome = item.sysname || '';
-      const vincCod  = item.sku     || '';
+      const vincNome = vinculos ? vinculos[0].nome : (item.sysname || '');
+      const vincCod  = vinculos ? vinculos[0].sku  : (item.sku || '');
+      const vincExtra = vinculos && vinculos.length > 1
+        ? `<div style="font-size:11px;color:#a78bfa;margin-top:2px;">+${vinculos.length-1} variação(ões) · Σ ${estoqueTotal} un.</div>` : '';
+      // Estoque individual quando há múltiplos
+      const indivHtml = vinculos && vinculos.length > 1
+        ? vinculos.map(v => `<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(v.nome.substring(0,28))}… <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};">${v.estoque}</span></div>`).join('')
+        : '';
 
       card.innerHTML = `
         <div class="mcard-top">
@@ -1905,8 +2113,10 @@ function renderMobile() {
           <div class="mcard-vincul-btn vincul-cell ${vincNome ? 'vinculado' : ''}" data-vincul-field="sys">
             <span class="mcard-vincul-icon">${vincNome ? '🔗' : '＋'}</span>
             <div class="mcard-vincul-info">
-              <div class="mcard-vincul-name ${vincNome ? '' : 'empty'}">${vincNome ? esc(vincNome) : 'Vincular produto…'}</div>
+              <div class="mcard-vincul-name ${vincNome ? '' : 'empty'}">${vincNome ? esc(vincNome.substring(0,35)) : 'Vincular produto…'}</div>
               ${vincCod ? `<div class="mcard-vincul-code">${esc(vincCod)}</div>` : ''}
+              ${vincExtra}
+              ${indivHtml}
             </div>
           </div>
         </div>`;
@@ -2009,28 +2219,62 @@ function fecharPopover() {
 function abrirPopoverVinculo(idx, anchorCell) {
   fecharPopover();
 
+  const item = lista[idx];
+  const vinculos = item.vinculos || (item.sysname ? [{
+    id: item.prodId, nome: item.sysname, sku: item.sku || '', estoque: item.estoque ?? 0
+  }] : []);
+
   const pop = document.createElement('div');
   pop.className = 'vincul-popover';
+
+  const vinculosHtml = vinculos.length
+    ? vinculos.map((v, vi) => `
+        <div class="vincul-active-row" data-vi="${vi}">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;">${esc(v.sku||'—')} · ${v.estoque > 0 ? `<span style="color:var(--accent)">✓ ${v.estoque}</span>` : `<span style="color:var(--warn)">⚠ ${v.estoque}</span>`}</div>
+          </div>
+          <button class="vincul-rm-btn" data-vi="${vi}" title="Remover este vínculo" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;flex-shrink:0;">✕</button>
+        </div>`).join('')
+    : `<div style="padding:8px 11px;font-size:12px;color:var(--text3);font-style:italic;">Nenhum vínculo ativo</div>`;
+
   pop.innerHTML = `
-    <input type="text" class="pop-search" placeholder="Buscar produto no sistema…" autocomplete="off" />
+    <div style="padding:7px 11px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">
+      Vínculos ativos <span style="color:var(--accent);margin-left:4px;">${vinculos.length > 0 ? `Σ ${vinculos.reduce((s,v)=>s+v.estoque,0)} un.` : ''}</span>
+    </div>
+    <div class="vincul-active-list">${vinculosHtml}</div>
+    <div style="padding:6px 11px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface2);">
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">＋ Adicionar vínculo</div>
+      <input type="text" class="pop-search" placeholder="Buscar produto na API…" autocomplete="off" style="font-size:13px;" />
+    </div>
     <div class="vincul-results"><div class="vincul-result-empty">Digite para buscar…</div></div>
-    ${lista[idx].sysname ? '<div class="vincul-desvincular">✕ Desvincular produto</div>' : ''}
   `;
 
-  // Posiciona o popover usando fixed, abaixo do elemento âncora
   document.body.appendChild(pop);
   _popoverAtivo = pop;
 
+  // Posiciona
   const rect = anchorCell.getBoundingClientRect();
-  const popW = Math.min(300, window.innerWidth * 0.9);
+  const popW = Math.min(310, window.innerWidth * 0.92);
   let left = rect.left;
-  // Evita vazar pela direita
   if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
   if (left < 8) left = 8;
-  pop.style.top  = (rect.bottom + 4) + 'px';
+  pop.style.top = (rect.bottom + 4) + 'px';
   pop.style.left = left + 'px';
   pop.style.width = popW + 'px';
 
+  // Remover vínculo
+  pop.querySelectorAll('.vincul-rm-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const vi = +btn.dataset.vi;
+      const novos = vinculos.filter((_, i) => i !== vi);
+      salvarVinculos(idx, novos);
+      fecharPopover();
+    });
+  });
+
+  // Busca para adicionar
   const searchInp = pop.querySelector('.pop-search');
   const resultsBox = pop.querySelector('.vincul-results');
   searchInp.focus();
@@ -2044,60 +2288,69 @@ function abrirPopoverVinculo(idx, anchorCell) {
       return;
     }
     resultsBox.innerHTML = '<div class="vincul-result-empty">⏳ Buscando…</div>';
-    _t = setTimeout(() => executarBuscaPopover(q, resultsBox, idx), 380);
+    _t = setTimeout(async () => {
+      // Busca no cache se disponível, senão na API
+      let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
+      if (!prods.length) {
+        try {
+          const d = await apiGet({ nome: q });
+          if (d.code === 200 && d.data?.length) prods = d.data;
+        } catch(e) {}
+      }
+      if (!prods.length) { resultsBox.innerHTML = '<div class="vincul-result-empty">Nenhum resultado.</div>'; return; }
+      renderResultadosPopover(prods.slice(0,20), resultsBox, idx, vinculos);
+    }, 350);
   });
 
   pop.querySelector('.vincul-desvincular')?.addEventListener('click', () => {
-    lista[idx].sysname = '';
-    lista[idx].sku     = '';
-    lista[idx].prodId  = null;
-    lista[idx].estoque = undefined;
+    salvarVinculos(idx, []);
     fecharPopover();
-    renderTabela(); renderMobile(); atualizarPreview(); salvar();
   });
-
   pop.addEventListener('click', e => e.stopPropagation());
 }
 
-async function executarBuscaPopover(q, resultsBox, idx) {
-  try {
-    const d = await apiGet({ nome: q });
-    if (!d || d.code !== 200 || !d.data || !d.data.length) {
-      // tenta por código também
-      const d2 = await apiGet({ codigo: q });
-      if (!d2 || d2.code !== 200 || !d2.data || !d2.data.length) {
-        resultsBox.innerHTML = '<div class="vincul-result-empty">Nenhum produto encontrado.</div>';
-        return;
-      }
-      renderResultadosPopover(d2.data, resultsBox, idx);
-      return;
-    }
-    renderResultadosPopover(d.data, resultsBox, idx);
-  } catch(e) {
-    resultsBox.innerHTML = `<div class="vincul-result-empty" style="color:var(--danger);">Erro: ${esc(e.message)}</div>`;
+function salvarVinculos(idx, vinculos) {
+  lista[idx].vinculos = vinculos;
+  if (vinculos.length) {
+    lista[idx].estoque  = vinculos.reduce((s, v) => s + v.estoque, 0);
+    lista[idx].prodId   = vinculos[0].id;
+    lista[idx].sysname  = vinculos[0].nome;
+    lista[idx].sku      = vinculos[0].sku;
+  } else {
+    lista[idx].estoque  = undefined;
+    lista[idx].prodId   = null;
+    lista[idx].sysname  = '';
+    lista[idx].sku      = '';
   }
+  renderTabela(); renderMobile(); atualizarPreview(); salvar();
 }
 
-function renderResultadosPopover(produtos, resultsBox, idx) {
+function renderResultadosPopover(produtos, resultsBox, idx, jaVinculados) {
   resultsBox.innerHTML = '';
-  produtos.slice(0, 20).forEach(p => {
+  produtos.forEach(p => {
     const est = Number(p.estoque ?? 0);
+    const jatem = jaVinculados.some(v => String(v.id) === String(p.id));
     const row = document.createElement('div');
     row.className = 'vincul-result-row';
+    row.style.opacity = jatem ? '.5' : '1';
     row.innerHTML = `
-      <div style="min-width:0; flex:1; overflow:hidden;">
+      <div style="min-width:0;flex:1;overflow:hidden;">
         <div class="vincul-result-nome" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.nome)}</div>
-        <div class="vincul-result-cod">${esc(p.codigo_interno || p.codigo_barra || '—')}</div>
+        <div class="vincul-result-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</div>
       </div>
-      <span class="badge ${est > 0 ? 'badge-ok' : 'badge-zero'}" style="flex-shrink:0;">${est > 0 ? '✓ ' + est : '⚠ ' + est}</span>`;
+      <span class="badge ${est>0?'badge-ok':'badge-zero'}" style="flex-shrink:0;">${est>0?'✓ '+est:'⚠ '+est}</span>
+      ${jatem ? '<span style="font-size:10px;color:var(--accent);flex-shrink:0;">✓</span>' : ''}`;
     row.addEventListener('click', () => {
-      lista[idx].sysname = p.nome;
-      lista[idx].sku     = p.codigo_interno || p.codigo_barra || '';
-      lista[idx].prodId  = p.id;
-      lista[idx].estoque = est;
+      if (jatem) return; // já está vinculado
+      const novoVinculo = {
+        id: p.id, nome: p.nome,
+        sku: p.codigo_interno || p.codigo_barra || '',
+        estoque: est,
+      };
+      const novos = [...jaVinculados, novoVinculo];
+      salvarVinculos(idx, novos);
       fecharPopover();
-      renderTabela(); renderMobile(); atualizarPreview(); salvar();
-      toast('🔗 Produto vinculado: ' + p.nome.substring(0, 40));
+      toast(`🔗 Vínculo adicionado: ${p.nome.substring(0,40)}`);
     });
     resultsBox.appendChild(row);
   });
