@@ -81,11 +81,11 @@
 
     .grid-principal { display: grid; grid-template-columns: 1fr 100px; gap: 10px; align-items: start; }
     
-    input[type="text"], textarea.input-livre {
+    input[type="text"], textarea.input-livre, select {
       width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
       font-size: 13px; font-family: inherit; color: var(--primary); background: var(--bg-main);
     }
-    input[type="text"]:focus, textarea.input-livre:focus { outline: none; border-color: var(--primary); background: white; }
+    input[type="text"]:focus, textarea.input-livre:focus, select:focus { outline: none; border-color: var(--primary); background: white; }
     
     textarea.input-livre { resize: vertical; min-height: 40px; line-height: 1.4; }
     textarea.input-texto-geral { min-height: 60px; }
@@ -126,29 +126,36 @@
     .preview-footer { padding: 16px; border-top: 1px solid var(--border); }
     #btn-copiar { width: 100%; padding: 12px; font-size: 14px; justify-content: center;}
 
-    /* Modal Generico */
+    /* Modais */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100; backdrop-filter: blur(3px);}
     .modal-overlay.visivel { opacity: 1; pointer-events: all; }
-    .modal { background: white; width: 90%; max-width: 700px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh;}
+    .modal { background: white; width: 90%; max-width: 900px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh;}
     .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: var(--radius) var(--radius) 0 0;}
     .modal-header h3 { font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 8px;}
     .modal-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px;}
     
-    /* Log Específico */
     .log-list { display: flex; flex-direction: column; gap: 8px; }
     .log-item { padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;}
 
     /* Tabela Modal IA */
     .ia-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;}
-    .ia-table th, .ia-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
-    .ia-table th { background: #f8f9fa; font-weight: 700; position: sticky; top: 0;}
+    .ia-table th, .ia-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle;}
+    .ia-table th { background: #f8f9fa; font-weight: 700; position: sticky; top: 0; z-index: 2;}
     .ia-table tr:hover { background: #f9f9f9; }
     .ia-table input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+    .ia-table select { font-size: 11px; padding: 6px; border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 350px; background: white; cursor: pointer; text-overflow: ellipsis;}
 
     .loader-ia { display: none; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; font-size: 14px; font-weight: 600; color: var(--purple);}
     .loader-ia.visivel { display: flex; }
     .spinner { border: 3px solid rgba(111, 66, 193, 0.2); border-top: 3px solid var(--purple); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Opções Avançadas */
+    .config-section { background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 10px;}
+    .config-header { padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--secondary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f0f2f5; }
+    .config-header:hover { background: #e8eaed; }
+    .config-body { padding: 16px; border-top: 1px solid var(--border); display: none; }
+    .config-body.visivel { display: block; }
 
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--primary); color: white; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 1000; }
     #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -158,7 +165,7 @@
       .editor-panel, .preview-panel { overflow: visible; flex: none; min-height: 500px;}
       .grid-principal { grid-template-columns: 1fr; }
       textarea#texto-resultado { min-height: 300px; border-bottom: 1px solid var(--border);}
-      .ia-table th:nth-child(3), .ia-table td:nth-child(3) { display: none; } /* Oculta nome sis no mobile */
+      .ia-table select { max-width: 200px; }
     }
   </style>
 </head>
@@ -176,30 +183,21 @@
         <button class="btn btn-outline" onclick="adicionarItem('texto')">➕ Texto Livre</button>
         <button class="btn btn-outline" onclick="adicionarItem('produto')">➕ Produto</button>
         <button class="btn btn-purple" onclick="abrirModalIA()">🤖 Importar c/ IA</button>
-        
-        <div style="flex: 1;"></div> <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar</button>
+        <div style="flex: 1;"></div>
+        <button class="btn btn-success" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar</button>
         <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
-      <div class="lista-container" id="lista-editor">
-        </div>
+      <div class="lista-container" id="lista-editor"></div>
     </div>
 
     <div class="preview-panel">
       <div class="preview-header">
         <h2>Pré-visualização da Mensagem</h2>
         <div class="opcoes-toggle">
-          <label class="toggle-label">
-            <input type="checkbox" id="chk-data" onchange="salvarOpcoes()"> Inserir data de hoje no topo
-          </label>
-          <label class="toggle-label">
-            <input type="checkbox" id="chk-codigo" onchange="salvarOpcoes()"> Exibir Código do Sistema no texto (se vinculado)
-          </label>
-          <label class="toggle-label">
-            <input type="checkbox" id="chk-ocultar" onchange="salvarOpcoes()"> Ocultar produtos sem estoque na mensagem
-          </label>
-          <label class="toggle-label">
-            <input type="checkbox" id="chk-destacar" onchange="salvarOpcoes()"> Destacar produtos sem estoque com "🛑 ESGOTADO"
-          </label>
+          <label class="toggle-label"><input type="checkbox" id="chk-data" onchange="salvarOpcoes()"> Inserir data de hoje no topo</label>
+          <label class="toggle-label"><input type="checkbox" id="chk-codigo" onchange="salvarOpcoes()"> Exibir Código do Sistema no texto (se vinculado)</label>
+          <label class="toggle-label"><input type="checkbox" id="chk-ocultar" onchange="salvarOpcoes()"> Ocultar produtos sem estoque na mensagem</label>
+          <label class="toggle-label"><input type="checkbox" id="chk-destacar" onchange="salvarOpcoes()"> Destacar produtos sem estoque com "🛑 ESGOTADO"</label>
         </div>
       </div>
       <textarea id="texto-resultado" readonly placeholder="Sua lista aparecerá aqui..."></textarea>
@@ -228,12 +226,25 @@
         <h3 style="color: var(--purple);">🤖 Importador de Listas com IA</h3>
         <button class="btn btn-icon" onclick="fecharModalIA()">✖</button>
       </div>
+      
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos, buscar automaticamente no seu estoque e preparar os cards para você adicionar à sua lista.
+            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e tentará encontrar a correspondência exata ou mais próxima no seu catálogo automaticamente.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
+        <div class="config-section">
+            <div class="config-header" onclick="toggleConfigIA()">
+                <span>⚙️ Opções Avançadas (Prompt da IA)</span>
+                <span id="icone-toggle-ia">▼</span>
+            </div>
+            <div class="config-body" id="body-config-ia">
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">PROMPT DE EXTRAÇÃO GROQ:</label>
+                <textarea id="prompt-ia-input" class="input-livre" style="min-height: 120px; font-family: monospace; font-size: 11px; color: var(--secondary);" onchange="salvarPromptIA()"></textarea>
+                <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Este texto define as regras de como a IA deve ler e devolver a lista para a ferramenta processar.</div>
+            </div>
+        </div>
+
         <div class="loader-ia" id="loader-ia">
             <div class="spinner"></div>
             <span id="texto-loader-ia">Extraindo dados com a IA...</span>
@@ -245,16 +256,16 @@
         </div>
       </div>
       
-      <div class="modal-body" id="body-ia-resultados" style="display: none;">
-        <p style="font-size: 13px; font-weight: 600;">Resultados do Cruzamento de Estoque:</p>
-        <div style="overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; flex: 1;">
+      <div class="modal-body" id="body-ia-resultados" style="display: none; padding-top: 10px;">
+        <p style="font-size: 13px; font-weight: 600;">Revisão e Vínculo de Estoque:</p>
+        <div style="overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; flex: 1; max-height: 50vh;">
             <table class="ia-table">
                 <thead>
                     <tr>
                         <th style="width: 40px; text-align: center;"><input type="checkbox" id="chk-ia-todos" onchange="alternarTodosIA(this)"></th>
                         <th>Nome Extraído / Preço</th>
-                        <th>Vínculo Sistema</th>
-                        <th>Estoque</th>
+                        <th>Vínculo no Sistema (Pode ser alterado)</th>
+                        <th style="width: 80px; text-align: center;">Estoque</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-ia-corpo">
@@ -263,7 +274,7 @@
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
             <button class="btn btn-outline" onclick="voltarInputIA()">Voltar</button>
-            <button class="btn btn-success" onclick="adicionarProdutosIA()">Adicionar Selecionados à Lista</button>
+            <button class="btn btn-success" onclick="adicionarProdutosIA()">Adicionar à Lista</button>
         </div>
       </div>
     </div>
@@ -273,33 +284,35 @@
 
   <script>
     const LOJA_ID = "361408";
-    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v3')) || [];
-    let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v3')) || {
-        data: false, codigo: false, ocultar: false, destacar: true
-    };
     
+    // Armazenamento
+    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v4')) || [];
+    let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v4')) || { data: false, codigo: false, ocultar: false, destacar: true };
+    let catalogoCompleto = []; // Cache do catálogo inteiro para buscas mais inteligentes
+    let optionsSelectHtml = ''; // Cache das opções HTML do Select
     let debounceTimer;
-    let cacheResultadosIA = []; // Armazena temporariamente a analise da IA
+
+    const PROMPT_PADRAO_IA = `Extraia todos os produtos e preços deste texto. Ignore cabeçalhos puros de marcas (ex: "MOTOROLA"). 
+Retorne APENAS um array JSON válido, sem NENHUM texto antes ou depois, sem crases de formatação markdown. 
+O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco": "Valor numérico limpo, apenas numeros e virgula"}].`;
 
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('chk-data').checked = opcoesLista.data;
       document.getElementById('chk-codigo').checked = opcoesLista.codigo;
       document.getElementById('chk-ocultar').checked = opcoesLista.ocultar;
       document.getElementById('chk-destacar').checked = opcoesLista.destacar;
+      
+      let promptSalvo = localStorage.getItem('jeta_prompt_ia') || PROMPT_PADRAO_IA;
+      document.getElementById('prompt-ia-input').value = promptSalvo;
 
-      if(itensLista.length === 0) {
-        itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
-      }
+      if(itensLista.length === 0) itensLista.push({ id: gerarId(), tipo: 'texto', texto: '📌 Lista EXCLUSIVA REVENDA/ATACADO:' });
       renderizarEditor();
     });
 
     function gerarId() { return Date.now().toString() + Math.floor(Math.random()*1000); }
-
-    function salvarLocal() {
-      localStorage.setItem('jeta_lista_v3', JSON.stringify(itensLista));
-      gerarTexto();
-    }
-
+    function salvarLocal() { localStorage.setItem('jeta_lista_v4', JSON.stringify(itensLista)); gerarTexto(); }
+    function autoSalvar() { clearTimeout(debounceTimer); debounceTimer = setTimeout(salvarLocal, 500); }
+    
     function salvarOpcoes() {
       opcoesLista = {
           data: document.getElementById('chk-data').checked,
@@ -307,87 +320,44 @@
           ocultar: document.getElementById('chk-ocultar').checked,
           destacar: document.getElementById('chk-destacar').checked
       };
-      localStorage.setItem('jeta_opcoes_v3', JSON.stringify(opcoesLista));
+      localStorage.setItem('jeta_opcoes_v4', JSON.stringify(opcoesLista));
       gerarTexto();
     }
 
-    function autoSalvar() {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(salvarLocal, 500);
-    }
-
+    // ==== Funções Básicas de Edição (Inalteradas) ====
     function adicionarItem(tipo) {
-      if(tipo === 'texto') {
-        itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
-      } else {
-        itensLista.push(criarObjetoProduto());
-      }
-      renderizarEditor();
-      salvarLocal();
-      rolarParaFim();
+      if(tipo === 'texto') itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
+      else itensLista.push(criarObjetoProduto());
+      renderizarEditor(); salvarLocal();
+      const container = document.getElementById('lista-editor');
+      setTimeout(() => container.scrollTop = container.scrollHeight, 50);
     }
-
     function criarObjetoProduto(nomePers = '', preco = '', vinculo = false, idSis = '', cod = '', nomeSis = '', est = null) {
-        return { 
-            id: gerarId(), tipo: 'produto', 
-            nomePersonalizado: nomePers, preco: preco, 
-            vinculado: vinculo, idSistema: idSis, codigo: cod, nomeSistema: nomeSis, estoque: est 
-        };
+        return { id: gerarId(), tipo: 'produto', nomePersonalizado: nomePers, preco: preco, vinculado: vinculo, idSistema: idSis, codigo: cod, nomeSistema: nomeSis, estoque: est };
     }
-
-    function rolarParaFim() {
-        const container = document.getElementById('lista-editor');
-        setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+    function removerItem(id) { itensLista = itensLista.filter(item => item.id !== id); renderizarEditor(); salvarLocal(); }
+    function moverItem(index, dir) {
+      if(direcao === -1 && index > 0) { const temp = itensLista[index]; itensLista[index] = itensLista[index - 1]; itensLista[index - 1] = temp; }
+      else if (direcao === 1 && index < itensLista.length - 1) { const temp = itensLista[index]; itensLista[index] = itensLista[index + 1]; itensLista[index + 1] = temp; }
+      renderizarEditor(); salvarLocal();
     }
-
-    function removerItem(id) {
-      itensLista = itensLista.filter(item => item.id !== id);
-      renderizarEditor();
-      salvarLocal();
-    }
-
-    function moverItem(index, direcao) {
-      if(direcao === -1 && index > 0) {
-        const temp = itensLista[index];
-        itensLista[index] = itensLista[index - 1];
-        itensLista[index - 1] = temp;
-      } else if (direcao === 1 && index < itensLista.length - 1) {
-        const temp = itensLista[index];
-        itensLista[index] = itensLista[index + 1];
-        itensLista[index + 1] = temp;
-      }
-      renderizarEditor();
-      salvarLocal();
-    }
-
-    function atualizarCampo(id, campo, valor) {
-      const item = itensLista.find(i => i.id === id);
-      if(item) { item[campo] = valor; autoSalvar(); }
-    }
-
+    function atualizarCampo(id, campo, valor) { const item = itensLista.find(i => i.id === id); if(item) { item[campo] = valor; autoSalvar(); } }
     function desvincularProduto(id) {
       const item = itensLista.find(i => i.id === id);
-      if(item) {
-        item.vinculado = false; item.idSistema = ''; item.codigo = ''; item.nomeSistema = ''; item.estoque = null;
-        renderizarEditor(); salvarLocal();
-      }
+      if(item) { item.vinculado = false; item.idSistema = ''; item.codigo = ''; item.nomeSistema = ''; item.estoque = null; renderizarEditor(); salvarLocal(); }
     }
 
     function renderizarEditor() {
       const container = document.getElementById('lista-editor');
       container.innerHTML = '';
-
       itensLista.forEach((item, index) => {
         const esgotado = (item.tipo === 'produto' && item.vinculado && item.estoque !== null && item.estoque <= 0);
         const manual = (item.tipo === 'produto' && !item.vinculado);
-        
         let classesCard = 'item-card';
         if (esgotado) classesCard += ' esgotado';
         if (manual) classesCard += ' manual';
 
-        const card = document.createElement('div');
-        card.className = classesCard;
-
+        const card = document.createElement('div'); card.className = classesCard;
         const acoesHTML = `
           <button class="btn btn-icon" onclick="moverItem(${index}, -1)" title="Subir" tabindex="-1" ${index === 0 ? 'disabled' : ''}>⬆️</button>
           <button class="btn btn-icon" onclick="moverItem(${index}, 1)" title="Descer" tabindex="-1" ${index === itensLista.length - 1 ? 'disabled' : ''}>⬇️</button>
@@ -396,10 +366,7 @@
 
         if (item.tipo === 'texto') {
           card.innerHTML = `
-            <div class="item-header">
-              <span class="item-tipo">Texto Livre / Quebra de linha</span>
-              <div class="item-acoes">${acoesHTML}</div>
-            </div>
+            <div class="item-header"><span class="item-tipo">Texto Livre / Quebra de linha</span><div class="item-acoes">${acoesHTML}</div></div>
             <textarea class="input-livre input-texto-geral" placeholder="Digite parágrafos, cabeçalhos, categorias..." oninput="atualizarCampo('${item.id}', 'texto', this.value)">${item.texto}</textarea>
           `;
         } else {
@@ -416,7 +383,6 @@
           } else {
             let estoqueHTML = `<span class="estoque-status status-ok">🟢 Em estoque: ${item.estoque} un.</span>`;
             if(item.estoque <= 0) estoqueHTML = `<span class="estoque-status status-zero">🔴 Esgotado (0 un.)</span>`;
-            
             boxVinculo = `
               <div class="sistema-info">
                 <div class="sistema-dados">
@@ -429,17 +395,12 @@
           }
 
           card.innerHTML = `
-            <div class="item-header">
-              <span class="item-tipo">📦 Produto</span>
-              <div class="item-acoes">${acoesHTML}</div>
-            </div>
+            <div class="item-header"><span class="item-tipo">📦 Produto</span><div class="item-acoes">${acoesHTML}</div></div>
             <div class="grid-principal">
               <textarea class="input-livre" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15...)" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">${item.nomePersonalizado}</textarea>
               <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarCampo('${item.id}', 'preco', this.value)">
             </div>
-            <div class="vinculo-box">
-              ${boxVinculo}
-            </div>
+            <div class="vinculo-box">${boxVinculo}</div>
           `;
         }
         container.appendChild(card);
@@ -447,55 +408,40 @@
       gerarTexto();
     }
 
-    // BUSCA NA API (Manual do Card)
     async function buscarNaAPI(idItem) {
       const input = document.getElementById(`input-busca-${idItem}`);
       const divResultados = document.getElementById(`resultados-${idItem}`);
       const termo = input.value.trim();
-      
       if(!termo) return;
-      divResultados.innerHTML = '<span style="font-size:11px; color:var(--text-muted)">⏳ Buscando no catálogo...</span>';
-
+      
+      divResultados.innerHTML = '<span style="font-size:11px; color:var(--text-muted)">⏳ Buscando...</span>';
       try {
         const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=10&nome=${encodeURIComponent(termo)}`);
         const json = await res.json();
-        
         if (json.code === 200 && json.data && json.data.length > 0) {
             divResultados.innerHTML = '';
             json.data.forEach(prod => {
                 const cod = prod.codigo_interno || prod.codigo_barra || prod.id;
-                const div = document.createElement('div');
-                div.className = 'resultado-item';
-                div.innerHTML = `
-                    <span style="margin-right: 10px;"><b>[${cod}]</b> ${prod.nome}</span>
-                    <span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0;">${prod.estoque} un.</span>
-                `;
-                div.onclick = () => vincularProduto(idItem, prod.id, cod, prod.nome, prod.valor_venda, prod.estoque);
+                const div = document.createElement('div'); div.className = 'resultado-item';
+                div.innerHTML = `<span style="margin-right: 10px;"><b>[${cod}]</b> ${prod.nome}</span><span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0;">${prod.estoque} un.</span>`;
+                div.onclick = () => {
+                    const item = itensLista.find(i => i.id === idItem);
+                    if(item) {
+                        item.vinculado = true; item.idSistema = prod.id; item.codigo = cod; item.nomeSistema = prod.nome; item.estoque = prod.estoque;
+                        if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
+                        if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
+                        renderizarEditor(); salvarLocal();
+                    }
+                };
                 divResultados.appendChild(div);
             });
-        } else {
-            divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Nenhum produto encontrado com este termo.</span>';
-        }
-      } catch (e) {
-        divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">Erro na conexão com o sistema.</span>';
-      }
+        } else { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Nenhum produto encontrado.</span>'; }
+      } catch (e) { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">Erro na conexão.</span>'; }
     }
 
-    function vincularProduto(idItem, idSis, cod, nomeSis, valorVenda, estoque) {
-        const item = itensLista.find(i => i.id === idItem);
-        if(item) {
-            item.vinculado = true; item.idSistema = idSis; item.codigo = cod; item.nomeSistema = nomeSis; item.estoque = estoque;
-            if(!item.nomePersonalizado.trim()) item.nomePersonalizado = nomeSis;
-            if(!item.preco.trim()) item.preco = parseFloat(valorVenda).toString(); 
-            renderizarEditor(); salvarLocal();
-        }
-    }
-
-    // SINCRONIZAÇÃO DE ESTOQUE
     async function sincronizarEstoqueTotal() {
         const btn = document.getElementById('btn-sync');
         const vinculados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado);
-        
         if(vinculados.length === 0) { mostrarToast("Não há produtos vinculados para sincronizar."); return; }
         
         btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
@@ -507,34 +453,94 @@
                 try {
                     const res = await fetch(`https://caixa-three.vercel.app/api/produtos/${prod.idSistema}?loja_id=${LOJA_ID}`);
                     const json = await res.json();
-                    if(json.code === 200 && json.data) {
-                        prod.estoque = json.data.estoque;
-                        prod.nomeSistema = json.data.nome; 
-                    }
+                    if(json.code === 200 && json.data) { prod.estoque = json.data.estoque; prod.nomeSistema = json.data.nome; }
                 } catch(e) {}
             });
             await Promise.all(promessas);
             renderizarEditor(); 
             if (i + 3 < vinculados.length) await delay(1000); 
         }
-
-        salvarLocal();
-        btn.innerHTML = "🔄 Sincronizar Vínculos"; btn.disabled = false;
+        salvarLocal(); btn.innerHTML = "🔄 Sincronizar"; btn.disabled = false;
         mostrarToast("✅ Sincronização concluída!");
     }
 
     // ==========================================
-    // MÓDULO IA - GROQ + ESTOQUE
+    // MÓDULO IA - CATÁLOGO E FUZZY MATCH
     // ==========================================
-    function fecharModal(e, id) { if(e.target.id === id) document.getElementById(id).classList.remove('visivel'); }
-    
-    function abrirModalIA() {
+    function toggleConfigIA() {
+        const body = document.getElementById('body-config-ia');
+        const icon = document.getElementById('icone-toggle-ia');
+        if(body.classList.contains('visivel')) { body.classList.remove('visivel'); icon.textContent = '▼'; } 
+        else { body.classList.add('visivel'); icon.textContent = '▲'; }
+    }
+
+    function salvarPromptIA() {
+        localStorage.setItem('jeta_prompt_ia', document.getElementById('prompt-ia-input').value);
+    }
+
+    async function carregarCatalogoCompleto() {
+        if (catalogoCompleto.length > 0) return true; // Já carregou antes
+        let pag = 1; let totalPaginas = 1;
+        try {
+            do {
+                const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=100&pagina=${pag}`);
+                const json = await res.json();
+                if(json.code === 200 && json.data) {
+                    catalogoCompleto = catalogoCompleto.concat(json.data.filter(p => p.nome));
+                    totalPaginas = json.meta.total_paginas;
+                } else { break; }
+                pag++;
+            } while (pag <= totalPaginas);
+            
+            // Constrói o HTML das options do Select uma vez só para performance
+            optionsSelectHtml = '<option value="">-- Sem vínculo (Manual) --</option>';
+            catalogoCompleto.forEach(p => {
+                const cod = p.codigo_interno || p.codigo_barra || p.id;
+                optionsSelectHtml += `<option value="${p.id}" data-cod="${cod}" data-nome="${p.nome}" data-estoque="${p.estoque}">[${cod}] ${p.nome} (${p.estoque} un.)</option>`;
+            });
+            return true;
+        } catch(e) {
+            console.error("Erro ao carregar catálogo completo:", e);
+            return false;
+        }
+    }
+
+    // Algoritmo de Similaridade por contagem de tokens comuns
+    function encontrarMelhorVinculo(nomeExtraido) {
+        if(!nomeExtraido || catalogoCompleto.length === 0) return null;
+        let melhorMatch = null; let maiorScore = 0;
+        
+        // Limpa a string e pega palavras com mais de 1 letra
+        const tokensExt = nomeExtraido.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
+
+        for(let prod of catalogoCompleto) {
+            const tokensProd = prod.nome.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 1);
+            let score = 0;
+            
+            for(let t of tokensExt) { if(tokensProd.includes(t)) score++; }
+            
+            // Bônus se o nome do sistema contém exatamente a frase da IA (ajuda muito em modelos específicos)
+            if (prod.nome.toLowerCase().includes(nomeExtraido.toLowerCase())) score += 5;
+
+            if(score > maiorScore) {
+                maiorScore = score;
+                melhorMatch = prod;
+            }
+        }
+        // Exige ao menos 2 palavras iguais (ou 1 se a string for muito curta) para sugerir vínculo
+        return maiorScore >= Math.min(2, tokensExt.length) ? melhorMatch : null;
+    }
+
+    async function abrirModalIA() {
         document.getElementById('texto-ia-entrada').value = '';
         document.getElementById('body-ia-input').style.display = 'block';
         document.getElementById('body-ia-resultados').style.display = 'none';
         document.getElementById('loader-ia').classList.remove('visivel');
         document.getElementById('btn-processar-ia').disabled = false;
         document.getElementById('modal-ia').classList.add('visivel');
+        
+        // Carrega o catálogo em background quando abre o modal (se já não estiver carregado)
+        carregarCatalogoCompleto(); 
     }
     
     function fecharModalIA() { document.getElementById('modal-ia').classList.remove('visivel'); }
@@ -543,79 +549,66 @@
         document.getElementById('body-ia-input').style.display = 'block';
     }
 
+    let cacheResultadosIA = []; // Dados processados pela IA
+
     async function processarListaIA() {
         const textoBruto = document.getElementById('texto-ia-entrada').value.trim();
         if(!textoBruto) { mostrarToast("Cole alguma lista para processar."); return; }
 
         document.getElementById('btn-processar-ia').disabled = true;
         document.getElementById('loader-ia').classList.add('visivel');
-        document.getElementById('texto-loader-ia').textContent = "Lendo e estruturando produtos (IA)...";
+        document.getElementById('texto-loader-ia').textContent = "Conectando ao assistente virtual (Groq)...";
 
-        // 1. CHAMA O GROQ
+        // Garante que o catálogo carregou para fazer a busca
+        await carregarCatalogoCompleto();
+
         let produtosExtraidos = [];
         try {
-            const prompt = `Extraia todos os produtos e preços deste texto. Ignore cabeçalhos puros de marcas (ex: "MOTOROLA"). 
-            Retorne APENAS um array JSON válido, sem NENHUM texto antes ou depois, sem crases de formatação markdown. 
-            O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco": "Valor numérico limpo, apenas numeros e virgula"}]. 
-            \n\nLista:\n${textoBruto}`;
+            const promptUsuario = document.getElementById('prompt-ia-input').value;
+            const promptFinal = `${promptUsuario}\n\nLista:\n${textoBruto}`;
 
             const response = await fetch('https://caixa-kal3.vercel.app/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    systemPrompt: 'Você é um extrator de dados JSON. Retorne apenas JSON válido.',
-                    messages: prompt
+                    systemPrompt: 'Você é um extrator de dados JSON estrito. Retorne apenas JSON válido sem conversação.',
+                    messages: promptFinal
                 })
             });
             
             const data = await response.json();
             let jsonString = data.choices[0].message.content.trim();
-            // Limpa possiveis formatações de markdown que a IA possa enviar
             jsonString = jsonString.replace(/```json/gi, '').replace(/```/g, '').trim();
             produtosExtraidos = JSON.parse(jsonString);
 
         } catch (e) {
             console.error(e);
-            mostrarToast("Erro na IA. Verifique se o formato enviado tem produtos.");
+            mostrarToast("Erro ao ler dados. A IA não retornou um formato válido.");
             document.getElementById('loader-ia').classList.remove('visivel');
             document.getElementById('btn-processar-ia').disabled = false;
             return;
         }
 
-        // 2. CRUZA COM O ESTOQUE (Em Lotes de 3)
-        document.getElementById('texto-loader-ia').textContent = "Cruzando produtos com o seu estoque...";
+        document.getElementById('texto-loader-ia').textContent = "Cruzando produtos com o seu estoque local...";
+        
         cacheResultadosIA = [];
-        const delay = (ms) => new Promise(r => setTimeout(r, ms));
+        // Analisa offline usando o Fuzzy Match no catalogoCompleto
+        produtosExtraidos.forEach((ext, index) => {
+            let objCache = { 
+                idTemp: index, nomeExtraido: ext.nome, precoExtraido: ext.preco, 
+                vinculado: false, idSis: '', cod: '', nomeSis: '', est: null 
+            };
 
-        for (let i = 0; i < produtosExtraidos.length; i += 3) {
-            const lote = produtosExtraidos.slice(i, i + 3);
-            const promessas = lote.map(async (ext) => {
-                let objCache = { 
-                    nomeExtraido: ext.nome, precoExtraido: ext.preco, 
-                    vinculado: false, idSis: '', cod: '', nomeSis: '', est: null 
-                };
-
-                try {
-                    // Tenta buscar o nome extraido cru na API
-                    const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=1&nome=${encodeURIComponent(ext.nome)}`);
-                    const json = await res.json();
-                    
-                    if(json.code === 200 && json.data && json.data.length > 0) {
-                        const p = json.data[0];
-                        objCache.vinculado = true;
-                        objCache.idSis = p.id;
-                        objCache.cod = p.codigo_interno || p.codigo_barra || p.id;
-                        objCache.nomeSis = p.nome;
-                        objCache.est = p.estoque;
-                    }
-                } catch(e) {}
-                
-                cacheResultadosIA.push(objCache);
-            });
-
-            await Promise.all(promessas);
-            if (i + 3 < produtosExtraidos.length) await delay(800); // Pausa API
-        }
+            const melhorMatch = encontrarMelhorVinculo(ext.nome);
+            if(melhorMatch) {
+                objCache.vinculado = true;
+                objCache.idSis = melhorMatch.id;
+                objCache.cod = melhorMatch.codigo_interno || melhorMatch.codigo_barra || melhorMatch.id;
+                objCache.nomeSis = melhorMatch.nome;
+                objCache.est = melhorMatch.estoque;
+            }
+            cacheResultadosIA.push(objCache);
+        });
 
         renderizarTabelaIA();
     }
@@ -627,21 +620,31 @@
         cacheResultadosIA.forEach((item, index) => {
             const tr = document.createElement('tr');
             
-            let statusEstoque = '<span class="status-manual">Não encontrado</span>';
-            let nomeVinculo = '<span style="color: var(--text-muted);">Sem vínculo</span>';
-            
+            let statusHTML = '<span class="status-manual">Manual</span>';
             if(item.vinculado) {
-                statusEstoque = item.est > 0 ? `<span class="status-ok">${item.est} un.</span>` : `<span class="status-zero">0 un.</span>`;
-                nomeVinculo = `<b>[${item.cod}]</b> ${item.nomeSis}`;
+                statusHTML = item.est > 0 ? `<span class="status-ok">${item.est} un.</span>` : `<span class="status-zero">0 un.</span>`;
             }
+
+            // Monta o Select já selecionando o Match, se houver
+            const idSelect = `select-ia-${index}`;
+            const selectHTML = `
+                <select id="${idSelect}" onchange="atualizarVinculoNaTabelaIA(${index}, this)">
+                    ${optionsSelectHtml}
+                </select>
+            `;
 
             tr.innerHTML = `
                 <td style="text-align: center;"><input type="checkbox" class="chk-ia-item" data-index="${index}" checked></td>
-                <td><b>${item.nomeExtraido}</b><br><span style="color:var(--success);">R$ ${item.precoExtraido}</span></td>
-                <td><div style="font-size: 11px;">${nomeVinculo}</div></td>
-                <td><b>${statusEstoque}</b></td>
+                <td><b style="color:var(--primary); font-size:13px;">${item.nomeExtraido}</b><br><span style="color:var(--success); font-weight:600;">R$ ${item.precoExtraido}</span></td>
+                <td>${selectHTML}</td>
+                <td style="text-align: center;" id="status-ia-${index}">${statusHTML}</td>
             `;
             tbody.appendChild(tr);
+
+            // Força a seleção correta no <select> recém injetado
+            if(item.vinculado) {
+                document.getElementById(idSelect).value = item.idSis;
+            }
         });
 
         document.getElementById('loader-ia').classList.remove('visivel');
@@ -649,6 +652,31 @@
         document.getElementById('body-ia-resultados').style.display = 'flex';
         document.getElementById('btn-processar-ia').disabled = false;
         document.getElementById('chk-ia-todos').checked = true;
+    }
+
+    // Quando o usuário troca o select manualmente na tabela
+    function atualizarVinculoNaTabelaIA(index, selectObj) {
+        const itemCache = cacheResultadosIA[index];
+        const statusTd = document.getElementById(`status-ia-${index}`);
+        const selectedOption = selectObj.options[selectObj.selectedIndex];
+
+        if(selectObj.value === "") {
+            // Desvinculou
+            itemCache.vinculado = false; itemCache.idSis = ''; itemCache.cod = ''; itemCache.nomeSis = ''; itemCache.est = null;
+            statusTd.innerHTML = '<span class="status-manual">Manual</span>';
+        } else {
+            // Vinculou a algo
+            const estoqueStr = selectedOption.getAttribute('data-estoque');
+            const estoqueNum = estoqueStr ? parseInt(estoqueStr) : 0;
+            
+            itemCache.vinculado = true;
+            itemCache.idSis = selectObj.value;
+            itemCache.cod = selectedOption.getAttribute('data-cod');
+            itemCache.nomeSis = selectedOption.getAttribute('data-nome');
+            itemCache.est = estoqueNum;
+
+            statusTd.innerHTML = estoqueNum > 0 ? `<span class="status-ok">${estoqueNum} un.</span>` : `<span class="status-zero">0 un.</span>`;
+        }
     }
 
     function alternarTodosIA(source) {
@@ -663,25 +691,21 @@
         checkboxes.forEach(chk => {
             const itemCache = cacheResultadosIA[chk.dataset.index];
             const novoProduto = criarObjetoProduto(
-                itemCache.nomeExtraido, 
-                itemCache.precoExtraido, 
-                itemCache.vinculado, 
-                itemCache.idSis, 
-                itemCache.cod, 
-                itemCache.nomeSis, 
-                itemCache.est
+                itemCache.nomeExtraido, itemCache.precoExtraido, itemCache.vinculado, 
+                itemCache.idSis, itemCache.cod, itemCache.nomeSis, itemCache.est
             );
             itensLista.push(novoProduto);
         });
 
-        renderizarEditor();
-        salvarLocal();
-        fecharModalIA();
-        rolarParaFim();
+        renderizarEditor(); salvarLocal(); fecharModalIA(); rolarParaFim();
         mostrarToast(`${checkboxes.length} produto(s) adicionado(s) à sua lista!`);
     }
 
-    // LOG DE ESGOTADOS E MANUAIS
+    // ==========================================
+    // LOG E TEXTO FINAL
+    // ==========================================
+    function fecharModal(e, id) { if(e.target.id === id) document.getElementById(id).classList.remove('visivel'); }
+
     function abrirLogEsgotados() {
         const esgotados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado && i.estoque !== null && i.estoque <= 0);
         const manuais = itensLista.filter(i => i.tipo === 'produto' && !i.vinculado);
@@ -716,7 +740,6 @@
         document.getElementById('modal-log').classList.add('visivel');
     }
 
-    // GERAÇÃO DO TEXTO FINAL
     function gerarTexto() {
       const ocultarSemEstoque = document.getElementById('chk-ocultar').checked;
       const destacarSemEstoque = document.getElementById('chk-destacar').checked;
@@ -725,18 +748,12 @@
       const textarea = document.getElementById('texto-resultado');
       
       let linhas = [];
-
-      if(incluirData) {
-          const hoje = new Date().toLocaleDateString('pt-BR');
-          linhas.push(`📅 *Atualizado em:* ${hoje}\n`);
-      }
+      if(incluirData) { linhas.push(`📅 *Atualizado em:* ${new Date().toLocaleDateString('pt-BR')}\n`); }
 
       itensLista.forEach(item => {
         if(item.tipo === 'texto') {
-            if(item.texto.trim() !== '') linhas.push(item.texto);
-            else linhas.push(''); 
+            if(item.texto.trim() !== '') linhas.push(item.texto); else linhas.push(''); 
         } else if (item.tipo === 'produto') {
-            
             const semEstoque = (item.vinculado && item.estoque !== null && item.estoque <= 0);
             if (semEstoque && ocultarSemEstoque) return; 
             
@@ -744,11 +761,7 @@
             const textoCodigo = (incluirCodigo && item.vinculado) ? `[${item.codigo}] ` : '';
             
             let linhaProduto = `${textoCodigo}${nomeFinal} - ${item.preco}`;
-            
-            if (semEstoque && destacarSemEstoque) {
-                linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
-            }
-            
+            if (semEstoque && destacarSemEstoque) linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
             linhas.push(linhaProduto);
         }
       });
@@ -758,25 +771,17 @@
     function copiarTexto() {
       const texto = document.getElementById('texto-resultado').value;
       if(!texto.trim()) { mostrarToast("O texto está vazio."); return; }
-      
       navigator.clipboard.writeText(texto).then(() => {
         const btn = document.getElementById('btn-copiar');
-        btn.innerHTML = '✅ Copiado com sucesso!';
-        btn.classList.add('btn-success');
-        btn.classList.remove('btn-primary');
-        setTimeout(() => {
-            btn.innerHTML = '📋 Copiar para WhatsApp';
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-primary');
-        }, 2000);
+        btn.innerHTML = '✅ Copiado com sucesso!'; btn.classList.add('btn-success'); btn.classList.remove('btn-primary');
+        setTimeout(() => { btn.innerHTML = '📋 Copiar para WhatsApp'; btn.classList.remove('btn-success'); btn.classList.add('btn-primary'); }, 2000);
       });
     }
 
     let toastTimeout;
     function mostrarToast(msg) {
       const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('visivel');
+      t.textContent = msg; t.classList.add('visivel');
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => t.classList.remove('visivel'), 2500);
     }
