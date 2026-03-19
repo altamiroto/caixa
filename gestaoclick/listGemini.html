@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v9 (Inteligência 4G/5G)</title>
+  <title>Gerador de Listas - JETA v9 (Inteligência Suprema)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -231,7 +231,7 @@
       
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A ferramenta varrerá seu estoque completo para encontrar as correspondências.
+            Cole a lista de um fornecedor ou concorrente abaixo. A ferramenta varrerá seu estoque completo, baixando todas as páginas necessárias, e encontrará as correspondências.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
@@ -293,7 +293,6 @@
     let catalogoCompleto = []; 
     let cacheResultadosIA = []; 
 
-    // NOVO PROMPT: Força a IA a cuspir o NOME EXATO E BRUTO sem alterações
     const PROMPT_PADRAO_IA = `Extraia todos os produtos e preços deste texto.
 REGRA DE OURO: O campo "nome" DEVE ser a CÓPIA EXATA E IDÊNTICA da linha original do produto. NÃO remova cores, capacidades (ex: 256gb), traços, nem conectivos.
 Retorne APENAS um array JSON válido. 
@@ -449,14 +448,13 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             json.data.forEach(prod => {
                 const cod = prod.codigo_interno || prod.codigo_barra || prod.id;
                 const div = document.createElement('div'); div.className = 'resultado-item';
-                div.innerHTML = `<span style="margin-right: 10px; font-size: 11px; line-height: 1.2;"><b>[${cod}]</b> ${prod.nome}</span><span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0;">${prod.estoque} un.</span>`;
+                div.innerHTML = `<span style="margin-right: 10px; font-size: 11px; line-height: 1.2;"><b>[${cod}]</b> ${prod.nome}</span><span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0; font-size: 10px;">${prod.estoque} un.</span>`;
                 div.onclick = () => {
                     const item = itensLista.find(i => i.id === idItem);
                     if(item) {
                         if(!item.vinculos) item.vinculos = [];
                         if(!item.vinculos.some(v => v.idSistema === prod.id)) {
                             item.vinculos.push({ idSistema: prod.id, codigo: cod, nomeSistema: prod.nome, estoque: prod.estoque });
-                            // Atualizamos o nome só se estiver vazio
                             if(!item.nomePersonalizado.trim()) item.nomePersonalizado = prod.nome;
                             if(!item.preco.trim()) item.preco = parseFloat(prod.valor_venda).toString(); 
                             input.value = '';
@@ -467,7 +465,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
                 };
                 divResultados.appendChild(div);
             });
-        } else { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Nenhum produto encontrado.</span>'; }
+        } else { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Não encontrado.</span>'; }
       } catch (e) { divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">Erro na conexão.</span>'; }
     }
 
@@ -518,7 +516,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
 
     function salvarPromptIA() { localStorage.setItem('jeta_prompt_ia_v9', document.getElementById('prompt-ia-input').value); }
 
-    // DOWNLOAD REAL DO CATÁLOGO
+    // DOWNLOAD REAL DO CATÁLOGO BLINDADO
     async function carregarCatalogoCompleto() {
         catalogoCompleto = []; 
         let pag = 1; 
@@ -529,12 +527,30 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             while(temMais) {
                 loaderText.textContent = `Baixando catálogo do sistema (Lendo página ${pag})...`;
                 const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=100&pagina=${pag}`);
+                
+                if (!res.ok) {
+                    if (res.status === 429) {
+                        loaderText.textContent = `Pausa anti-bloqueio da API (Aguardando para ler página ${pag})...`;
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        continue; 
+                    } else {
+                        break; 
+                    }
+                }
+                
                 const json = await res.json();
                 
                 if(json.code === 200 && json.data && json.data.length > 0) {
-                    catalogoCompleto = catalogoCompleto.concat(json.data.filter(p => p.nome));
+                    let novos = 0;
+                    json.data.forEach(p => {
+                        if (p.nome && !catalogoCompleto.some(ext => ext.id === p.id)) {
+                            catalogoCompleto.push(p);
+                            novos++;
+                        }
+                    });
                     
-                    if(json.data.length < 100) {
+                    // Se não veio nenhum produto novo (A API travou a página) ou veio menos de 100, finaliza
+                    if(novos === 0 || json.data.length < 100) {
                         temMais = false;
                     } else {
                         pag++;
@@ -544,6 +560,7 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
                     temMais = false; 
                 }
             }
+            loaderText.textContent = `Catálogo carregado (${catalogoCompleto.length} produtos). Cruzando dados...`;
             return true;
         } catch(e) { 
             console.error("Erro ao puxar API completa:", e);
@@ -557,7 +574,8 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const limparTexto = (txt) => {
             let str = txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
-                      // O SEGREDO 1: removemos palavras auxiliares, MAS DEIXAMOS OS NÚMEROS E AS LETRAS "G" E "B" INTACTAS
+                      // Transforma "256gb" ou "256 gb" em apenas "256" para a regra de capacidade funcionar
+                      .replace(/(\d+)\s*(gb|tb)\b/g, '$1 ')
                       .replace(/\b(ram|rom)\b/g, ' ')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
                       .replace(/\b([a-z])\s+(\d+)\b/g, '$1$2') 
@@ -571,30 +589,26 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
         const scores = [];
 
         // 1. Chaves Estritas
-        const chavesEstritas = ['pro', 'plus', 'ultra', 'note', 'lite', 'fe', 'se', 'power'];
+        const chavesEstritas = ['pro', 'plus', 'ultra', 'note', 'lite', 'fe', 'power'];
         const temChaveExt = {};
         chavesEstritas.forEach(c => temChaveExt[c] = tokensExt.includes(c));
 
-        // 2. Identificação de Redes
         const has5g = tokensExt.includes('5g');
         const has4g = tokensExt.includes('4g');
 
-        // 3. Capacidades de armazenamento EXATAS (128gb, 256gb, etc)
-        // Ao invez de procurar '256', procuramos se o número tem 'gb' junto ou solto
-        const capacidades = ['32', '64', '128', '256', '512', '1024', '32gb', '64gb', '128gb', '256gb', '512gb', '1tb'];
-        const capExt = tokensExt.find(t => capacidades.includes(t));
+        // 2. Capacidades de armazenamento EXATAS
+        const capacidades = ['32', '64', '128', '256', '512', '1024'];
+        const memoriasRam = ['3', '4', '6', '8', '12', '16', '24'];
+        
+        // Pega as capacidades presentes no texto (Ex: 12/512 -> vai pegar 512, pois o 12 não está no array de capacidades)
+        const capExts = tokensExt.filter(t => capacidades.includes(t));
+        const capExt = capExts.length > 0 ? Math.max(...capExts.map(Number)).toString() : null;
 
-        // 4. Modelos Estritos
+        // 3. Modelos Estritos
         const isModelo = (t) => {
-            if (t === '5g' || t === '4g' || capacidades.includes(t) || chavesEstritas.includes(t)) return false;
+            if (t === '5g' || t === '4g' || capacidades.includes(t) || memoriasRam.includes(t) || chavesEstritas.includes(t) || Object.values(dicionarioCores).includes(t)) return false;
             if (!/\d/.test(t)) return false;
-            if (/[a-z]/.test(t) && /\d/.test(t)) return true; 
-            if (/^\d+$/.test(t)) {
-                const num = parseInt(t);
-                if ([1, 2, 3, 4, 6, 8, 12, 16, 24].includes(num)) return false;
-                return true;
-            }
-            return false;
+            return true;
         };
         const modelosEstritosExt = tokensExt.filter(isModelo);
 
@@ -611,27 +625,28 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
             }
             if (desclassificado) continue;
 
-            // O SEGREDO 2: Contradição Direta 5G vs 4G
+            // Cortes de 5G vs 4G (Corte por contradição)
             const prodHas5g = tokensProd.includes('5g');
             const prodHas4g = tokensProd.includes('4g');
             
-            // Só corta se a lista pediu uma coisa, e o sistema afirmar EXATAMENTE O OPOSTO.
-            // Se a lista pediu 4G, e o sistema não diz nada (nem 4G nem 5G), ELE PASSA!
-            if (has5g && prodHas4g) desclassificado = true;
-            if (has4g && prodHas5g) desclassificado = true; 
+            // Se eu pedi 5G, e o seu sistema só diz 4G, então CORTA. 
+            // (Mas se o seu sistema não diz nem 4G nem 5G, ele perdoa e passa)
+            if (has5g && prodHas4g && !prodHas5g) desclassificado = true;
+            if (has4g && prodHas5g && !prodHas4g) desclassificado = true; 
             if (desclassificado) continue;
 
             // Cortes de Capacidade
             if (capExt) {
-                const capProd = tokensProd.find(t => capacidades.includes(t));
-                // O segredo 3: Se o sistema diz 128 e vc quer 256, corta. Se o sistema não diz capacidade, passa!
-                if (capProd && capExt.replace('gb','') !== capProd.replace('gb','')) desclassificado = true;
+                // Acha a capacidade do produto (Evitando confundir com RAMs que passaram soltas)
+                const capProd = tokensProd.find(t => capacidades.includes(t) && parseInt(t) > 30);
+                if (capProd && capExt !== capProd) desclassificado = true;
             }
             if (desclassificado) continue;
 
-            // Cortes de Modelos (Se tem G6 na busca, tem que ter no nome)
+            // Cortes de Modelos (Se tem X7 na busca, tem que ter no nome)
             for (let mod of modelosEstritosExt) {
-                if (!tokensProd.includes(mod)) {
+                // Exige que a palavra exata esteja lá, para não confundir 14s com 14
+                if (!tokensProd.some(tp => tp === mod)) {
                     desclassificado = true;
                     break;
                 }
@@ -644,14 +659,24 @@ O JSON deve ter este exato formato: [{"nome": "Texto da linha original exatament
                 if(tokensProd.includes(t)) score += 1;
             }
             
+            // Bônus para RAM igual (Ajuda a não confundir versoes de 8gb e 12gb se a memoria interna for a mesma)
+            const ramExt = tokensExt.find(t => memoriasRam.includes(t) && parseInt(t) < 30);
+            if (ramExt && tokensProd.includes(ramExt)) score += 2;
+            
             // Bônus se eles concordam ativamente sobre 4g ou 5g
             if (has5g && prodHas5g) score += 3;
             if (has4g && prodHas4g) score += 3;
 
-            // Penalidade: se o sistema tem 5G mas a lista não pediu, ou vice versa
-            // Isso garante que se existe uma versão "limpa", ela vence a versão com sufixo.
+            // Penalidade se o sistema diz que é 5G, mas você não pediu na lista
+            // Isso garante que ele pegue o aparelho normal se existir, em vez do 5G.
             if (!has5g && prodHas5g) score -= 3;
             if (!has4g && prodHas4g) score -= 3;
+            
+            // Penalidade se o produto tem uma cor que a lista não pediu
+            const coresProd = tokensProd.filter(t => Object.values(dicionarioCores).includes(t));
+            for(let c of coresProd) {
+                if(!tokensExt.includes(c)) score -= 1; 
+            }
 
             if (score > 0) scores.push({ prod, score });
         }
