@@ -1763,8 +1763,22 @@ function buscarNoCacheLocal(q) {
       return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
     })) return false;
 
-    // Conectividade: palavra inteira
-    if (redeTok.length && !redeTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+    // Conectividade: filtro BIDIRECIONAL
+    // - Label com 5G → produto deve ter 5G (já existia)
+    // - Label SEM conectividade E produto com 5G → rejeita
+    //   (Note 14 4G e Note 14 5G são SKUs completamente distintos)
+    const pRedeTok = normStr(p.nome).match(/\b(4g|5g)\b/gi);
+    const pTem5g   = pRedeTok && pRedeTok.some(r => r.toLowerCase() === '5g');
+    const pTem4g   = pRedeTok && pRedeTok.some(r => r.toLowerCase() === '4g');
+    if (redeTok.length) {
+      // Label especifica rede → produto deve ter a mesma
+      if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
+    } else {
+      // Label NÃO especifica rede → rejeita se produto tem 5G OU 4G explícito
+      // Exceção: se o próprio modelo só existe em 5G no catálogo, deixamos passar
+      // Regra prática: se produto tem "5g" ou "4g" na string, é um SKU diferente
+      if (pTem5g || pTem4g) return false;
+    }
 
     // Modelo alfanumérico: palavra inteira
     if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
@@ -1849,7 +1863,9 @@ function filtroTecnico(label, nomeAPI) {
   const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
   const lStor=extrairStorage(label);
   if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
+  // Conectividade bidirecional: label sem rede + produto com 5G/4G → rejeita
   if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
+  if (!lRede.length && pRede.length) return false;
   if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
   if (lStor.length) {
     const pMem2=extrairMem(nomeAPI);
