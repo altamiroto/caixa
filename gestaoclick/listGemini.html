@@ -67,13 +67,16 @@
         background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px;
         display: grid; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: border-color 0.2s;
     }
-    .item-card.esgotado { border-color: var(--danger); background: #fdf2f2; }
+    .item-card.esgotado { border-color: var(--danger); background: #fcf3f3; }
+    .item-card.manual { border-left: 4px solid var(--warning); }
     .item-card:focus-within { border-color: var(--primary); }
     
     .item-header { display: flex; justify-content: space-between; align-items: center; }
     .item-tipo { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); background: var(--bg-main); padding: 2px 8px; border-radius: 12px; }
     .item-acoes { display: flex; gap: 4px; }
 
+    .grid-principal { display: grid; grid-template-columns: 1fr 100px; gap: 10px; }
+    
     input[type="text"], textarea.input-livre {
       width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
       font-size: 13px; font-family: inherit; color: var(--primary); background: var(--bg-main);
@@ -81,22 +84,23 @@
     input[type="text"]:focus, textarea.input-livre:focus { outline: none; border-color: var(--primary); background: white; }
     textarea.input-livre { resize: vertical; min-height: 60px; line-height: 1.4; }
 
-    /* Estilos do Produto Selecionado / Busca */
+    /* Área de Vínculo de Sistema */
+    .vinculo-box { background: #fafafa; border: 1px dashed var(--border); border-radius: 6px; padding: 10px; margin-top: 4px;}
     .busca-container { display: flex; gap: 8px; }
-    .resultados-busca { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; max-height: 150px; overflow-y: auto;}
+    .resultados-busca { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 150px; overflow-y: auto;}
     .resultado-item { font-size: 12px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center;}
     .resultado-item:hover { border-color: var(--primary); background: var(--bg-main); }
     
-    .produto-selecionado { display: flex; flex-direction: column; gap: 8px; background: white; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
-    .prod-info { font-size: 13px; font-weight: 600; color: var(--primary); }
-    .prod-codigo { font-size: 11px; color: var(--text-muted); background: var(--bg-main); padding: 2px 6px; border-radius: 4px; margin-right: 6px;}
-    .prod-controles { display: flex; gap: 8px; align-items: center; }
-    .preco-input { max-width: 150px; }
-
-    .estoque-status { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;}
+    .sistema-info { display: flex; justify-content: space-between; align-items: center; }
+    .sistema-dados { display: flex; flex-direction: column; gap: 4px; }
+    .sistema-nome { font-size: 11px; font-weight: 600; color: var(--secondary); display: flex; align-items: center; gap: 6px;}
+    .badge-cod { font-size: 10px; background: #e0e0e0; padding: 2px 6px; border-radius: 4px; color: var(--primary); font-family: monospace;}
+    
+    .estoque-status { font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;}
     .status-ok { color: var(--success); }
     .status-zero { color: var(--danger); }
-    .status-load { color: var(--warning); }
+    .status-manual { color: var(--warning); }
+    .status-load { color: var(--primary); }
 
     /* Painel de Visualização */
     .preview-panel { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow); }
@@ -152,8 +156,8 @@
       <div class="toolbar">
         <button class="btn btn-primary" onclick="adicionarItem('texto')">➕ Texto Livre</button>
         <button class="btn btn-primary" onclick="adicionarItem('produto')">➕ Produto</button>
-        <button class="btn btn-success" style="margin-left: auto;" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Tudo</button>
-        <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas/Esgotados</button>
+        <button class="btn btn-success" style="margin-left: auto;" onclick="sincronizarEstoqueTotal()" id="btn-sync">🔄 Sincronizar Vínculos</button>
+        <button class="btn btn-warning" onclick="abrirLogEsgotados()">🚨 Ver Faltas</button>
       </div>
       <div class="lista-container" id="lista-editor">
         </div>
@@ -167,7 +171,7 @@
             <input type="checkbox" id="chk-data" onchange="gerarTexto()"> Inserir data de hoje no topo
           </label>
           <label class="toggle-label">
-            <input type="checkbox" id="chk-codigo" onchange="gerarTexto()"> Exibir Código do Produto no texto final
+            <input type="checkbox" id="chk-codigo" onchange="gerarTexto()"> Exibir Código do Sistema no texto (se vinculado)
           </label>
           <label class="toggle-label">
             <input type="checkbox" id="chk-ocultar" onchange="gerarTexto()"> Ocultar produtos sem estoque na mensagem
@@ -188,7 +192,7 @@
   <div class="modal-overlay" id="modal-log" onclick="fecharLog(event)">
     <div class="modal">
       <div class="modal-header">
-        <h3>🛑 Relatório de Faltas e Esgotados</h3>
+        <h3>🛑 Relatório de Faltas (Itens Vinculados)</h3>
         <button class="btn btn-icon" onclick="document.getElementById('modal-log').classList.remove('visivel')">✖</button>
       </div>
       <div class="modal-body">
@@ -201,7 +205,7 @@
 
   <script>
     const LOJA_ID = "361408";
-    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v2')) || [];
+    let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v3')) || [];
     let debounceTimer;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -214,7 +218,7 @@
     function gerarId() { return Date.now().toString() + Math.floor(Math.random()*1000); }
 
     function salvarLocal() {
-      localStorage.setItem('jeta_lista_v2', JSON.stringify(itensLista));
+      localStorage.setItem('jeta_lista_v3', JSON.stringify(itensLista));
       gerarTexto();
     }
 
@@ -227,8 +231,18 @@
       if(tipo === 'texto') {
         itensLista.push({ id: gerarId(), tipo: 'texto', texto: '' });
       } else {
-        // Objeto Produto refatorado para trava de catálogo
-        itensLista.push({ id: gerarId(), tipo: 'produto', selecionado: false, idSistema: '', codigo: '', nome: '', preco: '', estoque: null });
+        // Novo formato: Nome livre independente do sistema
+        itensLista.push({ 
+            id: gerarId(), 
+            tipo: 'produto', 
+            nomePersonalizado: '', 
+            preco: '', 
+            vinculado: false, 
+            idSistema: '', 
+            codigo: '', 
+            nomeSistema: '', 
+            estoque: null 
+        });
       }
       renderizarEditor();
       salvarLocal();
@@ -256,20 +270,15 @@
       salvarLocal();
     }
 
-    function atualizarTexto(id, valor) {
+    function atualizarCampo(id, campo, valor) {
       const item = itensLista.find(i => i.id === id);
-      if(item) { item.texto = valor; autoSalvar(); }
+      if(item) { item[campo] = valor; autoSalvar(); }
     }
 
-    function atualizarPreco(id, valor) {
-      const item = itensLista.find(i => i.id === id);
-      if(item) { item.preco = valor; autoSalvar(); }
-    }
-
-    function limparSelecaoProduto(id) {
+    function desvincularProduto(id) {
       const item = itensLista.find(i => i.id === id);
       if(item) {
-        item.selecionado = false; item.idSistema = ''; item.codigo = ''; item.nome = ''; item.preco = ''; item.estoque = null;
+        item.vinculado = false; item.idSistema = ''; item.codigo = ''; item.nomeSistema = ''; item.estoque = null;
         renderizarEditor(); salvarLocal();
       }
     }
@@ -279,58 +288,71 @@
       container.innerHTML = '';
 
       itensLista.forEach((item, index) => {
-        const esgotado = (item.tipo === 'produto' && item.selecionado && item.estoque <= 0);
+        // Estilização do card dependendo do status de estoque e vínculo
+        const esgotado = (item.tipo === 'produto' && item.vinculado && item.estoque !== null && item.estoque <= 0);
+        const manual = (item.tipo === 'produto' && !item.vinculado);
+        
+        let classesCard = 'item-card';
+        if (esgotado) classesCard += ' esgotado';
+        if (manual) classesCard += ' manual';
+
         const card = document.createElement('div');
-        card.className = `item-card ${esgotado ? 'esgotado' : ''}`;
+        card.className = classesCard;
 
         const acoesHTML = `
-          <button class="btn btn-icon" onclick="moverItem(${index}, -1)" title="Subir" ${index === 0 ? 'disabled' : ''}>⬆️</button>
-          <button class="btn btn-icon" onclick="moverItem(${index}, 1)" title="Descer" ${index === itensLista.length - 1 ? 'disabled' : ''}>⬇️</button>
-          <button class="btn btn-icon btn-danger" onclick="removerItem('${item.id}')" title="Excluir">🗑️</button>
+          <button class="btn btn-icon" onclick="moverItem(${index}, -1)" title="Subir" tabindex="-1" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+          <button class="btn btn-icon" onclick="moverItem(${index}, 1)" title="Descer" tabindex="-1" ${index === itensLista.length - 1 ? 'disabled' : ''}>⬇️</button>
+          <button class="btn btn-icon btn-danger" onclick="removerItem('${item.id}')" title="Excluir" tabindex="-1">🗑️</button>
         `;
 
         if (item.tipo === 'texto') {
           card.innerHTML = `
             <div class="item-header">
-              <span class="item-tipo">Texto Livre</span>
+              <span class="item-tipo">Texto Livre / Quebra de linha</span>
               <div class="item-acoes">${acoesHTML}</div>
             </div>
-            <textarea class="input-livre" placeholder="Digite parágrafos, quebras de linha, cabeçalhos..." oninput="atualizarTexto('${item.id}', this.value)">${item.texto}</textarea>
+            <textarea class="input-livre" placeholder="Digite parágrafos, cabeçalhos, categorias..." oninput="atualizarCampo('${item.id}', 'texto', this.value)">${item.texto}</textarea>
           `;
         } else {
-          // CARD DE PRODUTO
-          let conteudoProduto = '';
+          // PRODUTO (NOME LIVRE SEMPRE EDITÁVEL)
+          let boxVinculo = '';
 
-          if(!item.selecionado) {
-            conteudoProduto = `
+          if(!item.vinculado) {
+            boxVinculo = `
               <div class="busca-container">
-                <input type="text" id="input-busca-${item.id}" placeholder="Buscar produto no catálogo pelo nome ou código..." onkeypress="if(event.key === 'Enter') buscarNaAPI('${item.id}')">
-                <button class="btn btn-primary" onclick="buscarNaAPI('${item.id}')">🔍 Buscar</button>
+                <input type="text" id="input-busca-${item.id}" placeholder="Buscar no sistema para vincular (Opcional)..." style="font-size: 12px; padding: 6px;" onkeypress="if(event.key === 'Enter') buscarNaAPI('${item.id}')">
+                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="buscarNaAPI('${item.id}')">Buscar</button>
               </div>
               <div id="resultados-${item.id}" class="resultados-busca"></div>
+              <div class="estoque-status status-manual" style="margin-top: 6px;">⚪ Produto Manual (Estoque não monitorado)</div>
             `;
           } else {
-            let estoqueHTML = `<span class="estoque-status status-ok">🟢 ${item.estoque} un.</span>`;
+            let estoqueHTML = `<span class="estoque-status status-ok">🟢 Em estoque: ${item.estoque} un.</span>`;
             if(item.estoque <= 0) estoqueHTML = `<span class="estoque-status status-zero">🔴 Esgotado (0 un.)</span>`;
             
-            conteudoProduto = `
-              <div class="produto-selecionado">
-                <div class="prod-info"><span class="prod-codigo">${item.codigo || 'S/CÓD'}</span> ${item.nome}</div>
-                <div class="prod-controles">
+            boxVinculo = `
+              <div class="sistema-info">
+                <div class="sistema-dados">
+                  <div class="sistema-nome"><span class="badge-cod">${item.codigo || 'S/CÓD'}</span> ${item.nomeSistema}</div>
                   ${estoqueHTML}
-                  <input type="text" class="preco-input" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarPreco('${item.id}', this.value)">
-                  <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="limparSelecaoProduto('${item.id}')">Trocar Produto</button>
                 </div>
+                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; border-color: var(--danger); color: var(--danger);" onclick="desvincularProduto('${item.id}')">Desvincular</button>
               </div>
             `;
           }
 
           card.innerHTML = `
             <div class="item-header">
-              <span class="item-tipo">📦 Produto do Catálogo</span>
+              <span class="item-tipo">📦 Produto</span>
               <div class="item-acoes">${acoesHTML}</div>
             </div>
-            ${conteudoProduto}
+            <div class="grid-principal">
+              <input type="text" placeholder="Nome que aparecerá na lista (Ex: Motorola Moto G15...)" value="${item.nomePersonalizado}" oninput="atualizarCampo('${item.id}', 'nomePersonalizado', this.value)">
+              <input type="text" placeholder="Preço (Ex: 900)" value="${item.preco}" oninput="atualizarCampo('${item.id}', 'preco', this.value)">
+            </div>
+            <div class="vinculo-box">
+              ${boxVinculo}
+            </div>
           `;
         }
         container.appendChild(card);
@@ -338,14 +360,14 @@
       gerarTexto();
     }
 
-    // BUSCA E SELEÇÃO DE PRODUTO
+    // BUSCA NA API (Somente para vinculação)
     async function buscarNaAPI(idItem) {
       const input = document.getElementById(`input-busca-${idItem}`);
       const divResultados = document.getElementById(`resultados-${idItem}`);
       const termo = input.value.trim();
       
       if(!termo) return;
-      divResultados.innerHTML = '<span style="font-size:12px; color:var(--text-muted)">⏳ Buscando no sistema...</span>';
+      divResultados.innerHTML = '<span style="font-size:11px; color:var(--text-muted)">⏳ Buscando no catálogo...</span>';
 
       try {
         const res = await fetch(`https://caixa-three.vercel.app/api/produtos?loja_id=${LOJA_ID}&limite=10&nome=${encodeURIComponent(termo)}`);
@@ -358,85 +380,88 @@
                 const div = document.createElement('div');
                 div.className = 'resultado-item';
                 div.innerHTML = `
-                    <span><b>[${cod}]</b> ${prod.nome}</span>
-                    <span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}">${prod.estoque} un.</span>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px;"><b>[${cod}]</b> ${prod.nome}</span>
+                    <span class="estoque-status ${prod.estoque > 0 ? 'status-ok' : 'status-zero'}" style="flex-shrink: 0;">${prod.estoque} un.</span>
                 `;
-                // Passa os dados como string segura
+                // Passa dados para vinculação
                 div.onclick = () => vincularProduto(idItem, prod.id, cod, prod.nome, prod.valor_venda, prod.estoque);
                 divResultados.appendChild(div);
             });
         } else {
-            divResultados.innerHTML = '<span style="font-size:12px; color:var(--danger)">⚠️ Nenhum produto encontrado.</span>';
+            divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">⚠️ Nenhum produto encontrado com este termo.</span>';
         }
       } catch (e) {
-        divResultados.innerHTML = '<span style="font-size:12px; color:var(--danger)">Erro na conexão.</span>';
+        divResultados.innerHTML = '<span style="font-size:11px; color:var(--danger)">Erro na conexão com o sistema.</span>';
       }
     }
 
-    function vincularProduto(idItem, idSis, cod, nome, valorVenda, estoque) {
+    function vincularProduto(idItem, idSis, cod, nomeSis, valorVenda, estoque) {
         const item = itensLista.find(i => i.id === idItem);
         if(item) {
-            item.selecionado = true;
+            item.vinculado = true;
             item.idSistema = idSis;
             item.codigo = cod;
-            item.nome = nome;
-            // Formata o preço vindo da API tirando decimais desnecessários se for inteiro
-            item.preco = parseFloat(valorVenda).toString(); 
+            item.nomeSistema = nomeSis;
             item.estoque = estoque;
+            
+            // Auto-preenchimento inteligente: se o nome na lista ou preço estiver vazio, copia do sistema
+            if(!item.nomePersonalizado.trim()) item.nomePersonalizado = nomeSis;
+            if(!item.preco.trim()) item.preco = parseFloat(valorVenda).toString(); 
+
             renderizarEditor();
             salvarLocal();
         }
     }
 
-    // SINCRONIZAÇÃO DE LOTES
+    // SINCRONIZAÇÃO DE ESTOQUE (Somente itens vinculados)
     async function sincronizarEstoqueTotal() {
         const btn = document.getElementById('btn-sync');
-        const produtosAtivos = itensLista.filter(i => i.tipo === 'produto' && i.selecionado);
+        const vinculados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado);
         
-        if(produtosAtivos.length === 0) { mostrarToast("Nenhum produto selecionado para sincronizar."); return; }
+        if(vinculados.length === 0) { mostrarToast("Não há produtos vinculados para sincronizar."); return; }
         
         btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
         const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
-        // Lotes de 3 requisições
-        for (let i = 0; i < produtosAtivos.length; i += 3) {
-            const lote = produtosAtivos.slice(i, i + 3);
+        // Lotes de 3 requisições (Evita bloqueio da API)
+        for (let i = 0; i < vinculados.length; i += 3) {
+            const lote = vinculados.slice(i, i + 3);
             const promessas = lote.map(async (prod) => {
                 try {
-                    // Busca diretamente pelo ID caso a API suporte, ou pelo nome exato
                     const res = await fetch(`https://caixa-three.vercel.app/api/produtos/${prod.idSistema}?loja_id=${LOJA_ID}`);
                     const json = await res.json();
                     if(json.code === 200 && json.data) {
                         prod.estoque = json.data.estoque;
-                        // Opcional: Atualiza o nome se mudou lá no sistema
-                        prod.nome = json.data.nome; 
+                        prod.nomeSistema = json.data.nome; // Mantém o nome do sistema atualizado internamente
                     }
                 } catch(e) { console.error(e); }
             });
 
             await Promise.all(promessas);
             renderizarEditor(); 
-            if (i + 3 < produtosAtivos.length) await delay(1000); 
+            if (i + 3 < vinculados.length) await delay(1000); 
         }
 
         salvarLocal();
-        btn.innerHTML = "🔄 Sincronizar Tudo"; btn.disabled = false;
-        mostrarToast("✅ Sincronização concluída!");
+        btn.innerHTML = "🔄 Sincronizar Vínculos"; btn.disabled = false;
+        mostrarToast("✅ Sincronização de estoque concluída!");
     }
 
     // LOG DE ESGOTADOS
     function abrirLogEsgotados() {
-        const produtosLog = itensLista.filter(i => i.tipo === 'produto' && i.selecionado && i.estoque <= 0);
+        // Filtra apenas produtos que estão vinculados E zerados
+        const esgotados = itensLista.filter(i => i.tipo === 'produto' && i.vinculado && i.estoque <= 0);
         const divLog = document.getElementById('conteudo-log');
         
-        if(produtosLog.length === 0) {
-            divLog.innerHTML = '<p style="color: var(--success); font-weight: 600;">✅ Tudo certo! Nenhum produto da sua lista está esgotado no sistema.</p>';
+        if(esgotados.length === 0) {
+            divLog.innerHTML = '<p style="color: var(--success); font-weight: 600;">✅ Nenhum produto vinculado está esgotado no sistema.</p><p style="font-size:12px; color:var(--text-muted); margin-top: 8px;">Nota: Produtos adicionados manualmente não são monitorados.</p>';
         } else {
-            let html = '<p style="margin-bottom: 12px; font-size: 14px;">Os seguintes produtos da sua lista estão sem estoque no sistema:</p>';
-            produtosLog.forEach(p => {
+            let html = '<p style="margin-bottom: 12px; font-size: 13px;">Os seguintes produtos da sua lista constam sem estoque no sistema:</p>';
+            esgotados.forEach(p => {
+                const nomeMostrado = p.nomePersonalizado || p.nomeSistema;
                 html += `<div class="log-item">
-                            <strong>[${p.codigo}]</strong> ${p.nome} <br>
-                            <span style="font-size: 11px; color: var(--text-muted)">Preço configurado: R$ ${p.preco}</span>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Código: <b>[${p.codigo}]</b></div>
+                            <strong>${nomeMostrado}</strong> <br>
                          </div>`;
             });
             divLog.innerHTML = html;
@@ -469,14 +494,20 @@
         if(item.tipo === 'texto') {
             if(item.texto.trim() !== '') linhas.push(item.texto);
             else linhas.push(''); 
-        } else if (item.tipo === 'produto' && item.selecionado) {
-            const semEstoque = item.estoque <= 0;
+        } else if (item.tipo === 'produto') {
             
+            const semEstoque = (item.vinculado && item.estoque !== null && item.estoque <= 0);
+            
+            // Se estiver sem estoque e a opção de ocultar estiver ativa, ignora a linha
             if (semEstoque && ocultarSemEstoque) return; 
             
-            const textoCodigo = incluirCodigo ? `[${item.codigo}] ` : '';
-            let linhaProduto = `${textoCodigo}${item.nome} - ${item.preco}`;
+            // Define qual nome usar (Prioriza o personalizado)
+            const nomeFinal = item.nomePersonalizado.trim() !== '' ? item.nomePersonalizado : (item.nomeSistema || 'Produto Sem Nome');
             
+            const textoCodigo = (incluirCodigo && item.vinculado) ? `[${item.codigo}] ` : '';
+            let linhaProduto = `${textoCodigo}${nomeFinal} - ${item.preco}`;
+            
+            // Aplica formatação de esgotado, se necessário
             if (semEstoque && destacarSemEstoque) {
                 linhaProduto = `~${linhaProduto}~ 🛑 ESGOTADO`;
             }
