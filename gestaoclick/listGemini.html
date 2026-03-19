@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Listas - JETA v5.2</title>
+  <title>Gerador de Listas - JETA v5.2 (Filtro Rigoroso)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -231,7 +231,7 @@
       
       <div class="modal-body" id="body-ia-input">
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
-            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e buscar automaticamente todas as variações equivalentes no seu estoque.
+            Cole a lista de um fornecedor ou concorrente abaixo. A IA irá extrair os produtos e o sistema fará um cruzamento rigoroso com as variações do seu estoque.
         </p>
         <textarea id="texto-ia-entrada" class="input-livre" style="min-height: 150px;" placeholder="Cole a lista bruta aqui..."></textarea>
         
@@ -286,7 +286,6 @@
   <script>
     const LOJA_ID = "361408";
     
-    // Armazenamento
     let itensLista = JSON.parse(localStorage.getItem('jeta_lista_v5')) || [];
     let opcoesLista = JSON.parse(localStorage.getItem('jeta_opcoes_v5')) || { data: false, codigo: false, ocultar: false, destacar: true };
     let debounceTimer;
@@ -497,7 +496,7 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
     }
 
     // ==========================================
-    // MÓDULO IA - CÉREBRO REFINADO (Cortes Drásticos)
+    // MÓDULO IA - AUTO-VÍNCULO OTIMIZADO (PESOS SEVEROS)
     // ==========================================
     function toggleConfigIA() {
         const body = document.getElementById('body-config-ia');
@@ -525,73 +524,89 @@ O JSON deve ter este exato formato: [{"nome": "Nome completo do produto", "preco
         } catch(e) { return false; }
     }
 
+    // LÓGICA DE CORTE DRÁSTICO PARA O CRUZAMENTO (O "Cérebro" Corrigido)
     function encontrarMelhoresVinculos(nomeExtraido) {
         if(!nomeExtraido || catalogoCompleto.length === 0) return [];
         
-        // Normalização: Transforma '+' em 'plus', remove 'gb' e limpa a string
         const limparTexto = (txt) => {
-            return txt.toLowerCase()
+            let str = txt.toLowerCase()
                       .replace(/\+/g, ' plus ') 
-                      .replace(/gb/g, '')       
+                      .replace(/\b(gb|tb|ram|rom)\b/g, '')       
                       .replace(/[^a-z0-9\s]/g, ' ') 
-                      .split(/\s+/)
-                      .map(w => w.replace(/^([a-z]+)0+(\d+)$/, '$1$2')) // Ex: Converte g06 para g6 automaticamente
-                      // Mantém palavras, números isolados e letras únicas se forem essenciais
-                      .filter(w => w.length > 1 || w === 'm' || w === 'x' || w === 's' || !isNaN(w)); 
+                      .replace(/\b([a-z])\s+(\d+)\b/g, '$1$2') // Ex: m 7 -> m7
+                      .replace(/\b([a-z]+)0+(\d+)\b/g, '$1$2'); // Ex: g06 -> g6
+            
+            return str.split(/\s+/).filter(w => w.trim() !== ''); 
         };
 
         const tokensExt = limparTexto(nomeExtraido);
         const scores = [];
 
-        // Identifica Modificadores Críticos
-        const hasPro = tokensExt.includes('pro');
-        const hasPlus = tokensExt.includes('plus');
-        const hasUltra = tokensExt.includes('ultra');
+        // 1. Chaves Estritas
+        const chavesEstritas = ['pro', 'plus', 'ultra', 'note', 'lite', 'fe', 'se', 'power'];
+        const temChaveExt = {};
+        chavesEstritas.forEach(c => temChaveExt[c] = tokensExt.includes(c));
+
         const has5g = tokensExt.includes('5g');
 
-        // Identifica Numeros Básicos do modelo extraído (excluindo os que vamos tratar nas regras)
-        const numerosExt = tokensExt.filter(t => /\d/.test(t) && t !== '5g' && t !== '4g');
+        // 2. Capacidades de armazenamento
+        const capacidades = ['64', '128', '256', '512', '1024', '1'];
+        const capExt = tokensExt.find(t => capacidades.includes(t) && parseInt(t) >= 64);
+
+        // 3. Modelos Estritos (Ex: x7, m7, 15c ou numero > 8)
+        const isModelo = (t) => {
+            if (t === '5g' || t === '4g' || capacidades.includes(t)) return false;
+            if (!/\d/.test(t)) return false;
+            if (/[a-z]/.test(t) && /\d/.test(t)) return true; 
+            if (/^\d+$/.test(t) && parseInt(t) > 8) return true; 
+            return false;
+        };
+        const modelosEstritosExt = tokensExt.filter(isModelo);
 
         for(let prod of catalogoCompleto) {
             const tokensProd = limparTexto(prod.nome);
             let desclassificado = false;
 
-            // --- 1. REGRAS DE CORTES DRÁSTICOS ---
-            
-            // PRO, PLUS e ULTRA não perdoam
-            if (hasPro !== tokensProd.includes('pro')) desclassificado = true;
-            if (hasPlus !== tokensProd.includes('plus')) desclassificado = true;
-            if (hasUltra !== tokensProd.includes('ultra')) desclassificado = true;
+            // Cortes de Chave Estrita (Pro, Plus, Note)
+            for (let chave of chavesEstritas) {
+                if (temChaveExt[chave] !== tokensProd.includes(chave)) {
+                    desclassificado = true;
+                    break;
+                }
+            }
+            if (desclassificado) continue;
 
-            // 5G vs 4G: Se pede 5G, tem que ter. Se não pede, corta se for 5G.
+            // Cortes de 5G
             const prodHas5g = tokensProd.includes('5g');
             if (has5g && !prodHas5g) desclassificado = true;
             if (!has5g && prodHas5g) desclassificado = true; 
-
-            // Capacidade Estrita: Se um for 128 e o outro 256, corta a mistura
-            const capacidades = ['64', '128', '256', '512', '1024'];
-            const capExt = capacidades.find(c => tokensExt.includes(c));
-            const capProd = capacidades.find(c => tokensProd.includes(c));
-            if (capExt && capProd && capExt !== capProd) desclassificado = true;
-
             if (desclassificado) continue;
 
-            // --- 2. PONTUAÇÃO (Desempate) ---
-            let score = 0;
-            const numerosProd = tokensProd.filter(t => /\d/.test(t) && t !== '5g' && t !== '4g');
+            // Cortes de Capacidade
+            if (capExt) {
+                const capProd = tokensProd.find(t => capacidades.includes(t) && parseInt(t) >= 64);
+                if (capProd && capExt !== capProd) desclassificado = true;
+            }
+            if (desclassificado) continue;
 
+            // Cortes de Modelos (Se tem X7 na busca, tem que ter no nome)
+            for (let mod of modelosEstritosExt) {
+                if (!tokensProd.includes(mod)) {
+                    desclassificado = true;
+                    break;
+                }
+            }
+            if (desclassificado) continue;
+
+            // --- Sobreviveu aos cortes! Vamos pontuar ---
+            let score = 0;
             for(let t of tokensExt) {
                 if(tokensProd.includes(t)) score += 1;
             }
             
-            // Penaliza números faltantes ou divergentes de modelo (como X6 vs X7)
-            for (let nExt of numerosExt) {
-                if (numerosProd.some(np => np === nExt || np.includes(nExt) || nExt.includes(np))) {
-                    score += 5; // Peso forte para números correspondentes
-                } else {
-                    score -= 2; // Penalidade leve para não afundar tudo se o sistema omitiu algo
-                }
-            }
+            // Bônus para RAM igual
+            const ramExt = tokensExt.find(t => /^\d+$/.test(t) && parseInt(t) <= 12 && parseInt(t) >= 3);
+            if (ramExt && tokensProd.includes(ramExt)) score += 2;
 
             if (score > 0) scores.push({ prod, score });
         }
