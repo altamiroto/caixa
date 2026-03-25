@@ -1495,8 +1495,11 @@
           
           let baseHtml = '';
 
+          // Escapa aspas duplas de polegadas (ex: 32") para não quebrar o HTML e evita o erro URI malformed
+          let tituloEscapado = nomeOriginal.replace(/"/g, '&quot;');
+          
           let infoHtml = '<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">' +
-                           '<span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + encodeURIComponent(nomeOriginal).replace(/%[0-9A-F]{2}/g, match => decodeURIComponent(match)) + '">' + nomeOriginal + '</span>' +
+                           '<span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + tituloEscapado + '">' + nomeOriginal + '</span>' +
                            (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
                          '</div>';
 
