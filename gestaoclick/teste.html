@@ -328,7 +328,7 @@
     #ia-lote-modal {
       background:#fff; border-radius:16px;
       box-shadow:0 20px 60px rgba(0,0,0,.25);
-      width:100%; max-width:780px; margin:auto;
+      width:100%; max-width:700px; margin:auto;
       display:flex; flex-direction:column; overflow:hidden;
       border:2px solid #e0e0e0;
     }
@@ -349,106 +349,38 @@
     .ia-prog-outer { height:5px; background:#e0e0e0; border-radius:99px; overflow:hidden; margin-bottom:8px; }
     .ia-prog-inner { height:100%; background:linear-gradient(90deg,#7c3aed,#a78bfa); width:0%; transition:width .3s; border-radius:99px; }
     .ia-res-status { font-size:12px; color:#6b6b6b; margin-bottom:12px; }
-    .ia-res-grid { display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-right:2px; }
-
-    /* ── CARD DE RESULTADO APRIMORADO (estilo lista-wpp) ── */
-    .ia-card {
-      border:1px solid #e0e0e0; border-radius:10px;
-      background:#f9f9f9; overflow:hidden;
-    }
-    .ia-card.com-est { border-color:#34d399; }
-    .ia-card.sem-est { border-color:#fbbf24; }
+    .ia-res-grid { display:flex; flex-direction:column; gap:6px; max-height:45vh; overflow-y:auto; }
+    .ia-card { border:1px solid #e0e0e0; border-radius:9px; padding:9px 12px; font-size:13px; display:flex; flex-direction:column; gap:6px; background:#f9f9f9; }
+    .ia-card.com-est { border-color:#34d399; background:#f0fdf4; }
+    .ia-card.sem-est { border-color:#fbbf24; background:#fffbeb; }
     .ia-card.nao-enc { border-color:#fca5a5; background:#fef2f2; }
-
-    /* Cabeçalho do card: nome da lista + badge de estoque total */
-    .ia-card-header {
-      display:flex; align-items:center; gap:8px;
-      padding:8px 12px; background:#f0f0f0;
-      border-bottom:1px solid #e0e0e0;
-    }
-    .ia-card.com-est .ia-card-header { background:#f0fdf4; border-bottom-color:#a7f3d0; }
-    .ia-card.sem-est .ia-card-header { background:#fffbeb; border-bottom-color:#fde68a; }
-    .ia-card.nao-enc .ia-card-header { background:#fef2f2; border-bottom-color:#fca5a5; }
-
-    .ia-nome-lista {
-      font-size:12px; font-weight:700; color:#4b5563;
-      letter-spacing:.02em; text-transform:uppercase;
-      flex:0 0 auto; max-width:200px;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-    .ia-seta { color:#9ca3af; font-size:12px; flex-shrink:0; }
-    .ia-nome-sistema {
-      flex:1; min-width:0; font-size:13px; font-weight:700; color:#1a1a1a;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-    .ia-nome-sistema.nao-enc { color:#c0392b; font-style:italic; }
-
-    .ia-badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
+    .ia-nome { font-weight:700; color:#1a1a1a; }
+    .ia-cand-row { display:flex; align-items:center; gap:8px; padding:3px 0; border-bottom:1px solid #f0f0f0; min-width:0; }
+    .ia-cand-nome { flex:1; min-width:0; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#4a4a4a; }
+    .ia-cand-est { font-size:11px; font-weight:700; flex-shrink:0; }
+    .ia-cand-est.ok   { color:#27ae60; }
+    .ia-cand-est.zero { color:#c0392b; }
+    .ia-cand-btn { border:none; border-radius:5px; padding:2px 9px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; }
+    .ia-cand-btn.add  { background:#27ae60; color:#fff; }
+    .ia-cand-btn.dis  { background:#e0e0e0; color:#aaa; cursor:not-allowed; }
+    .ia-card-head { display:flex; align-items:center; gap:8px; }
+    .ia-badge { font-size:12px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
     .ia-badge.ok   { background:rgba(39,174,96,.12); color:#27ae60; }
     .ia-badge.zero { background:rgba(192,57,43,.12); color:#c0392b; }
     .ia-badge.nf   { background:#f0f0f0; color:#888; }
-
-    /* Lista de vínculos dentro do card */
-    .ia-vinculos-list { padding:6px 12px; display:flex; flex-direction:column; gap:0; }
-    .ia-cand-row {
-      display:flex; align-items:center; gap:8px;
-      padding:5px 0; border-bottom:1px solid #f0f0f0; min-width:0;
-    }
-    .ia-cand-row:last-child { border-bottom:none; }
-    .ia-cand-nome { flex:1; min-width:0; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#4a4a4a; }
-    .ia-cand-sku  { font-size:10px; color:#aaa; font-family:'DM Mono',monospace; flex-shrink:0; }
-    .ia-cand-est  { font-size:11px; font-weight:700; flex-shrink:0; }
-    .ia-cand-est.ok   { color:#27ae60; }
-    .ia-cand-est.zero { color:#c0392b; }
-    .ia-cand-btn { border:none; border-radius:5px; padding:3px 10px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; transition:all .15s; }
-    .ia-cand-btn.add  { background:#27ae60; color:#fff; }
-    .ia-cand-btn.add:hover { background:#1e8f50; }
-    .ia-cand-btn.dis  { background:#e0e0e0; color:#aaa; cursor:not-allowed; }
-
-    /* Busca manual inline (dentro do card) */
-    .ia-busca-inline-wrap {
-      padding:8px 12px 10px; border-top:1px dashed #e0e0e0;
-      display:none; flex-direction:column; gap:6px;
-    }
-    .ia-busca-inline-wrap.open { display:flex; }
-    .ia-busca-inline-row { display:flex; gap:6px; }
-    .ia-busca-inline-input {
-      flex:1; border:1px solid #d1d5db; border-radius:7px;
-      padding:6px 10px; font-size:13px; font-family:'DM Sans',sans-serif;
-      background:#fff; color:#1a1a1a;
-    }
-    .ia-busca-inline-input:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,.15); }
-    .ia-busca-inline-btn {
-      background:#1a1a1a; color:#fff; border:none; border-radius:7px;
-      padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer;
-    }
-    .ia-busca-inline-btn:hover { background:#333; }
-    .ia-busca-resultados { display:flex; flex-direction:column; gap:0; max-height:160px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:7px; background:#fff; }
-    .ia-busca-res-row {
-      display:flex; align-items:center; gap:8px; padding:6px 10px;
-      border-bottom:1px solid #f0f0f0; cursor:pointer; transition:background .1s;
-    }
-    .ia-busca-res-row:last-child { border-bottom:none; }
-    .ia-busca-res-row:hover { background:#f8f9fa; }
-    .ia-busca-res-nome { flex:1; min-width:0; font-size:12px; font-weight:600; color:#1a1a1a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .ia-busca-res-est { font-size:11px; font-weight:700; flex-shrink:0; }
-    .ia-busca-res-btn { border:none; border-radius:5px; padding:3px 10px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; background:#27ae60; color:#fff; }
-    .ia-busca-res-btn:hover { background:#1e8f50; }
-    .ia-busca-res-empty { padding:10px; text-align:center; font-size:12px; color:#aaa; }
-
-    .ia-btn-trocar {
-      background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0;
-      border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer;
-      flex-shrink:0; white-space:nowrap; transition:all .12s;
-    }
-    .ia-btn-trocar:hover { background:#e0e0e0; border-color:#aaa; }
-    .ia-btn-trocar.ativo { background:#ede9fe; border-color:#a78bfa; color:#7c3aed; }
-
+    .ia-btn-trocar { background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0; border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer; flex-shrink:0; white-space:nowrap; }
     .ia-lote-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 18px; border-top:1px solid #e0e0e0; background:#fafafa; flex-wrap:wrap; }
     .ia-btn-fechar { background:transparent; border:1px solid #e0e0e0; border-radius:7px; color:#6b6b6b; font-size:13px; cursor:pointer; padding:7px 14px; font-weight:600; }
     .ia-btn-fechar:hover { background:#f0f0f0; }
     .ia-btn-add-todos { background:#27ae60; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; display:none; }
     .ia-btn-add-todos:hover { opacity:.85; }
+
+    /* Dropdown Busca Inline IA */
+    .ia-dd-area { display: none; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e0e0; }
+    .ia-dd-area.open { display: flex; }
+    .ia-dd-search { padding: 6px 10px; border: 1px solid #c8c8c8; border-radius: 6px; font-size: 12px; width: 100%; font-family: inherit; }
+    .ia-dd-search:focus { outline: none; border-color: #7c3aed; }
+    .ia-dd-results { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -519,7 +451,6 @@
   </div>
 
 
-  <!-- MODAL BUSCA EM LOTE IA -->
   <div id="ia-lote-overlay">
     <div id="ia-lote-modal">
       <div class="ia-lh">
@@ -627,9 +558,11 @@
         const d = p[0].split('-'); 
         if (d.length !== 3) return s;
         const h = p[1] ? p[1].substring(0,5) : '';
+        
         const dataObj = new Date(d[0], d[1] - 1, d[2]);
         const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         const diaSemana = dias[dataObj.getDay()];
+        
         return diaSemana + ', ' + d[2]+'/'+d[1]+'/'+d[0]+(h?' '+h:'');
       } catch(e){ return s; }
     }
@@ -854,6 +787,7 @@
 
     let _produtoAtual = null, _todasMovs = [];
 
+    // CONFIGURAÇÃO DE DATAS: Padrão 3 Meses
     function setDatasDefault() {
       const h = new Date(), a = new Date();
       a.setMonth(h.getMonth() - 3); 
@@ -886,20 +820,31 @@
       });
     }
 
+    // NOVA FUNÇÃO OTIMIZADA: Com requisições em Lotes (Rate Limit respeitado) e Filtro de Datas Nativo!
     async function buscarTodasPaginas(rota, di, df) {
       const base = 'https://caixa-three.vercel.app/api/proxy';
       const params = new URLSearchParams({rota: rota, loja_id: lojaIdJeta, limite: 100, pagina: 1});
+      
+      // Aplicar filtro de datas nativo da API para vendas (Conforme documentação oficial)
       if (rota === 'vendas') {
           if (di) params.append('data_inicio', di); 
           if (df) params.append('data_fim', df);    
       }
+
+      // Busca a primeira página para saber o total de páginas existentes no período
       const res1 = await fetch(base + '?' + params).then(x => x.json()).catch(() => null);
       if (!res1 || res1.code !== 200 || !res1.data) return [];
+      
       let todos = [...res1.data];
       const tot = (res1.meta && res1.meta.total_paginas) ? res1.meta.total_paginas : 1;
+
+      // Cria a fila de páginas que precisam ser baixadas
       const paginasRestantes = [];
       for (let p = 2; p <= tot; p++) paginasRestantes.push(p);
+
       const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+      // BATCHING: Dispara 3 requisições por vez e aguarda 1 segundo. Isso evita o limite "Too Many Requests" (Status 429) da documentação!
       for (let i = 0; i < paginasRestantes.length; i += 3) {
         const lote = paginasRestantes.slice(i, i + 3);
         const promises = lote.map(p => {
@@ -910,12 +855,21 @@
             }
             return fetch(base + '?' + pParams).then(x => x.json()).catch(() => null);
         });
+
         const resultadosLote = await Promise.all(promises);
         resultadosLote.forEach(res => {
-            if (res && res.code === 200 && res.data) todos.push(...res.data);
+            if (res && res.code === 200 && res.data) {
+                todos.push(...res.data);
+            }
         });
-        if (i + 3 < paginasRestantes.length) await delay(1000); 
+        
+        // Se ainda tem página na fila, espera 1 segundo para respeitar a API
+        if (i + 3 < paginasRestantes.length) {
+            await delay(1000); 
+        }
       }
+
+      // Filtro manual de datas exclusivo para a rota de /compras (já que a doc oficial não suporta data_inicio lá)
       if (rota === 'compras' && (di || df)) {
           todos = todos.filter(c => {
               const d = c.data_emissao || (c.cadastrado_em ? c.cadastrado_em.split(' ')[0] : '');
@@ -925,13 +879,17 @@
               return true;
           });
       }
+
       return todos;
     }
 
     async function buscarMovimentacoesPeriodo(produto, di, df) {
       const pid=String(produto.id);
+      
+      // As duas buscas rodando ao mesmo tempo (já preparadas para não quebrar limite)
       const res=await Promise.all([buscarTodasPaginas('vendas',di,df), buscarTodasPaginas('compras',di,df)]);
       const movs=[];
+      
       res[0].forEach(function(v){
         const its=(v.produtos||[]).filter(function(p){return p.produto&&String(p.produto.produto_id)===pid;});
         if(!its.length) return;
@@ -946,11 +904,13 @@
         const ts=c.cadastrado_em||c.data_emissao||'', pp=ts.split(' ');
         movs.push({dataISO:pp[0]||'',hora:pp[1]?pp[1].substring(0,5):'',cliente:c.nome_fornecedor||c.nome_cliente||'\u2014',qtd:q,descricao:'Compra n\u00ba '+(c.codigo||c.id),isEntrada:true});
       });
+      
       if(produto.modificado_em&&produto.cadastrado_em&&produto.modificado_em!==produto.cadastrado_em){
         const pe=produto.modificado_em.split(' '),de=pe[0];
         if((!di||de>=di)&&(!df||de<=df)&&!movs.some(function(m){return m.dataISO===de&&m.isEntrada;}))
           movs.push({dataISO:de,hora:pe[1]?pe[1].substring(0,5):'',cliente:'\u2014',qtd:null,descricao:'Entrada manual',isEntrada:true});
       }
+      
       movs.sort(function(a,b){return (b.dataISO+b.hora).localeCompare(a.dataISO+a.hora);});
       return movs;
     }
@@ -960,11 +920,15 @@
       const ov=document.getElementById('modal-overlay'), tb=document.getElementById('tbody-mov');
       document.getElementById('modal-titulo').textContent    = produto.nome;
       document.getElementById('modal-subtitulo').textContent = 'Estoque atual na base: '+produto.estoque+' un.';
-      tb.innerHTML='<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde... Buscando histórico.</td></tr>';
+      
+      // Aviso ajustado para refletir o tempo
+      tb.innerHTML='<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde... Buscando histórico (isso pode levar alguns segundos devido ao volume de dados).</td></tr>';
       document.getElementById('modal-resumo').textContent='';
+      
       setDatasDefault(); 
       ov.classList.add('visivel'); 
       document.body.style.overflow='hidden';
+      
       try {
         const ini=document.getElementById('filtro-data-ini').value, fim=document.getElementById('filtro-data-fim').value;
         _todasMovs = await buscarMovimentacoesPeriodo(produto, ini, fim);
@@ -1030,480 +994,564 @@
 
     atualizarCarrinho();
 
-    // ════════════════════════════════════════════════════
-    // BUSCA EM LOTE POR IA — MOTOR COMPLETO
-    // ════════════════════════════════════════════════════
+    // ════════════════════════
+    // BUSCA EM LOTE POR IA
+    // ════════════════════════
     const IA_PROMPT_KEY = 'jeta_ia_lote_v2';
     const IA_PROMPT_DEFAULT = "Você é um assistente especializado em listas de produtos para revenda.\nAnalise a lista e extraia APENAS os nomes dos produtos, sem preço, sem cor, sem informações de marketing.\nMantenha: modelo, capacidade de armazenamento (ex: 256gb, 4/128gb), conectividade (4G, 5G) se estiver.\nRemova: preço, emojis, marcadores de lista, cores, datas, categorias, especificações técnicas longas.\nRetorne APENAS JSON válido, sem markdown, sem explicações.\n\nExemplo de saída:\n[\"Motorola Moto G15 256gb 4G\",\"Realme Note 60 4/256gb\",\"Samsung Galaxy A36 5G 8/256gb\",\"Redmi Note 14 Pro 5G 8/256gb\"]";
-
     let _iaResultados = [];
-    let _prodCache    = [];
-    let _prodCacheTs  = 0;
-    const CACHE_TTL   = 5 * 60 * 1000;
 
-    // ── Funções auxiliares do motor de busca ──
+    // Declara variáveis do cache (usadas pelo motor injetado)
+    let _prodCache = [];
+    let _prodCacheTs = 0;
+    const CACHE_TTL = 5 * 60 * 1000;
+
+    // ── Motor de busca inteligente (mesmo do gerador de lista) ──
     function extrairMem(s) {
-      return (s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
+      const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
+      return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
     }
+
     function extrairStorage(s) {
       if (/\d+\s*\/\s*\d+/i.test(s)) return [];
-      return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase());
+      return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || [])
+        .map(m => m.replace(/\s/g,'').toLowerCase());
     }
-    function extrairRede(s) { const m=s.match(/\b(4g|5g)\b/gi); return m?m.map(x=>x.toLowerCase()):[]; }
+
+    function extrairRede(s) {
+      const m = s.match(/\b(4g|5g)\b/gi);
+      return m ? m.map(x => x.toLowerCase()) : [];
+    }
+
     function extrairPolegadas(s) {
-      const m=s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi)||s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
-      return m?m.map(x=>x.match(/\d+/)[0]):[];
+      const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
+                s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
+      return m ? m.map(x => x.match(/\d+/)[0]) : [];
     }
+
     function normStr(s) {
-      return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-        .replace(/\bpro\s*\+/g,'pro plus').replace(/\+/g,' plus ')
-        .replace(/[^a-z0-9\s\/]/g,' ').replace(/\s+/g,' ').trim();
+      return s.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/\bpro\s*\+/g, 'pro plus')
+        .replace(/\+/g, ' plus ')
+        .replace(/[^a-z0-9\s\/]/g, ' ')
+        .replace(/\s+/g, ' ').trim();
     }
+
     function ehAcessorio(nome) {
-      return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
+      return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
     }
+
     function extrairVariante(s) {
-      const n=normStr(s),vs=[];
-      if(/\bpro\b/.test(n))   vs.push('pro');
-      if(/\bplus\b/.test(n))  vs.push('plus');
-      if(/\bultra\b/.test(n)) vs.push('ultra');
-      if(/\bmax\b/.test(n))   vs.push('max');
-      if(/\blite\b/.test(n))  vs.push('lite');
-      if(/\bneo\b/.test(n))   vs.push('neo');
-      if(/\bfe\b/.test(n))    vs.push('fe');
-      if(/\b\d+s\b/.test(n)&&!/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
+      const n = normStr(s);
+      const vs = [];
+      if (/\bpro\b/.test(n))   vs.push('pro');
+      if (/\bplus\b/.test(n))  vs.push('plus');
+      if (/\bultra\b/.test(n)) vs.push('ultra');
+      if (/\bmax\b/.test(n))   vs.push('max');
+      if (/\blite\b/.test(n))  vs.push('lite');
+      if (/\bneo\b/.test(n))   vs.push('neo');
+      if (/\bfe\b/.test(n))    vs.push('fe');
+      if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
       return vs;
     }
+
     function extrairSerie(s) {
-      const n=normStr(s),series=[];
-      if(/\bredmi\s+note\b/.test(n)) series.push('redmi-note');
-      else if(/\bredmi\b/.test(n))   series.push('redmi');
-      if(/\bpoco\b/.test(n))         series.push('poco');
-      if(/\brealme\b/.test(n))       series.push('realme');
-      if(/\biphone\b/.test(n))       series.push('iphone');
-      if(/\bgalaxy\b/.test(n))       series.push('galaxy');
-      if(/\bmoto\b/.test(n))         series.push('moto');
-      if(/\bnote\b/.test(n)&&!series.length) series.push('note-generic');
+      const n = normStr(s);
+      const series = [];
+      if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
+      else if (/\bredmi\b/.test(n))         series.push('redmi');
+      if (/\bpoco\b/.test(n))               series.push('poco');
+      if (/\brealme\b/.test(n))             series.push('realme');
+      if (/\biphone\b/.test(n))             series.push('iphone');
+      if (/\bgalaxy\b/.test(n))             series.push('galaxy');
+      if (/\bmoto\b/.test(n))               series.push('moto');
+      if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
       return series;
     }
-    function serieCompativel(lS,pS) {
-      if(!lS.length||!pS.length) return true;
-      if(lS.includes('note-generic')&&pS.some(s=>s.includes('note'))) return true;
-      if(pS.includes('note-generic')&&lS.some(s=>s.includes('note'))) return true;
-      return lS.some(s=>pS.includes(s));
+
+    function serieCompativel(lS, pS) {
+      if (!lS.length || !pS.length) return true;
+      if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
+      if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
+      return lS.some(s => pS.includes(s));
     }
+
     function tokensModelo(label) {
-      const stop=new Set(['de','do','da','com','para','a','o','e','em','smart','tv','led','oled','full','hd','4k','wi','fi','preto','branco','azul','verde','roxo','cinza','dourado','rosa','prata','bege','vermelho','amarelo','grafite','gold','creme','titanium','aurora','marrom','laranja','vinho','preta','silver','blue','black','white','purple','gray','transparente']);
-      const n=normStr(label)
-        .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi,'')
-        .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi,'')
-        .replace(/\s+/g,' ').trim();
-      return n.split(/\s+/).filter(t=>t.length>=2&&!stop.has(t));
+      const stop = new Set(['de','do','da','com','para','a','o','e','em',
+        'smart','tv','led','oled','full','hd','4k','wi','fi',
+        'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
+        'prata','bege','vermelho','amarelo','grafite','gold','creme',
+        'titanium','aurora','marrom','laranja','vinho','preta',
+        'silver','blue','black','white','purple','gray','transparente']);
+
+      const n = normStr(label)
+        .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
+        .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
+        .replace(/\s+/g, ' ').trim();
+
+      return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
     }
 
     async function carregarCacheProdutos(onProgress) {
-      if (_prodCache.length&&(Date.now()-_prodCacheTs)<CACHE_TTL) return _prodCache;
-      const base="https://caixa-three.vercel.app/api/produtos", loja=lojaIdJeta;
-      const delay=ms=>new Promise(r=>setTimeout(r,ms));
-      const url1=new URL(base); url1.searchParams.set('loja_id',loja); url1.searchParams.set('limite','100'); url1.searchParams.set('pagina','1');
-      const r1=await fetch(url1.toString()); if(!r1.ok) throw new Error('HTTP '+r1.status);
-      const d1=await r1.json(); if(d1.code!==200) throw new Error('API retornou código '+d1.code);
-      const totalPaginas=d1.meta?.total_paginas||1; let todos=[...(d1.data||[])];
-      if(onProgress) onProgress(1,totalPaginas,todos.length);
-      for(let p=2;p<=totalPaginas;p++){
-        const url=new URL(base); url.searchParams.set('loja_id',loja); url.searchParams.set('limite','100'); url.searchParams.set('pagina',p);
-        try{ const r=await fetch(url.toString()); if(r.ok){const d=await r.json(); if(d.code===200&&d.data) todos=todos.concat(d.data);} }catch(e){}
-        if(onProgress) onProgress(p,totalPaginas,todos.length);
-        if((p-1)%3===0) await delay(1100);
+      if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
+
+      const base = "https://caixa-three.vercel.app/api/produtos";
+      const loja = lojaIdJeta;
+      const delay = ms => new Promise(r => setTimeout(r, ms));
+
+      const url1 = new URL(base);
+      url1.searchParams.set('loja_id', loja);
+      url1.searchParams.set('limite', '100');
+      url1.searchParams.set('pagina', '1');
+      const r1 = await fetch(url1.toString());
+      if (!r1.ok) throw new Error('HTTP ' + r1.status);
+      const d1 = await r1.json();
+      if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+
+      const totalPaginas = d1.meta?.total_paginas || 1;
+      let todos = [...(d1.data || [])];
+
+      if (onProgress) onProgress(1, totalPaginas, todos.length);
+
+      for (let p = 2; p <= totalPaginas; p++) {
+        const url = new URL(base);
+        url.searchParams.set('loja_id', loja);
+        url.searchParams.set('limite', '100');
+        url.searchParams.set('pagina', p);
+        try {
+          const r = await fetch(url.toString());
+          if (r.ok) {
+            const d = await r.json();
+            if (d.code === 200 && d.data) todos = todos.concat(d.data);
+          }
+        } catch(e) { /* ignora página com falha */ }
+
+        if (onProgress) onProgress(p, totalPaginas, todos.length);
+        if ((p - 1) % 3 === 0) await delay(1100);
       }
-      _prodCache=todos; _prodCacheTs=Date.now(); return _prodCache;
+
+      _prodCache = todos;
+      _prodCacheTs = Date.now();
+      return _prodCache;
     }
 
     function buscarNoCacheLocal(q) {
-      if(!q||!_prodCache.length) return [];
-      const tokens=tokensModelo(q); if(!tokens.length) return [];
-      const memTok=tokens.filter(t=>/^\d+\/\d+(gb|tb)?$/i.test(t));
-      const storTok=tokens.filter(t=>/^\d+(gb|tb)$/i.test(t)&&!memTok.includes(t));
-      const redeTok=tokens.filter(t=>/^(4g|5g)$/i.test(t));
-      const modelTok=tokens.filter(t=>/^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t)&&!/^(4g|5g|gb|tb)$/i.test(t)&&!memTok.includes(t));
-      const numTok=tokens.filter(t=>/^\d+$/.test(t)&&t.length>=2&&!memTok.includes(t)&&!storTok.includes(t));
-      const txtTok=tokens.filter(t=>!memTok.includes(t)&&!storTok.includes(t)&&!redeTok.includes(t)&&!modelTok.includes(t)&&!numTok.includes(t));
-      const lV=extrairVariante(q), lS=extrairSerie(q);
-      return _prodCache.filter(p=>{
-        if(ehAcessorio(p.nome)) return false;
-        const pn=normStr(p.nome);
-        if(lS.length){const pS=extrairSerie(p.nome); if(!serieCompativel(lS,pS)) return false;}
-        const pV=extrairVariante(p.nome);
-        if(lV.includes('pro')!==pV.includes('pro')) return false;
-        if(lV.includes('s-suffix')!==pV.includes('s-suffix')) return false;
-        for(const v of['plus','ultra','max']) if(lV.includes(v)!==pV.includes(v)) return false;
-        if(memTok.length&&!memTok.every(t=>pn.includes(t.replace(/(gb|tb)$/i,'')))) return false;
-        if(storTok.length&&!storTok.every(t=>pn.includes(t)||new RegExp('\\b'+t.replace(/[^\d]/g,'')+'\\b').test(pn))) return false;
-        const ehSmartphone=/\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
-        const pRedeTok2=normStr(p.nome).match(/\b(4g|5g)\b/gi);
-        const pTem5g=pRedeTok2&&pRedeTok2.some(r=>r.toLowerCase()==='5g');
-        const pTem4g=pRedeTok2&&pRedeTok2.some(r=>r.toLowerCase()==='4g');
-        if(redeTok.length){if(!redeTok.every(t=>new RegExp('\\b'+t+'\\b').test(normStr(p.nome)))) return false;}
-        else if(ehSmartphone){if(pTem5g||pTem4g) return false;}
-        if(modelTok.length&&!modelTok.every(t=>new RegExp('\\b'+t+'\\b').test(pn))) return false;
-        if(numTok.length&&!numTok.every(t=>new RegExp('\\b'+t+'\\b').test(pn))) return false;
-        if(txtTok.length){const hits=txtTok.filter(t=>new RegExp('\\b'+t+'\\b').test(pn)).length; if(hits<Math.ceil(txtTok.length*0.5)) return false;}
+      if (!q || !_prodCache.length) return [];
+      const tokens = tokensModelo(q);
+      if (!tokens.length) return [];
+
+      const memTok   = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t));
+      const storTok  = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t));
+      const redeTok  = tokens.filter(t => /^(4g|5g)$/i.test(t));
+      const modelTok = tokens.filter(t =>
+        /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+        !/^(4g|5g|gb|tb)$/i.test(t) &&
+        !memTok.includes(t));
+      const numTok = tokens.filter(t =>
+        /^\d+$/.test(t) && t.length >= 2 &&
+        !memTok.includes(t) && !storTok.includes(t));
+      const txtTok = tokens.filter(t =>
+        !memTok.includes(t) && !storTok.includes(t) &&
+        !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
+
+      const lV = extrairVariante(q);
+      const lS = extrairSerie(q);
+
+      return _prodCache.filter(p => {
+        if (ehAcessorio(p.nome)) return false;
+        const pn = normStr(p.nome);
+
+        if (lS.length) {
+          const pS = extrairSerie(p.nome);
+          if (!serieCompativel(lS, pS)) return false;
+        }
+
+        const pV = extrairVariante(p.nome);
+        if (lV.includes('pro')      !== pV.includes('pro'))      return false;
+        if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false;
+        for (const v of ['plus','ultra','max']) {
+          if (lV.includes(v) !== pV.includes(v)) return false;
+        }
+
+        if (memTok.length && !memTok.every(t => {
+          const base = t.replace(/(gb|tb)$/i,'');
+          return pn.includes(base);
+        })) return false;
+
+        if (storTok.length && !storTok.every(t => {
+          const n = t.replace(/[^\d]/g,'');
+          return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
+        })) return false;
+
+        const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
+        const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
+        const pTem5g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
+        const pTem4g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
+        if (redeTok.length) {
+          if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
+        } else if (ehSmartphone) {
+          if (pTem5g || pTem4g) return false;
+        }
+
+        if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+        if (numTok.length && !numTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+        if (txtTok.length) {
+          const hits = txtTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length;
+          if (hits < Math.ceil(txtTok.length * 0.5)) return false;
+        }
         return true;
       });
     }
 
     function gerarQueries(label) {
-      const queries=[];
-      let limpo=label.replace(/,\s*[^,]{10,}/g,'').replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi,'').replace(/\s+/g,' ').trim();
-      limpo=limpo.replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi,'').replace(/\s+/g,' ').trim();
-      const comMem=limpo.replace(/\s*[-–]\s*\S+.*$/,'').trim(); if(comMem.length>3) queries.push(comMem);
-      const semMem=comMem.replace(/\s+\d+\/\d+\s*(gb|tb)?/gi,'').replace(/\s+\d+(gb|tb)/gi,'').replace(/\s+/g,' ').trim();
-      if(semMem&&semMem!==comMem&&semMem.length>3) queries.push(semMem);
-      const semRede=semMem.replace(/\s+\d+g\b/gi,'').replace(/\s+/g,' ').trim();
-      if(semRede&&semRede!==semMem&&semRede.length>3) queries.push(semRede);
-      const tvMatch=label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
-      if(tvMatch){const marca=tvMatch[1].trim(),pol=tvMatch[2],codMatch=label.match(/\b([A-Z0-9]{4,12}F?\b)/),cod=codMatch?codMatch[1]:'';const qTV=[marca,pol+'"',cod].filter(Boolean).join(' ').trim();if(qTV.length>3)queries.push(qTV);queries.push((marca+' '+pol+'"').trim());}
-      const codModelo=label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
-      if(codModelo) codModelo.forEach(cod=>{if(cod.length>=4) queries.push(cod);});
-      const marcaPol=label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
-      if(marcaPol) queries.push(marcaPol[1]+' '+marcaPol[2]+'"');
-      if(/\bipad\b/i.test(label)){const gen=label.match(/\bipad\s+(\d+)\b/i),mem=label.match(/\b(\d+)\s*gb\b/i);if(gen&&mem)queries.push('ipad '+gen[1]+' '+mem[1]+'gb');if(gen)queries.push('ipad '+gen[1]);queries.push('ipad');}
-      if(!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
-      return[...new Set(queries.filter(q=>q.length>2))];
-    }
+      const queries = [];
+      let limpo = label
+        .replace(/,\s*[^,]{10,}/g, '')
+        .replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '')
+        .replace(/\s+/g, ' ').trim();
 
-    function filtroTecnico(label,nomeAPI){
-      const lMem=extrairMem(label),pMem=extrairMem(nomeAPI),lRede=extrairRede(label),pRede=extrairRede(nomeAPI),lPol=extrairPolegadas(label),pPol=extrairPolegadas(nomeAPI),lStor=extrairStorage(label);
-      if(lMem.length&&pMem.length&&!lMem.some(m=>pMem.includes(m))) return false;
-      const ehSmartphoneFT=/\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
-      if(lRede.length&&pRede.length&&!lRede.some(r=>pRede.includes(r))) return false;
-      if(!lRede.length&&pRede.length&&ehSmartphoneFT) return false;
-      if(lPol.length&&pPol.length&&!lPol.some(p=>pPol.includes(p))) return false;
-      if(lStor.length){const pMem2=extrairMem(nomeAPI),lStorNum=lStor.map(s=>s.replace(/[^\d]/g,'')),pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];if(pStorNums.length&&!lStorNum.some(n=>pStorNums.includes(n))) return false;}
-      return true;
-    }
+      limpo = limpo
+        .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '')
+        .replace(/\s+/g, ' ').trim();
 
-    function scoreNome(label,nomeAPI){
-      const tokens=tokensModelo(label); if(!tokens.length) return 0;
-      const pn=normStr(nomeAPI);
-      const modelTok=tokens.filter(t=>/^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t)&&!/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
-      const restTok=tokens.filter(t=>!modelTok.includes(t));
-      const mScore=modelTok.length?modelTok.filter(t=>new RegExp('\\b'+t+'\\b').test(pn)).length/modelTok.length:1;
-      const rScore=restTok.length?restTok.filter(t=>pn.includes(t)).length/restTok.length:1;
-      return mScore*0.7+rScore*0.3;
-    }
+      const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+      if (comMem.length > 3) queries.push(comMem);
 
-    async function buscarVinculosDoItem(item){
-      let candidatos=[];
-      if(_prodCache.length){
-        const queries=gerarQueries(item.label||item.sysname||'');
-        for(const q of queries){buscarNoCacheLocal(q).forEach(p=>{if(!candidatos.find(c=>c.id===p.id))candidatos.push(p);});if(candidatos.length>=30) break;}
-        if(!candidatos.length&&item.sku?.trim()){const skuN=item.sku.trim().toLowerCase();_prodCache.filter(p=>(p.codigo_interno||'').toLowerCase()===skuN||(p.codigo_barra||'').toLowerCase()===skuN).forEach(p=>{if(!candidatos.find(c=>c.id===p.id))candidatos.push(p);});}
+      const semMem = comMem
+        .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
+        .replace(/\s+\d+(gb|tb)/gi, '')
+        .replace(/\s+/g, ' ').trim();
+      if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+
+      const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
+      if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+
+      const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
+      if (tvMatch) {
+        const marca = tvMatch[1].trim();
+        const pol   = tvMatch[2];
+        const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
+        const cod = codMatch ? codMatch[1] : '';
+        const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
+        if (qTV.length > 3) queries.push(qTV);
+        queries.push((marca + ' ' + pol + '"').trim());
       }
-      if(!candidatos.length) return [];
-      const label=item.label||item.sysname||'';
-      const ehTV=/\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
-      const threshold=ehTV?0.20:0.55;
-      return candidatos.filter(p=>!ehAcessorio(p.nome)).filter(p=>filtroTecnico(label,p.nome)).map(p=>({p,score:scoreNome(label,p.nome)})).filter(({score})=>score>=threshold).sort((a,b)=>b.score-a.score).slice(0,8).map(({p})=>({id:p.id,nome:p.nome,sku:p.codigo_interno||p.codigo_barra||'',estoque:Number(p.estoque??0)}));
+
+      const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
+      if (codModelo) {
+        codModelo.forEach(cod => {
+          if (cod.length >= 4) queries.push(cod);
+        });
+      }
+
+      const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
+      if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
+
+      if (/\bipad\b/i.test(label)) {
+        const gen = label.match(/\bipad\s+(\d+)\b/i);
+        const mem = label.match(/\b(\d+)\s*gb\b/i);
+        if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
+        if (gen)        queries.push(`ipad ${gen[1]}`);
+        queries.push('ipad');
+      }
+
+      if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
+      return [...new Set(queries.filter(q => q.length > 2))];
     }
 
-    // ── Groq ──
-    async function chamarGroq(system, user) {
-      const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({systemPrompt:system, messages:user})
+    async function buscarVinculosDoItem(item) {
+      let candidatos = [];
+      if (_prodCache.length) {
+        const queries = gerarQueries(item.label || item.sysname || '');
+        for (const q of queries) {
+          buscarNoCacheLocal(q).forEach(p => {
+            if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
+          });
+          if (candidatos.length >= 30) break;
+        }
+        if (!candidatos.length && item.sku?.trim()) {
+          const skuN = item.sku.trim().toLowerCase();
+          _prodCache.filter(p =>
+            (p.codigo_interno||'').toLowerCase() === skuN ||
+            (p.codigo_barra||'').toLowerCase() === skuN
+          ).forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+        }
+      } else {
+        const queries = gerarQueries(item.label || item.sysname || '');
+        for (const q of queries) {
+          try {
+            const d = await apiGet({ nome: q });
+            if (d.code === 200 && d.data?.length)
+              d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+          } catch(e) {}
+          if (candidatos.length >= 10) break;
+        }
+      }
+      if (!candidatos.length) return [];
+      const label = item.label || item.sysname || '';
+      const ehTV      = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
+      const threshold = ehTV ? 0.20 : 0.55;
+      return candidatos
+        .filter(p => !ehAcessorio(p.nome))
+        .filter(p => filtroTecnico(label, p.nome))
+        .map(p => ({ p, score: scoreNome(label, p.nome) }))
+        .filter(({ score }) => score >= threshold)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map(({ p }) => ({
+          id: p.id, nome: p.nome,
+          sku: p.codigo_interno || p.codigo_barra || '',
+          estoque: Number(p.estoque ?? 0),
+        }));
+    }
+
+    // NOVA FUNÇÃO PARA BUSCA DINÂMICA DENTRO DO CARD DO MODAL DA IA
+    async function triggerBuscaModalIA(idx, q) {
+      const resDiv = document.getElementById('ia-dd-res-' + idx);
+      q = q.trim();
+      if (q.length < 2) { resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Digite pelo menos 2 caracteres...</div>'; return; }
+      resDiv.innerHTML = '<div style="font-size:11px;color:#888;">⏳ Buscando na API...</div>';
+
+      let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
+      if (!prods.length) {
+        try {
+          const url = new URL("https://caixa-three.vercel.app/api/produtos");
+          url.searchParams.append("loja_id", lojaIdJeta);
+          url.searchParams.append("limite", "20");
+          url.searchParams.append("nome", q);
+          const r = await fetch(url.toString());
+          const d = await r.json();
+          if (d.code === 200 && d.data) prods = d.data;
+        } catch(e){}
+      }
+
+      if (!prods.length) {
+        resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Nenhum resultado encontrado.</div>';
+        return;
+      }
+
+      resDiv.innerHTML = prods.slice(0, 15).map(p => {
+        const est = Number(p.estoque || 0);
+        const ok = est > 0;
+        return `<div class="ia-cand-row">
+                  <span class="ia-cand-nome" title="${p.nome}">${p.nome}</span>
+                  <span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span>
+                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" 
+                          data-pid="${p.id}" 
+                          data-pnome="${encodeURIComponent(p.nome)}" 
+                          data-pest="${est}" 
+                          ${!ok ? 'disabled' : ''}>+</button>
+                </div>`;
+      }).join('');
+
+      resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
+        b.addEventListener('click', function() {
+          adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) });
+          this.textContent = '✓';
+          this.className = 'ia-cand-btn dis';
+          this.disabled = true;
+        });
       });
-      if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
-      const d = await resp.json();
-      if (d.choices&&d.choices[0]&&d.choices[0].message) return d.choices[0].message.content.trim();
-      throw new Error('Resposta inesperada do Groq');
     }
 
-    // ── Inicializa prompt ──
+    function el(id) { return document.getElementById(id); }
+
     document.getElementById('ia-prompt').value = localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT;
-    document.getElementById('ia-prompt').addEventListener('input', function(){ localStorage.setItem(IA_PROMPT_KEY, this.value); });
-    document.getElementById('ia-restaurar').addEventListener('click', function(){
+
+    document.getElementById('ia-prompt').addEventListener('input', function() {
+      localStorage.setItem(IA_PROMPT_KEY, this.value);
+    });
+
+    document.getElementById('ia-restaurar').addEventListener('click', function() {
       document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT;
       localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT);
       mostrarToast('↺ Prompt restaurado');
     });
 
-    // ── Abrir / fechar modal ──
-    document.getElementById('btn-abrir-ia-lote').addEventListener('click', function(){
+    document.getElementById('btn-abrir-ia-lote').addEventListener('click', function() {
       document.getElementById('ia-passo1').style.display = 'flex';
       document.getElementById('ia-passo2').style.display = 'none';
-      document.getElementById('ia-erro').style.display   = 'none';
+      document.getElementById('ia-erro').style.display = 'none';
       document.getElementById('ia-add-todos').style.display = 'none';
-      document.getElementById('ia-resumo').textContent   = '';
-      document.getElementById('ia-grid').innerHTML       = '';
+      document.getElementById('ia-resumo').textContent = '';
       document.getElementById('ia-lote-overlay').classList.add('open');
       setTimeout(function(){ document.getElementById('ia-raw').focus(); }, 80);
     });
 
-    function fecharIaLote(){ document.getElementById('ia-lote-overlay').classList.remove('open'); }
+    function fecharIaLote() {
+      document.getElementById('ia-lote-overlay').classList.remove('open');
+    }
     document.getElementById('ia-lote-fechar-topo').addEventListener('click', fecharIaLote);
     document.getElementById('ia-fechar-rodape').addEventListener('click', fecharIaLote);
-    document.getElementById('ia-lote-overlay').addEventListener('click', function(e){ if(e.target===this) fecharIaLote(); });
+    document.getElementById('ia-lote-overlay').addEventListener('click', function(e) {
+      if (e.target === this) fecharIaLote();
+    });
 
-    // ── PROCESSAR ──
-    document.getElementById('ia-processar').addEventListener('click', async function(){
+    async function chamarGroq(system, user) {
+      const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ systemPrompt: system, messages: user })
+      });
+      if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
+      const d = await resp.json();
+      if (d.choices && d.choices[0] && d.choices[0].message)
+        return d.choices[0].message.content.trim();
+      throw new Error('Resposta inesperada do Groq');
+    }
+
+    document.getElementById('ia-processar').addEventListener('click', async function() {
       const raw = document.getElementById('ia-raw').value.trim();
-      if (!raw){
+      if (!raw) {
         document.getElementById('ia-erro').textContent = 'Cole a lista antes de processar.';
         document.getElementById('ia-erro').style.display = 'block';
         return;
       }
       document.getElementById('ia-erro').style.display = 'none';
-      const btn = this; btn.disabled = true; btn.textContent = '⏳ Processando…';
+      const btn = this;
+      btn.disabled = true; btn.textContent = '⏳ Processando…';
 
       try {
         const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         localStorage.setItem(IA_PROMPT_KEY, prompt);
 
-        // 1. IA extrai nomes
         const resposta = await chamarGroq(
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
           prompt + '\n\nLista:\n' + raw
         );
-        const nomes = JSON.parse(resposta.replace(/```json|```/g,'').trim());
-        if (!Array.isArray(nomes)||!nomes.length) throw new Error('IA não retornou lista válida.');
+        const nomes = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        if (!Array.isArray(nomes) || !nomes.length) throw new Error('IA não retornou lista válida.');
 
-        // 2. Muda para passo 2
         document.getElementById('ia-passo1').style.display = 'none';
         document.getElementById('ia-passo2').style.display = 'flex';
 
-        const grid   = document.getElementById('ia-grid');
-        const prog   = document.getElementById('ia-prog');
+        const grid  = document.getElementById('ia-grid');
+        const prog  = document.getElementById('ia-prog');
         const status = document.getElementById('ia-status');
         grid.innerHTML = '';
-        _iaResultados  = [];
+        _iaResultados = [];
 
-        // 3. Baixa catálogo completo
         status.textContent = 'Baixando catálogo de produtos…';
-        prog.style.width   = '5%';
-        await carregarCacheProdutos(function(pag,total){
-          prog.style.width   = Math.round((pag/total)*40)+'%';
-          status.textContent = 'Catálogo: '+pag+'/'+total+'…';
+        prog.style.width = '5%';
+        await carregarCacheProdutos(function(pag, total) {
+          prog.style.width = Math.round((pag/total)*40) + '%';
+          status.textContent = 'Catálogo: ' + pag + '/' + total + '…';
         });
 
-        let comEst=0, semEst=0, naoAch=0;
+        var comEst = 0, semEst = 0, naoAch = 0;
 
-        // Helpers para construir DOM com segurança (sem innerHTML com dados do usuário)
-        function mk(tag, cls, txt) {
-          const el = document.createElement(tag);
-          if (cls) el.className = cls;
-          if (txt !== undefined) el.textContent = txt;
-          return el;
-        }
-        function mkBuscaInline(idx, valorInicial, autoAberto) {
-          const wrap = mk('div','ia-busca-inline-wrap');
-          wrap.id = 'bi-'+idx;
-          if (autoAberto) wrap.classList.add('open');
-          const row = mk('div','ia-busca-inline-row');
-          const inp = mk('input'); inp.type='text'; inp.className='ia-busca-inline-input';
-          inp.placeholder='Buscar produto…'; inp.value=valorInicial; inp.dataset.cardIdx=idx;
-          const btn = mk('button','ia-busca-inline-btn','Buscar'); btn.dataset.cardIdx=idx;
-          row.appendChild(inp); row.appendChild(btn);
-          const res = mk('div','ia-busca-resultados'); res.id='bi-res-'+idx;
-          wrap.appendChild(row); wrap.appendChild(res);
-          return wrap;
-        }
+        for (var i = 0; i < nomes.length; i++) {
+          const nome = nomes[i];
+          status.textContent = '(' + (i+1) + '/' + nomes.length + ') ' + nome.substring(0,45) + '…';
+          prog.style.width = (40 + Math.round(((i+1)/nomes.length)*60)) + '%';
 
-        // 4. Resolve cada produto
-        for (let i=0; i<nomes.length; i++){
-          const nomeOriginal = nomes[i];
-          status.textContent = '('+(i+1)+'/'+nomes.length+') '+nomeOriginal.substring(0,45)+'…';
-          prog.style.width   = (40+Math.round(((i+1)/nomes.length)*60))+'%';
+          const vinculos = await buscarVinculosDoItem({ label: nome, sysname:'', sku:'', prodId:null });
+          const card = document.createElement('div');
+          
+          let baseHtml = '';
 
-          const vinculos = await buscarVinculosDoItem({label:nomeOriginal, sysname:'', sku:'', prodId:null});
-          const card     = mk('div');
-
-          if (!vinculos||!vinculos.length){
-            // ── Não encontrado ──
-            card.className = 'ia-card nao-enc';
-
-            const hdr = mk('div','ia-card-header');
-            const nomeLista = mk('span','ia-nome-lista', nomeOriginal); nomeLista.title=nomeOriginal;
-            const seta      = mk('span','ia-seta','→');
-            const nomeSis   = mk('span','ia-nome-sistema nao-enc','Não encontrado no sistema');
-            const badge     = mk('span','ia-badge nf','N/A');
-            hdr.appendChild(nomeLista); hdr.appendChild(seta); hdr.appendChild(nomeSis); hdr.appendChild(badge);
-            card.appendChild(hdr);
-            card.appendChild(mkBuscaInline(i, nomeOriginal, true)); // abre automaticamente
+          if (!vinculos || !vinculos.length) {
+            baseHtml =
+              '<div class="ia-card-head">' +
+                '<span class="ia-nome">' + nome + '</span>' +
+                '<span class="ia-badge nf">N/A</span>' +
+                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '">🔍 Buscar API</button>' +
+              '</div>' +
+              '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
-
           } else {
-            // ── Encontrado ──
-            const estoqueTotal = vinculos.reduce(function(s,v){return s+v.estoque;},0);
-            const temEst       = estoqueTotal > 0;
-            const primNome     = vinculos[0].nome;
+            const total = vinculos.reduce(function(s,v){return s+v.estoque;},0);
+            const temEst = total > 0;
             if (temEst) comEst++; else semEst++;
 
-            card.className = 'ia-card '+(temEst?'com-est':'sem-est');
-
-            // Cabeçalho: nome da lista → nome do sistema
-            const hdr = mk('div','ia-card-header');
-            const nomeLista = mk('span','ia-nome-lista', nomeOriginal); nomeLista.title=nomeOriginal;
-            const seta      = mk('span','ia-seta','→');
-            const nomeSis   = mk('span','ia-nome-sistema', primNome); nomeSis.title=primNome;
-            const badge     = mk('span','ia-badge '+(temEst?'ok':'zero'), (temEst?'✓ ':'⚠ ')+estoqueTotal);
-            const btnTrocar = mk('button','ia-btn-trocar','🔄 Trocar'); btnTrocar.dataset.cardIdx=i;
-            hdr.appendChild(nomeLista); hdr.appendChild(seta); hdr.appendChild(nomeSis);
-            hdr.appendChild(badge); hdr.appendChild(btnTrocar);
-            card.appendChild(hdr);
-
-            // Lista de vínculos
-            const vincList = mk('div','ia-vinculos-list');
-            vinculos.forEach(function(v){
-              const row  = mk('div','ia-cand-row');
-              const nome = mk('span','ia-cand-nome', v.nome); nome.title=v.nome;
-              const sku  = mk('span','ia-cand-sku',  v.sku||'—');
-              const est  = mk('span','ia-cand-est '+(v.estoque>0?'ok':'zero'), (v.estoque>0?'✓ ':'⚠ ')+v.estoque);
-              row.appendChild(nome); row.appendChild(sku); row.appendChild(est);
-              if (v.estoque>0){
-                const btnAdd = mk('button','ia-cand-btn add ia-add-vinc','+');
-                btnAdd.dataset.pid   = v.id;
-                btnAdd.dataset.pnome = v.nome;  // guardamos direto, sem encode
-                btnAdd.dataset.pest  = v.estoque;
-                row.appendChild(btnAdd);
-              } else {
-                const btnDis = mk('button','ia-cand-btn dis','+'); btnDis.disabled=true;
-                row.appendChild(btnDis);
-              }
-              vincList.appendChild(row);
+            var candidatos = '';
+            vinculos.forEach(function(v) {
+              candidatos +=
+                '<div class="ia-cand-row">' +
+                  '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
+                  '<span class="ia-cand-est ' + (v.estoque>0?'ok':'zero') + '">' + (v.estoque>0?'✓ ':'⚠ ') + v.estoque + '</span>' +
+                  (v.estoque > 0
+                    ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
+                    : '<button class="ia-cand-btn dis" disabled>+</button>') +
+                '</div>';
             });
-            card.appendChild(vincList);
-            card.appendChild(mkBuscaInline(i, nomeOriginal, false));
+
+            baseHtml =
+              '<div class="ia-card-head">' +
+                '<span class="ia-nome">' + nome + '</span>' +
+                '<span class="ia-badge ' + (temEst?'ok':'zero') + '">' + (temEst?'✓ ':'⚠ ') + total + '</span>' +
+                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '">🔄 Trocar</button>' +
+              '</div>' +
+              candidatos;
           }
 
-          // ── Eventos do card ──
+          // Adiciona a área oculta de busca em todos os cards
+          baseHtml += 
+            '<div class="ia-dd-area" id="ia-dd-area-' + i + '">' +
+              '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nome + '">' +
+              '<div class="ia-dd-results" id="ia-dd-res-' + i + '"></div>' +
+            '</div>';
 
-          // Botões "+" de adicionar ao carrinho
-          card.querySelectorAll('.ia-add-vinc').forEach(function(b){
-            b.addEventListener('click', function(){
-              adicionarAoCarrinho({id:b.dataset.pid, nome:b.dataset.pnome, estoque:parseInt(b.dataset.pest)});
-              b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
-            });
-          });
-
-          // Botão "Trocar" — abre/fecha busca inline
-          card.querySelector('.ia-btn-trocar')?.addEventListener('click', function(){
-            const wrap = document.getElementById('bi-'+i);
-            const estaAberto = wrap.classList.contains('open');
-            wrap.classList.toggle('open', !estaAberto);
-            this.classList.toggle('ativo', !estaAberto);
-            if (!estaAberto) {
-              const inp = wrap.querySelector('.ia-busca-inline-input');
-              inp.focus(); inp.select();
-            }
-          });
-
-          // Busca inline: botão Buscar
-          card.querySelector('.ia-busca-inline-btn')?.addEventListener('click', function(){
-            const idx  = parseInt(this.dataset.cardIdx);
-            const wrap = document.getElementById('bi-'+idx);
-            const inp  = wrap.querySelector('.ia-busca-inline-input');
-            executarBuscaInline(idx, inp.value.trim());
-          });
-
-          // Busca inline: Enter
-          card.querySelector('.ia-busca-inline-input')?.addEventListener('keydown', function(e){
-            if (e.key === 'Enter'){
-              const idx = parseInt(this.dataset.cardIdx);
-              executarBuscaInline(idx, this.value.trim());
-            }
-          });
-
+          card.className = 'ia-card ' + (!vinculos || !vinculos.length ? 'nao-enc' : (vinculos.reduce((s,v)=>s+v.estoque,0)>0 ? 'com-est' : 'sem-est'));
+          card.innerHTML = baseHtml;
+          
           grid.appendChild(card);
-          _iaResultados.push({nome:nomeOriginal, vinculos:vinculos||[]});
+          _iaResultados.push({ nome: nome, vinculos: vinculos || [] });
         }
 
-        status.textContent = 'Concluído!';
-        prog.style.width   = '100%';
-        document.getElementById('ia-resumo').textContent =
-          '✅ '+comEst+' c/ estoque  ⚠️ '+semEst+' zerado  ❌ '+naoAch+' não encontrado';
-        if (comEst>0) document.getElementById('ia-add-todos').style.display = 'block';
+        grid.querySelectorAll('.ia-add-vinc').forEach(function(b) {
+          b.addEventListener('click', function() {
+            adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
+            b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
+          });
+        });
 
-      } catch(err){
+        grid.querySelectorAll('.ia-toggle-search').forEach(function(b) {
+          b.addEventListener('click', function() {
+            const idx = this.dataset.idx;
+            const area = document.getElementById('ia-dd-area-' + idx);
+            area.classList.toggle('open');
+            if (area.classList.contains('open')) {
+              const inp = document.getElementById('ia-dd-search-' + idx);
+              inp.focus();
+              triggerBuscaModalIA(idx, inp.value);
+            }
+          });
+        });
+
+        grid.querySelectorAll('.ia-dd-search').forEach(function(inp) {
+          let timer;
+          inp.addEventListener('input', function() {
+            clearTimeout(timer);
+            const idx = this.id.replace('ia-dd-search-', '');
+            timer = setTimeout(function() { triggerBuscaModalIA(idx, inp.value); }, 400);
+          });
+        });
+
+        status.textContent = 'Concluído!';
+        prog.style.width = '100%';
+        document.getElementById('ia-resumo').textContent =
+          '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+        if (comEst > 0) document.getElementById('ia-add-todos').style.display = 'block';
+
+      } catch(err) {
         document.getElementById('ia-passo1').style.display = 'flex';
         document.getElementById('ia-passo2').style.display = 'none';
-        document.getElementById('ia-erro').textContent = 'Erro: '+err.message;
+        document.getElementById('ia-erro').textContent = 'Erro: ' + err.message;
         document.getElementById('ia-erro').style.display = 'block';
       }
       btn.disabled = false; btn.textContent = '🤖 Processar e consultar estoque →';
     });
 
-    // ── Busca inline dentro do card (sem sair do modal) ──
-    async function executarBuscaInline(cardIdx, q) {
-      const resDiv = document.getElementById('bi-res-'+cardIdx);
-      if (!q || q.length < 2){ resDiv.innerHTML = '<div class="ia-busca-res-empty">Mín. 2 caracteres…</div>'; return; }
-
-      resDiv.innerHTML = '<div class="ia-busca-res-empty">⏳ Buscando…</div>';
-
-      // Busca no cache local primeiro, depois na API se necessário
-      let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
-      if (!prods.length){
-        try{
-          const url=new URL('https://caixa-three.vercel.app/api/produtos');
-          url.searchParams.set('loja_id',lojaIdJeta); url.searchParams.set('limite','20'); url.searchParams.set('nome',q);
-          const r=await fetch(url.toString());
-          if(r.ok){const d=await r.json(); if(d.code===200&&d.data) prods=d.data;}
-        }catch(e){}
-      }
-
-      if (!prods.length){ resDiv.innerHTML = '<div class="ia-busca-res-empty">Nenhum resultado.</div>'; return; }
-
-      resDiv.innerHTML = '';
-      prods.slice(0,20).forEach(function(p){
-        const est = Number(p.estoque??0);
-        const row = document.createElement('div');
-        row.className = 'ia-busca-res-row';
-
-        const nomeSpan = document.createElement('span');
-        nomeSpan.className = 'ia-busca-res-nome';
-        nomeSpan.textContent = p.nome;
-        nomeSpan.title = p.nome;
-
-        const estSpan = document.createElement('span');
-        estSpan.className = 'ia-busca-res-est';
-        estSpan.style.color = est>0 ? '#27ae60' : '#c0392b';
-        estSpan.textContent = (est>0?'✓ ':'⚠ ')+est;
-
-        const btnAdd = document.createElement('button');
-        btnAdd.className = 'ia-busca-res-btn';
-        btnAdd.textContent = '+';
-        if (est<=0){ btnAdd.style.background='#ccc'; btnAdd.style.cursor='not-allowed'; btnAdd.disabled=true; }
-
-        row.appendChild(nomeSpan); row.appendChild(estSpan); row.appendChild(btnAdd);
-
-        btnAdd.addEventListener('click', function(e){
-          e.stopPropagation();
-          if (est<=0){ mostrarToast('⚠️ Sem estoque'); return; }
-          adicionarAoCarrinho({id:p.id||p.nome, nome:p.nome, estoque:est});
-          // Fecha o painel e atualiza o card visualmente
-          const wrap = document.getElementById('bi-'+cardIdx);
-          wrap.classList.remove('open');
-          const card = wrap.closest('.ia-card');
-          const nomeSistema = card.querySelector('.ia-nome-sistema');
-          if (nomeSistema){ nomeSistema.textContent = p.nome; nomeSistema.classList.remove('nao-enc'); }
-          const badge = card.querySelector('.ia-badge');
-          if (badge){ badge.textContent = '✓ '+est; badge.className='ia-badge ok'; }
-          card.className = 'ia-card com-est';
-          if (_iaResultados[cardIdx]){ _iaResultados[cardIdx].vinculos = [{id:p.id||p.nome,nome:p.nome,sku:p.codigo_interno||p.codigo_barra||'',estoque:est}]; }
-        });
-        resDiv.appendChild(row);
-      });
-    }
-
-    // ── Adicionar todos com estoque ──
-    document.getElementById('ia-add-todos').addEventListener('click', function(){
-      let n=0;
-      _iaResultados.forEach(function(r){
-        r.vinculos.forEach(function(v){
-          if(v.estoque>0){ adicionarAoCarrinho({id:v.id,nome:v.nome,estoque:v.estoque}); n++; }
+    document.getElementById('ia-add-todos').addEventListener('click', function() {
+      var n = 0;
+      _iaResultados.forEach(function(r) {
+        r.vinculos.forEach(function(v) {
+          if (v.estoque > 0) { adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque }); n++; }
         });
       });
-      mostrarToast('✅ '+n+' produto(s) adicionados');
+      mostrarToast('✅ ' + n + ' produto(s) adicionados');
       fecharIaLote();
     });
   </script>
