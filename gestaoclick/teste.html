@@ -1288,35 +1288,48 @@
 
         let comEst=0, semEst=0, naoAch=0;
 
+        // Helpers para construir DOM com segurança (sem innerHTML com dados do usuário)
+        function mk(tag, cls, txt) {
+          const el = document.createElement(tag);
+          if (cls) el.className = cls;
+          if (txt !== undefined) el.textContent = txt;
+          return el;
+        }
+        function mkBuscaInline(idx, valorInicial, autoAberto) {
+          const wrap = mk('div','ia-busca-inline-wrap');
+          wrap.id = 'bi-'+idx;
+          if (autoAberto) wrap.classList.add('open');
+          const row = mk('div','ia-busca-inline-row');
+          const inp = mk('input'); inp.type='text'; inp.className='ia-busca-inline-input';
+          inp.placeholder='Buscar produto…'; inp.value=valorInicial; inp.dataset.cardIdx=idx;
+          const btn = mk('button','ia-busca-inline-btn','Buscar'); btn.dataset.cardIdx=idx;
+          row.appendChild(inp); row.appendChild(btn);
+          const res = mk('div','ia-busca-resultados'); res.id='bi-res-'+idx;
+          wrap.appendChild(row); wrap.appendChild(res);
+          return wrap;
+        }
+
         // 4. Resolve cada produto
         for (let i=0; i<nomes.length; i++){
           const nomeOriginal = nomes[i];
-          status.textContent = '('+( i+1)+'/'+nomes.length+') '+nomeOriginal.substring(0,45)+'…';
+          status.textContent = '('+(i+1)+'/'+nomes.length+') '+nomeOriginal.substring(0,45)+'…';
           prog.style.width   = (40+Math.round(((i+1)/nomes.length)*60))+'%';
 
           const vinculos = await buscarVinculosDoItem({label:nomeOriginal, sysname:'', sku:'', prodId:null});
-          const card     = document.createElement('div');
+          const card     = mk('div');
 
           if (!vinculos||!vinculos.length){
             // ── Não encontrado ──
             card.className = 'ia-card nao-enc';
-            card.innerHTML =
-              '<div class="ia-card-header">' +
-                '<span class="ia-nome-lista" title="'+nomeOriginal+'">'+nomeOriginal+'</span>' +
-                '<span class="ia-seta">→</span>' +
-                '<span class="ia-nome-sistema nao-enc">Não encontrado no sistema</span>' +
-                '<span class="ia-badge nf">N/A</span>' +
-              '</div>' +
-              '<div class="ia-busca-inline-wrap" id="bi-'+i+'">' +
-                '<div class="ia-busca-inline-row">' +
-                  '<input type="text" class="ia-busca-inline-input" placeholder="Buscar produto manualmente…" value="'+nomeOriginal+'" data-card-idx="'+i+'" />' +
-                  '<button class="ia-busca-inline-btn" data-card-idx="'+i+'">Buscar</button>' +
-                '</div>' +
-                '<div class="ia-busca-resultados" id="bi-res-'+i+'"></div>' +
-              '</div>';
 
-            // Abre o painel de busca imediatamente para "não encontrado"
-            card.querySelector('.ia-busca-inline-wrap').classList.add('open');
+            const hdr = mk('div','ia-card-header');
+            const nomeLista = mk('span','ia-nome-lista', nomeOriginal); nomeLista.title=nomeOriginal;
+            const seta      = mk('span','ia-seta','→');
+            const nomeSis   = mk('span','ia-nome-sistema nao-enc','Não encontrado no sistema');
+            const badge     = mk('span','ia-badge nf','N/A');
+            hdr.appendChild(nomeLista); hdr.appendChild(seta); hdr.appendChild(nomeSis); hdr.appendChild(badge);
+            card.appendChild(hdr);
+            card.appendChild(mkBuscaInline(i, nomeOriginal, true)); // abre automaticamente
             naoAch++;
 
           } else {
@@ -1326,40 +1339,41 @@
             const primNome     = vinculos[0].nome;
             if (temEst) comEst++; else semEst++;
 
-            // Linha de vínculos
-            let vinculosHtml = '';
-            vinculos.forEach(function(v){
-              vinculosHtml +=
-                '<div class="ia-cand-row">' +
-                  '<span class="ia-cand-nome" title="'+v.nome+'">'+v.nome+'</span>' +
-                  '<span class="ia-cand-sku">'+( v.sku||'—')+'</span>' +
-                  '<span class="ia-cand-est '+(v.estoque>0?'ok':'zero')+'">'+(v.estoque>0?'✓ ':'⚠ ')+v.estoque+'</span>' +
-                  (v.estoque>0
-                    ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="'+v.id+'" data-pnome="'+encodeURIComponent(v.nome)+'" data-pest="'+v.estoque+'">+</button>'
-                    : '<button class="ia-cand-btn dis" disabled>+</button>') +
-                '</div>';
-            });
-
             card.className = 'ia-card '+(temEst?'com-est':'sem-est');
-            card.innerHTML =
-              // Cabeçalho: nome da lista → primeiro vínculo do sistema
-              '<div class="ia-card-header">' +
-                '<span class="ia-nome-lista" title="'+nomeOriginal+'">'+nomeOriginal+'</span>' +
-                '<span class="ia-seta">→</span>' +
-                '<span class="ia-nome-sistema" title="'+primNome+'">'+primNome+'</span>' +
-                '<span class="ia-badge '+(temEst?'ok':'zero')+'">'+(temEst?'✓ ':'⚠ ')+estoqueTotal+'</span>' +
-                '<button class="ia-btn-trocar" data-card-idx="'+i+'">🔄 Trocar</button>' +
-              '</div>' +
-              // Lista de vínculos (quando há mais de 1 ou para conferência)
-              '<div class="ia-vinculos-list">'+vinculosHtml+'</div>' +
-              // Painel de busca manual (fechado por padrão)
-              '<div class="ia-busca-inline-wrap" id="bi-'+i+'">' +
-                '<div class="ia-busca-inline-row">' +
-                  '<input type="text" class="ia-busca-inline-input" placeholder="Buscar outro produto…" value="'+nomeOriginal+'" data-card-idx="'+i+'" />' +
-                  '<button class="ia-busca-inline-btn" data-card-idx="'+i+'">Buscar</button>' +
-                '</div>' +
-                '<div class="ia-busca-resultados" id="bi-res-'+i+'"></div>' +
-              '</div>';
+
+            // Cabeçalho: nome da lista → nome do sistema
+            const hdr = mk('div','ia-card-header');
+            const nomeLista = mk('span','ia-nome-lista', nomeOriginal); nomeLista.title=nomeOriginal;
+            const seta      = mk('span','ia-seta','→');
+            const nomeSis   = mk('span','ia-nome-sistema', primNome); nomeSis.title=primNome;
+            const badge     = mk('span','ia-badge '+(temEst?'ok':'zero'), (temEst?'✓ ':'⚠ ')+estoqueTotal);
+            const btnTrocar = mk('button','ia-btn-trocar','🔄 Trocar'); btnTrocar.dataset.cardIdx=i;
+            hdr.appendChild(nomeLista); hdr.appendChild(seta); hdr.appendChild(nomeSis);
+            hdr.appendChild(badge); hdr.appendChild(btnTrocar);
+            card.appendChild(hdr);
+
+            // Lista de vínculos
+            const vincList = mk('div','ia-vinculos-list');
+            vinculos.forEach(function(v){
+              const row  = mk('div','ia-cand-row');
+              const nome = mk('span','ia-cand-nome', v.nome); nome.title=v.nome;
+              const sku  = mk('span','ia-cand-sku',  v.sku||'—');
+              const est  = mk('span','ia-cand-est '+(v.estoque>0?'ok':'zero'), (v.estoque>0?'✓ ':'⚠ ')+v.estoque);
+              row.appendChild(nome); row.appendChild(sku); row.appendChild(est);
+              if (v.estoque>0){
+                const btnAdd = mk('button','ia-cand-btn add ia-add-vinc','+');
+                btnAdd.dataset.pid   = v.id;
+                btnAdd.dataset.pnome = v.nome;  // guardamos direto, sem encode
+                btnAdd.dataset.pest  = v.estoque;
+                row.appendChild(btnAdd);
+              } else {
+                const btnDis = mk('button','ia-cand-btn dis','+'); btnDis.disabled=true;
+                row.appendChild(btnDis);
+              }
+              vincList.appendChild(row);
+            });
+            card.appendChild(vincList);
+            card.appendChild(mkBuscaInline(i, nomeOriginal, false));
           }
 
           // ── Eventos do card ──
@@ -1367,7 +1381,7 @@
           // Botões "+" de adicionar ao carrinho
           card.querySelectorAll('.ia-add-vinc').forEach(function(b){
             b.addEventListener('click', function(){
-              adicionarAoCarrinho({id:b.dataset.pid, nome:decodeURIComponent(b.dataset.pnome), estoque:parseInt(b.dataset.pest)});
+              adicionarAoCarrinho({id:b.dataset.pid, nome:b.dataset.pnome, estoque:parseInt(b.dataset.pest)});
               b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
             });
           });
@@ -1444,26 +1458,37 @@
         const est = Number(p.estoque??0);
         const row = document.createElement('div');
         row.className = 'ia-busca-res-row';
-        row.innerHTML =
-          '<span class="ia-busca-res-nome" title="'+p.nome+'">'+p.nome+'</span>' +
-          '<span class="ia-busca-res-est" style="color:'+(est>0?'#27ae60':'#c0392b')+'">'+(est>0?'✓ ':'⚠ ')+est+'</span>' +
-          (est>0 ? '<button class="ia-busca-res-btn">+</button>' : '<button class="ia-busca-res-btn" style="background:#ccc;cursor:not-allowed;" disabled>+</button>');
 
-        row.querySelector('.ia-busca-res-btn').addEventListener('click', function(e){
+        const nomeSpan = document.createElement('span');
+        nomeSpan.className = 'ia-busca-res-nome';
+        nomeSpan.textContent = p.nome;
+        nomeSpan.title = p.nome;
+
+        const estSpan = document.createElement('span');
+        estSpan.className = 'ia-busca-res-est';
+        estSpan.style.color = est>0 ? '#27ae60' : '#c0392b';
+        estSpan.textContent = (est>0?'✓ ':'⚠ ')+est;
+
+        const btnAdd = document.createElement('button');
+        btnAdd.className = 'ia-busca-res-btn';
+        btnAdd.textContent = '+';
+        if (est<=0){ btnAdd.style.background='#ccc'; btnAdd.style.cursor='not-allowed'; btnAdd.disabled=true; }
+
+        row.appendChild(nomeSpan); row.appendChild(estSpan); row.appendChild(btnAdd);
+
+        btnAdd.addEventListener('click', function(e){
           e.stopPropagation();
           if (est<=0){ mostrarToast('⚠️ Sem estoque'); return; }
           adicionarAoCarrinho({id:p.id||p.nome, nome:p.nome, estoque:est});
-          // Fecha o painel de busca e atualiza o card visualmente
+          // Fecha o painel e atualiza o card visualmente
           const wrap = document.getElementById('bi-'+cardIdx);
           wrap.classList.remove('open');
-          // Atualiza o resumo do card no cabeçalho
           const card = wrap.closest('.ia-card');
           const nomeSistema = card.querySelector('.ia-nome-sistema');
           if (nomeSistema){ nomeSistema.textContent = p.nome; nomeSistema.classList.remove('nao-enc'); }
           const badge = card.querySelector('.ia-badge');
           if (badge){ badge.textContent = '✓ '+est; badge.className='ia-badge ok'; }
           card.className = 'ia-card com-est';
-          // Atualiza _iaResultados
           if (_iaResultados[cardIdx]){ _iaResultados[cardIdx].vinculos = [{id:p.id||p.nome,nome:p.nome,sku:p.codigo_interno||p.codigo_barra||'',estoque:est}]; }
         });
         resDiv.appendChild(row);
