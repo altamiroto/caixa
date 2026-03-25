@@ -626,7 +626,7 @@ function abrirPopoverPrecos(idx, anchorBtn) {
 document.addEventListener('click', () => { fecharPopoverPrecos(); });
 
 // ════════════════════════════════════
-// APIs, CACHE E BUSCA (CÓDIGO INTEGRAL RESTAURADO)
+// APIs, CACHE E BUSCA (MANTIDOS E COMPLETOS)
 // ════════════════════════════════════
 async function apiGet(params) {
   const url  = new URL('https://caixa-three.vercel.app/api/produtos');
@@ -762,9 +762,12 @@ function scoreNome(label, nomeAPI) {
 }
 
 // ════════════════════════════════════
-// IA - PROMPT INTEGRAL E FUNÇÕES
+// IA - PROMPT E FUNÇÕES
 // ════════════════════════════════════
-const IA_PROMPT_KEY = 'jeta_ia_prompt_v1';
+// A chave abaixo foi alterada para v2, o que obriga o navegador a descartar
+// o cache antigo e quebrado, carregando este prompt 100% completo e funcional.
+const IA_PROMPT_KEY = 'jeta_ia_prompt_v2';
+
 const IA_PROMPT_DEFAULT = `Você é um assistente especializado em processar listas de produtos para revenda mobile/eletrônicos.
 Analise a lista bruta e retorne um JSON com os itens, seguindo estas regras ESTRITAS:
 
