@@ -450,7 +450,6 @@
 
   </div>
 
-
   <div id="ia-lote-overlay">
     <div id="ia-lote-modal">
       <div class="ia-lh">
@@ -1091,6 +1090,47 @@
         .replace(/\s+/g, ' ').trim();
 
       return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
+    }
+
+    function filtroTecnico(label, nomeAPI) {
+      const lMem=extrairMem(label), pMem=extrairMem(nomeAPI);
+      const lRede=extrairRede(label), pRede=extrairRede(nomeAPI);
+      const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
+      const lStor=extrairStorage(label);
+      if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
+      const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
+      if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
+      if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
+      if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
+      if (lStor.length) {
+        const pMem2=extrairMem(nomeAPI);
+        const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,''));
+        const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];
+        if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false;
+      }
+      return true;
+    }
+
+    function scoreNome(label, nomeAPI) {
+      const tokens = tokensModelo(label);
+      if (!tokens.length) return 0;
+      const pn = normStr(nomeAPI);
+      const modelTok = tokens.filter(t =>
+        /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+        !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
+      const restTok = tokens.filter(t => !modelTok.includes(t));
+      const mScore = modelTok.length
+        ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1;
+      const rScore = restTok.length
+        ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
+      return mScore * 0.7 + rScore * 0.3;
+    }
+
+    async function buscarEstoqueDoItem(item) {
+      const vs = await buscarVinculosDoItem(item);
+      if (!vs.length) return null;
+      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+      return { estoque: estoqueTotal, prodId: vs[0].id };
     }
 
     async function carregarCacheProdutos(onProgress) {
