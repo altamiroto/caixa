@@ -92,7 +92,7 @@
     .tab-add { background: transparent; border: 1px dashed var(--border2); }
 
     /* LAYOUT */
-    .app { display:grid; grid-template-columns:1fr 340px; height:calc(100vh - 105px); width:100%; max-width:100vw; overflow:hidden; }
+    .app { display:grid; grid-template-columns:1fr 420px; height:calc(100vh - 105px); width:100%; max-width:100vw; overflow:hidden; }
     .panel-left { overflow-y:hidden; overflow-x:hidden; padding:16px; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:13px; min-width:0; }
     .panel-right { overflow-y:auto; overflow-x:hidden; padding:16px; display:flex; flex-direction:column; gap:13px; background:var(--surface); min-width:0; }
 
@@ -147,10 +147,9 @@
     .label-ta::placeholder { color: var(--text3); font-weight: 400; }
 
     .col-drag  { width:24px; text-align:center; color:var(--muted); user-select:none; cursor:grab; }
-    .col-drag:active { cursor:grabbing; }
     .col-label { min-width:160px; max-width:260px; }
     .col-price { width:110px; }
-    .col-api   { min-width:180px; } /* Mescla Sys, SKU e Estoque */
+    .col-api   { width:150px; } /* Reduzido para dar espaço à direita */
     .col-act   { width:60px; text-align:center; }
 
     .btn-precos { padding: 3px 6px; font-size: 14px; background: transparent; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; color: var(--text2); transition: background .12s; }
@@ -405,14 +404,6 @@
       </div>
       <div style="padding:13px; display:flex; flex-direction:column; gap:10px;">
         <div class="field-group">
-          <span class="field-label">Título da Lista</span>
-          <input type="text" id="lista-titulo" placeholder="Lista EXCLUSIVA REVENDA/ATACADO" />
-        </div>
-        <div class="field-group">
-          <span class="field-label">Data da lista</span>
-          <input type="text" id="cfg-data" placeholder="ex: 18/03/26" style="font-family:'Sora',sans-serif;" />
-        </div>
-        <div class="field-group">
           <span class="field-label">Produtos sem estoque no preview</span>
           <select id="cfg-sem-estoque">
             <option value="ocultar">Ocultar da lista final</option>
@@ -499,7 +490,7 @@ let currentTabObj = null;
 let lista = []; 
 let dragSrcIdx = null;
 let _dragScrollTimer = null;
-const HEADER_ICONS = ['📌','Ⓜ️','✳️','❇','☑️','🍎','🔷','🟥','🟩','⭐','🔹','▪️'];
+const HEADER_ICONS = ['','📌','Ⓜ️','✳️','❇','☑️','🍎','🔷','🟥','🟩','⭐','🔹','▪️'];
 
 function createListObj(nome) {
   return {
@@ -539,8 +530,6 @@ function switchTab(id) {
   lista = currentTabObj.lista;
   lista.forEach(initPrices); // garante estrutura de preços
   
-  el('lista-titulo').value = currentTabObj.titulo || '';
-  el('cfg-data').value = currentTabObj.cfgData || dataHoje();
   el('cfg-sem-estoque').value = currentTabObj.cfgSemEst || 'ocultar';
   
   renderTemplatesConfig();
@@ -626,7 +615,7 @@ function abrirPopoverPrecos(idx, anchorBtn) {
 document.addEventListener('click', () => { fecharPopoverPrecos(); });
 
 // ════════════════════════════════════
-// APIs, CACHE E BUSCA (MANTIDOS E COMPLETOS)
+// APIs, CACHE E BUSCA
 // ════════════════════════════════════
 async function apiGet(params) {
   const url  = new URL('https://caixa-three.vercel.app/api/produtos');
@@ -764,8 +753,6 @@ function scoreNome(label, nomeAPI) {
 // ════════════════════════════════════
 // IA - PROMPT E FUNÇÕES
 // ════════════════════════════════════
-// A chave abaixo foi alterada para v2, o que obriga o navegador a descartar
-// o cache antigo e quebrado, carregando este prompt 100% completo e funcional.
 const IA_PROMPT_KEY = 'jeta_ia_prompt_v2';
 
 const IA_PROMPT_DEFAULT = `Você é um assistente especializado em processar listas de produtos para revenda mobile/eletrônicos.
@@ -990,7 +977,7 @@ function renderTabela() {
 
     if (item.type === 'header') {
       tr.className = 'row-header';
-      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${item.icon===v?'selected':''}>${v}</option>`).join('');
+      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${(item.icon===undefined && v==='📌') || item.icon===v ? 'selected' : ''}>${v || 'Nenhum'}</option>`).join('');
       tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="3" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
     } else if (item.type === 'free') {
       tr.className = 'row-free';
@@ -1058,7 +1045,7 @@ function renderMobile() {
     const card = document.createElement('div');
     if (item.type === 'header') {
       card.className = 'mcard mcard-header';
-      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${item.icon===v?'selected':''}>${v}</option>`).join('');
+      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${(item.icon===undefined && v==='📌') || item.icon===v ? 'selected' : ''}>${v || 'Nenhum'}</option>`).join('');
       card.innerHTML = `<div class="mcard-header-row"><span class="mcard-drag">⠿</span><select class="hdr-icon-sel" data-field="icon" style="width:48px;">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1;font-weight:700;font-size:.85rem;background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 5px;color:var(--text);" /><button class="mcard-del" data-idx="${idx}">✕</button></div>`;
     } else if (item.type === 'free') {
       card.className = 'mcard mcard-free';
@@ -1171,19 +1158,28 @@ function formatarComTemplate(item, templateText) {
 
 function atualizarPreview() {
   const box = el('preview-box');
-  const titulo = currentTabObj?.titulo || 'Lista EXCLUSIVA REVENDA/ATACADO';
-  const data = currentTabObj?.cfgData || dataHoje();
   const semEst = currentTabObj?.cfgSemEst || 'ocultar';
   
   const templateSelecionado = appData.templates.find(x => x.id === (currentTabObj?.templateId || 't1'));
   const templateText = templateSelecionado ? templateSelecionado.texto : '{{nome}} - R$ {{preco}}';
 
   if (lista.length === 0) { box.innerHTML = '<span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span>'; return; }
-  const linhas = []; linhas.push(`📌 *\`${titulo} (${data}):\`* 📌`);
+  
+  const linhas = [];
+  const dHoje = dataHoje();
 
   lista.forEach(item => {
-    if (item.type === 'header') { const icon = item.icon || '📌', label = (item.label || 'SEÇÃO').toUpperCase(); linhas.push(`${icon} *\`${label}\`*`); }
-    else if (item.type === 'free') { linhas.push(item.text || ''); }
+    if (item.type === 'header') { 
+      const icon = item.icon ? item.icon + ' ' : '';
+      let label = (item.label || 'SEÇÃO').toUpperCase();
+      label = label.replace(/\{\{data\}\}/gi, dHoje);
+      linhas.push(`${icon}*\`${label}\`*`); 
+    }
+    else if (item.type === 'free') { 
+      let text = item.text || '';
+      text = text.replace(/\{\{data\}\}/gi, dHoje);
+      linhas.push(text); 
+    }
     else {
       const semEstoque = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
       if (semEstoque && semEst === 'ocultar') return;
@@ -1232,7 +1228,7 @@ el('btn-limpar-lista').addEventListener('click', () => { if (!lista.length || !c
 el('btn-sync-all').addEventListener('click', syncTodos);
 el('fab-preview').addEventListener('click', () => { document.querySelector('.panel-right').scrollIntoView({ behavior: 'smooth' }); const pb = el('preview-box'); pb.style.boxShadow = '0 0 0 3px var(--accent)'; setTimeout(() => pb.style.boxShadow = 'none', 1000); });
 
-['lista-titulo','cfg-data','cfg-sem-estoque'].forEach(id => { el(id).addEventListener('input', () => { if (currentTabObj) { if (id === 'lista-titulo') currentTabObj.titulo = el(id).value; if (id === 'cfg-data') currentTabObj.cfgData = el(id).value; if (id === 'cfg-sem-estoque') currentTabObj.cfgSemEst = el(id).value; } atualizarPreview(); salvar(); }); });
+['cfg-sem-estoque'].forEach(id => { el(id).addEventListener('input', () => { if (currentTabObj) { if (id === 'cfg-sem-estoque') currentTabObj.cfgSemEst = el(id).value; } atualizarPreview(); salvar(); }); });
 
 el('btn-abrir-ia').addEventListener('click', iaAbrir); el('ia-fechar').addEventListener('click', iaFechar); el('ia-overlay').addEventListener('click', e => { if (e.target === el('ia-overlay')) iaFechar(); }); el('ia-processar').addEventListener('click', iaProcessar); el('ia-voltar').addEventListener('click', () => iaSetStep(1)); el('ia-confirmar').addEventListener('click', iaConfirmar); el('ia-raw').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); iaProcessar(); } });
 
