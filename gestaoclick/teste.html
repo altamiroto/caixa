@@ -338,7 +338,7 @@
     .ia-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6b6b6b; margin-bottom:4px; display:block; }
     .ia-ta { width:100%; min-height:130px; max-height:240px; border:1px solid #e0e0e0; border-radius:8px; padding:10px 12px; font-family:'DM Mono',monospace; font-size:13px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
     .ia-ta:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
-    .ia-prompt-ta { width:100%; min-height:90px; border:1px solid #e0e0e0; border-radius:8px; padding:9px 12px; font-family:'DM Mono',monospace; font-size:12px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
+    .ia-prompt-ta { width:100%; min-height:110px; border:1px solid #e0e0e0; border-radius:8px; padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
     .ia-prompt-ta:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
     .ia-prompt-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
     .ia-btn-restaurar { background:transparent; border:1px solid #e0e0e0; border-radius:6px; color:#6b6b6b; font-size:11px; cursor:pointer; padding:3px 9px; }
@@ -363,12 +363,12 @@
     .ia-cand-btn { border:none; border-radius:5px; padding:2px 9px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; }
     .ia-cand-btn.add  { background:#27ae60; color:#fff; }
     .ia-cand-btn.dis  { background:#e0e0e0; color:#aaa; cursor:not-allowed; }
-    .ia-card-head { display:flex; align-items:center; gap:8px; }
+    .ia-card-head { display:flex; align-items:flex-start; gap:8px; }
     .ia-badge { font-size:12px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
     .ia-badge.ok   { background:rgba(39,174,96,.12); color:#27ae60; }
     .ia-badge.zero { background:rgba(192,57,43,.12); color:#c0392b; }
     .ia-badge.nf   { background:#f0f0f0; color:#888; }
-    .ia-btn-trocar { background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0; border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer; flex-shrink:0; white-space:nowrap; }
+    .ia-btn-trocar { background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0; border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-top: 2px;}
     .ia-lote-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 18px; border-top:1px solid #e0e0e0; background:#fafafa; flex-wrap:wrap; }
     .ia-btn-fechar { background:transparent; border:1px solid #e0e0e0; border-radius:7px; color:#6b6b6b; font-size:13px; cursor:pointer; padding:7px 14px; font-weight:600; }
     .ia-btn-fechar:hover { background:#f0f0f0; }
@@ -996,8 +996,9 @@
     // ════════════════════════
     // BUSCA EM LOTE POR IA
     // ════════════════════════
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v2';
-    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em listas de produtos para revenda.\nAnalise a lista e extraia APENAS os nomes dos produtos, sem preço, sem cor, sem informações de marketing.\nMantenha: modelo, capacidade de armazenamento (ex: 256gb, 4/128gb), conectividade (4G, 5G) se estiver.\nRemova: preço, emojis, marcadores de lista, cores, datas, categorias, especificações técnicas longas.\nRetorne APENAS JSON válido, sem markdown, sem explicações.\n\nExemplo de saída:\n[\"Motorola Moto G15 256gb 4G\",\"Realme Note 60 4/256gb\",\"Samsung Galaxy A36 5G 8/256gb\",\"Redmi Note 14 Pro 5G 8/256gb\"]";
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v3';
+    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em processar listas de produtos.\nAnalise a lista bruta e retorne um array de objetos JSON.\nPara cada produto encontrado, extraia:\n- \"original\": a linha original completa exatamente como o usuário colou (com cor, preço, etc).\n- \"busca\": o nome limpo do produto (remova preço, cor e marketing, mantendo apenas marca, modelo, memória e conectividade).\n\nRetorne APENAS JSON válido, sem markdown.\n\nExemplo de saída:\n[\n  {\"original\": \"Motorola Moto G15 256gb 4G - Bege - 650\", \"busca\": \"Motorola Moto G15 256gb 4G\"},\n  {\"original\": \"Realme Note 60 4/256gb Verde\", \"busca\": \"Realme Note 60 4/256gb\"}\n]";
+    
     let _iaResultados = [];
 
     // Declara variáveis do cache (usadas pelo motor injetado)
@@ -1460,8 +1461,8 @@
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
           prompt + '\n\nLista:\n' + raw
         );
-        const nomes = JSON.parse(resposta.replace(/```json|```/g, '').trim());
-        if (!Array.isArray(nomes) || !nomes.length) throw new Error('IA não retornou lista válida.');
+        const itens = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        if (!Array.isArray(itens) || !itens.length) throw new Error('IA não retornou lista válida.');
 
         document.getElementById('ia-passo1').style.display = 'none';
         document.getElementById('ia-passo2').style.display = 'flex';
@@ -1481,22 +1482,30 @@
 
         var comEst = 0, semEst = 0, naoAch = 0;
 
-        for (var i = 0; i < nomes.length; i++) {
-          const nome = nomes[i];
-          status.textContent = '(' + (i+1) + '/' + nomes.length + ') ' + nome.substring(0,45) + '…';
-          prog.style.width = (40 + Math.round(((i+1)/nomes.length)*60)) + '%';
+        for (var i = 0; i < itens.length; i++) {
+          let itemRaw = itens[i];
+          let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto");
+          let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
 
-          const vinculos = await buscarVinculosDoItem({ label: nome, sysname:'', sku:'', prodId:null });
+          status.textContent = '(' + (i+1) + '/' + itens.length + ') ' + nomeOriginal.substring(0,45) + '…';
+          prog.style.width = (40 + Math.round(((i+1)/itens.length)*60)) + '%';
+
+          const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname:'', sku:'', prodId:null });
           const card = document.createElement('div');
           
           let baseHtml = '';
 
+          let infoHtml = '<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">' +
+                           '<span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + encodeURIComponent(nomeOriginal).replace(/%[0-9A-F]{2}/g, match => decodeURIComponent(match)) + '">' + nomeOriginal + '</span>' +
+                           (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
+                         '</div>';
+
           if (!vinculos || !vinculos.length) {
             baseHtml =
-              '<div class="ia-card-head">' +
-                '<span class="ia-nome">' + nome + '</span>' +
-                '<span class="ia-badge nf">N/A</span>' +
-                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '">🔍 Buscar API</button>' +
+              '<div class="ia-card-head" style="align-items:flex-start;">' +
+                infoHtml +
+                '<span class="ia-badge nf" style="margin-top:2px;">N/A</span>' +
+                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button>' +
               '</div>' +
               '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
@@ -1518,10 +1527,10 @@
             });
 
             baseHtml =
-              '<div class="ia-card-head">' +
-                '<span class="ia-nome">' + nome + '</span>' +
-                '<span class="ia-badge ' + (temEst?'ok':'zero') + '">' + (temEst?'✓ ':'⚠ ') + total + '</span>' +
-                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '">🔄 Trocar</button>' +
+              '<div class="ia-card-head" style="align-items:flex-start;">' +
+                infoHtml +
+                '<span class="ia-badge ' + (temEst?'ok':'zero') + '" style="margin-top:2px;">' + (temEst?'✓ ':'⚠ ') + total + '</span>' +
+                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button>' +
               '</div>' +
               candidatos;
           }
@@ -1529,7 +1538,7 @@
           // Adiciona a área oculta de busca em todos os cards
           baseHtml += 
             '<div class="ia-dd-area" id="ia-dd-area-' + i + '">' +
-              '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nome + '">' +
+              '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '">' +
               '<div class="ia-dd-results" id="ia-dd-res-' + i + '"></div>' +
             '</div>';
 
@@ -1537,7 +1546,7 @@
           card.innerHTML = baseHtml;
           
           grid.appendChild(card);
-          _iaResultados.push({ nome: nome, vinculos: vinculos || [] });
+          _iaResultados.push({ nome: nomeOriginal, vinculos: vinculos || [] });
         }
 
         grid.querySelectorAll('.ia-add-vinc').forEach(function(b) {
