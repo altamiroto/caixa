@@ -1014,22 +1014,35 @@ async function syncTodos() {
 function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
 function autoGrowAll() { document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow); }
 
+let _saveTimer = null;
 function salvar() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-    setSync('ok','Salvo local');
-    if (_currentUser) syncToCloud();
+    if (!_currentUser) {
+       setSync('ok', 'Salvo Localmente');
+       return;
+    }
+    
+    // Debounce de 2 segundos para não sobrecarregar a nuvem enquanto digita
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => {
+       syncToCloud(false); // false = silent sync (sem overlay)
+    }, 2000);
+    
   } catch(e) { setSync('err','Erro ao salvar'); }
 }
 
 let _cloudLoading = false;
 let _syncReady = false; // Só sincroniza após carregar nuvem ou criar primeiro item manual
 
-async function syncToCloud() {
+async function syncToCloud(isManual = false) {
   if (_cloudLoading || !_syncReady) return;
   _isSyncInProgress = true;
   updateCloudStatus('syncing');
-  el('sync-overlay').classList.add('active');
+  
+  // Só mostra o popup invasivo se for um clique manual ou operação crítica
+  if (isManual) el('sync-overlay').classList.add('active');
+  
   try {
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
@@ -1086,13 +1099,21 @@ function updateCloudStatus(type, errMsg = '') {
   pill.title = errMsg || '';
   dot.className = 'sync-dot ' + (type === 'syncing' ? 'loading' : type === 'success' ? 'ok' : 'err');
   
-  if (type === 'syncing') txt.textContent = 'SINCRONIZANDO...';
-  else if (type === 'loading') txt.textContent = 'CARREGANDO...';
-  else if (type === 'success') txt.textContent = 'NUVEM OK';
-  else txt.textContent = 'ERRO NUVEM';
+  if (type === 'syncing') {
+    txt.textContent = 'SINCRONIZANDO...';
+  } else if (type === 'loading') {
+    txt.textContent = 'CARREGANDO...';
+  } else if (type === 'success') {
+    const agora = new Date();
+    const hh = String(agora.getHours()).padStart(2, '0');
+    const mm = String(agora.getMinutes()).padStart(2, '0');
+    txt.textContent = `SALVO ÀS ${hh}:${mm}`;
+  } else {
+    txt.textContent = 'ERRO NUVEM';
+  }
 
   if(type === 'success') {
-    setTimeout(() => { if(txt.textContent === 'NUVEM OK') pill.style.opacity = '0.5'; }, 4000);
+    setTimeout(() => { if(txt.textContent.includes('SALVO')) pill.style.opacity = '0.6'; }, 3000);
   } else pill.style.opacity = '1';
 }
 
