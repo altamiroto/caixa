@@ -990,7 +990,10 @@ function salvar() {
   } catch(e) { setSync('err','Erro ao salvar'); }
 }
 
+let _cloudLoading = false;
+
 async function syncToCloud() {
+  if (_cloudLoading) return; // Evita salvar enquanto carrega
   updateCloudStatus('syncing');
   try {
     await fetch(SHEETS_URL, {
@@ -1004,39 +1007,60 @@ async function syncToCloud() {
 
 function updateCloudStatus(type) {
   const pill = el('save-status-pill');
+  if (!pill) return;
   const dot = pill.querySelector('.sync-dot');
   const txt = el('save-status-text');
   pill.style.display = 'flex';
   dot.className = 'sync-dot ' + (type === 'syncing' ? 'loading' : type === 'success' ? 'ok' : 'err');
-  txt.textContent = type === 'syncing' ? 'NUVEM...' : type === 'success' ? 'NUVEM OK' : 'ERRO NUVEM';
+  txt.textContent = type === 'syncing' ? 'NUVEM...' : type === 'success' ? 'NUVEM OK' : type === 'loading' ? 'CARREGANDO...' : 'ERRO NUVEM';
   if(type === 'success') setTimeout(() => { if(txt.textContent === 'NUVEM OK') pill.style.opacity = '0.5'; }, 3000);
   else pill.style.opacity = '1';
 }
 
-function initAuth() {
+async function initAuth() {
   _currentUser = JSON.parse(localStorage.getItem(CLOUD_KEY));
   if(_currentUser) {
     renderUser(_currentUser);
-    fetch(SHEETS_URL + '?email=' + _currentUser.email).then(r => r.json()).then(data => {
-      if(data && data.listas) {
+    _cloudLoading = true;
+    updateCloudStatus('loading');
+    try {
+      const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+      const data = await resp.json();
+      if(data && data.listas && data.listas.length > 0) {
         appData = data;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         switchTab(appData.currentId || appData.listas[0].id);
         toast('☁️ Nuvem sincronizada');
       }
-    });
+    } catch(e) { console.error('Cloud load fail:', e); }
+    _cloudLoading = false;
+    updateCloudStatus('success');
   }
   
   setTimeout(() => {
     if(window.google) {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: (resp) => {
+        callback: async (resp) => {
           const p = JSON.parse(atob(resp.credential.split('.')[1]));
           _currentUser = { email: p.email, name: p.name, picture: p.picture };
           localStorage.setItem(CLOUD_KEY, JSON.stringify(_currentUser));
           renderUser(_currentUser);
           fecharAuth();
+          
+          // Após login, tenta buscar dados
+          _cloudLoading = true;
+          updateCloudStatus('loading');
+          try {
+            const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+            const d = await r.json();
+            if(d && d.listas) {
+              appData = d;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+              switchTab(appData.currentId || appData.listas[0].id);
+            }
+          } catch(e) {}
+          _cloudLoading = false;
           salvar();
         }
       });
