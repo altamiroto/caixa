@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lista WhatsApp — JETA</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* ── TEMA CLARO (padrão) ── */
     :root {
@@ -58,6 +59,41 @@
       font-family:'Sora',sans-serif; background:var(--bg); color:var(--text);
       min-height:100vh; overflow-x: hidden; width: 100%; max-width: 100vw;
     }
+
+    /* AUTH WALL */
+    .auth-wall {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(15, 17, 23, 0.85); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; padding: 40px 32px; text-align: center;
+      max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: authPop 0.4s cubic-bezier(.34,1.4,.64,1);
+    }
+    @keyframes authPop { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    .auth-logo { font-size: 3.5rem; margin-bottom: 20px; }
+    .auth-title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+    .auth-sub { font-size: 0.9rem; color: var(--text2); margin-bottom: 30px; line-height: 1.6; }
+
+    /* USER BAR */
+    .user-pill {
+      display: flex; align-items: center; gap: 10px; padding: 6px 12px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 30px; cursor: pointer; transition: all 0.2s;
+    }
+    .user-pill:hover { background: var(--border); }
+    .user-pill img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .user-pill span { font-size: 0.75rem; font-weight: 600; color: var(--text2); }
+
+    #save-status {
+      font-size: 0.65rem; color: var(--text3); font-weight: 600;
+      margin-right: 12px; display: flex; align-items: center; gap: 4px;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+    .status-dot.syncing { background: var(--warn); animation: pulse 1s infinite; }
+    .status-dot.success { background: var(--accent); }
 
     /* HEADER */
     header {
@@ -319,21 +355,36 @@
     .btn-ia:hover { background: linear-gradient(135deg,#6d28d9,#4338ca); }
   </style>
 </head>
-<body>
-
-<header>
-  <div class="header-brand">
-    <div class="logo">📋</div>
-    <div>
-      <h1>Lista WhatsApp</h1>
-      <span>Editor de divulgação — JETA</span>
+  <div class="auth-wall" id="auth-wall" style="display:none;">
+    <div class="auth-card">
+      <div class="auth-logo">💎</div>
+      <div class="auth-title">Lista WhatsApp — JETA</div>
+      <div class="auth-sub">Entre com sua conta Google para sincronizar suas listas e configurações na nuvem.</div>
+      <div id="google-btn" style="display:flex; justify-content:center; margin-bottom:20px;"></div>
+      <button class="btn btn-ghost" onclick="fecharAuth()" style="width:100%;">Continuar sem login</button>
     </div>
   </div>
-  <div class="header-actions">
-    <button id="btn-tema" title="Alternar tema">🌙</button>
-    <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
-  </div>
-</header>
+
+  <header>
+    <div class="header-brand">
+      <div class="logo">📋</div>
+      <div>
+        <h1>Lista WhatsApp</h1>
+        <span>Editor de divulgação — JETA</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div id="save-status" style="display:none;">
+        <div class="status-dot"></div>
+        <span id="save-status-text">Salvo</span>
+      </div>
+      <div id="user-area">
+        <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Entrar</button>
+      </div>
+      <button id="btn-tema" title="Alternar tema">🌙</button>
+      <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
+    </div>
+  </header>
 
 <div class="tabs-wrapper" id="tabs-container"></div>
 
@@ -1234,7 +1285,175 @@ el('btn-abrir-ia').addEventListener('click', iaAbrir); el('ia-fechar').addEventL
 
 const TEMA_KEY = 'jeta_tema'; function aplicarTema(t) { document.documentElement.setAttribute('data-theme', t); el('btn-tema').textContent = t === 'dark' ? '☀️' : '🌙'; localStorage.setItem(TEMA_KEY, t); } el('btn-tema').addEventListener('click', () => { const atual = document.documentElement.getAttribute('data-theme') || 'light'; aplicarTema(atual === 'dark' ? 'light' : 'dark'); }); aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
 
-carregar();
+// ════════════════════════════════════
+// CONFIGURAÇÕES E CLOUD STORAGE
+// ════════════════════════════════════
+const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycb-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
+const CLOUD_KEY = 'jeta_cloud_user';
+
+let _currentUser = null;
+let _saveTimeout = null;
+
+function _decodeJwt(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
+  catch(e) { return null; }
+}
+
+function initAuth() {
+  _currentUser = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null');
+  if (_currentUser) {
+    showUser(_currentUser);
+    carregar();
+  } else {
+    carregar();
+  }
+
+  const checkGoogle = () => {
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+        auto_select: true
+      });
+    } else {
+      setTimeout(checkGoogle, 100);
+    }
+  };
+  checkGoogle();
+}
+
+function handleGoogleResponse(response) {
+  const payload = _decodeJwt(response.credential);
+  if (payload) {
+    _currentUser = {
+      name: payload.name,
+      email: payload.email,
+      picture: payload.picture
+    };
+    localStorage.setItem(CLOUD_KEY, JSON.stringify(_currentUser));
+    showUser(_currentUser);
+    fecharAuth();
+    carregar(); // Recarrega da nuvem após login
+  }
+}
+
+function showUser(user) {
+  const bar = el('user-area');
+  bar.innerHTML = `
+    <div class="user-pill" onclick="logout()">
+      <img src="${user.picture}" alt="">
+      <span>${user.name.split(' ')[0]}</span>
+    </div>
+  `;
+}
+
+function logout() {
+  if (confirm('Deseja sair da conta?')) {
+    localStorage.removeItem(CLOUD_KEY);
+    location.reload();
+  }
+}
+
+function abrirAuth() {
+  if (location.protocol === 'file:') {
+    alert('O Login do Google não funciona abrindo o arquivo diretamente (file://). \n\nPor favor, use um servidor local (como Live Server do VS Code) ou abra via localhost/URL.');
+  }
+  
+  el('auth-wall').style.display = 'flex';
+  const checkAndRender = () => {
+    if (window.google?.accounts?.id) {
+       window.google.accounts.id.renderButton(el('google-btn'), { theme: 'outline', size: 'large', shape: 'pill' });
+    } else {
+       setTimeout(checkAndRender, 100);
+    }
+  };
+  checkAndRender();
+}
+
+function fecharAuth() {
+  el('auth-wall').style.display = 'none';
+}
+
+function setStatus(type, text) {
+  const bar = el('save-status');
+  const dot = bar.querySelector('.status-dot');
+  const txt = el('save-status-text');
+  
+  bar.style.display = 'flex';
+  dot.className = 'status-dot ' + type;
+  txt.textContent = text;
+  
+  if (type === 'success') {
+    setTimeout(() => { if (txt.textContent === text) bar.style.display = 'none'; }, 3000);
+  }
+}
+
+// ════════════════════════════════════
+// PERSISTÊNCIA (LOCAL E CLOUD)
+// ════════════════════════════════════
+function salvar() {
+  clearTimeout(_saveTimeout);
+  _saveTimeout = setTimeout(async () => {
+    const data = {
+      appData: appData,
+      lista: lista,
+      timestamp: Date.now()
+    };
+    
+    // Salva local sempre por segurança
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    
+    if (_currentUser) {
+      setStatus('syncing', 'Sincronizando…');
+      try {
+        await fetch(SHEETS_URL, {
+          method: 'POST',
+          mode: 'no-cors', // Apps Script exige no-cors para POST simples sem pre-flight
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: _currentUser.email, payload: data })
+        });
+        setStatus('success', 'Nuvem Atualizada');
+      } catch (e) {
+        setStatus('err', 'Erro na Sincronização');
+        console.error('Cloud save error:', e);
+      }
+    } else {
+      setStatus('success', 'Salvo Localmente');
+    }
+  }, 1000);
+}
+
+async function carregar() {
+  // 1. Tenta carregar local primeiro para resposta rápida
+  const local = localStorage.getItem(STORAGE_KEY);
+  if (local) {
+    const d = JSON.parse(local);
+    appData = d.appData || appData;
+    lista = d.lista || [];
+    renderAbas();
+    mudarAba(appData.currentTabId || 't1');
+  }
+  
+  // 2. Se logado, sobrepõe com nuvem
+  if (_currentUser) {
+    try {
+      const resp = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email));
+      const cloudData = await resp.json();
+      if (cloudData && cloudData.appData) {
+        // Se a nuvem for mais nova que o local (ou se local não existir)
+        appData = cloudData.appData;
+        lista = cloudData.lista;
+        renderAbas();
+        mudarAba(appData.currentTabId || 't1');
+      }
+    } catch (e) {
+      console.warn('Could not load from cloud:', e);
+    }
+  }
+}
+
+initAuth();
 setTimeout(autoGrowAll, 60);
 </script>
 </body>
