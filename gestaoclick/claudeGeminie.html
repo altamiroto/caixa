@@ -321,8 +321,19 @@
     .btn-ia:hover { background: linear-gradient(135deg,#6d28d9,#4338ca); }
 
     /* AUTH WALL & USER PILL */
-    .auth-wall { position: fixed; inset: 0; z-index: 10001; background: rgba(10, 12, 18, 0.9); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; }
+    .auth-wall { position: fixed; inset: 0; z-index: 10001; background: rgba(10, 12, 18, 0.9); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
     .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+    .sync-dot.loading { background: #3498db; animation: blink .8s infinite alternate; }
+    #sync-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.15); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(1px); pointer-events: none; }
+    #sync-overlay.active { display: flex; pointer-events: all; }
+    .sync-card { background: var(--surface); padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--accent); display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--text); }
+    
+    #conflict-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 10001; }
+    .conflict-card { background: var(--surface); width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; border: 2px solid var(--accent); }
+    .conflict-card h3 { margin-bottom: 15px; color: var(--accent); }
+    .conflict-card p { font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+    .conflict-btns { display: flex; gap: 10px; flex-direction: column; }
+    
     .user-pill { display: flex; align-items: center; gap: 10px; padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 30px; cursor: pointer; transition: all 0.2s; }
     .user-pill:hover { border-color: var(--accent); }
     .user-pill img { width: 24px; height: 24px; border-radius: 50%; }
@@ -342,6 +353,24 @@
       <span>Editor de divulgação — JETA</span>
     </div>
   </div>
+  <div id="sync-overlay">
+    <div class="sync-card">
+      <div class="sync-dot loading"></div>
+      <span>SALVANDO NA NUVEM...</span>
+    </div>
+  </div>
+
+  <div id="conflict-modal">
+    <div class="conflict-card">
+      <h3>⚠️ Conflito de Dados</h3>
+      <p>Existem itens no seu computador que não estão na nuvem. O que deseja fazer?</p>
+      <div class="conflict-btns">
+        <button class="btn btn-primary" onclick="resolveConflict('push')">📤 Enviar meus dados locais para a nuvem</button>
+        <button class="btn btn-ghost" onclick="resolveConflict('pull')">📥 Baixar dados da nuvem (descarta locais)</button>
+      </div>
+    </div>
+  </div>
+
   <div class="header-actions">
     <div id="save-status-pill">
       <div class="sync-dot"></div>
@@ -998,12 +1027,14 @@ let _syncReady = false; // Só sincroniza após carregar nuvem ou criar primeiro
 
 async function syncToCloud() {
   if (_cloudLoading || !_syncReady) return;
+  _isSyncInProgress = true;
   updateCloudStatus('syncing');
+  el('sync-overlay').classList.add('active');
   try {
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ email: _currentUser.email, payload: appData })
+      body: JSON.stringify({ email: _currentUser.email, payload: appData, _t: Date.now() })
     });
     if (!resp.ok) throw new Error('CORS/Network error ' + resp.status);
     const data = await resp.json();
@@ -1015,8 +1046,35 @@ async function syncToCloud() {
   } catch(e) { 
     console.error('Cloud save fail:', e);
     updateCloudStatus('err', e.message); 
-    toast('❌ Erro na Nuvem: ' + e.message);
   }
+  _cloudLoading = false;
+  _isSyncInProgress = false;
+  el('sync-overlay').classList.remove('active');
+}
+
+let _isSyncInProgress = false;
+window.onbeforeunload = (e) => {
+  if (_isSyncInProgress) {
+    e.preventDefault();
+    return (e.returnValue = 'O salvamento na nuvem ainda não terminou. Deseja realmente sair?');
+  }
+};
+
+let _pendingCloudData = null;
+function resolveConflict(choice) {
+  el('conflict-modal').style.display = 'none';
+  if (choice === 'pull' && _pendingCloudData) {
+    appData = _pendingCloudData;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    switchTab(appData.currentId || appData.listas[0].id);
+    toast('📥 Dados da nuvem carregados');
+  }
+  _syncReady = true;
+  if (choice === 'push') {
+     toast('📤 Dados locais prontos para nuvem');
+     salvar(); 
+  }
+  updateCloudStatus('success');
 }
 
 function updateCloudStatus(type, errMsg = '') {
@@ -1066,26 +1124,31 @@ async function initAuth() {
          }
       }
 
-      if(data && data.listas && data.listas.length > 0) {
+      const totalItensNuvem = (data.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+      const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+
+      if (totalItensLocal > 0 && totalItensNuvem === 0) {
+         // Conflito: Local tem itens, nuvem não. Pergunta antes de sobrescrever.
+         _pendingCloudData = data;
+         el('conflict-modal').style.display = 'flex';
+         updateCloudStatus('success');
+      } else if(data && data.listas && data.listas.length > 0) {
         appData = data;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         switchTab(appData.currentId || appData.listas[0].id);
         toast('☁️ Nuvem sincronizada');
-        _syncReady = true; // Dados carregados, pronto para sincronizar mudanças
+        _syncReady = true;
         updateCloudStatus('success');
       } else {
-        console.log('Ambiente: Nuvem vazia ou formato novo.');
-        _syncReady = true; // Conta vazia confirmada, pronto para novos dados
+        _syncReady = true;
         updateCloudStatus('success');
       }
     } catch(e) { 
       console.error('Cloud load fail:', e); 
       updateCloudStatus('err', e.message);
-      // Não habilita _syncReady aqui para evitar sobrescrever a nuvem com erro de rede
     }
     _cloudLoading = false;
   } else {
-    // Usuário deslogado: só permite sync local
     _syncReady = false;
   }
   
