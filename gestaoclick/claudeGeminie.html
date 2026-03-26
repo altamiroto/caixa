@@ -327,7 +327,9 @@
     .user-pill:hover { border-color: var(--accent); }
     .user-pill img { width: 24px; height: 24px; border-radius: 50%; }
     .user-pill span { font-size: 0.75rem; font-weight: 700; color: var(--text2); }
-    #save-status-pill { display: none; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 700; color: var(--text3); background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 5px 12px; }
+    #save-status-pill { display: none; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 700; color: var(--text3); background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 5px 12px; cursor: help; }
+    .sync-btn-cloud { background: none; border: none; padding: 0; color: var(--muted); cursor: pointer; display: flex; align-items: center; font-size: 14px; }
+    .sync-btn-cloud:hover { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -344,6 +346,7 @@
     <div id="save-status-pill">
       <div class="sync-dot"></div>
       <span id="save-status-text">SALVO</span>
+      <button class="sync-btn-cloud" onclick="initAuth()" title="Forçar atualização da nuvem">🔄</button>
     </div>
     <div id="user-area">
       <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Log In</button>
@@ -993,48 +996,72 @@ function salvar() {
 let _cloudLoading = false;
 
 async function syncToCloud() {
-  if (_cloudLoading) return; // Evita salvar enquanto carrega
+  if (_cloudLoading) return;
   updateCloudStatus('syncing');
   try {
-    await fetch(SHEETS_URL, {
+    const resp = await fetch(SHEETS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ email: _currentUser.email, payload: appData })
     });
-    updateCloudStatus('success');
-  } catch(e) { updateCloudStatus('err'); }
+    if (!resp.ok) throw new Error('CORS/Network error ' + resp.status);
+    const data = await resp.json();
+    if (data.status === 'success') {
+      updateCloudStatus('success');
+    } else {
+      throw new Error(data.message || 'Erro no servidor GAS');
+    }
+  } catch(e) { 
+    console.error('Cloud save fail:', e);
+    updateCloudStatus('err', e.message); 
+    toast('❌ Erro na Nuvem: ' + e.message);
+  }
 }
 
-function updateCloudStatus(type) {
+function updateCloudStatus(type, errMsg = '') {
   const pill = el('save-status-pill');
   if (!pill) return;
   const dot = pill.querySelector('.sync-dot');
   const txt = el('save-status-text');
   pill.style.display = 'flex';
+  pill.title = errMsg || '';
   dot.className = 'sync-dot ' + (type === 'syncing' ? 'loading' : type === 'success' ? 'ok' : 'err');
-  txt.textContent = type === 'syncing' ? 'NUVEM...' : type === 'success' ? 'NUVEM OK' : type === 'loading' ? 'CARREGANDO...' : 'ERRO NUVEM';
-  if(type === 'success') setTimeout(() => { if(txt.textContent === 'NUVEM OK') pill.style.opacity = '0.5'; }, 3000);
-  else pill.style.opacity = '1';
+  
+  if (type === 'syncing') txt.textContent = 'SINCRONIZANDO...';
+  else if (type === 'loading') txt.textContent = 'CARREGANDO...';
+  else if (type === 'success') txt.textContent = 'NUVEM OK';
+  else txt.textContent = 'ERRO NUVEM';
+
+  if(type === 'success') {
+    setTimeout(() => { if(txt.textContent === 'NUVEM OK') pill.style.opacity = '0.5'; }, 4000);
+  } else pill.style.opacity = '1';
 }
 
 async function initAuth() {
   _currentUser = JSON.parse(localStorage.getItem(CLOUD_KEY));
   if(_currentUser) {
+    if(!_currentUser.email) { logout(); return; }
     renderUser(_currentUser);
     _cloudLoading = true;
     updateCloudStatus('loading');
     try {
       const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+      if (!resp.ok) throw new Error('Servidor não respondeu (CORS/Network)');
       const data = await resp.json();
       if(data && data.listas && data.listas.length > 0) {
         appData = data;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         switchTab(appData.currentId || appData.listas[0].id);
         toast('☁️ Nuvem sincronizada');
+        updateCloudStatus('success');
+      } else {
+        updateCloudStatus('success');
       }
-    } catch(e) { console.error('Cloud load fail:', e); }
+    } catch(e) { 
+      console.error('Cloud load fail:', e); 
+      updateCloudStatus('err', e.message);
+    }
     _cloudLoading = false;
-    updateCloudStatus('success');
   }
   
   setTimeout(() => {
