@@ -99,6 +99,14 @@
     .status-dot.success { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
     .status-dot.err     { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
 
+    /* PROTOCOL WARNING */
+    #protocol-warning {
+      display: none; background: #e74c3c; color: #fff; text-align: center;
+      padding: 10px; font-size: 0.85rem; font-weight: 700;
+      position: sticky; top: 0; z-index: 10001;
+      border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+
     * { margin:0; padding:0; box-sizing:border-box; }
     html { overflow-x: hidden; }
     body {
@@ -516,8 +524,14 @@
     .ia-dd-jatem { opacity: .55; }
     .btn-ia { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
     .btn-ia:hover { background: linear-gradient(135deg,#6d28d9,#4338ca); }
-  </style>
-</head>
+  </head>
+<body onload="checkProtocol()">
+
+  <div id="protocol-warning">
+    ⚠️ ATENÇÃO: Você está abrindo o arquivo diretamente (file://). O salvamento na nuvem e o login Google NÃO FUNCIONARÃO. 
+    Use o Live Server do VS Code ou um servidor local (http://localhost).
+  </div>
+
   <div class="auth-wall" id="auth-wall" style="display:none;">
     <div class="auth-card">
       <div class="auth-logo">💎</div>
@@ -1178,7 +1192,11 @@ function setStatus(type, text) {
   if (type === 'success') {
     txt.style.color = 'var(--text2)';
     setTimeout(() => { if (txt.textContent === text) bar.style.opacity = '0.5'; }, 4000);
-  } else if (type === 'err') { txt.style.color = '#e74c3c'; }
+  } else if (type === 'err') { 
+    txt.style.color = '#e74c3c'; 
+    bar.style.opacity = '1';
+    bar.title = 'Clique para ver detalhes do erro no console (F12)';
+  }
   else { txt.style.color = 'var(--text2)'; }
 }
 
@@ -1196,8 +1214,15 @@ function salvar() {
         });
         const res = await resp.json();
         if (res.status === 'success') setStatus('success', 'Nuvem Atualizada');
-        else throw new Error(res.error || 'Erro');
-      } catch (e) { setStatus('err', 'Erro na Sincronização'); console.error(e); }
+        else throw new Error(res.error || 'Erro no Script');
+      } catch (e) { 
+        console.error('Erro de Sincronização:', e);
+        let msg = 'Erro na Sincronização';
+        if (location.protocol === 'file:') msg = 'Erro: Protocolo file:// (Use Localhost)';
+        else if (e.message.includes('Unexpected token')) msg = 'Erro: Resposta Inválida (URL 404?)';
+        else if (e.name === 'TypeError') msg = 'Erro de Rede / CORS';
+        setStatus('err', msg);
+      }
     } else { setStatus('success', 'Salvo Localmente'); }
   }, 1000);
 }
@@ -1654,6 +1679,12 @@ const TEMA_KEY = 'jeta_tema'; function aplicarTema(t) { document.documentElement
 el('btn-tema').addEventListener('click', () => { const atual = document.documentElement.getAttribute('data-theme') || 'light'; aplicarTema(atual === 'dark' ? 'light' : 'dark'); });
 
 aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
+function checkProtocol() {
+  if (location.protocol === 'file:') {
+    el('protocol-warning').style.display = 'block';
+  }
+}
+
 initAuth();
 setTimeout(autoGrowAll, 60);
 </script>
