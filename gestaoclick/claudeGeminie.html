@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lista WhatsApp — JETA</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* ── TEMA CLARO (padrão) ── */
@@ -49,87 +50,27 @@
     }
     /* Botão de toggle tema */
     #btn-tema {
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: 20px;
-      color: var(--text2);
-      font-size: 16px;
-      cursor: pointer;
-      padding: 4px 10px;
-      transition: all .15s;
-      line-height: 1;
+      background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px;
+      color: var(--text2); font-size: 16px; cursor: pointer; padding: 4px 10px; transition: all .15s; line-height: 1;
     }
     #btn-tema:hover { background: var(--border); }
-    
-    /* AUTH WALL */
-    .auth-wall {
-      position: fixed; inset: 0; z-index: 10000;
-      background: rgba(15, 17, 23, 0.85); backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center; padding: 20px;
-    }
-    .auth-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 24px; padding: 40px 32px; text-align: center;
-      max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      animation: authPop 0.4s cubic-bezier(.34,1.4,.64,1);
-    }
-    @keyframes authPop { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
-    .auth-logo { font-size: 3.5rem; margin-bottom: 20px; }
-    .auth-title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 12px; }
-    .auth-sub { font-size: 0.9rem; color: var(--text2); margin-bottom: 30px; line-height: 1.6; }
-
-    /* USER BAR */
-    .user-pill {
-      display: flex; align-items: center; gap: 10px; padding: 6px 12px;
-      background: var(--surface2); border: 1px solid var(--border2);
-      border-radius: 30px; cursor: pointer; transition: all 0.2s;
-    }
-    .user-pill:hover { background: var(--border); }
-    .user-pill img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
-    .user-pill span { font-size: 0.75rem; font-weight: 600; color: var(--text2); }
-
-    #save-status {
-      font-size: 0.65rem; color: var(--text3); font-weight: 700;
-      margin-right: 12px; display: flex; align-items: center; gap: 6px;
-      padding: 4px 10px; background: var(--surface2); border: 1px solid var(--border2);
-      border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: opacity .2s;
-    }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-    .status-dot.syncing { background: #f39c12; animation: pulse 0.8s infinite; }
-    .status-dot.success { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
-    .status-dot.err     { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
-
-    /* PROTOCOL WARNING */
-    #protocol-warning {
-      display: none; background: #e74c3c; color: #fff; text-align: center;
-      padding: 10px; font-size: 0.85rem; font-weight: 700;
-      position: sticky; top: 0; z-index: 10001;
-      border-bottom: 2px solid rgba(0,0,0,0.1);
-    }
-
     * { margin:0; padding:0; box-sizing:border-box; }
     html { overflow-x: hidden; }
     body {
       font-family:'Sora',sans-serif; background:var(--bg); color:var(--text);
-      min-height:100vh;
-      overflow-x: hidden;
-      width: 100%;
-      max-width: 100vw;
+      min-height:100vh; overflow-x: hidden; width: 100%; max-width: 100vw;
     }
 
     /* HEADER */
     header {
       background:var(--surface); border-bottom:1px solid var(--border);
-      padding:0 12px; height:58px;
-      display:flex; align-items:center; justify-content:space-between;
-      position:sticky; top:0; z-index:100;
-      box-shadow:0 2px 16px rgba(0,0,0,0.4);
+      padding:0 12px; height:58px; display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,0.4);
       width:100%; max-width:100vw; overflow:hidden;
     }
     .header-brand { display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden; }
     .header-brand .logo {
-      width:30px; height:30px; flex-shrink:0;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      width:30px; height:30px; flex-shrink:0; background:linear-gradient(135deg,var(--accent),var(--accent2));
       border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px;
     }
     .header-brand h1 { font-size:.9rem; font-weight:700; letter-spacing:-0.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -138,36 +79,14 @@
 
     /* TABS */
     .tabs-wrapper {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 12px;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
+      background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
     }
     .tabs-wrapper::-webkit-scrollbar { display: none; }
     .tab-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: .75rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-      transition: all .15s;
+      background: var(--surface2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-size: .75rem; font-weight: 600; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: all .15s;
     }
     .tab-btn:hover { background: var(--border); }
-    .tab-btn.active {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-      color: var(--accent2);
-    }
+    .tab-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent2); }
     [data-theme="dark"] .tab-btn.active { color: var(--accent); }
     .tab-name-edit { outline: none; min-width: 40px; }
     .tab-close { font-size: .8rem; opacity: .5; cursor: pointer; padding: 0 4px; margin-right: -4px; }
@@ -175,44 +94,18 @@
     .tab-add { background: transparent; border: 1px dashed var(--border2); }
 
     /* LAYOUT */
-    .app {
-      display:grid; grid-template-columns:1fr 340px;
-      height:calc(100vh - 105px); /* header + tabs */
-      width:100%; max-width:100vw; overflow:hidden;
-    }
-    .panel-left {
-      overflow-y:hidden; overflow-x:hidden;
-      padding:16px; border-right:1px solid var(--border);
-      display:flex; flex-direction:column; gap:13px;
-      min-width:0;
-    }
-    .panel-right {
-      overflow-y:auto; overflow-x:hidden;
-      padding:16px; display:flex; flex-direction:column; gap:13px;
-      background:var(--surface);
-      min-width:0;
-    }
+    .app { display:grid; grid-template-columns:1fr 420px; height:calc(100vh - 105px); width:100%; max-width:100vw; overflow:hidden; }
+    .panel-left { overflow-y:hidden; overflow-x:hidden; padding:16px; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:13px; min-width:0; }
+    .panel-right { overflow-y:auto; overflow-x:hidden; padding:16px; display:flex; flex-direction:column; gap:13px; background:var(--surface); min-width:0; }
 
     /* CARDS */
     .card { background:var(--surface); border:1px solid var(--border); border-radius:11px; overflow:hidden; }
-    .card-header {
-      padding:9px 13px; border-bottom:1px solid var(--border);
-      display:flex; align-items:center; justify-content:space-between;
-      background:var(--surface2);
-    }
-    .card-title {
-      font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-      color:var(--text2); display:flex; align-items:center; gap:7px;
-    }
+    .card-header { padding:9px 13px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--surface2); }
+    .card-title { font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text2); display:flex; align-items:center; gap:7px; }
     .card-title .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
 
     /* BUTTONS */
-    .btn {
-      display:inline-flex; align-items:center; justify-content:center; gap:5px;
-      padding:7px 12px; border:none; border-radius:7px;
-      font-family:inherit; font-size:.77rem; font-weight:600;
-      cursor:pointer; transition:all .14s; white-space:nowrap;
-    }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:7px 12px; border:none; border-radius:7px; font-family:inherit; font-size:.77rem; font-weight:600; cursor:pointer; transition:all .14s; white-space:nowrap; }
     .btn:hover  { transform:translateY(-1px); }
     .btn:active { transform:none; }
     .btn-green  { background:var(--accent); color:#000; }
@@ -229,182 +122,91 @@
     .api-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:13px; }
     .field-group { display:flex; flex-direction:column; gap:5px; }
     .field-label { font-size:.68rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; }
-    input, select, textarea {
-      background:var(--bg); border:1px solid var(--border); border-radius:7px;
-      color:var(--text); font-family:inherit; font-size:16px; padding:7px 9px;
-      transition:border-color .14s; width:100%; max-width:100%; box-sizing:border-box;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);
-    }
+    input, select, textarea { background:var(--bg); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:16px; padding:7px 9px; transition:border-color .14s; width:100%; max-width:100%; box-sizing:border-box; }
+    input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
     input::placeholder, textarea::placeholder { color:var(--text3); }
 
     /* TABLE */
     #card-tabela { flex:1; display:flex; flex-direction:column; min-height:0; }
     #card-tabela .table-scroll { flex:1; overflow-y:auto; overflow-x:auto; min-height:0; }
-
     .table-scroll { overflow-x:auto; }
     table { width:100%; border-collapse:collapse; font-size:14px; }
-    thead th {
-      padding:8px 8px; background:var(--surface2);
-      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-      color:var(--text2); border-bottom:1px solid var(--border);
-      white-space:nowrap; position:sticky; top:0; z-index:2;
-    }
+    thead th { padding:8px 8px; background:var(--surface2); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text2); border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; z-index:2; text-align: left; }
     tbody tr { border-bottom:1px solid var(--border); transition:background .12s; }
     tbody tr:last-child { border-bottom:none; }
     tbody tr:hover { background:var(--surface2); }
-
     tr.row-sem-estoque td:nth-child(2) { border-left:2px solid var(--warn); }
     tr.row-header  { background:rgba(37,211,102,.04) !important; border-bottom:2px solid var(--border2); }
     tr.row-free td { background:rgba(255,255,255,.015); }
     tr.row-free td:nth-child(2) { border-left:2px dashed var(--border2); }
-
     td { padding:4px 6px; vertical-align:middle; }
-
-    td input, td textarea {
-      background:transparent; border:1px solid transparent;
-      padding:4px 6px; border-radius:5px;
-      font-family:'Sora',sans-serif; font-size:14px; color:var(--text);
-      width:100%; min-width:0; resize:none;
-    }
-    td input:focus, td textarea:focus {
-      background:var(--bg); border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim);
-      outline:none;
-    }
+    td input, td textarea { background:transparent; border:1px solid transparent; padding:4px 6px; border-radius:5px; font-family:'Sora',sans-serif; font-size:14px; color:var(--text); width:100%; min-width:0; resize:none; }
+    td input:focus, td textarea:focus { background:var(--bg); border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim); outline:none; }
     td input::placeholder, td textarea::placeholder { color:var(--text3); }
     .mono-inp { font-family:'JetBrains Mono',monospace !important; font-size:13px !important; }
-
-    .label-ta {
-      background: transparent;
-      border: 1px solid transparent; border-radius: 5px; padding: 4px 6px;
-      font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
-      color: var(--text); width: 100%; min-width: 0; resize: none;
-      overflow: hidden; min-height: 30px; line-height: 1.4; display: block; box-sizing: border-box;
-    }
-    .label-ta:focus {
-      background: var(--bg); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); outline: none;
-    }
+    .label-ta { background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 4px 6px; font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); width: 100%; min-width: 0; resize: none; overflow: hidden; min-height: 30px; line-height: 1.4; display: block; box-sizing: border-box; }
+    .label-ta:focus { background: var(--bg); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); outline: none; }
     .label-ta::placeholder { color: var(--text3); font-weight: 400; }
 
     .col-drag  { width:24px; text-align:center; color:var(--muted); user-select:none; cursor:grab; }
-    .col-drag:active { cursor:grabbing; }
     .col-label { min-width:160px; max-width:260px; }
-    .col-price { width:80px; }
-    .col-sys   { min-width:120px; }
-    .col-sku   { width:100px; }
-    .col-stock { width:78px; text-align:center; }
+    .col-price { width:110px; }
+    .col-api   { width:150px; } /* Reduzido para dar espaço à direita */
     .col-act   { width:60px; text-align:center; }
 
+    .btn-precos { padding: 3px 6px; font-size: 14px; background: transparent; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; color: var(--text2); transition: background .12s; }
+    .btn-precos:hover { background: var(--surface2); }
+    .price-popover { position: fixed; z-index: 1000; background: var(--surface); border: 1px solid var(--border2); border-radius: 9px; padding: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.55); width: 220px; display: flex; flex-direction: column; gap: 8px; }
+    .price-popover input { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
     .vincul-cell { position: relative; }
-    .col-sys .vincul-pill,
-    .col-sku .vincul-pill { cursor: pointer; }
-    .vincul-pill {
-      display: flex; align-items: center; gap: 5px;
-      padding: 4px 7px; border-radius: 6px; cursor: pointer;
-      border: 1px dashed var(--border2); background: transparent;
-      transition: background .12s, border-color .12s;
-      min-height: 28px; width: 100%;
-    }
+    .vincul-pill { display: flex; align-items: center; gap: 5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; border: 1px dashed var(--border2); background: transparent; transition: background .12s, border-color .12s; min-height: 28px; width: 100%; }
     .vincul-pill:hover { background: var(--surface2); border-color: var(--accent); }
     .vincul-pill.vinculado { border-style: solid; border-color: var(--border2); }
-    .vincul-pill.vinculado:hover { border-color: var(--accent); }
-    .vincul-text {
-      font-size: .73rem; color: var(--text); white-space: nowrap;
-      overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
-    }
+    .vincul-text { font-size: .73rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
     .vincul-text.empty { color: var(--text3); font-style: italic; }
-    .vincul-icon { font-size: .7rem; color: var(--text3); flex-shrink: 0; }
-
-    .vincul-popover {
-      position: fixed; z-index: 999; width: min(300px, 90vw);
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 9px; box-shadow: 0 8px 32px rgba(0,0,0,.55); overflow: hidden;
-    }
-    .vincul-popover input {
-      border: none; border-bottom: 1px solid var(--border); border-radius: 0;
-      padding: 8px 11px; background: var(--surface2);
-    }
+    .vincul-popover { position: fixed; z-index: 999; width: min(300px, 90vw); background: var(--surface); border: 1px solid var(--border2); border-radius: 9px; box-shadow: 0 8px 32px rgba(0,0,0,.55); overflow: hidden; }
+    .vincul-popover input { border: none; border-bottom: 1px solid var(--border); border-radius: 0; padding: 8px 11px; background: var(--surface2); }
     .vincul-popover input:focus { box-shadow: none; border-color: var(--accent); }
     .vincul-results { max-height: 180px; overflow-y: auto; }
-    .vincul-result-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      padding: 7px 11px; cursor: pointer; border-bottom: 1px solid var(--border);
-      transition: background .1s; font-size: .75rem;
-    }
-    .vincul-result-row:last-child { border-bottom: none; }
+    .vincul-result-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 11px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .1s; font-size: .75rem; }
     .vincul-result-row:hover { background: var(--surface2); }
     .vincul-result-nome { font-weight: 600; color: var(--text); }
     .vincul-result-cod  { font-size: .67rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
     .vincul-result-empty { padding: 10px 11px; color: var(--text3); font-size: .75rem; }
-    .vincul-desvincular {
-      padding: 6px 11px; border-top: 1px solid var(--border); font-size: .71rem;
-      color: var(--danger); cursor: pointer; background: var(--surface2); text-align: center;
-      transition: background .1s;
-    }
+    .vincul-desvincular { padding: 6px 11px; border-top: 1px solid var(--border); font-size: .71rem; color: var(--danger); cursor: pointer; background: var(--surface2); text-align: center; transition: background .1s; }
     .vincul-desvincular:hover { background: var(--danger-dim); }
 
-    .badge {
-      display:inline-flex; align-items:center; gap:3px;
-      padding:2px 6px; border-radius:20px;
-      font-size:.67rem; font-weight:700; white-space:nowrap;
-      font-family:'JetBrains Mono',monospace;
-    }
+    .badge { display:inline-flex; align-items:center; gap:3px; padding:2px 6px; border-radius:20px; font-size:.67rem; font-weight:700; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
     .badge-ok      { background:rgba(37,211,102,.12); color:var(--accent); border:1px solid rgba(37,211,102,.25); }
     .badge-zero    { background:var(--warn-dim); color:var(--warn); border:1px solid rgba(243,156,18,.3); }
     .badge-unknown { background:transparent; color:var(--muted); border:1px dashed var(--border2); }
-    .badge-unlinked {
-      background: transparent; color: var(--text3); border: 1px dashed var(--border);
-      font-style: italic; letter-spacing: 0;
-    }
+    .badge-unlinked { background: transparent; color: var(--text3); border: 1px dashed var(--border); font-style: italic; letter-spacing: 0; }
 
-    .hdr-icon-sel {
-      background:var(--surface2); border:1px solid var(--border2);
-      border-radius:5px; color:var(--text); font-size:.8rem;
-      padding:3px 4px; width:54px; flex-shrink:0;
-    }
+    .hdr-icon-sel { background:var(--surface2); border:1px solid var(--border2); border-radius:5px; color:var(--text); font-size:.8rem; padding:3px 4px; width:54px; flex-shrink:0; }
 
     /* SYNC BAR */
-    .sync-bar {
-      display:flex; align-items:center; gap:7px;
-      padding:5px 12px; font-size:.71rem; font-weight:500;
-      background:var(--surface2); border-bottom:1px solid var(--border);
-    }
+    .sync-bar { display:flex; align-items:center; gap:7px; padding:5px 12px; font-size:.71rem; font-weight:500; background:var(--surface2); border-bottom:1px solid var(--border); }
     .sync-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; }
     .sync-dot.ok      { background:var(--accent); box-shadow:0 0 5px var(--accent); }
     .sync-dot.err     { background:var(--danger); }
     .sync-dot.loading { background:var(--warn); animation:pulse .9s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
     #sync-text { color:var(--text2); }
-
     #sync-progress-wrap { height:3px; background:var(--border); display:none; }
     #sync-progress-bar  { height:100%; background:var(--accent); width:0%; transition:width .25s; }
 
     /* PREVIEW */
-    .preview-box {
-      background:var(--bg); border:1px solid var(--border); border-radius:9px;
-      padding:12px; font-family:'JetBrains Mono',monospace; font-size:.73rem;
-      line-height:1.85; color:var(--text); white-space:pre-wrap;
-      min-height:180px; word-break:break-word;
-    }
+    .preview-box { background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:12px; font-family:'JetBrains Mono',monospace; font-size:.73rem; line-height:1.85; color:var(--text); white-space:pre-wrap; min-height:180px; word-break:break-word; }
     .preview-empty { color:var(--text3); font-style:italic; font-family:'Sora',sans-serif; }
 
     /* TOAST */
-    #toast {
-      position:fixed; bottom:18px; left:50%;
-      transform:translateX(-50%) translateY(10px);
-      background:var(--surface2); border:1px solid var(--border2);
-      color:var(--text); padding:8px 18px; border-radius:28px;
-      font-size:.77rem; font-weight:600; box-shadow:var(--shadow);
-      opacity:0; pointer-events:none; transition:all .22s; z-index:9999;
-    }
+    #toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--surface2); border:1px solid var(--border2); color:var(--text); padding:8px 18px; border-radius:28px; font-size:.77rem; font-weight:600; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:all .22s; z-index:9999; }
     #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    #card-add { flex-shrink:0; }
     .empty-state { text-align:center; padding:36px 20px; color:var(--text3); }
     .empty-state .icon { font-size:2rem; margin-bottom:8px; }
     .empty-state p { font-size:.82rem; line-height:1.6; }
-
     tr.drag-over { outline:2px dashed var(--accent); outline-offset:-1px; }
 
     ::-webkit-scrollbar { width:5px; height:5px; }
@@ -412,13 +214,7 @@
     ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 
     /* FAB NO MOBILE */
-    #fab-preview {
-      display: none;
-      position: fixed; bottom: 20px; right: 20px; z-index: 900;
-      background: var(--accent); color: #000; font-weight: 700; border: none;
-      border-radius: 30px; padding: 14px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      font-family: 'Sora', sans-serif; font-size: 14px; cursor: pointer;
-    }
+    #fab-preview { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 900; background: var(--accent); color: #000; font-weight: 700; border: none; border-radius: 30px; padding: 14px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); font-family: 'Sora', sans-serif; font-size: 14px; cursor: pointer; }
 
     /* MOBILE */
     @media (max-width: 900px) {
@@ -432,7 +228,7 @@
       #card-tabela table { display: none; }
       #lista-mobile { display: flex !important; }
       .card, .mcard, input, textarea, select, .vincul-pill, .mcard-vincul-btn { max-width: 100%; box-sizing: border-box; }
-      #fab-preview { display: block; } /* Ativa botão flutuante no mobile */
+      #fab-preview { display: block; }
     }
 
     /* CARDS MOBILE */
@@ -448,6 +244,12 @@
     .mcard-name-wrap textarea { font-size: 16px; font-weight: 600; line-height: 1.4; color: var(--text); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; width: 100%; resize: none; overflow: hidden; min-height: 32px; font-family: 'Sora', sans-serif; display: block; box-sizing: border-box; }
     .mcard-name-wrap textarea:focus { background: var(--bg); border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px var(--accent-dim); }
     .mcard-name-wrap textarea::placeholder { color: var(--text3); font-weight: 400; }
+    
+    .mcard-toggle { background: transparent; border: none; font-size: 14px; padding: 4px 8px; color: var(--text3); cursor: pointer; transition: transform 0.2s; }
+    .mcard-toggle.open { transform: rotate(180deg); color: var(--accent); }
+    .mcard-body { display: none; flex-direction: column; gap: 10px; padding-top: 4px; border-top: 1px dashed var(--border); }
+    .mcard-body.open { display: flex; }
+
     .mcard-del { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px 6px; border-radius: 5px; flex-shrink: 0; transition: color .12s; line-height: 1; }
     .mcard-del:active { color: var(--danger); }
     .mcard-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -455,18 +257,12 @@
     .mcard-price-wrap label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; flex-shrink: 0; }
     .mcard-price-wrap input { background: transparent; border: none; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; width: 80px; padding: 0; }
     .mcard-price-wrap input:focus { outline: none; }
-    .mcard-meta .badge { font-size: 12px; padding: 4px 9px; }
     .mcard-sync-btn { background: transparent; border: 1px solid var(--border2); border-radius: 7px; color: var(--text2); font-size: 16px; cursor: pointer; padding: 6px 10px; flex-shrink: 0; transition: background .12s; }
-    .mcard-sync-btn:active { background: var(--surface2); }
     .mcard-vincul { display: flex; align-items: center; gap: 8px; }
     .mcard-vincul-btn { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px dashed var(--border2); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: border-color .12s; min-width: 0; position: relative; }
     .mcard-vincul-btn.vinculado { border-style: solid; border-color: var(--border2); }
-    .mcard-vincul-btn:active { border-color: var(--accent); background: var(--surface2); }
-    .mcard-vincul-icon { font-size: 15px; flex-shrink: 0; }
-    .mcard-vincul-info { flex: 1; min-width: 0; }
     .mcard-vincul-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mcard-vincul-name.empty { color: var(--text3); font-style: italic; }
-    .mcard-vincul-code { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
     .mcard-header-row { display: flex; align-items: center; gap: 8px; }
     .mcard.drag-over-mobile { outline: 2px dashed var(--accent); outline-offset: -2px; border-radius: 4px; }
 
@@ -520,48 +316,53 @@
     .ia-sel-all { font-size: 12px; color: var(--text2); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
     .vincul-active-list { max-height: 120px; overflow-y: auto; }
     .vincul-active-row { display: flex; align-items: center; gap: 8px; padding: 6px 11px; border-bottom: 1px solid var(--border); font-size: 12px; }
-    .vincul-active-row:last-child { border-bottom: none; }
     .ia-dd-jatem { opacity: .55; }
     .btn-ia { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
     .btn-ia:hover { background: linear-gradient(135deg,#6d28d9,#4338ca); }
-  </head>
-<body onload="checkProtocol()">
 
-  <div id="protocol-warning">
-    ⚠️ ATENÇÃO: Você está abrindo o arquivo diretamente (file://). O salvamento na nuvem e o login Google NÃO FUNCIONARÃO. 
-    Use o Live Server do VS Code ou um servidor local (http://localhost).
+    /* AUTH WALL & USER PILL */
+    .auth-wall { position: fixed; inset: 0; z-index: 10001; background: rgba(10, 12, 18, 0.9); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+    .user-pill { display: flex; align-items: center; gap: 10px; padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 30px; cursor: pointer; transition: all 0.2s; }
+    .user-pill:hover { border-color: var(--accent); }
+    .user-pill img { width: 24px; height: 24px; border-radius: 50%; }
+    .user-pill span { font-size: 0.75rem; font-weight: 700; color: var(--text2); }
+    #save-status-pill { display: none; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 700; color: var(--text3); background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 5px 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="logo">📋</div>
+    <div>
+      <h1>Lista WhatsApp</h1>
+      <span>Editor de divulgação — JETA</span>
+    </div>
   </div>
+  <div class="header-actions">
+    <div id="save-status-pill">
+      <div class="sync-dot"></div>
+      <span id="save-status-text">SALVO</span>
+    </div>
+    <div id="user-area">
+      <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Log In</button>
+    </div>
+    <button id="btn-tema" title="Alternar tema">🌙</button>
+    <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
+  </div>
+</header>
 
-  <div class="auth-wall" id="auth-wall" style="display:none;">
+<!-- AUTH WALL -->
+<div class="auth-wall" id="auth-wall" style="display:none;">
     <div class="auth-card">
-      <div class="auth-logo">💎</div>
-      <div class="auth-title">Lista WhatsApp — JETA</div>
-      <div class="auth-sub">Entre com sua conta Google para sincronizar suas listas e configurações na nuvem.</div>
-      <div id="google-btn" style="display:flex; justify-content:center; margin-bottom:20px;"></div>
-      <button class="btn btn-ghost" onclick="fecharAuth()" style="width:100%;">Continuar sem login</button>
+        <div class="text-5xl mb-6" style="font-size: 3rem; margin-bottom: 1.5rem;">🚀</div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text);">Lista WhatsApp Cloud</h2>
+        <p style="color: var(--text2); font-size: 0.85rem; margin-bottom: 2rem;">Conecte sua conta Google para sincronizar suas listas e configurações em tempo real.</p>
+        <div id="google-btn" style="display: flex; justify-content: center; margin-bottom: 1.5rem;"></div>
+        <button class="btn btn-ghost" style="width: 100%;" onclick="fecharAuth()">Continuar offline</button>
     </div>
-  </div>
-
-  <header>
-    <div class="header-brand">
-      <div class="logo">📋</div>
-      <div>
-        <h1>Lista WhatsApp</h1>
-        <span>Editor de divulgação — JETA</span>
-      </div>
-    </div>
-    <div class="header-actions">
-      <div id="save-status" style="display:none; opacity:0;">
-        <div class="status-dot"></div>
-        <span id="save-status-text">Salvo</span>
-      </div>
-      <div id="user-area">
-        <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Entrar</button>
-      </div>
-      <button id="btn-tema" title="Alternar tema">🌙</button>
-      <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
-    </div>
-  </header>
+</div>
 
 <div class="tabs-wrapper" id="tabs-container"></div>
 
@@ -608,9 +409,7 @@
               <th class="col-drag">⠿</th>
               <th class="col-label">Nome na Lista</th>
               <th class="col-price">Preço</th>
-              <th class="col-sys">Nome no Sistema</th>
-              <th class="col-sku">Código</th>
-              <th class="col-stock">Estoque</th>
+              <th class="col-api">Vínculo API (Sistema, SKU, Estoque)</th>
               <th class="col-act"></th>
             </tr>
           </thead>
@@ -634,27 +433,28 @@
       </div>
       <div style="padding:13px; display:flex; flex-direction:column; gap:10px;">
         <div class="field-group">
-          <span class="field-label">Título da Lista</span>
-          <input type="text" id="lista-titulo" placeholder="Lista EXCLUSIVA REVENDA/ATACADO" />
-        </div>
-        <div class="field-group">
-          <span class="field-label">Data da lista</span>
-          <input type="text" id="cfg-data" placeholder="ex: 18/03/26" style="font-family:'Sora',sans-serif;" />
-        </div>
-        <div class="field-group">
           <span class="field-label">Produtos sem estoque no preview</span>
           <select id="cfg-sem-estoque">
             <option value="ocultar">Ocultar da lista final</option>
             <option value="incluir">Incluir normalmente</option>
           </select>
         </div>
+        
+        <div style="border-top:1px solid var(--border); margin: 4px 0;"></div>
+        
         <div class="field-group">
-          <span class="field-label">Formato do preço</span>
-          <select id="cfg-preco">
-            <option value="numero">Só número (ex: 650)</option>
-            <option value="reais">Com R$ (ex: R$ 650)</option>
-          </select>
+          <span class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+            Padrão de Divulgação
+            <span style="font-size:10px; color:var(--text3); font-weight:normal; text-transform:none;">Tags: {{nome}} {{preco}} {{custo}} {{atacado}} {{pix}} {{cartao}}</span>
+          </span>
+          <div style="display:flex; gap:6px; margin-bottom:4px;">
+            <select id="cfg-template-select" style="flex:1;"></select>
+            <button class="btn btn-ghost btn-sm" id="btn-novo-template" title="Novo Padrão">＋ Novo</button>
+            <button class="btn btn-danger btn-sm" id="btn-del-template" title="Excluir Padrão">✕</button>
+          </div>
+          <textarea id="cfg-template-body" rows="4" style="font-size:13px; font-family:'JetBrains Mono', monospace;" placeholder="Ex: {{nome}}\nPix: R$ {{pix}}\nCartão: R$ {{cartao}}"></textarea>
         </div>
+        
       </div>
     </div>
 
@@ -664,9 +464,7 @@
         <button class="btn btn-green btn-sm" id="btn-copiar">📋 Copiar</button>
       </div>
       <div style="padding:13px; flex:1; overflow-y:auto;">
-        <div id="preview-box" class="preview-box">
-          <span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span>
-        </div>
+        <div id="preview-box" class="preview-box"><span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span></div>
       </div>
     </div>
 
@@ -677,55 +475,25 @@
 
 <div id="ia-overlay">
   <div id="ia-modal">
-
-    <div class="ia-header">
-      <h2>🤖 Importar lista com IA</h2>
-      <button class="btn btn-ghost btn-sm" id="ia-fechar">✕ Fechar</button>
-    </div>
-
-    <div class="ia-steps">
-      <div class="ia-step active" data-step="1">① Cola a lista</div>
-      <div class="ia-step" data-step="2">② Revisa & vincula</div>
-    </div>
-
+    <div class="ia-header"><h2>🤖 Importar lista com IA</h2><button class="btn btn-ghost btn-sm" id="ia-fechar">✕ Fechar</button></div>
+    <div class="ia-steps"><div class="ia-step active" data-step="1">① Cola a lista</div><div class="ia-step" data-step="2">② Revisa & vincula</div></div>
     <div class="ia-pane active" id="ia-pane-1">
+      <div><div class="ia-label">Cola sua lista bruta aqui</div><textarea class="ia-raw-ta" id="ia-raw" placeholder="Cole aqui a lista no formato WhatsApp, CSV, ou qualquer texto com produtos e preços…"></textarea></div>
       <div>
-        <div class="ia-label">Cola sua lista bruta aqui</div>
-        <textarea class="ia-raw-ta" id="ia-raw" placeholder="Cole aqui a lista no formato WhatsApp, CSV, ou qualquer texto com produtos e preços…"></textarea>
-      </div>
-      <div>
-        <div class="ia-prompt-bar">
-          <div class="ia-label" style="margin-bottom:0;">Prompt da IA <span style="font-weight:400;color:var(--text3);font-size:10px;margin-left:4px;">(editável)</span></div>
-          <button class="btn btn-ghost btn-sm" id="ia-restaurar-prompt" style="font-size:11px;padding:3px 8px;">↺ Restaurar padrão</button>
-        </div>
+        <div class="ia-prompt-bar"><div class="ia-label" style="margin-bottom:0;">Prompt da IA <span style="font-weight:400;color:var(--text3);font-size:10px;margin-left:4px;">(editável)</span></div><button class="btn btn-ghost btn-sm" id="ia-restaurar-prompt" style="font-size:11px;padding:3px 8px;">↺ Restaurar padrão</button></div>
         <textarea class="ia-prompt-ta" id="ia-prompt"></textarea>
       </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button class="btn btn-ia" id="ia-processar">🤖 Processar com IA →</button>
-      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-ia" id="ia-processar">🤖 Processar com IA →</button></div>
       <div id="ia-erro" style="display:none;background:var(--danger-dim);border:1px solid var(--danger);border-radius:7px;padding:9px 12px;font-size:12px;color:var(--danger);"></div>
     </div>
-
     <div class="ia-pane" id="ia-pane-2">
-      <div id="ia-progress-wrap">
-        <p id="ia-prog-txt">Buscando vínculos na API…</p>
-        <div class="ia-prog-bar-outer"><div class="ia-prog-bar-inner" id="ia-prog-bar"></div></div>
-      </div>
+      <div id="ia-progress-wrap"><p id="ia-prog-txt">Buscando vínculos na API…</p><div class="ia-prog-bar-outer"><div class="ia-prog-bar-inner" id="ia-prog-bar"></div></div></div>
       <div id="ia-rev-container" style="display:none;flex-direction:column;gap:10px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-          <span style="font-size:12px;color:var(--text2);" id="ia-rev-summary"></span>
-          <label class="ia-sel-all"><input type="checkbox" id="ia-check-all" checked> Selecionar todos</label>
-        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--text2);" id="ia-rev-summary"></span><label class="ia-sel-all"><input type="checkbox" id="ia-check-all" checked> Selecionar todos</label></div>
         <div class="ia-rev-list" id="ia-rev-list"></div>
       </div>
     </div>
-
-    <div class="ia-footer">
-      <button class="btn btn-ghost btn-sm" id="ia-voltar" style="display:none;">← Voltar</button>
-      <div style="flex:1;"></div>
-      <button class="btn btn-ia" id="ia-confirmar" style="display:none;">✅ Adicionar selecionados à lista</button>
-    </div>
-
+    <div class="ia-footer"><button class="btn btn-ghost btn-sm" id="ia-voltar" style="display:none;">← Voltar</button><div style="flex:1;"></div><button class="btn btn-ia" id="ia-confirmar" style="display:none;">✅ Adicionar selecionados</button></div>
   </div>
 </div>
 
@@ -733,535 +501,156 @@
 
 <script>
 // ════════════════════════════════════
-// ESTADO MULTILISTAS
+// ESTADO MULTILISTAS E TEMPLATES
 // ════════════════════════════════════
-const STORAGE_KEY = 'jeta_lista_wpp_v4';
+const STORAGE_KEY = 'jeta_lista_wpp_v6';
+const CLOUD_KEY = 'jeta_cloud_user';
+const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
 
 let appData = {
   listas: [],
-  currentId: null
+  currentId: null,
+  templates: [
+    { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' },
+    { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' },
+    { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)' }
+  ]
 };
 
+let _currentUser = null;
+
 let currentTabObj = null;
-let lista = []; // ponteiro direto para currentTabObj.lista
+let lista = []; 
 let dragSrcIdx = null;
 let _dragScrollTimer = null;
-
-const HEADER_ICONS = ['📌','Ⓜ️','✳️','❇','☑️','🍎','🔷','🟥','🟩','⭐','🔹','▪️'];
+const HEADER_ICONS = ['','📌','Ⓜ️','✳️','❇','☑️','🍎','🔷','🟥','🟩','⭐','🔹','▪️'];
 
 function createListObj(nome) {
   return {
-    id: uid(),
-    nome: nome,
-    lista: [],
-    titulo: '',
-    cfgData: dataHoje(),
-    cfgSemEst: 'ocultar',
-    cfgPreco: 'numero'
+    id: uid(), nome: nome, lista: [], titulo: '', cfgData: dataHoje(),
+    cfgSemEst: 'ocultar', templateId: 't1'
   };
+}
+
+function initPrices(item) {
+  if (item.type === 'product' && !item.prices) {
+    item.prices = { custo: '', atacado: '', pix: '', cartao: '' };
+  }
 }
 
 // ════════════════════════════════════
 // RENDERIZAÇÃO DE ABAS
 // ════════════════════════════════════
 function renderTabs() {
-  const c = el('tabs-container');
-  c.innerHTML = '';
-  
+  const c = el('tabs-container'); c.innerHTML = '';
   appData.listas.forEach((l, i) => {
     const btn = document.createElement('div');
     btn.className = 'tab-btn' + (l.id === appData.currentId ? ' active' : '');
-    btn.innerHTML = `
-      <span contenteditable="true" spellcheck="false" class="tab-name-edit">${esc(l.nome)}</span>
-      ${appData.listas.length > 1 ? `<span class="tab-close" data-id="${l.id}">✕</span>` : ''}
-    `;
-    
-    btn.addEventListener('click', e => {
-      if (e.target.classList.contains('tab-close')) {
-        removerTab(l.id);
-      } else if (!e.target.classList.contains('tab-name-edit')) {
-        switchTab(l.id);
-      }
-    });
-
+    btn.innerHTML = `<span contenteditable="true" spellcheck="false" class="tab-name-edit">${esc(l.nome)}</span>${appData.listas.length > 1 ? `<span class="tab-close" data-id="${l.id}">✕</span>` : ''}`;
+    btn.addEventListener('click', e => { if (e.target.classList.contains('tab-close')) removerTab(l.id); else if (!e.target.classList.contains('tab-name-edit')) switchTab(l.id); });
     const nameEdit = btn.querySelector('.tab-name-edit');
-    nameEdit.addEventListener('blur', () => {
-      l.nome = nameEdit.textContent.trim() || `Lista ${i+1}`;
-      nameEdit.textContent = l.nome;
-      salvar();
-    });
-    nameEdit.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); nameEdit.blur(); }
-    });
-
+    nameEdit.addEventListener('blur', () => { l.nome = nameEdit.textContent.trim() || `Lista ${i+1}`; nameEdit.textContent = l.nome; salvar(); });
+    nameEdit.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameEdit.blur(); } });
     c.appendChild(btn);
   });
-
-  const addBtn = document.createElement('div');
-  addBtn.className = 'tab-btn tab-add';
-  addBtn.textContent = '＋ Nova Lista';
-  addBtn.addEventListener('click', () => {
-    const nova = createListObj(`Lista ${appData.listas.length + 1}`);
-    appData.listas.push(nova);
-    switchTab(nova.id);
-    salvar();
-  });
+  const addBtn = document.createElement('div'); addBtn.className = 'tab-btn tab-add'; addBtn.textContent = '＋ Nova Lista';
+  addBtn.addEventListener('click', () => { const nova = createListObj(`Lista ${appData.listas.length + 1}`); appData.listas.push(nova); switchTab(nova.id); salvar(); });
   c.appendChild(addBtn);
 }
 
 function switchTab(id) {
-  appData.currentId = id;
-  currentTabObj = appData.listas.find(l => l.id === id);
-  if (!currentTabObj) return; 
+  appData.currentId = id; currentTabObj = appData.listas.find(l => l.id === id); if (!currentTabObj) return; 
   lista = currentTabObj.lista;
+  lista.forEach(initPrices); // garante estrutura de preços
   
-  // Sincronizar UI com dados da aba
-  el('lista-titulo').value = currentTabObj.titulo || '';
-  el('cfg-data').value = currentTabObj.cfgData || dataHoje();
   el('cfg-sem-estoque').value = currentTabObj.cfgSemEst || 'ocultar';
-  el('cfg-preco').value = currentTabObj.cfgPreco || 'numero';
-
-  renderTabs();
-  renderTabela();
-  renderMobile();
-  atualizarPreview();
+  
+  renderTemplatesConfig();
+  renderTabs(); renderTabela(); renderMobile(); atualizarPreview();
 }
 
 function removerTab(id) {
-  if (appData.listas.length <= 1) return;
-  if (!confirm('Excluir esta lista permanentemente?')) return;
+  if (appData.listas.length <= 1) return; if (!confirm('Excluir esta lista permanentemente?')) return;
   appData.listas = appData.listas.filter(l => l.id !== id);
-  if (appData.currentId === id) {
-    switchTab(appData.listas[0].id);
-  } else {
-    renderTabs();
-  }
+  if (appData.currentId === id) switchTab(appData.listas[0].id); else renderTabs();
   salvar();
 }
 
 // ════════════════════════════════════
-// MODAL IA — PROMPT PADRÃO
+// TEMPLATES CONFIGURAÇÃO
 // ════════════════════════════════════
-const IA_PROMPT_KEY = 'jeta_ia_prompt_v1';
-const IA_PROMPT_DEFAULT = `Você é um assistente especializado em processar listas de produtos para revenda mobile/eletrônicos.
-Analise a lista bruta e retorne um JSON com os itens, seguindo estas regras ESTRITAS:
-
-CABEÇALHOS (type: "header"):
-- SOMENTE linhas que identificam uma MARCA/FABRICANTE como seção separadora
-- Exemplos válidos: "MOTOROLA", "SAMSUNG", "XIAOMI", "REALME", "APPLE"
-- Formato: linha com emoji de marca + nome da marca em maiúsculas
-- NÃO crie cabeçalho para: títulos gerais de lista, datas, categorias de produto (ex: "SmartTVs"), frases descritivas
-
-PRODUTOS (type: "product"):
-- Cada linha/item com nome de produto e preço
-- label: nome do produto limpo (sem emojis decorativos, sem R$, sem texto de marketing)
-- price: somente o número final (ex: "650", "1499"). Se vier "R$ 1.190", extraia "1190"
-- Mantenha modelo, memória RAM/armazenamento, cor no label
-
-LINHA LIVRE (type: "free", text: ""):
-- Títulos gerais de lista (ex: "Lista EXCLUSIVA REVENDA/ATACADO (18/03/26)")
-- Linhas separadoras, linhas vazias, categorias não-marca (ex: "SmartTVs Revenda (18/03/26)")
-- Emojis de separação ou decoração sem conteúdo de produto
-
-Retorne APENAS JSON válido. Sem markdown. Sem explicações.
-
-Exemplo de entrada:
-📌 Lista EXCLUSIVA REVENDA/ATACADO (18/03/26) 📌
-Ⓜ️ MOTOROLA
-Motorola Moto G06 256gb 4G - Bege - 650
-✳️ REALME
-Realme Note 60x 64gb - Verde - 499
-📢 SmartTVs Revenda (18/03/26): 📢
-📺 Smart TV Samsung 32" HD - R$ 1190
-
-Exemplo de saída:
-[
-  {"type":"free","text":""},
-  {"type":"header","icon":"Ⓜ️","label":"MOTOROLA"},
-  {"type":"product","label":"Motorola Moto G06 256gb 4G - Bege","price":"650"},
-  {"type":"header","icon":"✳️","label":"REALME"},
-  {"type":"product","label":"Realme Note 60x 64gb - Verde","price":"499"},
-  {"type":"free","text":""},
-  {"type":"product","label":"Smart TV Samsung 32\" HD","price":"1190"}
-]`;
-
-function iaGetPrompt() { return localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT; }
-function iaSavePrompt(v) { localStorage.setItem(IA_PROMPT_KEY, v); }
-
-async function chamarGroq(systemPrompt, userMessage) {
-  const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ systemPrompt, messages: userMessage })
-  });
-  if (!resp.ok) {
-    const e = await resp.json().catch(() => ({}));
-    throw new Error(e.error || 'Erro HTTP ' + resp.status);
-  }
-  const d = await resp.json();
-  if (d.choices && d.choices[0]?.message?.content)
-    return d.choices[0].message.content.trim();
-  throw new Error('Resposta inesperada da API Groq');
+function renderTemplatesConfig() {
+  if (!currentTabObj) return;
+  const sel = el('cfg-template-select');
+  sel.innerHTML = appData.templates.map(t => `<option value="${t.id}" ${t.id === (currentTabObj.templateId || 't1') ? 'selected' : ''}>${esc(t.nome)}</option>`).join('');
+  const t = appData.templates.find(x => x.id === (currentTabObj.templateId || 't1')) || appData.templates[0];
+  el('cfg-template-body').value = t ? t.texto : '';
 }
 
-let _iaItens = [];
-
-function iaAbrir() {
-  el('ia-prompt').value = iaGetPrompt(); el('ia-raw').value = '';
-  el('ia-erro').style.display = 'none'; iaSetStep(1);
-  el('ia-overlay').classList.add('open');
-  setTimeout(() => el('ia-raw').focus(), 100);
-}
-function iaFechar() { el('ia-overlay').classList.remove('open'); }
-function iaSetStep(n) {
-  document.querySelectorAll('.ia-step').forEach(s => s.classList.toggle('active', +s.dataset.step === n));
-  document.querySelectorAll('.ia-pane').forEach(p => p.classList.toggle('active', p.id === 'ia-pane-' + n));
-  el('ia-voltar').style.display = n === 2 ? 'flex' : 'none';
-  el('ia-confirmar').style.display = n === 2 ? 'flex' : 'none';
-}
-
-async function iaProcessar() {
-  const raw = el('ia-raw').value.trim();
-  if (!raw) { iaErro('Cole a lista antes de processar.'); return; }
-  el('ia-erro').style.display = 'none';
-  const btn = el('ia-processar'); btn.disabled = true; btn.textContent = '⏳ Processando…';
-
-  try {
-    const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
-    iaSavePrompt(el('ia-prompt').value.trim());
-
-    const resposta = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista para processar:\n' + raw);
-    const jsonStr = resposta.replace(/```json|```/g, '').trim();
-    const itens = JSON.parse(jsonStr);
-    if (!Array.isArray(itens)) throw new Error('IA não retornou um array JSON.');
-
-    document.querySelector('.ia-step[data-step="1"]').classList.add('done');
-    iaSetStep(2);
-    await iaBuscarVinculos(itens);
-  } catch(e) { iaErro('Erro ao processar: ' + e.message); } finally { btn.disabled = false; btn.textContent = '🤖 Processar com IA →'; }
-}
-
-function iaErro(msg) {
-  const d = el('ia-erro'); d.textContent = msg; d.style.display = 'block';
-}
-
-async function iaBuscarVinculos(itens) {
-  el('ia-progress-wrap').style.display = 'flex';
-  el('ia-rev-container').style.display = 'none';
-  _iaItens = itens.map(i => ({ ...i, _vinculos: [], _selecionado: true }));
-
-  el('ia-prog-txt').textContent = 'Baixando catálogo de produtos…';
-  el('ia-prog-bar').style.width = '5%';
-  try {
-    await carregarCacheProdutos((pag, total) => {
-      el('ia-prog-bar').style.width = Math.round((pag/total)*40) + '%';
-      el('ia-prog-txt').textContent = `Catálogo: página ${pag}/${total}…`;
-    });
-  } catch(e) { console.warn('Cache falhou:', e.message); }
-
-  const produtos = _iaItens.filter(i => i.type === 'product');
-  const total = produtos.length;
-  let feitos = 0;
-
-  for (let i = 0; i < _iaItens.length; i++) {
-    const item = _iaItens[i];
-    if (item.type !== 'product') continue;
-
-    feitos++;
-    el('ia-prog-txt').textContent = `(${feitos}/${total}) ${item.label?.substring(0,35)}…`;
-    el('ia-prog-bar').style.width = (40 + Math.round((feitos/Math.max(total,1))*60)) + '%';
-    try {
-      const vs = await buscarVinculosDoItem(item);
-      _iaItens[i]._vinculos = vs;
-    } catch(e) {}
-  }
-
-  el('ia-prog-bar').style.width = '100%';
-  el('ia-prog-txt').textContent = 'Concluído!';
-  setTimeout(() => { el('ia-progress-wrap').style.display = 'none'; iaRenderRevisao(); el('ia-rev-container').style.display = 'flex'; }, 400);
-}
-
-function extrairMem(s) { return (s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,'')); }
-function extrairStorage(s) { if (/\d+\s*\/\s*\d+/i.test(s)) return []; return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase()); }
-function extrairRede(s) { const m = s.match(/\b(4g|5g)\b/gi); return m ? m.map(x => x.toLowerCase()) : []; }
-function extrairPolegadas(s) { const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) || s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi); return m ? m.map(x => x.match(/\d+/)[0]) : []; }
-
-function melhorMatch(label, produtos) {
-  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s\/]/g, ' ').replace(/\s+/g, ' ').trim();
-  const labelN = norm(label);
-  const labelMem = extrairMem(label), labelRede = extrairRede(label), labelPol = extrairPolegadas(label), labelStor = extrairStorage(label);
-  const stopTokens = new Set(['de','do','da','the','com','para','and','or','in','a','o','e']);
-  const tokens = labelN.split(/\s+/).filter(t => t.length >= 2 && !stopTokens.has(t));
-  let best = null, bestScore = -1;
-
-  produtos.forEach(p => {
-    const pn = p.nome, pnN = norm(pn);
-    if (labelMem.length > 0) { const pMem = extrairMem(pn); if (pMem.length > 0 && !labelMem.some(m => pMem.includes(m))) return; }
-    if (labelStor.length > 0) {
-      const pStor = extrairStorage(pn), pMem2 = extrairMem(pn);
-      const labelStorNum = labelStor.map(s => s.replace(/[^\d]/g, ''));
-      const pStorFromPair = pMem2.map(m => m.split('/')[1]).filter(Boolean);
-      if (pStor.length > 0 || pStorFromPair.length > 0) {
-        const pStorNums = [...pStor.map(s => s.replace(/[^\d]/g, '')), ...pStorFromPair];
-        if (!labelStorNum.some(n => pStorNums.includes(n))) return;
-      }
-    }
-    if (labelRede.length > 0) { const pRede = extrairRede(pn); if (pRede.length > 0 && !labelRede.some(r => pRede.includes(r))) return; }
-    if (labelPol.length > 0) { const pPol = extrairPolegadas(pn); if (pPol.length > 0 && !labelPol.some(p => pPol.includes(p))) return; }
-
-    const score = tokens.reduce((s, t) => s + (pnN.includes(t) ? 1 : 0), 0) / tokens.length;
-    if (score > bestScore) { bestScore = score; best = p; }
-  });
-  return bestScore >= 0.25 ? best : null;
-}
-
-function iaRenderRevisao() {
-  const list = el('ia-rev-list'); list.innerHTML = '';
-  const total = _iaItens.filter(i => i.type === 'product').length;
-  const comVinc = _iaItens.filter(i => i.type === 'product' && i._vinculos?.length).length;
-  el('ia-rev-summary').textContent = `${total} produto(s) · ${comVinc} vinculado(s) · ${total - comVinc} sem vínculo`;
-
-  _iaItens.forEach((item, idx) => {
-    const div = document.createElement('div');
-    div.className = 'ia-rev-item' + (item._selecionado ? ' selected' : '') + (item.type === 'header' ? ' type-header' : '') + (item.type === 'free' ? ' type-free' : '');
-    div.dataset.idx = idx;
-
-    if (item.type === 'header') {
-      div.innerHTML = `<input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
-        <div class="ia-rev-body">
-          <div class="ia-rev-label" style="color:#a78bfa;">${esc(item.icon||'📌')} ${esc(item.label||'Seção')}</div>
-          <div style="font-size:11px;color:var(--text3);">Cabeçalho de seção</div>
-        </div>`;
-    } else if (item.type === 'free') {
-      div.innerHTML = `<input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
-        <div class="ia-rev-body"><div class="ia-rev-label" style="color:var(--text3);font-style:italic;">${item.text||'(linha em branco)'}</div></div>`;
-    } else {
-      const vs = item._vinculos || [];
-      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
-      let vincHtml;
-      if (vs.length === 0) vincHtml = `<span class="ia-rev-vinc none">⚠ Sem vínculo — clique em Trocar</span>`;
-      else if (vs.length === 1) vincHtml = `<span class="ia-rev-vinc ok" title="${esc(vs[0].nome)}">🔗 ${esc(vs[0].nome.substring(0,38))}${vs[0].nome.length>38?'…':''} · ${vs[0].estoque>0?'✓ '+vs[0].estoque:'⚠ '+vs[0].estoque}</span>`;
-      else vincHtml = `<span class="ia-rev-vinc ok">🔗 ${vs.length} vínculos · Σ ${estoqueTotal} un.</span>`;
-
-      const detalhes = vs.length > 1 ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
-            ${vs.map(v => `<div style="font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;">
-              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome.substring(0,40))}</span>
-              <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};flex-shrink:0;">${v.estoque>0?'✓ '+v.estoque:'⚠ '+v.estoque}</span>
-              <button class="ia-rm-vinc" data-idx="${idx}" data-vid="${v.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;flex-shrink:0;">✕</button>
-            </div>`).join('')}
-          </div>` : '';
-
-      div.innerHTML = `<input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}>
-        <div class="ia-rev-body">
-          <div class="ia-rev-label">${esc(item.label||'(sem nome)')}</div>
-          <div class="ia-rev-meta">
-            ${item.price ? `<span class="ia-rev-price">R$ ${esc(item.price)}</span>` : ''}
-            ${vincHtml} <button class="ia-rev-change" data-idx="${idx}">🔄 Trocar/Add</button>
-          </div>
-          ${detalhes}
-          <div class="ia-rev-dropdown" id="ia-dd-${idx}">
-            <input type="text" class="ia-rev-dd-search" placeholder="Buscar na API…" data-idx="${idx}" />
-            <div class="ia-rev-dd-results" id="ia-dd-res-${idx}">${iaDdItens(_prodCache.length ? [] : [], idx, vs)}</div>
-          </div>
-        </div>`;
-    }
-
-    div.querySelector('.ia-rev-check').addEventListener('change', e => { _iaItens[idx]._selecionado = e.target.checked; div.classList.toggle('selected', e.target.checked); });
-    div.querySelectorAll('.ia-rm-vinc').forEach(btn => {
-      btn.addEventListener('click', e => { e.stopPropagation(); const vid = btn.dataset.vid; _iaItens[idx]._vinculos = (_iaItens[idx]._vinculos || []).filter(v => String(v.id) !== String(vid)); iaRenderRevisao(); });
-    });
-    div.querySelector('.ia-rev-change')?.addEventListener('click', () => {
-      const dd = el(`ia-dd-${idx}`); dd.classList.toggle('open');
-      if (dd.classList.contains('open')) {
-        const inp = dd.querySelector('.ia-rev-dd-search'); inp?.focus();
-        const cands = _prodCache.length ? buscarNoCacheLocal(item.label).slice(0,15) : [];
-        el(`ia-dd-res-${idx}`).innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []);
-      }
-    });
-    div.querySelector('.ia-rev-dd-search')?.addEventListener('input', async function() {
-      const q = this.value.trim(); const resDiv = el(`ia-dd-res-${idx}`);
-      if (q.length < 2) { const cands = _prodCache.length ? buscarNoCacheLocal(_iaItens[idx].label || '').slice(0,15) : []; resDiv.innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []); return; }
-      resDiv.innerHTML = '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">⏳ Buscando…</div>';
-      let prods = _prodCache.length ? buscarNoCacheLocal(q).slice(0,15) : [];
-      if (!prods.length) { try { const d = await apiGet({ nome: q }); if (d.code === 200 && d.data?.length) prods = d.data.slice(0,15); } catch(e) {} }
-      resDiv.innerHTML = prods.length ? iaDdItens(prods, idx, _iaItens[idx]._vinculos || []) : '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum resultado.</div>';
-    });
-    list.appendChild(div);
-  });
-}
-
-function iaDdItens(cands, idx, jaVinculados) {
-  if (!cands?.length) return '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum candidato. Busque acima.</div>';
-  return cands.map(p => {
-    const est = Number(p.estoque ?? 0), badgeCls = est > 0 ? 'badge-ok' : 'badge-zero', jatem = (jaVinculados||[]).some(v => String(v.id) === String(p.id));
-    return `<div class="ia-rev-dd-row${jatem?' ia-dd-jatem':''}" data-pid="${esc(p.id)}" data-pnome="${esc(p.nome)}" data-psku="${esc(p.codigo_interno||p.codigo_barra||'')}" data-pest="${est}" data-idx="${idx}">
-      <span class="ia-rev-dd-nome">${esc(p.nome)}</span>
-      <span class="ia-rev-dd-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</span>
-      <span class="badge ${badgeCls}" style="font-size:10px;padding:2px 5px;">${est>0?'✓ '+est:'⚠ '+est}</span>
-      ${jatem ? '<span style="color:var(--accent);font-size:10px;">✓</span>' : ''}
-    </div>`;
-  }).join('');
-}
-
-el('ia-rev-list').addEventListener('click', e => {
-  const row = e.target.closest('.ia-rev-dd-row'); if (!row) return;
-  const idx = +row.dataset.idx;
-  const novoVinculo = { id: row.dataset.pid, nome: row.dataset.pnome, sku: row.dataset.psku, estoque: +row.dataset.pest };
-  const vs = _iaItens[idx]._vinculos || [];
-  const existe = vs.findIndex(v => String(v.id) === String(novoVinculo.id));
-  if (existe >= 0) _iaItens[idx]._vinculos = vs.filter((_, i) => i !== existe);
-  else _iaItens[idx]._vinculos = [...vs, novoVinculo];
-  iaRenderRevisao();
+el('cfg-template-select').addEventListener('change', e => {
+  if(!currentTabObj) return; currentTabObj.templateId = e.target.value; renderTemplatesConfig(); atualizarPreview(); salvar();
 });
 
-el('ia-check-all').addEventListener('change', function() { _iaItens.forEach(i => i._selecionado = this.checked); iaRenderRevisao(); });
+el('cfg-template-body').addEventListener('input', e => {
+  if(!currentTabObj) return; const t = appData.templates.find(x => x.id === (currentTabObj.templateId || 't1'));
+  if (t) { t.texto = e.target.value; atualizarPreview(); salvar(); }
+});
 
-function iaConfirmar() {
-  const selecionados = _iaItens.filter(i => i._selecionado);
-  if (!selecionados.length) { toast('⚠️ Nenhum item selecionado'); return; }
+el('btn-novo-template').addEventListener('click', () => {
+  const nome = prompt('Nome do novo padrão (ex: Padrão 4):'); if (!nome) return;
+  const novo = { id: uid(), nome, texto: '{{nome}}\n- R$ {{preco}}' };
+  appData.templates.push(novo); currentTabObj.templateId = novo.id;
+  renderTemplatesConfig(); atualizarPreview(); salvar();
+});
 
-  selecionados.forEach(item => {
-    const base = { id: uid() };
-    if (item.type === 'header') lista.push({ ...base, type: 'header', icon: item.icon || '📌', label: item.label || '' });
-    else if (item.type === 'free') lista.push({ ...base, type: 'free', text: item.text || '' });
-    else {
-      const vs = item._vinculos || [];
-      lista.push({
-        ...base, type: 'product', label: item.label || '', price: item.price || '',
-        vinculos: vs, sysname: vs[0]?.nome || '', sku: vs[0]?.sku || '', prodId: vs[0]?.id || null,
-        estoque: vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined,
-      });
-    }
+el('btn-del-template').addEventListener('click', () => {
+  if (appData.templates.length <= 1) { alert('Você precisa ter pelo menos um padrão de divulgação.'); return; }
+  if (!confirm('Tem certeza que deseja excluir este padrão?')) return;
+  appData.templates = appData.templates.filter(x => x.id !== currentTabObj.templateId);
+  currentTabObj.templateId = appData.templates[0].id;
+  renderTemplatesConfig(); atualizarPreview(); salvar();
+});
+
+// ════════════════════════════════════
+// POPOVER DE MÚLTIPLOS PREÇOS
+// ════════════════════════════════════
+let _popPrecosAtivo = null;
+function fecharPopoverPrecos() { if (_popPrecosAtivo) { _popPrecosAtivo.remove(); _popPrecosAtivo = null; } }
+
+function abrirPopoverPrecos(idx, anchorBtn) {
+  fecharPopover(); fecharPopoverPrecos();
+  const item = lista[idx]; initPrices(item);
+
+  const pop = document.createElement('div'); pop.className = 'price-popover';
+  pop.innerHTML = `
+    <div style="font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; margin-bottom:4px;">Preços Adicionais</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <label style="font-size:12px; font-weight:600; color:var(--text2); display:flex; align-items:center; justify-content:space-between;">Pix/Varejo:<input type="text" class="inp-pix" value="${esc(item.prices.pix)}" placeholder="Ex: 890" style="width:110px;"/></label>
+      <label style="font-size:12px; font-weight:600; color:var(--text2); display:flex; align-items:center; justify-content:space-between;">Cartão:<input type="text" class="inp-cartao" value="${esc(item.prices.cartao)}" placeholder="Ex: 950" style="width:110px;"/></label>
+      <div style="border-top:1px dashed var(--border2); margin:2px 0;"></div>
+      <label style="font-size:12px; font-weight:600; color:var(--text2); display:flex; align-items:center; justify-content:space-between;">Atacado:<input type="text" class="inp-atacado" value="${esc(item.prices.atacado)}" style="width:110px;"/></label>
+      <label style="font-size:12px; font-weight:600; color:var(--text2); display:flex; align-items:center; justify-content:space-between;">Custo:<input type="text" class="inp-custo" value="${esc(item.prices.custo)}" style="width:110px;"/></label>
+    </div>
+  `;
+  document.body.appendChild(pop); _popPrecosAtivo = pop;
+
+  const rect = anchorBtn.getBoundingClientRect();
+  let left = rect.left - 180; if(left < 10) left = 10;
+  pop.style.top = (rect.bottom + 4) + 'px'; pop.style.left = left + 'px';
+
+  ['custo','atacado','pix','cartao'].forEach(f => {
+    pop.querySelector('.inp-' + f).addEventListener('input', e => {
+      item.prices[f] = e.target.value; salvar(); atualizarPreview();
+    });
   });
-  renderTabela(); renderMobile(); atualizarPreview(); salvar(); iaFechar();
-  toast(`✅ ${selecionados.length} item(s) adicionados à lista!`);
+  pop.addEventListener('click', e => e.stopPropagation());
 }
-
-function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
-function autoGrowAll() { document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow); }
+document.addEventListener('click', () => { fecharPopoverPrecos(); });
 
 // ════════════════════════════════════
-// CONFIGURAÇÕES E CLOUD STORAGE
+// APIs, CACHE E BUSCA
 // ════════════════════════════════════
-const CLOUD_KEY = 'jeta_cloud_user';
-const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycb-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
-
-let _currentUser = null;
-let _saveTimeout = null;
-
-function _decodeJwt(token) { try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch(e) { return null; } }
-
-function initAuth() {
-  _currentUser = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null');
-  if (_currentUser) { showUser(_currentUser); carregar(); } else { carregar(); }
-  const checkGoogle = () => { if (window.google?.accounts?.id) { window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse, auto_select: true }); } else { setTimeout(checkGoogle, 100); } };
-  checkGoogle();
-}
-
-function handleGoogleResponse(response) {
-  const payload = _decodeJwt(response.credential);
-  if (payload) {
-    _currentUser = { name: payload.name, email: payload.email, picture: payload.picture };
-    localStorage.setItem(CLOUD_KEY, JSON.stringify(_currentUser));
-    showUser(_currentUser); fecharAuth(); carregar();
-  }
-}
-
-function showUser(user) {
-  el('user-area').innerHTML = `<div class="user-pill" onclick="logout()"><img src="${user.picture}"><span>${user.name.split(' ')[0]}</span></div>`;
-}
-
-function logout() { if (confirm('Sair da conta?')) { localStorage.removeItem(CLOUD_KEY); location.reload(); } }
-
-function abrirAuth() {
-  if (location.protocol === 'file:') alert('Login Google não funciona com arquivo local (file://). Use um servidor ou localhost.');
-  el('auth-wall').style.display = 'flex';
-  const checkAndRender = () => { if (window.google?.accounts?.id) { window.google.accounts.id.renderButton(el('google-btn'), { theme: 'outline', size: 'large', shape: 'pill' }); } else { setTimeout(checkAndRender, 100); } };
-  checkAndRender();
-}
-function fecharAuth() { el('auth-wall').style.display = 'none'; }
-
-function setStatus(type, text) {
-  const bar = el('save-status');
-  const dot = bar.querySelector('.status-dot');
-  const txt = el('save-status-text');
-  bar.style.display = 'flex'; bar.style.opacity = '1';
-  dot.className = 'status-dot ' + type;
-  txt.textContent = text;
-  if (type === 'success') {
-    txt.style.color = 'var(--text2)';
-    setTimeout(() => { if (txt.textContent === text) bar.style.opacity = '0.5'; }, 4000);
-  } else if (type === 'err') { 
-    txt.style.color = '#e74c3c'; 
-    bar.style.opacity = '1';
-    bar.title = 'Clique para ver detalhes do erro no console (F12)';
-  }
-  else { txt.style.color = 'var(--text2)'; }
-}
-
-function salvar() {
-  clearTimeout(_saveTimeout);
-  _saveTimeout = setTimeout(async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-    if (_currentUser) {
-      setStatus('syncing', 'Sincronizando…');
-      try {
-        const resp = await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ email: _currentUser.email, payload: appData })
-        });
-        const res = await resp.json();
-        if (res.status === 'success') setStatus('success', 'Nuvem Atualizada');
-        else throw new Error(res.error || 'Erro no Script');
-      } catch (e) { 
-        console.error('Erro de Sincronização:', e);
-        let msg = 'Erro na Sincronização';
-        if (location.protocol === 'file:') msg = 'Erro: Protocolo file:// (Use Localhost)';
-        else if (e.message.includes('Unexpected token')) msg = 'Erro: Resposta Inválida (URL 404?)';
-        else if (e.name === 'TypeError') msg = 'Erro de Rede / CORS';
-        setStatus('err', msg);
-      }
-    } else { setStatus('success', 'Salvo Localmente'); }
-  }, 1000);
-}
-
-async function carregar() {
-  const local = localStorage.getItem(STORAGE_KEY);
-  if (local) {
-    appData = JSON.parse(local);
-    if (!appData.listas.length) appData.listas.push(createListObj('Lista 1'));
-    switchTab(appData.currentId || appData.listas[0].id);
-  }
-  if (_currentUser) {
-    try {
-      const resp = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email));
-      const text = await resp.text();
-      if (text && text.trim() !== '{}') {
-        const cloudData = JSON.parse(text);
-        if (cloudData && cloudData.listas) {
-           appData = cloudData;
-           localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-           switchTab(appData.currentId || appData.listas[0].id);
-           toast('☁️ Sincronizado com a nuvem');
-        }
-      }
-    } catch(e) { console.error('Load error', e); }
-  } else if (!local) {
-    appData.listas.push(createListObj('Lista 1'));
-    switchTab(appData.listas[0].id);
-  }
-}
-
-function el(id) { return document.getElementById(id); }
-let _tt;
-function toast(msg, dur=2600) { const t = el('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), dur); }
-function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').textContent=m; }
-function dataHoje(){ const d=new Date(); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear().toString().slice(2); }
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 async function apiGet(params) {
   const url  = new URL('https://caixa-three.vercel.app/api/produtos');
   url.searchParams.set('loja_id', '361408');
@@ -1301,6 +690,11 @@ function ehAcessorio(nome) { return /\b(pelicula|película|peliculas|películas|
 function extrairVariante(s) { const n = normStr(s), vs = []; if (/\bpro\b/.test(n)) vs.push('pro'); if (/\bplus\b/.test(n)) vs.push('plus'); if (/\bultra\b/.test(n)) vs.push('ultra'); if (/\bmax\b/.test(n)) vs.push('max'); if (/\blite\b/.test(n)) vs.push('lite'); if (/\bneo\b/.test(n)) vs.push('neo'); if (/\bfe\b/.test(n)) vs.push('fe'); if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix'); return vs; }
 function extrairSerie(s) { const n = normStr(s), series = []; if (/\bredmi\s+note\b/.test(n)) series.push('redmi-note'); else if (/\bredmi\b/.test(n)) series.push('redmi'); if (/\bpoco\b/.test(n)) series.push('poco'); if (/\brealme\b/.test(n)) series.push('realme'); if (/\biphone\b/.test(n)) series.push('iphone'); if (/\bgalaxy\b/.test(n)) series.push('galaxy'); if (/\bmoto\b/.test(n)) series.push('moto'); if (/\bnote\b/.test(n) && !series.length) series.push('note-generic'); return series; }
 function serieCompativel(lS, pS) { if (!lS.length || !pS.length) return true; if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true; if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true; return lS.some(s => pS.includes(s)); }
+function extrairMem(s) { return (s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,'')); }
+function extrairStorage(s) { if (/\d+\s*\/\s*\d+/i.test(s)) return []; return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase()); }
+function extrairRede(s) { const m = s.match(/\b(4g|5g)\b/gi); return m ? m.map(x => x.toLowerCase()) : []; }
+function extrairPolegadas(s) { const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) || s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi); return m ? m.map(x => x.match(/\d+/)[0]) : []; }
+
 function tokensModelo(label) { const stop = new Set(['de','do','da','com','para','a','o','e','em','smart','tv','led','oled','full','hd','4k','wi','fi','preto','branco','azul','verde','roxo','cinza','dourado','rosa','prata','bege','vermelho','amarelo','grafite','gold','creme','titanium','aurora','marrom','laranja','vinho','preta','silver','blue','black','white','purple','gray','transparente']); const n = normStr(label).replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '').replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '').replace(/\s+/g, ' ').trim(); return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t)); }
 
 function buscarNoCacheLocal(q) {
@@ -1390,16 +784,179 @@ function scoreNome(label, nomeAPI) {
   return mScore * 0.7 + rScore * 0.3;
 }
 
+// ════════════════════════════════════
+// IA - PROMPT E FUNÇÕES
+// ════════════════════════════════════
+const IA_PROMPT_KEY = 'jeta_ia_prompt_v2';
+
+const IA_PROMPT_DEFAULT = `Você é um assistente especializado em processar listas de produtos para revenda mobile/eletrônicos.
+Analise a lista bruta e retorne um JSON com os itens, seguindo estas regras ESTRITAS:
+
+CABEÇALHOS (type: "header"):
+- SOMENTE linhas que identificam uma MARCA/FABRICANTE como seção separadora
+- Exemplos válidos: "MOTOROLA", "SAMSUNG", "XIAOMI", "REALME", "APPLE"
+- Formato: linha com emoji de marca + nome da marca em maiúsculas
+- NÃO crie cabeçalho para: títulos gerais de lista, datas, categorias de produto (ex: "SmartTVs"), frases descritivas
+
+PRODUTOS (type: "product"):
+- Cada linha/item com nome de produto e preço
+- label: nome do produto limpo (sem emojis decorativos, sem R$, sem texto de marketing)
+- price: somente o número final (ex: "650", "1499"). Se vier "R$ 1.190", extraia "1190"
+- Mantenha modelo, memória RAM/armazenamento, cor no label
+
+LINHA LIVRE (type: "free", text: ""):
+- Títulos gerais de lista (ex: "Lista EXCLUSIVA REVENDA/ATACADO (18/03/26)")
+- Linhas separadoras, linhas vazias, categorias não-marca (ex: "SmartTVs Revenda (18/03/26)")
+- Emojis de separação ou decoração sem conteúdo de produto
+
+Retorne APENAS JSON válido. Sem markdown. Sem explicações.
+
+Exemplo de entrada:
+📌 Lista EXCLUSIVA REVENDA/ATACADO (18/03/26) 📌
+Ⓜ️ MOTOROLA
+Motorola Moto G06 256gb 4G - Bege - 650
+✳️ REALME
+Realme Note 60x 64gb - Verde - 499
+📢 SmartTVs Revenda (18/03/26): 📢
+📺 Smart TV Samsung 32" HD - R$ 1190
+
+Exemplo de saída:
+[
+  {"type":"free","text":""},
+  {"type":"header","icon":"Ⓜ️","label":"MOTOROLA"},
+  {"type":"product","label":"Motorola Moto G06 256gb 4G - Bege","price":"650"},
+  {"type":"header","icon":"✳️","label":"REALME"},
+  {"type":"product","label":"Realme Note 60x 64gb - Verde","price":"499"},
+  {"type":"free","text":""},
+  {"type":"product","label":"Smart TV Samsung 32\\" HD","price":"1190"}
+]`;
+
+function iaGetPrompt() { return localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT; }
+function iaSavePrompt(v) { localStorage.setItem(IA_PROMPT_KEY, v); }
+async function chamarGroq(systemPrompt, userMessage) {
+  const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemPrompt, messages: userMessage }) });
+  if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || 'Erro HTTP ' + resp.status); }
+  const d = await resp.json(); if (d.choices && d.choices[0]?.message?.content) return d.choices[0].message.content.trim(); throw new Error('Resposta inesperada da API Groq');
+}
+
+let _iaItens = [];
+function iaAbrir() { el('ia-prompt').value = iaGetPrompt(); el('ia-raw').value = ''; el('ia-erro').style.display = 'none'; iaSetStep(1); el('ia-overlay').classList.add('open'); setTimeout(() => el('ia-raw').focus(), 100); }
+function iaFechar() { el('ia-overlay').classList.remove('open'); }
+function iaSetStep(n) { document.querySelectorAll('.ia-step').forEach(s => s.classList.toggle('active', +s.dataset.step === n)); document.querySelectorAll('.ia-pane').forEach(p => p.classList.toggle('active', p.id === 'ia-pane-' + n)); el('ia-voltar').style.display = n === 2 ? 'flex' : 'none'; el('ia-confirmar').style.display = n === 2 ? 'flex' : 'none'; }
+function iaErro(msg) { const d = el('ia-erro'); d.textContent = msg; d.style.display = 'block'; }
+
+async function iaProcessar() {
+  const raw = el('ia-raw').value.trim(); if (!raw) { iaErro('Cole a lista antes de processar.'); return; }
+  el('ia-erro').style.display = 'none'; const btn = el('ia-processar'); btn.disabled = true; btn.textContent = '⏳ Processando…';
+  try {
+    iaSavePrompt(el('ia-prompt').value.trim());
+    const promptFull = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
+    const resposta = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', promptFull + '\n\nLista para processar:\n' + raw);
+    const jsonStr = resposta.replace(/```json|```/g, '').trim();
+    const itens = JSON.parse(jsonStr); if (!Array.isArray(itens)) throw new Error('IA não retornou um array JSON.');
+    document.querySelector('.ia-step[data-step="1"]').classList.add('done'); iaSetStep(2); await iaBuscarVinculos(itens);
+  } catch(e) { iaErro('Erro ao processar: ' + e.message); } finally { btn.disabled = false; btn.textContent = '🤖 Processar com IA →'; }
+}
+
+async function iaBuscarVinculos(itens) {
+  el('ia-progress-wrap').style.display = 'flex'; el('ia-rev-container').style.display = 'none';
+  _iaItens = itens.map(i => ({ ...i, _vinculos: [], _selecionado: true }));
+  el('ia-prog-txt').textContent = 'Baixando catálogo de produtos…'; el('ia-prog-bar').style.width = '5%';
+  try { await carregarCacheProdutos((pag, total) => { el('ia-prog-bar').style.width = Math.round((pag/total)*40) + '%'; el('ia-prog-txt').textContent = `Catálogo: página ${pag}/${total}…`; }); } catch(e) { console.warn('Cache falhou:', e.message); }
+  const produtos = _iaItens.filter(i => i.type === 'product'); let feitos = 0; const total = produtos.length;
+  for (let i = 0; i < _iaItens.length; i++) {
+    const item = _iaItens[i]; if (item.type !== 'product') continue;
+    feitos++; el('ia-prog-txt').textContent = `(${feitos}/${total}) ${item.label?.substring(0,35)}…`; el('ia-prog-bar').style.width = (40 + Math.round((feitos/Math.max(total,1))*60)) + '%';
+    try { const vs = await buscarVinculosDoItem(item); _iaItens[i]._vinculos = vs; } catch(e) {}
+  }
+  el('ia-prog-bar').style.width = '100%'; el('ia-prog-txt').textContent = 'Concluído!';
+  setTimeout(() => { el('ia-progress-wrap').style.display = 'none'; iaRenderRevisao(); el('ia-rev-container').style.display = 'flex'; }, 400);
+}
+
+function iaRenderRevisao() {
+  const list = el('ia-rev-list'); list.innerHTML = '';
+  const total = _iaItens.filter(i => i.type === 'product').length; const comVinc = _iaItens.filter(i => i.type === 'product' && i._vinculos?.length).length;
+  el('ia-rev-summary').textContent = `${total} produto(s) · ${comVinc} vinculado(s) · ${total - comVinc} sem vínculo`;
+
+  _iaItens.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'ia-rev-item' + (item._selecionado ? ' selected' : '') + (item.type === 'header' ? ' type-header' : '') + (item.type === 'free' ? ' type-free' : '');
+    div.dataset.idx = idx;
+
+    if (item.type === 'header') {
+      div.innerHTML = `<input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}><div class="ia-rev-body"><div class="ia-rev-label" style="color:#a78bfa;">${esc(item.icon||'📌')} ${esc(item.label||'Seção')}</div><div style="font-size:11px;color:var(--text3);">Cabeçalho de seção</div></div>`;
+    } else if (item.type === 'free') {
+      div.innerHTML = `<input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}><div class="ia-rev-body"><div class="ia-rev-label" style="color:var(--text3);font-style:italic;">${item.text||'(linha em branco)'}</div></div>`;
+    } else {
+      const vs = item._vinculos || []; const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+      let vincHtml;
+      if (vs.length === 0) vincHtml = `<span class="ia-rev-vinc none">⚠ Sem vínculo — clique em Trocar</span>`;
+      else if (vs.length === 1) vincHtml = `<span class="ia-rev-vinc ok" title="${esc(vs[0].nome)}">🔗 ${esc(vs[0].nome.substring(0,38))}${vs[0].nome.length>38?'…':''} · ${vs[0].estoque>0?'✓ '+vs[0].estoque:'⚠ '+vs[0].estoque}</span>`;
+      else vincHtml = `<span class="ia-rev-vinc ok">🔗 ${vs.length} vínculos · Σ ${estoqueTotal} un.</span>`;
+
+      const detalhes = vs.length > 1 ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">${vs.map(v => `<div style="font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome.substring(0,40))}</span><span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};flex-shrink:0;">${v.estoque>0?'✓ '+v.estoque:'⚠ '+v.estoque}</span><button class="ia-rm-vinc" data-idx="${idx}" data-vid="${v.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;flex-shrink:0;">✕</button></div>`).join('')}</div>` : '';
+
+      div.innerHTML = `<input type="checkbox" class="ia-rev-check" ${item._selecionado?'checked':''}><div class="ia-rev-body"><div class="ia-rev-label">${esc(item.label||'(sem nome)')}</div><div class="ia-rev-meta">${item.price ? `<span class="ia-rev-price">R$ ${esc(item.price)}</span>` : ''} ${vincHtml} <button class="ia-rev-change" data-idx="${idx}">🔄 Trocar/Add</button></div>${detalhes}<div class="ia-rev-dropdown" id="ia-dd-${idx}"><input type="text" class="ia-rev-dd-search" placeholder="Buscar na API…" data-idx="${idx}" /><div class="ia-rev-dd-results" id="ia-dd-res-${idx}">${iaDdItens(_prodCache.length ? [] : [], idx, vs)}</div></div></div>`;
+    }
+
+    div.querySelector('.ia-rev-check').addEventListener('change', e => { _iaItens[idx]._selecionado = e.target.checked; div.classList.toggle('selected', e.target.checked); });
+    div.querySelectorAll('.ia-rm-vinc').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const vid = btn.dataset.vid; _iaItens[idx]._vinculos = (_iaItens[idx]._vinculos || []).filter(v => String(v.id) !== String(vid)); iaRenderRevisao(); }); });
+    div.querySelector('.ia-rev-change')?.addEventListener('click', () => {
+      const dd = el(`ia-dd-${idx}`); dd.classList.toggle('open');
+      if (dd.classList.contains('open')) { const inp = dd.querySelector('.ia-rev-dd-search'); inp?.focus(); const cands = _prodCache.length ? buscarNoCacheLocal(item.label).slice(0,15) : []; el(`ia-dd-res-${idx}`).innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []); }
+    });
+    div.querySelector('.ia-rev-dd-search')?.addEventListener('input', async function() {
+      const q = this.value.trim(); const resDiv = el(`ia-dd-res-${idx}`);
+      if (q.length < 2) { const cands = _prodCache.length ? buscarNoCacheLocal(_iaItens[idx].label || '').slice(0,15) : []; resDiv.innerHTML = iaDdItens(cands, idx, _iaItens[idx]._vinculos || []); return; }
+      resDiv.innerHTML = '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">⏳ Buscando…</div>'; let prods = _prodCache.length ? buscarNoCacheLocal(q).slice(0,15) : [];
+      if (!prods.length) { try { const d = await apiGet({ nome: q }); if (d.code === 200 && d.data?.length) prods = d.data.slice(0,15); } catch(e) {} }
+      resDiv.innerHTML = prods.length ? iaDdItens(prods, idx, _iaItens[idx]._vinculos || []) : '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum resultado.</div>';
+    });
+    list.appendChild(div);
+  });
+}
+
+function iaDdItens(cands, idx, jaVinculados) {
+  if (!cands?.length) return '<div style="padding:6px 10px;color:var(--text3);font-size:12px;">Nenhum candidato. Busque acima.</div>';
+  return cands.map(p => {
+    const est = Number(p.estoque ?? 0), badgeCls = est > 0 ? 'badge-ok' : 'badge-zero', jatem = (jaVinculados||[]).some(v => String(v.id) === String(p.id));
+    return `<div class="ia-rev-dd-row${jatem?' ia-dd-jatem':''}" data-pid="${esc(p.id)}" data-pnome="${esc(p.nome)}" data-psku="${esc(p.codigo_interno||p.codigo_barra||'')}" data-pest="${est}" data-idx="${idx}"><span class="ia-rev-dd-nome">${esc(p.nome)}</span><span class="ia-rev-dd-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</span><span class="badge ${badgeCls}" style="font-size:10px;padding:2px 5px;">${est>0?'✓ '+est:'⚠ '+est}</span>${jatem ? '<span style="color:var(--accent);font-size:10px;">✓</span>' : ''}</div>`;
+  }).join('');
+}
+
+el('ia-rev-list').addEventListener('click', e => {
+  const row = e.target.closest('.ia-rev-dd-row'); if (!row) return; const idx = +row.dataset.idx;
+  const novoVinculo = { id: row.dataset.pid, nome: row.dataset.pnome, sku: row.dataset.psku, estoque: +row.dataset.pest };
+  const vs = _iaItens[idx]._vinculos || []; const existe = vs.findIndex(v => String(v.id) === String(novoVinculo.id));
+  if (existe >= 0) _iaItens[idx]._vinculos = vs.filter((_, i) => i !== existe); else _iaItens[idx]._vinculos = [...vs, novoVinculo];
+  iaRenderRevisao();
+});
+
+el('ia-check-all').addEventListener('change', function() { _iaItens.forEach(i => i._selecionado = this.checked); iaRenderRevisao(); });
+
+function iaConfirmar() {
+  const selecionados = _iaItens.filter(i => i._selecionado); if (!selecionados.length) { toast('⚠️ Nenhum item selecionado'); return; }
+  selecionados.forEach(item => {
+    const base = { id: uid() };
+    if (item.type === 'header') lista.push({ ...base, type: 'header', icon: item.icon || '📌', label: item.label || '' });
+    else if (item.type === 'free') lista.push({ ...base, type: 'free', text: item.text || '' });
+    else {
+      const vs = item._vinculos || [];
+      lista.push({ ...base, type: 'product', label: item.label || '', price: item.price || '', prices: { custo:'', atacado:'', pix:'', cartao:'' }, vinculos: vs, sysname: vs[0]?.nome || '', sku: vs[0]?.sku || '', prodId: vs[0]?.id || null, estoque: vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined });
+    }
+  });
+  renderTabela(); renderMobile(); atualizarPreview(); salvar(); iaFechar(); toast(`✅ ${selecionados.length} item(s) adicionados à lista!`);
+}
+
+// ════════════════════════════════════
+// SINCRONIZAÇÃO GERAL
+// ════════════════════════════════════
 async function syncItem(idx) {
-  const item = lista[idx]; if (!item || item.type !== 'product') return;
-  setSync('loading','Atualizando…');
+  const item = lista[idx]; if (!item || item.type !== 'product') return; setSync('loading','Atualizando…');
   try {
     if (!_prodCache.length) { setSync('loading','Baixando catálogo…'); await carregarCacheProdutos(); }
     const vs = await buscarVinculosDoItem(item);
-    if (vs.length) {
-      lista[idx].vinculos = vs; lista[idx].estoque = vs.reduce((s, v) => s + v.estoque, 0); lista[idx].prodId = vs[0].id; lista[idx].sysname = vs[0].nome; lista[idx].sku = vs[0].sku;
-      setSync('ok', vs.length > 1 ? `${vs.length} variações ✓` : 'Atualizado ✓');
-    } else { setSync('err','Não encontrado'); toast('⚠️ Produto não encontrado na API'); }
+    if (vs.length) { lista[idx].vinculos = vs; lista[idx].estoque = vs.reduce((s, v) => s + v.estoque, 0); lista[idx].prodId = vs[0].id; lista[idx].sysname = vs[0].nome; lista[idx].sku = vs[0].sku; setSync('ok', vs.length > 1 ? `${vs.length} variações ✓` : 'Atualizado ✓'); } else { setSync('err','Não encontrado'); toast('⚠️ Produto não encontrado na API'); }
   } catch(e) { setSync('err','Erro: '+e.message); toast('❌ '+e.message); }
   renderTabela(); renderMobile(); atualizarPreview(); salvar();
 }
@@ -1407,28 +964,120 @@ async function syncItem(idx) {
 async function syncTodos() {
   const targets = lista.map((item,idx) => ({item,idx})).filter(({item}) => item.type === 'product');
   if (!targets.length) { toast('Nenhum produto na lista'); return; }
-
   const btn = el('btn-sync-all'); btn.disabled = true; btn.textContent = '⏳ Carregando…';
-  const wrap = el('sync-progress-wrap'), bar = el('sync-progress-bar');
-  wrap.style.display = 'block'; bar.style.width = '0%'; setSync('loading','Baixando catálogo completo…');
-
+  const wrap = el('sync-progress-wrap'), bar = el('sync-progress-bar'); wrap.style.display = 'block'; bar.style.width = '0%'; setSync('loading','Baixando catálogo completo…');
   try {
-    await carregarCacheProdutos((pag, total, qtd) => { btn.textContent = `⏳ Catálogo ${pag}/${total}`; bar.style.width = Math.round((pag/total)*50) + '%'; });
-    setSync('loading',`Resolvendo ${targets.length} produto(s)…`);
-    let ok = 0, err = 0;
+    await carregarCacheProdutos((pag, total) => { btn.textContent = `⏳ Catálogo ${pag}/${total}`; bar.style.width = Math.round((pag/total)*50) + '%'; });
+    setSync('loading',`Resolvendo ${targets.length} produto(s)…`); let ok = 0, err = 0;
     for (let i = 0; i < targets.length; i++) {
       const { item, idx } = targets[i]; const vs = await buscarVinculosDoItem(item);
-      if (vs.length) {
-        lista[idx].vinculos = vs; lista[idx].estoque = vs.reduce((s, v) => s + v.estoque, 0); lista[idx].prodId = vs[0].id; lista[idx].sysname = vs[0].nome; lista[idx].sku = vs[0].sku; ok++;
-      } else { err++; }
+      if (vs.length) { lista[idx].vinculos = vs; lista[idx].estoque = vs.reduce((s, v) => s + v.estoque, 0); lista[idx].prodId = vs[0].id; lista[idx].sysname = vs[0].nome; lista[idx].sku = vs[0].sku; ok++; } else { err++; }
       bar.style.width = (50 + Math.round(((i+1)/targets.length)*50)) + '%'; setSync('loading',`${i+1}/${targets.length} resolvidos…`);
     }
-    renderTabela(); renderMobile(); atualizarPreview(); salvar();
-    setSync('ok', `${ok} atualizado${ok!==1?'s':''}${err?' · '+err+' sem vínculo':''}`); toast(`🔄 ${ok} produto(s) atualizados`);
+    renderTabela(); renderMobile(); atualizarPreview(); salvar(); setSync('ok', `${ok} atualizado(s)`); toast(`🔄 ${ok} produto(s) atualizados`);
   } catch(e) { setSync('err','Erro: '+e.message); toast('❌ Erro: '+e.message); }
   wrap.style.display = 'none'; bar.style.width = '0%'; btn.disabled = false; btn.textContent = '🔄 Atualizar Estoque';
 }
 
+function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+function autoGrowAll() { document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow); }
+
+function salvar() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    setSync('ok','Salvo local');
+    if (_currentUser) syncToCloud();
+  } catch(e) { setSync('err','Erro ao salvar'); }
+}
+
+async function syncToCloud() {
+  updateCloudStatus('syncing');
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ email: _currentUser.email, payload: appData })
+    });
+    updateCloudStatus('success');
+  } catch(e) { updateCloudStatus('err'); }
+}
+
+function updateCloudStatus(type) {
+  const pill = el('save-status-pill');
+  const dot = pill.querySelector('.sync-dot');
+  const txt = el('save-status-text');
+  pill.style.display = 'flex';
+  dot.className = 'sync-dot ' + (type === 'syncing' ? 'loading' : type === 'success' ? 'ok' : 'err');
+  txt.textContent = type === 'syncing' ? 'NUVEM...' : type === 'success' ? 'NUVEM OK' : 'ERRO NUVEM';
+  if(type === 'success') setTimeout(() => { if(txt.textContent === 'NUVEM OK') pill.style.opacity = '0.5'; }, 3000);
+  else pill.style.opacity = '1';
+}
+
+function initAuth() {
+  _currentUser = JSON.parse(localStorage.getItem(CLOUD_KEY));
+  if(_currentUser) {
+    renderUser(_currentUser);
+    fetch(SHEETS_URL + '?email=' + _currentUser.email).then(r => r.json()).then(data => {
+      if(data && data.listas) {
+        appData = data;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        switchTab(appData.currentId || appData.listas[0].id);
+        toast('☁️ Nuvem sincronizada');
+      }
+    });
+  }
+  
+  setTimeout(() => {
+    if(window.google) {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (resp) => {
+          const p = JSON.parse(atob(resp.credential.split('.')[1]));
+          _currentUser = { email: p.email, name: p.name, picture: p.picture };
+          localStorage.setItem(CLOUD_KEY, JSON.stringify(_currentUser));
+          renderUser(_currentUser);
+          fecharAuth();
+          salvar();
+        }
+      });
+    }
+  }, 1000);
+}
+
+function renderUser(u) {
+  el('user-area').innerHTML = `
+    <div class="user-pill" onclick="logout()">
+      <img src="${u.picture}">
+      <span>${u.name.split(' ')[0]}</span>
+    </div>
+  `;
+}
+
+function abrirAuth() {
+  el('auth-wall').style.display = 'flex';
+  google.accounts.id.renderButton(el('google-btn'), { theme: 'outline', size: 'large' });
+}
+function fecharAuth() { el('auth-wall').style.display = 'none'; }
+function logout() { if(confirm('Sair da conta?')) { localStorage.removeItem(CLOUD_KEY); location.reload(); } }
+function carregar() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { appData = JSON.parse(raw); } else { appData = { listas: [createListObj('Lista 1')], currentId: null }; }
+    if(!appData.templates || appData.templates.length === 0) {
+      appData.templates = [ { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' }, { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' } ];
+    }
+    if(!appData.listas.length) appData.listas.push(createListObj('Lista 1'));
+    if(!appData.currentId) appData.currentId = appData.listas[0].id;
+    switchTab(appData.currentId);
+  } catch(e) {}
+}
+
+function el(id) { return document.getElementById(id); } let _tt; function toast(msg, dur=2600) { const t = el('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), dur); }
+function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').textContent=m; } function dataHoje(){ const d=new Date(); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear().toString().slice(2); } function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); } function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ════════════════════════════════════
+// RENDERIZAÇÃO DA TABELA (DESKTOP)
+// ════════════════════════════════════
 function renderTabela() {
   const tbody = el('tbody-lista'); tbody.innerHTML = '';
   const nProd = lista.filter(i=>i.type==='product').length; el('count-badge').textContent = nProd + ' produto'+(nProd!==1?'s':'');
@@ -1439,56 +1088,67 @@ function renderTabela() {
 
     if (item.type === 'header') {
       tr.className = 'row-header';
-      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${item.icon===v?'selected':''}>${v}</option>`).join('');
-      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="5" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td><td class="col-act" style="text-align:center;"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button></td>`;
+      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${(item.icon===undefined && v==='📌') || item.icon===v ? 'selected' : ''}>${v || 'Nenhum'}</option>`).join('');
+      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="3" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
     } else if (item.type === 'free') {
       tr.className = 'row-free';
-      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="5" style="padding:4px 6px;"><textarea data-field="text" rows="2" style="min-height:34px; resize:vertical;" placeholder="Texto livre — pode ser multilinha ou vazio (linha em branco na mensagem)…">${esc(item.text||'')}</textarea></td><td class="col-act" style="text-align:center;"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button></td>`;
+      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="3" style="padding:4px 6px;"><textarea data-field="text" rows="2" style="min-height:34px; resize:vertical;" placeholder="Texto livre…">${esc(item.text||'')}</textarea></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
     } else {
       const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
       const estoqueTotal = vinculos ? vinculos.reduce((s, v) => s + v.estoque, 0) : (item.estoque ?? null);
-      const semEst = estoqueTotal !== null && estoqueTotal !== undefined && estoqueTotal <= 0;
-      if (semEst) tr.className = 'row-sem-estoque';
+      if (estoqueTotal !== null && estoqueTotal <= 0) tr.className = 'row-sem-estoque';
       const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
 
       let badgeHtml;
-      if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo — clique em Nome/Código para vincular">🔗 —</span>`;
-      else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown" title="Clique em 🔄 para atualizar">? —</span>`;
-      else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero', icn = estoqueTotal > 0 ? '✓' : '⚠'; badgeHtml = `<span class="badge ${cls}">${icn} ${estoqueTotal}</span>`; }
+      if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo">🔗 —</span>`;
+      else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`;
+      else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero'; badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${estoqueTotal} un.</span>`; }
 
-      const vinculosList = vinculos ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:4px;padding:1px 0;min-width:0;"><span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(v.nome)}">${esc(v.nome)}</span><span style="font-size:11px;font-family:'JetBrains Mono',monospace;${v.estoque>0?'color:var(--accent)':'color:var(--warn)'};flex-shrink:0;">${v.estoque>0?'✓':'⚠'} ${v.estoque}</span><button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;flex-shrink:0;line-height:1;" title="Remover">✕</button></div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
-      const temVincAtivo = vinculos ? vinculos.length > 0 : !!item.sysname;
+      const vinculosList = vinculos ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:4px;min-width:0;"><span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</span><button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;">✕</button></div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
 
-      tr.innerHTML = `<td class="col-drag">⠿</td><td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td><td class="col-price"><input type="text" data-field="price" value="${esc(item.price)}" placeholder="650" class="mono-inp" /></td><td class="col-sys vincul-cell" data-vincul-idx="${idx}" data-vincul-field="sys" style="cursor:pointer;"><div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;">${vinculosList}<div class="vincul-add-btn" style="font-size:11px;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:3px;margin-top:2px;opacity:.8;"><span>＋ ${temVincAtivo ? 'add' : 'vincular'}</span></div></div></td><td class="col-sku" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text2);">${vinculos && vinculos.length ? vinculos.map(v => `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(v.sku||'')}">${esc(v.sku||'—')}</div>`).join('') : esc(item.sku||'—')}</td><td class="col-stock" style="text-align:center;">${badgeHtml}</td><td class="col-act"><div style="display:flex; gap:3px; justify-content:center; align-items:center;"><button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}" title="Remover">✕</button></div></td>`;
+      tr.innerHTML = `
+        <td class="col-drag">⠿</td>
+        <td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td>
+        <td class="col-price">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:65px;"/>
+            <button class="btn-precos" data-idx="${idx}" title="Preços Extras">⚙️</button>
+          </div>
+        </td>
+        <td class="col-api vincul-cell" data-vincul-field="sys" style="cursor:pointer;">
+          <div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;">
+            ${vinculosList}
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+              <span style="font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text3);">SKU: ${esc(item.sku||'—')}</span>
+              ${badgeHtml}
+            </div>
+            <div class="vincul-add-btn" style="font-size:11px;color:var(--accent);display:flex;align-items:center;opacity:.8;"><span>＋ ${temVinculo ? 'add' : 'vincular'}</span></div>
+          </div>
+        </td>
+        <td class="col-act"><div style="display:flex; gap:3px; justify-content:center;"><button class="btn btn-ghost btn-icon btn-sm sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></div></td>`;
     }
 
     const handle = tr.querySelector('.col-drag'); handle.setAttribute('draggable','true');
     handle.addEventListener('dragstart', e => { dragSrcIdx = idx; tr.style.opacity = '.4'; e.dataTransfer.effectAllowed = 'move'; });
-    handle.addEventListener('dragend', () => { tr.style.opacity = ''; document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); clearInterval(_dragScrollTimer); });
-    tr.addEventListener('dragover', e => {
-      e.preventDefault(); document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); tr.classList.add('drag-over');
-      const scroller = document.querySelector('#card-tabela .table-scroll'); if (!scroller) return;
-      const rect = scroller.getBoundingClientRect(), zone = 60; clearInterval(_dragScrollTimer);
-      if (e.clientY < rect.top + zone) _dragScrollTimer = setInterval(() => scroller.scrollTop -= 8, 30);
-      else if (e.clientY > rect.bottom - zone) _dragScrollTimer = setInterval(() => scroller.scrollTop += 8, 30);
-    });
-    tr.addEventListener('dragleave', () => clearInterval(_dragScrollTimer));
-    tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); clearInterval(_dragScrollTimer); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx,1)[0]; lista.splice(idx,0,moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
+    handle.addEventListener('dragend', () => { tr.style.opacity = ''; document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); });
+    tr.addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); tr.classList.add('drag-over'); });
+    tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx,1)[0]; lista.splice(idx,0,moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
 
     tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
     setTimeout(() => { const ta = tr.querySelector('.label-ta'); if (ta) autoGrow(ta); }, 0);
 
-    tr.querySelectorAll('.vincul-rm-inline').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const i = +btn.dataset.idx, vi = +btn.dataset.vi; const novos = (lista[i].vinculos || []).filter((_, j) => j !== vi); salvarVinculos(i, novos); }); });
-    const addBtn = tr.querySelector('.vincul-add-btn'); if (addBtn) { addBtn.addEventListener('click', e => { e.stopPropagation(); const sysCell = tr.querySelector('.vincul-cell[data-vincul-field="sys"]') || tr.querySelector('.col-sys'); abrirPopoverVinculo(idx, sysCell); }); }
-    tr.querySelector('.col-sys')?.addEventListener('click', e => { if (e.target.closest('.vincul-rm-inline') || e.target.closest('.vincul-add-btn')) return; e.stopPropagation(); abrirPopoverVinculo(idx, tr.querySelector('.col-sys')); });
-
-    tr.querySelector('.del-btn')?.addEventListener('click', e => { lista.splice(parseInt(e.currentTarget.dataset.idx),1); renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
-    tr.querySelector('.sync-btn')?.addEventListener('click', e => { syncItem(parseInt(e.currentTarget.dataset.idx)); });
-
+    tr.querySelector('.btn-precos')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverPrecos(idx, e.currentTarget); });
+    tr.querySelectorAll('.vincul-rm-inline').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi); salvarVinculos(idx, novos); }); });
+    tr.querySelector('.col-api')?.addEventListener('click', e => { if (e.target.closest('.vincul-rm-inline') || e.target.closest('.btn-precos')) return; abrirPopoverVinculo(idx, tr.querySelector('.col-api')); });
+    tr.querySelector('.del-btn')?.addEventListener('click', () => { lista.splice(idx,1); renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
+    tr.querySelector('.sync-btn')?.addEventListener('click', () => syncItem(idx));
     tbody.appendChild(tr);
   });
 }
 
+// ════════════════════════════════════
+// RENDERIZAÇÃO MOBILE
+// ════════════════════════════════════
 function renderMobile() {
   const cont = el('lista-mobile'); if (!cont) return; cont.innerHTML = ''; if (lista.length === 0) return;
 
@@ -1496,7 +1156,7 @@ function renderMobile() {
     const card = document.createElement('div');
     if (item.type === 'header') {
       card.className = 'mcard mcard-header';
-      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${item.icon===v?'selected':''}>${v}</option>`).join('');
+      const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${(item.icon===undefined && v==='📌') || item.icon===v ? 'selected' : ''}>${v || 'Nenhum'}</option>`).join('');
       card.innerHTML = `<div class="mcard-header-row"><span class="mcard-drag">⠿</span><select class="hdr-icon-sel" data-field="icon" style="width:48px;">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1;font-weight:700;font-size:.85rem;background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 5px;color:var(--text);" /><button class="mcard-del" data-idx="${idx}">✕</button></div>`;
     } else if (item.type === 'free') {
       card.className = 'mcard mcard-free';
@@ -1504,34 +1164,44 @@ function renderMobile() {
     } else {
       const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
       const estoqueTotal = vinculos ? vinculos.reduce((s, v) => s + v.estoque, 0) : (item.estoque ?? null);
-      const semEst = estoqueTotal !== null && estoqueTotal !== undefined && estoqueTotal <= 0;
-      card.className = 'mcard' + (semEst ? ' mcard-sem-estoque' : '');
+      card.className = 'mcard' + (estoqueTotal !== null && estoqueTotal <= 0 ? ' mcard-sem-estoque' : '');
       const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
       
       let badgeHtml;
-      if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`; else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`; else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero', icn = estoqueTotal > 0 ? '✓' : '⚠'; badgeHtml = `<span class="badge ${cls}">${icn} ${estoqueTotal}</span>`; }
+      if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`; else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`; else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero'; badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${estoqueTotal}</span>`; }
 
-      const vinculosInfoHtml = vinculos && vinculos.length ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div><div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);">${esc(v.sku||'—')} · <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};">${v.estoque>0?'✓ ':'⚠ '}${v.estoque}</span></div></div><button class="mcard-rm-vinc" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;">✕</button></div>`).join('') : item.sysname ? `<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : '';
+      const vinculosInfoHtml = vinculos && vinculos.length ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div><div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);">${esc(v.sku||'—')} · <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};">${v.estoque>0?'✓ ':'⚠ '}${v.estoque}</span></div></div><button class="mcard-rm-vinc" data-vi="${vi}" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 4px;">✕</button></div>`).join('') : item.sysname ? `<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : '';
 
-      card.innerHTML = `<div class="mcard-top"><span class="mcard-drag">⠿</span><div class="mcard-name-wrap"><textarea data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></div><button class="mcard-del" data-idx="${idx}">✕</button></div><div class="mcard-meta"><div class="mcard-price-wrap"><label>R$</label><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" /></div>${badgeHtml}<button class="mcard-sync-btn sync-btn" data-idx="${idx}" title="Atualizar estoque">🔄</button></div><div class="mcard-vincul"><div class="mcard-vincul-btn vincul-cell ${temVinculo ? 'vinculado' : ''}" data-vincul-field="sys"><div style="flex:1;min-width:0;">${vinculosInfoHtml || `<span class="mcard-vincul-name empty">Vincular produto…</span>`}</div></div></div><div style="padding-top:4px;"><button class="mcard-add-vinc btn btn-ghost btn-sm" data-idx="${idx}" style="font-size:12px;padding:4px 10px;width:100%;justify-content:center;">＋ ${temVinculo ? 'Adicionar vínculo' : 'Vincular produto'}</button></div>`;
+      card.innerHTML = `
+        <div class="mcard-top">
+          <span class="mcard-drag">⠿</span>
+          <div class="mcard-name-wrap"><textarea data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></div>
+          <button class="mcard-toggle" data-idx="${idx}">▼</button>
+          <button class="mcard-del" data-idx="${idx}">✕</button>
+        </div>
+        <div class="mcard-body" id="mcard-body-${idx}">
+          <div class="mcard-meta">
+            <div class="mcard-price-wrap"><label>R$</label><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" /></div>
+            <button class="btn-precos" data-idx="${idx}">⚙️ Preços</button>
+            ${badgeHtml}
+            <button class="mcard-sync-btn sync-btn" data-idx="${idx}">🔄</button>
+          </div>
+          <div class="mcard-vincul">
+            <div class="mcard-vincul-btn vincul-cell ${temVinculo ? 'vinculado' : ''}" data-vincul-field="sys"><div style="flex:1;min-width:0;">${vinculosInfoHtml || `<span class="mcard-vincul-name empty">Vincular produto API…</span>`}</div></div>
+          </div>
+        </div>`;
     }
 
     card.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
     setTimeout(() => { const ta = card.querySelector('.mcard-name-wrap textarea'); if (ta) autoGrow(ta); }, 0);
 
+    card.querySelector('.mcard-toggle')?.addEventListener('click', function() { const body = card.querySelector('.mcard-body'); body.classList.toggle('open'); this.classList.toggle('open'); });
+    card.querySelector('.btn-precos')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverPrecos(idx, e.currentTarget); });
     card.querySelector('.mcard-del')?.addEventListener('click', () => { lista.splice(idx, 1); renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
-    card.querySelectorAll('.mcard-rm-vinc').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const i = +btn.dataset.idx, vi = +btn.dataset.vi; const novos = (lista[i].vinculos || []).filter((_, j) => j !== vi); salvarVinculos(i, novos); }); });
-    card.querySelector('.mcard-add-vinc')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverVinculo(idx, card.querySelector('.mcard-vincul-btn') || card); });
+    card.querySelectorAll('.mcard-rm-vinc').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi); salvarVinculos(idx, novos); }); });
     card.querySelector('.sync-btn')?.addEventListener('click', () => syncItem(idx));
     const vincBtn = card.querySelector('.mcard-vincul-btn'); if (vincBtn) { vincBtn.addEventListener('click', e => { e.stopPropagation(); abrirPopoverVinculo(idx, vincBtn); }); }
 
-    const dragHandle = card.querySelector('.mcard-drag');
-    if (dragHandle) {
-      let touchStartY = 0, touchDragIdx = null;
-      dragHandle.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; touchDragIdx = idx; card.style.opacity = '.5'; e.preventDefault(); }, { passive: false });
-      dragHandle.addEventListener('touchmove', e => { if (touchDragIdx === null) return; e.preventDefault(); const y = e.touches[0].clientY; card.style.pointerEvents = 'none'; const target = document.elementFromPoint(e.touches[0].clientX, y); card.style.pointerEvents = ''; const targetCard = target?.closest('.mcard'); document.querySelectorAll('.mcard').forEach(c => c.classList.remove('drag-over-mobile')); if (targetCard && targetCard !== card) { targetCard.classList.add('drag-over-mobile'); } }, { passive: false });
-      dragHandle.addEventListener('touchend', e => { if (touchDragIdx === null) return; card.style.opacity = ''; const y = e.changedTouches[0].clientY; card.style.pointerEvents = 'none'; const target = document.elementFromPoint(e.changedTouches[0].clientX, y); card.style.pointerEvents = ''; const targetCard = target?.closest('.mcard[data-midx]'); document.querySelectorAll('.mcard').forEach(c => c.classList.remove('drag-over-mobile')); if (targetCard) { const toIdx = parseInt(targetCard.dataset.midx); if (!isNaN(toIdx) && toIdx !== touchDragIdx) { const moved = lista.splice(touchDragIdx, 1)[0]; lista.splice(toIdx, 0, moved); renderTabela(); renderMobile(); atualizarPreview(); salvar(); } } touchDragIdx = null; });
-    }
     card.dataset.midx = idx; cont.appendChild(card);
   });
 }
@@ -1540,78 +1210,100 @@ let _popoverAtivo = null;
 function fecharPopover() { if (_popoverAtivo) { _popoverAtivo.remove(); _popoverAtivo = null; } }
 
 function abrirPopoverVinculo(idx, anchorCell) {
-  fecharPopover();
+  fecharPopover(); fecharPopoverPrecos();
   const item = lista[idx], vinculos = item.vinculos || (item.sysname ? [{ id: item.prodId, nome: item.sysname, sku: item.sku || '', estoque: item.estoque ?? 0 }] : []);
   const pop = document.createElement('div'); pop.className = 'vincul-popover';
 
-  const vinculosHtml = vinculos.length ? vinculos.map((v, vi) => `<div class="vincul-active-row" data-vi="${vi}"><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div><div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;">${esc(v.sku||'—')} · ${v.estoque > 0 ? `<span style="color:var(--accent)">✓ ${v.estoque}</span>` : `<span style="color:var(--warn)">⚠ ${v.estoque}</span>`}</div></div><button class="vincul-rm-btn" data-vi="${vi}" title="Remover este vínculo" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;flex-shrink:0;">✕</button></div>`).join('') : `<div style="padding:8px 11px;font-size:12px;color:var(--text3);font-style:italic;">Nenhum vínculo ativo</div>`;
+  const vinculosHtml = vinculos.length ? vinculos.map((v, vi) => `<div class="vincul-active-row" data-vi="${vi}"><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div><div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;">${esc(v.sku||'—')} · <span style="${v.estoque > 0 ? 'color:var(--accent)':'color:var(--warn)'}">${v.estoque > 0 ? '✓':'⚠'} ${v.estoque}</span></div></div><button class="vincul-rm-btn" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 5px;">✕</button></div>`).join('') : `<div style="padding:8px 11px;font-size:12px;color:var(--text3);font-style:italic;">Nenhum vínculo</div>`;
 
-  pop.innerHTML = `<div style="padding:7px 11px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">Vínculos ativos <span style="color:var(--accent);margin-left:4px;">${vinculos.length > 0 ? `Σ ${vinculos.reduce((s,v)=>s+v.estoque,0)} un.` : ''}</span></div><div class="vincul-active-list">${vinculosHtml}</div><div style="padding:6px 11px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface2);"><div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">＋ Adicionar vínculo</div><input type="text" class="pop-search" placeholder="Buscar produto na API…" autocomplete="off" style="font-size:13px;" /></div><div class="vincul-results"><div class="vincul-result-empty">Digite para buscar…</div></div>`;
+  pop.innerHTML = `<div style="padding:7px 11px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;">Vínculos ativos</div><div class="vincul-active-list">${vinculosHtml}</div><div style="padding:6px 11px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface2);"><div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:5px;">＋ Adicionar vínculo</div><input type="text" class="pop-search" placeholder="Buscar produto API…" style="font-size:13px;" /></div><div class="vincul-results"><div class="vincul-result-empty">Digite para buscar…</div></div>`;
   document.body.appendChild(pop); _popoverAtivo = pop;
 
   const rect = anchorCell.getBoundingClientRect(); const popW = Math.min(310, window.innerWidth * 0.92); let left = rect.left; if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8; if (left < 8) left = 8; pop.style.top = (rect.bottom + 4) + 'px'; pop.style.left = left + 'px'; pop.style.width = popW + 'px';
 
-  pop.querySelectorAll('.vincul-rm-btn').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const vi = +btn.dataset.vi; const novos = vinculos.filter((_, i) => i !== vi); salvarVinculos(idx, novos); fecharPopover(); }); });
+  pop.querySelectorAll('.vincul-rm-btn').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const novos = vinculos.filter((_, i) => i !== +btn.dataset.vi); salvarVinculos(idx, novos); fecharPopover(); }); });
   const searchInp = pop.querySelector('.pop-search'), resultsBox = pop.querySelector('.vincul-results'); searchInp.focus();
   let _t; searchInp.addEventListener('input', () => {
-    clearTimeout(_t); const q = searchInp.value.trim();
-    if (q.length < 2) { resultsBox.innerHTML = '<div class="vincul-result-empty">Digite ao menos 2 caracteres…</div>'; return; }
+    clearTimeout(_t); const q = searchInp.value.trim(); if (q.length < 2) { resultsBox.innerHTML = '<div class="vincul-result-empty">Mín. 2 caracteres…</div>'; return; }
     resultsBox.innerHTML = '<div class="vincul-result-empty">⏳ Buscando…</div>';
-    _t = setTimeout(async () => {
+    _t = setTimeout(async () => { 
       let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
       if (!prods.length) { try { const d = await apiGet({ nome: q }); if (d.code === 200 && d.data?.length) prods = d.data; } catch(e) {} }
-      if (!prods.length) { resultsBox.innerHTML = '<div class="vincul-result-empty">Nenhum resultado.</div>'; return; }
-      renderResultadosPopover(prods.slice(0,20), resultsBox, idx, vinculos);
+      if (!prods.length) { resultsBox.innerHTML = '<div class="vincul-result-empty">Sem resultados.</div>'; return; }
+      resultsBox.innerHTML = '';
+      prods.slice(0,20).forEach(p => {
+        const est = Number(p.estoque ?? 0), jatem = vinculos.some(v => String(v.id) === String(p.id));
+        const row = document.createElement('div'); row.className = 'vincul-result-row'; row.style.opacity = jatem ? '.5' : '1';
+        row.innerHTML = `<div style="min-width:0;flex:1;overflow:hidden;"><div class="vincul-result-nome" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.nome)}</div><div class="vincul-result-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</div></div><span class="badge ${est>0?'badge-ok':'badge-zero'}" style="flex-shrink:0;">${est>0?'✓ '+est:'⚠ '+est}</span>${jatem ? '<span style="font-size:10px;color:var(--accent);flex-shrink:0;">✓</span>' : ''}`;
+        row.addEventListener('click', () => { if (jatem) return; const novoVinculo = { id: p.id, nome: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: est }; const novos = [...vinculos, novoVinculo]; salvarVinculos(idx, novos); fecharPopover(); toast(`🔗 Vínculo adicionado: ${p.nome.substring(0,40)}`); });
+        resultsBox.appendChild(row);
+      });
     }, 350);
   });
-  pop.querySelector('.vincul-desvincular')?.addEventListener('click', () => { salvarVinculos(idx, []); fecharPopover(); });
   pop.addEventListener('click', e => e.stopPropagation());
 }
-
 function salvarVinculos(idx, vinculos) {
   lista[idx].vinculos = vinculos;
-  if (vinculos.length) { lista[idx].estoque = vinculos.reduce((s, v) => s + v.estoque, 0); lista[idx].prodId = vinculos[0].id; lista[idx].sysname = vinculos[0].nome; lista[idx].sku = vinculos[0].sku; }
-  else { lista[idx].estoque = undefined; lista[idx].prodId = null; lista[idx].sysname = ''; lista[idx].sku = ''; }
+  if (vinculos.length) { lista[idx].estoque = vinculos.reduce((s, v) => s + v.estoque, 0); lista[idx].prodId = vinculos[0].id; lista[idx].sysname = vinculos[0].nome; lista[idx].sku = vinculos[0].sku; } else { lista[idx].estoque = undefined; lista[idx].prodId = null; lista[idx].sysname = ''; lista[idx].sku = ''; }
   renderTabela(); renderMobile(); atualizarPreview(); salvar();
 }
 
-function renderResultadosPopover(produtos, resultsBox, idx, jaVinculados) {
-  resultsBox.innerHTML = '';
-  produtos.forEach(p => {
-    const est = Number(p.estoque ?? 0), jatem = jaVinculados.some(v => String(v.id) === String(p.id));
-    const row = document.createElement('div'); row.className = 'vincul-result-row'; row.style.opacity = jatem ? '.5' : '1';
-    row.innerHTML = `<div style="min-width:0;flex:1;overflow:hidden;"><div class="vincul-result-nome" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.nome)}</div><div class="vincul-result-cod">${esc(p.codigo_interno||p.codigo_barra||'—')}</div></div><span class="badge ${est>0?'badge-ok':'badge-zero'}" style="flex-shrink:0;">${est>0?'✓ '+est:'⚠ '+est}</span>${jatem ? '<span style="font-size:10px;color:var(--accent);flex-shrink:0;">✓</span>' : ''}`;
-    row.addEventListener('click', () => { if (jatem) return; const novoVinculo = { id: p.id, nome: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: est }; const novos = [...jaVinculados, novoVinculo]; salvarVinculos(idx, novos); fecharPopover(); toast(`🔗 Vínculo adicionado: ${p.nome.substring(0,40)}`); });
-    resultsBox.appendChild(row);
-  });
+// ════════════════════════════════════
+// RENDERIZAÇÃO PREVIEW WPP (TEMPLATES)
+// ════════════════════════════════════
+function formatarComTemplate(item, templateText) {
+  let texto = templateText || '{{nome}} - R$ {{preco}}';
+  texto = texto.replace(/\{\{nome\}\}/gi, item.label || '');
+  texto = texto.replace(/\{\{preco\}\}/gi, item.price || '');
+  texto = texto.replace(/\{\{custo\}\}/gi, item.prices?.custo || '');
+  texto = texto.replace(/\{\{atacado\}\}/gi, item.prices?.atacado || '');
+  texto = texto.replace(/\{\{pix\}\}/gi, item.prices?.pix || '');
+  texto = texto.replace(/\{\{cartao\}\}/gi, item.prices?.cartao || '');
+
+  const linhasLimpas = texto.split('\n').filter(linha => {
+     if (linha.includes('R$') && !/\d/.test(linha)) return false; 
+     return true;
+  }).join('\n');
+  return linhasLimpas;
 }
-document.addEventListener('click', () => fecharPopover());
 
 function atualizarPreview() {
   const box = el('preview-box');
-  const titulo = currentTabObj?.titulo || 'Lista EXCLUSIVA REVENDA/ATACADO';
-  const data = currentTabObj?.cfgData || dataHoje();
   const semEst = currentTabObj?.cfgSemEst || 'ocultar';
-  const fmt = currentTabObj?.cfgPreco || 'numero';
+  
+  const templateSelecionado = appData.templates.find(x => x.id === (currentTabObj?.templateId || 't1'));
+  const templateText = templateSelecionado ? templateSelecionado.texto : '{{nome}} - R$ {{preco}}';
 
   if (lista.length === 0) { box.innerHTML = '<span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span>'; return; }
-  const linhas = []; linhas.push(`📌 *\`${titulo} (${data}):\`* 📌`);
+  
+  const linhas = [];
+  const dHoje = dataHoje();
 
   lista.forEach(item => {
-    if (item.type === 'header') { const icon = item.icon || '📌', label = (item.label || 'SEÇÃO').toUpperCase(); linhas.push(`${icon} *\`${label}\`*`); }
-    else if (item.type === 'free') { linhas.push(item.text || ''); }
+    if (item.type === 'header') { 
+      const icon = item.icon ? item.icon + ' ' : '';
+      let label = (item.label || 'SEÇÃO').toUpperCase();
+      label = label.replace(/\{\{data\}\}/gi, dHoje);
+      linhas.push(`${icon}*\`${label}\`*`); 
+    }
+    else if (item.type === 'free') { 
+      let text = item.text || '';
+      text = text.replace(/\{\{data\}\}/gi, dHoje);
+      linhas.push(text); 
+    }
     else {
       const semEstoque = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0;
       if (semEstoque && semEst === 'ocultar') return;
-      let linha = item.label || '(sem nome)'; if (item.price) { const preco = fmt === 'reais' ? 'R$ ' + item.price : item.price; linha += ' - ' + preco; }
-      linhas.push(linha);
+      linhas.push(formatarComTemplate(item, templateText));
     }
   });
   box.textContent = linhas.join('\n');
 }
 
-let _bt;
-el('busca-produto').addEventListener('input', () => { clearTimeout(_bt); const q = el('busca-produto').value.trim(); if (q.length < 2) { el('resultados-busca').style.display='none'; return; } _bt = setTimeout(() => executarBusca(q), 450); });
+// ════════════════════════════════════
+// EVENTOS DE BUSCA E INTERFACE
+// ════════════════════════════════════
+let _bt; el('busca-produto').addEventListener('input', () => { clearTimeout(_bt); const q = el('busca-produto').value.trim(); if (q.length < 2) { el('resultados-busca').style.display='none'; return; } _bt = setTimeout(() => executarBusca(q), 450); });
 el('btn-buscar-prod').addEventListener('click', () => { const q = el('busca-produto').value.trim(); if (q) executarBusca(q); });
 el('busca-produto').addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); const q=el('busca-produto').value.trim(); if(q) executarBusca(q); } });
 
@@ -1631,60 +1323,29 @@ async function executarBusca(q) {
     box.appendChild(ul);
   } catch(e) { box.innerHTML = `<div style="padding:9px 12px; color:var(--danger); font-size:.77rem;">❌ ${esc(e.message)}</div>`; }
 }
+document.addEventListener('click', e => { if (!el('busca-produto').contains(e.target) && !el('resultados-busca').contains(e.target)) el('resultados-busca').style.display = 'none'; });
 
-function adicionarDaAPI(p) { lista.push({ id: uid(), type:'product', label: p.nome, price: p.valor_venda ? String(Math.round(Number(p.valor_venda))) : '', sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', prodId: p.id, estoque: Number(p.estoque ?? 0) }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); toast('✅ Produto adicionado'); }
+function adicionarDaAPI(p) { lista.push({ id: uid(), type:'product', label: p.nome, price: p.valor_venda ? String(Math.round(Number(p.valor_venda))) : '', prices: {custo:'', atacado:'', pix:'', cartao:''}, sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', prodId: p.id, estoque: Number(p.estoque ?? 0) }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); toast('✅ Produto adicionado'); }
 
-el('btn-add-manual').addEventListener('click', () => { lista.push({ id:uid(), type:'product', label:'', price:'', sysname:'', sku:'', prodId:null, estoque:undefined }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr:not(.row-header):not(.row-free)'); rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus(); }, 40); });
+el('btn-add-manual').addEventListener('click', () => { lista.push({ id:uid(), type:'product', label:'', price:'', prices: {custo:'', atacado:'', pix:'', cartao:''}, sysname:'', sku:'', prodId:null, estoque:undefined }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr:not(.row-header):not(.row-free)'); rows[rows.length-1]?.querySelector('textarea[data-field="label"]')?.focus(); }, 40); });
 el('btn-add-header').addEventListener('click', () => { lista.push({ id:uid(), type:'header', label:'', icon:'📌' }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr.row-header'); rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus(); }, 40); });
 el('btn-add-free').addEventListener('click', () => { lista.push({ id:uid(), type:'free', text:'' }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr.row-free'); rows[rows.length-1]?.querySelector('textarea')?.focus(); }, 40); });
 
 el('btn-copiar').addEventListener('click', () => {
   const text = el('preview-box').textContent; if (!text || text.includes('aparecerá aqui')) { toast('⚠️ Lista vazia'); return; }
-  navigator.clipboard.writeText(text).then(() => { toast('✅ Copiado para a área de transferência!'); const btn = el('btn-copiar'), orig = btn.innerHTML; btn.innerHTML = '✅ Copiado!'; setTimeout(() => btn.innerHTML = orig, 2000); }).catch(() => toast('Erro ao copiar'));
+  navigator.clipboard.writeText(text).then(() => { toast('✅ Copiado!'); const btn = el('btn-copiar'), orig = btn.innerHTML; btn.innerHTML = '✅ Copiado!'; setTimeout(() => btn.innerHTML = orig, 2000); }).catch(() => toast('Erro ao copiar'));
 });
-
 el('btn-limpar-lista').addEventListener('click', () => { if (!lista.length || !confirm('Limpar toda a lista?')) return; lista.length = 0; renderTabela(); renderMobile(); atualizarPreview(); salvar(); toast('🗑️ Lista limpa'); });
-
 el('btn-sync-all').addEventListener('click', syncTodos);
+el('fab-preview').addEventListener('click', () => { document.querySelector('.panel-right').scrollIntoView({ behavior: 'smooth' }); const pb = el('preview-box'); pb.style.boxShadow = '0 0 0 3px var(--accent)'; setTimeout(() => pb.style.boxShadow = 'none', 1000); });
 
-// FAB do Mobile
-el('fab-preview').addEventListener('click', () => {
-  const rightPanel = document.querySelector('.panel-right');
-  rightPanel.scrollIntoView({ behavior: 'smooth' });
-  const previewBox = el('preview-box');
-  previewBox.style.boxShadow = '0 0 0 3px var(--accent)';
-  setTimeout(() => previewBox.style.boxShadow = 'none', 1000);
-});
+['cfg-sem-estoque'].forEach(id => { el(id).addEventListener('input', () => { if (currentTabObj) { if (id === 'cfg-sem-estoque') currentTabObj.cfgSemEst = el(id).value; } atualizarPreview(); salvar(); }); });
 
-['lista-titulo','cfg-data','cfg-sem-estoque','cfg-preco'].forEach(id => {
-  el(id).addEventListener('input', () => {
-    if (currentTabObj) {
-      if (id === 'lista-titulo') currentTabObj.titulo = el(id).value;
-      if (id === 'cfg-data') currentTabObj.cfgData = el(id).value;
-      if (id === 'cfg-sem-estoque') currentTabObj.cfgSemEst = el(id).value;
-      if (id === 'cfg-preco') currentTabObj.cfgPreco = el(id).value;
-    }
-    atualizarPreview(); salvar();
-  });
-});
+el('btn-abrir-ia').addEventListener('click', iaAbrir); el('ia-fechar').addEventListener('click', iaFechar); el('ia-overlay').addEventListener('click', e => { if (e.target === el('ia-overlay')) iaFechar(); }); el('ia-processar').addEventListener('click', iaProcessar); el('ia-voltar').addEventListener('click', () => iaSetStep(1)); el('ia-confirmar').addEventListener('click', iaConfirmar); el('ia-raw').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); iaProcessar(); } });
 
-document.addEventListener('click', e => { if (!el('busca-produto').contains(e.target) && !el('resultados-busca').contains(e.target)) el('resultados-busca').style.display = 'none'; });
+const TEMA_KEY = 'jeta_tema'; function aplicarTema(t) { document.documentElement.setAttribute('data-theme', t); el('btn-tema').textContent = t === 'dark' ? '☀️' : '🌙'; localStorage.setItem(TEMA_KEY, t); } el('btn-tema').addEventListener('click', () => { const atual = document.documentElement.getAttribute('data-theme') || 'light'; aplicarTema(atual === 'dark' ? 'light' : 'dark'); }); aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
 
-el('btn-abrir-ia').addEventListener('click', iaAbrir); el('ia-fechar').addEventListener('click', iaFechar); el('ia-overlay').addEventListener('click', e => { if (e.target === el('ia-overlay')) iaFechar(); });
-el('ia-processar').addEventListener('click', iaProcessar); el('ia-raw').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); iaProcessar(); } });
-el('ia-prompt').addEventListener('input', () => iaSavePrompt(el('ia-prompt').value)); el('ia-restaurar-prompt').addEventListener('click', () => { el('ia-prompt').value = IA_PROMPT_DEFAULT; iaSavePrompt(IA_PROMPT_DEFAULT); toast('↺ Prompt restaurado para o padrão'); });
-el('ia-voltar').addEventListener('click', () => iaSetStep(1)); el('ia-confirmar').addEventListener('click', iaConfirmar);
-
-const TEMA_KEY = 'jeta_tema'; function aplicarTema(t) { document.documentElement.setAttribute('data-theme', t); el('btn-tema').textContent = t === 'dark' ? '☀️' : '🌙'; localStorage.setItem(TEMA_KEY, t); }
-el('btn-tema').addEventListener('click', () => { const atual = document.documentElement.getAttribute('data-theme') || 'light'; aplicarTema(atual === 'dark' ? 'light' : 'dark'); });
-
-aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
-function checkProtocol() {
-  if (location.protocol === 'file:') {
-    el('protocol-warning').style.display = 'block';
-  }
-}
-
+carregar();
 initAuth();
 setTimeout(autoGrowAll, 60);
 </script>
