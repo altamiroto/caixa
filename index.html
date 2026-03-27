@@ -190,6 +190,17 @@
         .discount-summary.active { display: block; }
         .discount-summary h4 { color: var(--accent-color); margin-bottom: 10px; }
         .discount-summary p { margin: 5px 0; color: var(--text-primary); }
+        .resumo-item-card {
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+            font-size: 0.85rem; line-height: 1.7;
+        }
+        .resumo-item-card:last-child { margin-bottom: 0; }
+        .resumo-item-nome {
+            font-weight: 700; font-size: 0.88rem; color: var(--secondary-color);
+            margin-bottom: 4px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;
+        }
         .error-message {
             color: #d9534f; background: linear-gradient(135deg, #f2dede 0%, #ebcccc 100%);
             padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #d9534f;
@@ -976,6 +987,14 @@ Capa silicone R$ 50,00
         <div id="visualizarHistoricoSection" style="display:none;">
             <div class="section-card">
                 <div class="section-title">🕓 Meus Acessos Anteriores</div>
+                <div class="input-group" style="margin-bottom:12px;">
+                    <div class="input-with-icon">
+                        <span class="input-icon">🔍</span>
+                        <input type="text" id="historicoBusca" placeholder="Buscar por título ou comentário..."
+                            oninput="filtrarHistoricoLista(this.value)"
+                            style="padding-left:42px;">
+                    </div>
+                </div>
                 <div id="historicoLista"></div>
                 <div class="button-row" style="margin-top:15px;">
                     <button class="btn btn-outline" onclick="toggleVerHistorico()">⬅️ Voltar</button>
@@ -1054,6 +1073,12 @@ Capa silicone R$ 50,00
                 <textarea class="fhist-titulo-input" id="fpHistComentarioInput"
                     placeholder="Observações sobre este acesso..."
                     style="min-height:54px;resize:vertical;font-family:inherit;font-size:0.82rem;"></textarea>
+            </div>
+            <div style="margin-bottom:8px;">
+                <input type="text" id="fpHistBusca" class="fhist-titulo-input"
+                    placeholder="🔍 Buscar por título..."
+                    oninput="_fpFiltrarHist(this.value)"
+                    style="width:100%;">
             </div>
             <div id="fpHistLista"><div class="fhist-loading">Abrindo...</div></div>
         </div>
@@ -1600,6 +1625,29 @@ Capa silicone R$ 50,00
         const HIST_PAGE_SIZE = 20;
         let _autoVisivel = HIST_PAGE_SIZE;
 
+        function filtrarHistoricoLista(termo) {
+            if (!_sheetsCache) return;
+            if (!termo || !termo.trim()) { renderizarHistorico(); return; }
+            const t = termo.trim().toLowerCase();
+            const cache = _sheetsCache;
+            const filtrados = cache.filter(r => {
+                const titulo = String(r.titulo == null ? '' : r.titulo).toLowerCase();
+                let coment = '';
+                try { const d = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload||{}); coment = String(d.comentarios || '').toLowerCase(); } catch(e){}
+                return titulo.includes(t) || coment.includes(t);
+            });
+            if (!filtrados.length) {
+                historicoLista.innerHTML = `<div class="empty-historico"><div class="empty-historico-icon">🔍</div><p>Nenhum resultado para "<strong>${termo}</strong>"</p></div>`;
+                return;
+            }
+            let html = filtrados.map(r => {
+                const dados = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload || {});
+                const isAuto = (() => { const tt = String(r.titulo==null?'':r.titulo).trim(); return !tt || /^\d{2}\/\d{2}\/\d{4}/.test(tt); })();
+                return buildItemHistoricoHtml(r.id, r.titulo || '(sem título)', new Date(r.date).toLocaleString('pt-BR'), dados.comentarios || '', dados, isAuto);
+            }).join('');
+            historicoLista.innerHTML = `<div class="historico-secao-titulo">🔍 ${filtrados.length} resultado(s) para "${termo}"</div>` + html;
+        }
+
         function renderizarHistorico() {
             if (!_sheetsCache || !_sheetsCache.length) {
                 historicoLista.innerHTML = '<div class="empty-historico"><div class="empty-historico-icon">📭</div><p>Nenhum acesso anterior encontrado</p><small>Use a calculadora e aguarde 2s para salvar automaticamente</small></div>';
@@ -1957,30 +2005,54 @@ Capa silicone R$ 50,00
             const valor = valorBase + valorAcrescimoPerc + lucroFixo + acrescimoFix - valorDescontoPerc - descontoFix;
             return Math.max(0, valor);
         }
-        function atualizarResumoDescontos() {
-            const base = parseFloat(valorBaseInput.value) || 0;
-            if (base === 0) { discountSummary.classList.remove('active'); return; }
-            const acrescimoPerc = parseFloat(acrescimoPercentualInput.value) || 0;
-            const lucroFixo     = parseFloat(lucroAdicionalInput.value) || 0;
-            const acrescimoFix  = parseFloat(acrescimoComissaoInput.value) || 0;
-            const descontoPerc  = parseFloat(descontoPercentualInput.value) || 0;
-            const descontoFix   = parseFloat(descontoFixoInput.value) || 0;
-            if (!acrescimoPerc && !lucroFixo && !acrescimoFix && !descontoPerc && !descontoFix) { discountSummary.classList.remove('active'); return; }
-            let detalhes = [], valorFinal = base;
-            detalhes.push(`💵 Valor inicial: R$ ${base.toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
-            if (acrescimoPerc > 0) { const v = base*(acrescimoPerc/100); valorFinal+=v; detalhes.push(`📈 Acréscimo ${acrescimoPerc}%: +R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
-            if (lucroFixo     > 0) { valorFinal+=lucroFixo; detalhes.push(`💰 Acréscimo R$: +R$ ${lucroFixo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
-            if (acrescimoFix  > 0) { valorFinal+=acrescimoFix; detalhes.push(`🤝 Comissão: +R$ ${acrescimoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
-            if (descontoPerc  > 0) { const vd=valorFinal*(descontoPerc/100); valorFinal-=vd; detalhes.push(`📉 Desconto ${descontoPerc}%: -R$ ${vd.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
-            if (descontoFix   > 0) { valorFinal-=descontoFix; detalhes.push(`💸 Desconto fixo: -R$ ${descontoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
-            detalhes.push(`<strong>💰 Valor base final: R$ ${valorFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`);
-            const diferenca = valorFinal - base;
-            if (Math.abs(diferenca) > 0.001) {
-                if (diferenca < 0) detalhes.push(`<strong style="color:var(--success-color)">💚 Economia: R$ ${Math.abs(diferenca).toLocaleString('pt-BR',{minimumFractionDigits:2})} (${((Math.abs(diferenca)/base)*100).toFixed(1)}%)</strong>`);
-                else detalhes.push(`<strong style="color:var(--accent-color)">📊 Acréscimo total: R$ ${diferenca.toLocaleString('pt-BR',{minimumFractionDigits:2})} (+${((diferenca/base)*100).toFixed(1)}%)</strong>`);
+        function _calcResumoItem(base, overrides) {
+            const ov = overrides || {};
+            const _hasVal = (v) => v !== undefined && v !== '' && v !== null;
+            const acrescimoPerc = parseFloat(_hasVal(ov.acrescimoP) ? ov.acrescimoP : acrescimoPercentualInput.value) || 0;
+            const lucroFixo     = parseFloat(_hasVal(ov.acrescimoR) ? ov.acrescimoR : lucroAdicionalInput.value) || 0;
+            const acrescimoFix  = parseFloat(_hasVal(ov.comissao)   ? ov.comissao   : acrescimoComissaoInput.value) || 0;
+            const descontoPerc  = parseFloat(_hasVal(ov.descontoP)  ? ov.descontoP  : descontoPercentualInput.value) || 0;
+            const descontoFix   = parseFloat(_hasVal(ov.descontoR)  ? ov.descontoR  : descontoFixoInput.value) || 0;
+            const temAjuste = acrescimoPerc || lucroFixo || acrescimoFix || descontoPerc || descontoFix;
+            if (!temAjuste) return null;
+            let linhas = [], vf = base;
+            linhas.push(`💵 Valor: R$ ${base.toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
+            if (acrescimoPerc > 0) { const v=base*(acrescimoPerc/100); vf+=v; linhas.push(`📈 Acréscimo ${acrescimoPerc}%: +R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (lucroFixo     > 0) { vf+=lucroFixo; linhas.push(`💰 Acréscimo R$: +R$ ${lucroFixo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (acrescimoFix  > 0) { vf+=acrescimoFix; linhas.push(`🤝 Comissão: +R$ ${acrescimoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (descontoPerc  > 0) { const vd=base*(descontoPerc/100); vf-=vd; linhas.push(`📉 Desconto ${descontoPerc}%: -R$ ${vd.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            if (descontoFix   > 0) { vf-=descontoFix; linhas.push(`💸 Desconto fixo: -R$ ${descontoFix.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); }
+            linhas.push(`<strong>✅ Final: R$ ${vf.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`);
+            const dif = vf - base;
+            if (Math.abs(dif) > 0.001) {
+                if (dif < 0) linhas.push(`<strong style="color:var(--success-color)">💚 Economia: R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})} (${((Math.abs(dif)/base)*100).toFixed(1)}%)</strong>`);
+                else linhas.push(`<strong style="color:var(--accent-color)">📊 Acréscimo: +R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})} (+${((dif/base)*100).toFixed(1)}%)</strong>`);
             }
-            discountDetails.innerHTML = detalhes.join('<br>');
-            discountSummary.classList.add('active');
+            return linhas.join('<br>');
+        }
+        function atualizarResumoDescontos() {
+            if (selectedProducts && selectedProducts.length > 0) {
+                // Análise individual de cada produto selecionado
+                let cards = [];
+                selectedProducts.forEach(p => {
+                    const overrides = (p._idx !== undefined) ? getProductAdj(p._idx) : null;
+                    const conteudo = _calcResumoItem(p.preco, overrides);
+                    if (conteudo) {
+                        cards.push(`<div class="resumo-item-card"><div class="resumo-item-nome">📦 ${p.produto}</div>${conteudo}</div>`);
+                    }
+                });
+                if (!cards.length) { discountSummary.classList.remove('active'); return; }
+                discountDetails.innerHTML = cards.join('');
+                discountSummary.classList.add('active');
+            } else {
+                // Modo valor único
+                const base = parseFloat(valorBaseInput.value) || 0;
+                if (base === 0) { discountSummary.classList.remove('active'); return; }
+                const conteudo = _calcResumoItem(base, null);
+                if (!conteudo) { discountSummary.classList.remove('active'); return; }
+                discountDetails.innerHTML = conteudo;
+                discountSummary.classList.add('active');
+            }
         }
 
         gerarCheckboxesAvancadas();
@@ -2187,6 +2259,16 @@ Capa silicone R$ 50,00
                                 <span>✏️ Ajuste para: <strong>${p.produto}</strong></span>
                                 <button class="adj-reset" onclick="resetProductAdj(${i})">↺ Limpar ajustes</button>
                             </div>
+                            <div class="adj-fields" style="margin-bottom:8px;">
+                                <div class="adj-field" style="grid-column:1/-1;">
+                                    <label>📝 Nome do produto</label>
+                                    <div class="adj-field-inner"><input type="text" value="${p.produto.replace(/"/g,'&quot;')}" oninput="saveProductName(${i},this.value)" id="adj_${i}_nome" style="font-size:13px;"></div>
+                                </div>
+                                <div class="adj-field">
+                                    <label>💰 Preço (R$)</label>
+                                    <div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" value="${p.preco}" oninput="saveProductPrice(${i},this.value)" id="adj_${i}_preco"></div>
+                                </div>
+                            </div>
                             <div class="adj-fields">
                                 <div class="adj-field"><label>Desconto R$</label><div class="adj-field-inner"><span>R$</span><input type="number" step="0.01" min="0" placeholder="${parseFloat(descontoFixoInput.value)||0}" value="${adj.descontoR}" oninput="saveProductAdj(${i},'descontoR',this.value)" id="adj_${i}_descontoR"></div></div>
                                 <div class="adj-field"><label>Desconto %</label><div class="adj-field-inner"><input type="number" step="0.01" min="0" max="100" placeholder="${parseFloat(descontoPercentualInput.value)||0}" value="${adj.descontoP}" oninput="saveProductAdj(${i},'descontoP',this.value)" id="adj_${i}_descontoP"><span>%</span></div></div>
@@ -2217,6 +2299,47 @@ Capa silicone R$ 50,00
             if (!panel) return;
             const isOpen = panel.classList.toggle('open');
             btn.classList.toggle('active', isOpen);
+        }
+        function saveProductName(idx, value) {
+            if (!products[idx]) return;
+            products[idx].produto = value;
+            // Update the display name cell in the table
+            const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
+            if (row) {
+                const nameCell = row.cells[1];
+                // Preserve badges, just update text node
+                const badges = Array.from(nameCell.querySelectorAll('.adj-badge, .comment-badge'));
+                nameCell.childNodes.forEach(n => { if (n.nodeType === 3) n.nodeValue = ''; });
+                nameCell.firstChild && nameCell.firstChild.nodeType === 3
+                    ? nameCell.firstChild.nodeValue = value
+                    : nameCell.insertBefore(document.createTextNode(value), nameCell.firstChild);
+                // Re-insert badges
+                badges.forEach(b => nameCell.appendChild(b));
+            }
+            // Update panel title
+            const panelTitle = document.querySelector(`#adjPanel_${idx} .adj-panel-title strong`);
+            if (panelTitle) panelTitle.textContent = value;
+            // Update selectedProducts
+            const sp = selectedProducts.find(p => p._idx === idx);
+            if (sp) sp.produto = value;
+            calcularParcelas();
+            enviarLog('editou_nome_produto');
+        }
+        function saveProductPrice(idx, value) {
+            if (!products[idx]) return;
+            const preco = parseFloat(value) || 0;
+            products[idx].preco = preco;
+            // Update price cell in table
+            const row = document.querySelector(`tr[data-prod-idx="${idx}"]`);
+            if (row && row.cells[2]) {
+                row.cells[2].textContent = `R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            }
+            // Update selectedProducts
+            const sp = selectedProducts.find(p => p._idx === idx);
+            if (sp) sp.preco = preco;
+            atualizarResumoDescontos();
+            calcularParcelas();
+            enviarLog('editou_preco_produto');
         }
         function saveProductAdj(idx, field, value) {
             if (!productAdjustments[idx]) productAdjustments[idx] = { descontoR:'', descontoP:'', acrescimoR:'', acrescimoP:'', comissao:'', comentario:'' };
@@ -2258,6 +2381,7 @@ Capa silicone R$ 50,00
                 const p = products[parseInt(cb.value)];
                 if (p) selectedProducts.push({ ...p, _idx: parseInt(cb.value) });
             });
+            atualizarResumoDescontos();
             calcularParcelas();
             // ── CORRIGIDO: agenda auto-save ao selecionar/desselecionar produtos ──
             enviarLog('selecionou_produtos');
@@ -2900,6 +3024,19 @@ Capa silicone R$ 50,00
             } catch(e) {
                 lista.innerHTML = '<div class="fhist-loading" style="color:var(--danger-color);">❌ ' + e.message + '</div>';
             }
+        }
+
+        function _fpFiltrarHist(termo) {
+            if (!_sheetsCache) return;
+            if (!termo || !termo.trim()) { _fpRenderHist(_sheetsCache); return; }
+            const t = termo.trim().toLowerCase();
+            const filtrados = _sheetsCache.filter(function(r) {
+                var titulo = String(r.titulo == null ? '' : r.titulo).toLowerCase();
+                var coment = '';
+                try { var d = typeof r.payload === 'string' ? JSON.parse(r.payload) : (r.payload||{}); coment = String(d.comentarios || '').toLowerCase(); } catch(e){}
+                return titulo.includes(t) || coment.includes(t);
+            });
+            _fpRenderHist(filtrados);
         }
 
         function _fpRenderHist(regs) {
