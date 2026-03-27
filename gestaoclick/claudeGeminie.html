@@ -440,7 +440,8 @@
             <tr>
               <th class="col-drag">⠿</th>
               <th class="col-label">Nome na Lista</th>
-              <th class="col-price">Preço</th>
+              <th class="col-price">Preço Base</th>
+              <!-- Colunas dinâmicas de preços inseridas via JS -->
               <th class="col-api">Vínculo API (Sistema, SKU, Estoque)</th>
               <th class="col-act"></th>
             </tr>
@@ -502,6 +503,16 @@
       </div>
     </div>
 
+    <div class="card" style="margin-top:10px;">
+      <div class="card-header">
+        <span class="card-title"><span class="dot"></span>Sistema de Preços</span>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalPrecos()">⚙️ Gerenciar</button>
+      </div>
+      <div style="padding:13px;">
+        <p style="font-size:11px; color:var(--text3);">Configure fórmulas e preços personalizados (Pix, Atacado, Parcelas, etc).</p>
+      </div>
+    </div>
+
     <div class="card" style="flex:1; display:flex; flex-direction:column;">
       <div class="card-header">
         <span class="card-title"><span class="dot"></span>Preview WhatsApp</span>
@@ -543,6 +554,24 @@
 
 <div id="toast"></div>
 
+<!-- Modal Gerenciar Preços -->
+<div id="price-modal-overlay" class="ia-overlay">
+  <div class="ia-modal" style="max-width:600px;">
+    <div class="ia-header">
+      <h2>⚙️ Gerenciar Configurações de Preços</h2>
+      <button class="btn btn-ghost btn-sm" onclick="fecharModalPrecos()">✕</button>
+    </div>
+    <div style="padding:16px; max-height:70vh; overflow-y:auto;">
+      <div id="price-configs-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:15px; border:1px dashed var(--border);" onclick="addPriceConfig()">＋ Adicionar Novo Preço</button>
+    </div>
+    <div class="ia-footer">
+      <p style="font-size:11px; color:var(--text3); flex:1;">Fórmulas são calculadas em tempo real. As tags para o template são o nome da opção em minúsculas (ex: {{pix}}).</p>
+      <button class="btn btn-ia" onclick="fecharModalPrecos()">Concluir</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════
 // ESTADO MULTILISTAS E TEMPLATES
@@ -553,12 +582,16 @@ const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.go
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
 
 let appData = {
-  listas: [],
-  currentId: null,
   templates: [
     { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' },
     { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' },
     { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)' }
+  ],
+  priceConfigs: [
+    { id: 'pc_custo', label: 'Custo', type: 'manual' },
+    { id: 'pc_atacado', label: 'Atacado', type: 'manual' },
+    { id: 'pc_pix', label: 'Pix', type: 'manual' },
+    { id: 'pc_cartao', label: 'Cartão', type: 'manual' }
   ]
 };
 
@@ -986,7 +1019,7 @@ function iaConfirmar() {
     else if (item.type === 'free') lista.push({ ...base, type: 'free', text: item.text || '' });
     else {
       const vs = item._vinculos || [];
-      lista.push({ ...base, type: 'product', label: item.label || '', price: item.price || '', prices: { custo:'', atacado:'', pix:'', cartao:'' }, vinculos: vs, sysname: vs[0]?.nome || '', sku: vs[0]?.sku || '', prodId: vs[0]?.id || null, estoque: vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined });
+      lista.push({ ...base, type: 'product', label: item.label || '', price: item.price || '', prices: {}, vinculos: vs, sysname: vs[0]?.nome || '', sku: vs[0]?.sku || '', prodId: vs[0]?.id || null, estoque: vs.length ? vs.reduce((s, v) => s + v.estoque, 0) : undefined });
     }
   });
   renderTabela(); renderMobile(); atualizarPreview(); salvar(); iaFechar(); toast(`✅ ${selecionados.length} item(s) adicionados à lista!`);
@@ -1253,7 +1286,28 @@ function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').t
 // RENDERIZAÇÃO DA TABELA (DESKTOP)
 // ════════════════════════════════════
 function renderTabela() {
-  const tbody = el('tbody-lista'); tbody.innerHTML = '';
+  const tbody = el('tbody-lista');
+  const theadRow = document.querySelector('#card-tabela thead tr');
+  
+  // Atualiza Headers Dinâmicos
+  const currentHeaders = theadRow.querySelectorAll('th');
+  // Remove headers entre Preço Base (idx 2) e API (que agora é empurrado)
+  // O layout fixo era: Drag(0), Nome(1), Preço Base(2), [DYNAMIC], API(last-1), Act(last)
+  for (let i = currentHeaders.length - 1 - 2; i > 2; i--) {
+    theadRow.removeChild(currentHeaders[i]);
+  }
+  
+  const refNode = theadRow.children[3] || theadRow.children[theadRow.children.length - 1]; 
+  appData.priceConfigs.forEach(conf => {
+    const th = document.createElement('th');
+    th.className = 'col-dprice';
+    th.textContent = conf.label;
+    th.style.fontSize = '10px';
+    th.style.width = '75px';
+    theadRow.insertBefore(th, refNode);
+  });
+
+  tbody.innerHTML = '';
   const nProd = lista.filter(i=>i.type==='product').length; el('count-badge').textContent = nProd + ' produto'+(nProd!==1?'s':'');
   el('empty-table').style.display = lista.length === 0 ? 'block' : 'none';
 
@@ -1263,10 +1317,10 @@ function renderTabela() {
     if (item.type === 'header') {
       tr.className = 'row-header';
       const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${(item.icon===undefined && v==='📌') || item.icon===v ? 'selected' : ''}>${v || 'Nenhum'}</option>`).join('');
-      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="3" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
+      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="${2 + appData.priceConfigs.length}" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td><td class="col-api"></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
     } else if (item.type === 'free') {
       tr.className = 'row-free';
-      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="3" style="padding:4px 6px;"><textarea data-field="text" rows="2" style="min-height:34px; resize:vertical;" placeholder="Texto livre…">${esc(item.text||'')}</textarea></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
+      tr.innerHTML = `<td class="col-drag">⠿</td><td colspan="${2 + appData.priceConfigs.length}" style="padding:4px 6px;"><textarea data-field="text" rows="2" style="min-height:34px; resize:vertical;" placeholder="Texto livre…">${esc(item.text||'')}</textarea></td><td class="col-api"></td><td class="col-act"><button class="btn btn-danger btn-icon btn-sm del-btn" data-idx="${idx}">✕</button></td>`;
     } else {
       const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
       const estoqueTotal = vinculos ? vinculos.reduce((s, v) => s + v.estoque, 0) : (item.estoque ?? null);
@@ -1280,15 +1334,27 @@ function renderTabela() {
 
       const vinculosList = vinculos ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:4px;min-width:0;"><span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</span><button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;">✕</button></div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
 
+      let dynamicCols = '';
+      appData.priceConfigs.forEach(conf => {
+        const val = getDynamicPriceValue(item, conf);
+        const isCalculated = conf.type === 'formula';
+        dynamicCols += `
+          <td class="col-dprice">
+            <input type="text" class="mono-inp ${isCalculated?'calc-readonly':''}" 
+                   data-idx="${idx}" data-confid="${conf.id}" 
+                   value="${esc(val)}" ${isCalculated?'readonly':''}
+                   style="width:100%;" placeholder="-">
+          </td>
+        `;
+      });
+
       tr.innerHTML = `
         <td class="col-drag">⠿</td>
         <td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td>
         <td class="col-price">
-          <div style="display:flex; align-items:center; gap:4px;">
-            <input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:65px;"/>
-            <button class="btn-precos" data-idx="${idx}" title="Preços Extras">⚙️</button>
-          </div>
+          <input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:100%;"/>
         </td>
+        ${dynamicCols}
         <td class="col-api vincul-cell" data-vincul-field="sys" style="cursor:pointer;">
           <div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;">
             ${vinculosList}
@@ -1309,6 +1375,14 @@ function renderTabela() {
     tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx,1)[0]; lista.splice(idx,0,moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
 
     tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
+    tr.querySelectorAll('[data-confid]').forEach(inp => { 
+      inp.addEventListener('input', () => { 
+        if (!lista[idx].prices) lista[idx].prices = {};
+        lista[idx].prices[inp.dataset.confid] = inp.value; 
+        atualizarPreview(); salvar(); 
+      });
+      inp.addEventListener('blur', () => renderTabela());
+    });
     setTimeout(() => { const ta = tr.querySelector('.label-ta'); if (ta) autoGrow(ta); }, 0);
 
     tr.querySelector('.btn-precos')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverPrecos(idx, e.currentTarget); });
@@ -1356,9 +1430,18 @@ function renderMobile() {
         <div class="mcard-body" id="mcard-body-${idx}">
           <div class="mcard-meta">
             <div class="mcard-price-wrap"><label>R$</label><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" /></div>
-            <button class="btn-precos" data-idx="${idx}">⚙️ Preços</button>
             ${badgeHtml}
             <button class="mcard-sync-btn sync-btn" data-idx="${idx}">🔄</button>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+            ${appData.priceConfigs.map(conf => {
+              const val = getDynamicPriceValue(item, conf);
+              const isCalc = conf.type === 'formula';
+              return `<div style="flex:1; min-width:45%; background:var(--surface); padding:4px 7px; border-radius:6px; border:1px solid var(--border);">
+                <div style="font-size:9px; color:var(--text3); text-transform:uppercase; margin-bottom:2px;">${conf.label}</div>
+                <input type="text" data-confid="${conf.id}" value="${esc(val)}" ${isCalc?'readonly':''} style="width:100%; border:none; background:transparent; font-size:12px; font-weight:600; color:var(--text); padding:0;" placeholder="-">
+              </div>`;
+            }).join('')}
           </div>
           <div class="mcard-vincul">
             <div class="mcard-vincul-btn vincul-cell ${temVinculo ? 'vinculado' : ''}" data-vincul-field="sys"><div style="flex:1;min-width:0;">${vinculosInfoHtml || `<span class="mcard-vincul-name empty">Vincular produto API…</span>`}</div></div>
@@ -1422,6 +1505,33 @@ function salvarVinculos(idx, vinculos) {
   renderTabela(); renderMobile(); atualizarPreview(); salvar();
 }
 
+function getDynamicPriceValue(item, conf) {
+  if (conf.type === 'manual') return (item.prices && item.prices[conf.id]) || '';
+  return calculateFormula(item, conf);
+}
+
+function calculateFormula(item, conf) {
+  try {
+    const baseValue = getBaseValue(item, conf.base);
+    if (!baseValue || isNaN(baseValue)) return '';
+    let result = baseValue;
+    const val = parseFloat(conf.val) || 0;
+    if (conf.op === '+') result += conf.isPct ? (baseValue * (val/100)) : val;
+    else if (conf.op === '-') result -= conf.isPct ? (baseValue * (val/100)) : val;
+    else if (conf.op === '*') result *= val;
+    else if (conf.op === '/') result /= val;
+    if (conf.divisor && conf.divisor > 1) result /= conf.divisor;
+    return Math.round(result).toString();
+  } catch(e) { return ''; }
+}
+
+function getBaseValue(item, baseId) {
+  if (baseId === 'price') return parseFloat(String(item.price).replace(',', '.')) || 0;
+  const conf = appData.priceConfigs.find(c => c.id === baseId);
+  if (!conf) return 0;
+  return parseFloat(getDynamicPriceValue(item, conf)) || 0;
+}
+
 // ════════════════════════════════════
 // RENDERIZAÇÃO PREVIEW WPP (TEMPLATES)
 // ════════════════════════════════════
@@ -1429,10 +1539,12 @@ function formatarComTemplate(item, templateText) {
   let texto = templateText || '{{nome}} - R$ {{preco}}';
   texto = texto.replace(/\{\{nome\}\}/gi, item.label || '');
   texto = texto.replace(/\{\{preco\}\}/gi, item.price || '');
-  texto = texto.replace(/\{\{custo\}\}/gi, item.prices?.custo || '');
-  texto = texto.replace(/\{\{atacado\}\}/gi, item.prices?.atacado || '');
-  texto = texto.replace(/\{\{pix\}\}/gi, item.prices?.pix || '');
-  texto = texto.replace(/\{\{cartao\}\}/gi, item.prices?.cartao || '');
+  
+  appData.priceConfigs.forEach(conf => {
+    const val = getDynamicPriceValue(item, conf);
+    const tag = conf.label.toLowerCase().replace(/\s+/g, '');
+    texto = texto.replace(new RegExp(`\\{\\{${tag}\\}\\}`, 'gi'), val || '');
+  });
 
   const linhasLimpas = texto.split('\n').filter(linha => {
      if (linha.includes('R$') && !/\d/.test(linha)) return false; 
@@ -1499,9 +1611,23 @@ async function executarBusca(q) {
 }
 document.addEventListener('click', e => { if (!el('busca-produto').contains(e.target) && !el('resultados-busca').contains(e.target)) el('resultados-busca').style.display = 'none'; });
 
-function adicionarDaAPI(p) { lista.push({ id: uid(), type:'product', label: p.nome, price: p.valor_venda ? String(Math.round(Number(p.valor_venda))) : '', prices: {custo:'', atacado:'', pix:'', cartao:''}, sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', prodId: p.id, estoque: Number(p.estoque ?? 0) }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); toast('✅ Produto adicionado'); }
+function adicionarDaAPI(p) {
+  const item = { 
+    id: uid(), type:'product', label: p.nome, 
+    price: p.valor_venda ? String(Math.round(Number(p.valor_venda))) : '', 
+    prices: {}, // Iniciado vazio para preços manuais
+    sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', 
+    prodId: p.id, estoque: Number(p.estoque ?? 0) 
+  }; 
+  lista.push(item); 
+  renderTabela(); renderMobile(); atualizarPreview(); salvar(); toast('✅ Produto adicionado'); 
+}
 
-el('btn-add-manual').addEventListener('click', () => { lista.push({ id:uid(), type:'product', label:'', price:'', prices: {custo:'', atacado:'', pix:'', cartao:''}, sysname:'', sku:'', prodId:null, estoque:undefined }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr:not(.row-header):not(.row-free)'); rows[rows.length-1]?.querySelector('textarea[data-field="label"]')?.focus(); }, 40); });
+el('btn-add-manual').addEventListener('click', () => { 
+  lista.push({ id:uid(), type:'product', label:'', price:'', prices: {}, sysname:'', sku:'', prodId:null, estoque:undefined }); 
+  renderTabela(); renderMobile(); atualizarPreview(); salvar(); 
+  setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr'); rows[rows.length-1]?.querySelector('textarea')?.focus(); }, 40); 
+});
 el('btn-add-header').addEventListener('click', () => { lista.push({ id:uid(), type:'header', label:'', icon:'📌' }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr.row-header'); rows[rows.length-1]?.querySelector('input[data-field="label"]')?.focus(); }, 40); });
 el('btn-add-free').addEventListener('click', () => { lista.push({ id:uid(), type:'free', text:'' }); renderTabela(); renderMobile(); atualizarPreview(); salvar(); setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr.row-free'); rows[rows.length-1]?.querySelector('textarea')?.focus(); }, 40); });
 
@@ -1523,7 +1649,8 @@ const TEMA_KEY = 'jeta_tema'; function aplicarTema(t) { document.documentElement
 // EXPORT/IMPORT CSV
 // ════════════════════════════════════
 function exportToCSV() {
-  const header = ['Lista', 'Tipo', 'Item', 'Preco', 'Custo', 'Atacado', 'Pix', 'Cartao', 'SKU', 'Sistema_Nome'];
+  const dynamicHeaders = appData.priceConfigs.map(c => c.label);
+  const header = ['Lista', 'Tipo', 'Item', 'Preço Base', ...dynamicHeaders, 'SKU', 'Sistema_Nome'];
   let csvContent = header.join(';') + '\n';
   
   appData.listas.forEach(l => {
@@ -1532,14 +1659,13 @@ function exportToCSV() {
         l.nome,
         item.type,
         item.label || '',
-        item.price || '',
-        (item.prices && item.prices.custo) || '',
-        (item.prices && item.prices.atacado) || '',
-        (item.prices && item.prices.pix) || '',
-        (item.prices && item.prices.cartao) || '',
-        item.sku || '',
-        item.sysname || ''
+        item.price || ''
       ];
+      // Adiciona preços dinâmicos
+      appData.priceConfigs.forEach(conf => {
+        row.push(getDynamicPriceValue(item, conf));
+      });
+      row.push(item.sku || '', item.sysname || '');
       csvContent += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';') + '\n';
     });
   });
@@ -1573,8 +1699,9 @@ function importFromCSV(input) {
     const newAppData = { listas: [], currentId: null, templates: appData.templates };
     const listsMap = {};
 
+    const headers = lines[0].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+    
     for (let i = 1; i < lines.length; i++) {
-      // Split robusto que ignora ';' dentro de aspas
       const cols = lines[i].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
       if (cols.length < 3) continue;
 
@@ -1584,20 +1711,29 @@ function importFromCSV(input) {
         newAppData.listas.push(listsMap[listName]);
       }
 
-      const item = {
-        id: uid(),
-        type: cols[1],
-        label: cols[2],
-        price: cols[3] || '',
-        prices: {
-          custo: cols[4] || '',
-          atacado: cols[5] || '',
-          pix: cols[6] || '',
-          cartao: cols[7] || ''
-        },
-        sku: cols[8] || '',
-        sysname: cols[9] || ''
-      };
+      const type = cols[1];
+      const item = { id: uid(), type: type, label: cols[2], price: cols[3] || '', prices: {} };
+      
+      if (type === 'header') {
+        item.icon = '📌';
+      } else if (type === 'free') {
+        item.text = cols[2];
+      } else {
+        // Mapeia colunas de preços dinâmicos
+        // Formato: [Lista, Tipo, Item, Preço Base, ...Prices, SKU, Sistema_Nome]
+        const startPriceIdx = 4;
+        const endPriceIdx = cols.length - 2;
+        
+        for (let j = startPriceIdx; j < endPriceIdx; j++) {
+          const confLabel = headers[j];
+          const conf = appData.priceConfigs.find(c => c.label === confLabel);
+          if (conf && conf.type === 'manual') {
+            item.prices[conf.id] = cols[j];
+          }
+        }
+        item.sku = cols[cols.length - 2] || '';
+        item.sysname = cols[cols.length - 1] || '';
+      }
       listsMap[listName].lista.push(item);
     }
 
@@ -1614,6 +1750,132 @@ function importFromCSV(input) {
     input.value = '';
   };
   reader.readAsText(file);
+}
+
+// ════════════════════════════════════
+// GERENCIAMENTO DE PREÇOS DINÂMICOS
+// ════════════════════════════════════
+function abrirModalPrecos() {
+  renderPriceConfigs();
+  el('price-modal-overlay').classList.add('open');
+}
+
+function fecharModalPrecos() {
+  el('price-modal-overlay').classList.remove('open');
+}
+
+function renderPriceConfigs() {
+  const container = el('price-configs-list');
+  container.innerHTML = '';
+  
+  appData.priceConfigs.forEach((conf, idx) => {
+    const div = document.createElement('div');
+    div.className = 'price-config-card';
+    div.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:8px;';
+    
+    const isManual = conf.type === 'manual';
+    
+    div.innerHTML = `
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" value="${esc(conf.label)}" onchange="updatePriceConf(${idx}, 'label', this.value)" placeholder="Nome (ex: Pix)" style="flex:1; font-weight:700;"/>
+        <select onchange="updatePriceConf(${idx}, 'type', this.value)" style="width:100px;">
+          <option value="manual" ${isManual?'selected':''}>Manual</option>
+          <option value="formula" ${!isManual?'selected':''}>Fórmula</option>
+        </select>
+        <button class="btn btn-danger btn-sm" onclick="removePriceConf(${idx})">✕</button>
+      </div>
+      ${!isManual ? `
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px;">
+          <span>Base:</span>
+          <select onchange="updatePriceConf(${idx}, 'base', this.value)">
+            <option value="price" ${conf.base==='price'?'selected':''}>Preço Base</option>
+            ${appData.priceConfigs.filter((c, i) => i < idx).map(c => `<option value="${c.id}" ${conf.base===c.id?'selected':''}>${c.label}</option>`).join('')}
+          </select>
+          <select onchange="updatePriceConf(${idx}, 'op', this.value)" style="width:45px;">
+            <option value="+" ${conf.op==='+'?'selected':''}>+</option>
+            <option value="-" ${conf.op==='-'?'selected':''}>-</option>
+            <option value="*" ${conf.op==='*'?'selected':''}>×</option>
+            <option value="/" ${conf.op==='/'?'selected':''}>÷</option>
+          </select>
+          <input type="number" value="${conf.val || 0}" onchange="updatePriceConf(${idx}, 'val', this.value)" style="width:60px;"/>
+          <label style="display:flex; align-items:center; gap:3px;"><input type="checkbox" ${conf.isPct?'checked':''} onchange="updatePriceConf(${idx}, 'isPct', this.checked)"/> %</label>
+          <span style="margin-left:5px;">Divisor:</span>
+          <input type="number" value="${conf.divisor || 1}" onchange="updatePriceConf(${idx}, 'divisor', this.value)" style="width:50px;" placeholder="1"/>
+        </div>
+      ` : ''}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function addPriceConfig() {
+  const newConf = { id: 'pc_' + uid(), label: 'Novo Preço', type: 'manual' };
+  appData.priceConfigs.push(newConf);
+  renderPriceConfigs();
+  salvar();
+}
+
+function updatePriceConf(idx, field, val) {
+  // Se mudar tipo, inicializar campos de fórmula
+  if (field === 'type' && val === 'formula') {
+    appData.priceConfigs[idx].base = 'price';
+    appData.priceConfigs[idx].op = '+';
+    appData.priceConfigs[idx].val = 0;
+    appData.priceConfigs[idx].isPct = false;
+    appData.priceConfigs[idx].divisor = 1;
+  }
+  appData.priceConfigs[idx][field] = val;
+  salvar();
+  renderPriceConfigs();
+  renderTabela();
+  renderMobile();
+  atualizarPreview();
+}
+
+function removePriceConf(idx) {
+  if (!confirm('Excluir esta configuração de preço?')) return;
+  appData.priceConfigs.splice(idx, 1);
+  salvar();
+  renderPriceConfigs();
+  renderTabela();
+  renderMobile();
+  atualizarPreview();
+}
+function carregar() {
+  const local = localStorage.getItem(STORAGE_KEY);
+  if (local) {
+    try { 
+      const parsed = JSON.parse(local);
+      if (parsed && Array.isArray(parsed.listas)) appData = parsed;
+    } catch(e) {}
+  }
+  updateSchema();
+  if (!appData.listas || !appData.listas.length) {
+    appData.listas = [createListObj('Lista 1')];
+    appData.currentId = appData.listas[0].id;
+  }
+}
+
+function updateSchema() {
+  if (!appData.priceConfigs) {
+    appData.priceConfigs = [
+      { id: 'pc_custo', label: 'Custo', type: 'manual' },
+      { id: 'pc_atacado', label: 'Atacado', type: 'manual' },
+      { id: 'pc_pix', label: 'Pix', type: 'manual' },
+      { id: 'pc_cartao', label: 'Cartão', type: 'manual' }
+    ];
+  }
+  // Migração de dados legados: custo, atacado, pix, cartao
+  appData.listas.forEach(l => {
+    l.lista.forEach(item => {
+      if (item.type === 'product' && item.prices) {
+        if (item.prices.custo !== undefined && !item.prices.pc_custo) { item.prices.pc_custo = item.prices.custo; delete item.prices.custo; }
+        if (item.prices.atacado !== undefined && !item.prices.pc_atacado) { item.prices.pc_atacado = item.prices.atacado; delete item.prices.atacado; }
+        if (item.prices.pix !== undefined && !item.prices.pc_pix) { item.prices.pc_pix = item.prices.pix; delete item.prices.pix; }
+        if (item.prices.cartao !== undefined && !item.prices.pc_cartao) { item.prices.pc_cartao = item.prices.cartao; delete item.prices.cartao; }
+      }
+    });
+  });
 }
 
 carregar();
