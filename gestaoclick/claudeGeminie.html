@@ -1324,9 +1324,19 @@ function renderTabela() {
       let badgeHtml;
       if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo">🔗 —</span>`;
       else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`;
-      else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero'; badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${estoqueTotal} un.</span>`; }
+      else { 
+        const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero';
+        const breakdown = (vinculos && vinculos.length > 1) ? `(${vinculos.map(v => v.estoque).join('+')}) ` : '';
+        badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${breakdown}${estoqueTotal} un.</span>`;
+      }
 
-      const vinculosList = vinculos ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:4px;min-width:0;"><span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</span><button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;">✕</button></div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
+      const vinculosList = vinculos ? vinculos.map((v, vi) => `
+        <div style="display:flex;align-items:center;gap:4px;min-width:0;">
+          <span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">${esc(v.nome)}</span>
+          <span style="font-size:10px; color:${v.estoque>0?'var(--accent)':'var(--warn)'}; font-weight:700; white-space:nowrap;">${v.estoque>0?'✓':'⚠'}${v.estoque}</span>
+          <button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;">✕</button>
+        </div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
+
 
       let dynamicCols = '';
       appData.priceConfigs.forEach(conf => {
@@ -1427,7 +1437,13 @@ function renderMobile() {
       const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
       
       let badgeHtml;
-      if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`; else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`; else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero'; badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${estoqueTotal}</span>`; }
+      if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`;
+      else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`;
+      else { 
+        const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero';
+        const breakdown = (vinculos && vinculos.length > 1) ? `(${vinculos.map(v => v.estoque).join('+')}) ` : '';
+        badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${breakdown}${estoqueTotal}</span>`;
+      }
 
       const vinculosInfoHtml = vinculos && vinculos.length ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(v.nome)}</div><div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);">${esc(v.sku||'—')} · <span style="color:${v.estoque>0?'var(--accent)':'var(--warn)'};">${v.estoque>0?'✓ ':'⚠ '}${v.estoque}</span></div></div><button class="mcard-rm-vinc" data-vi="${vi}" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 4px;">✕</button></div>`).join('') : item.sysname ? `<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : '';
 
