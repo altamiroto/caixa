@@ -241,7 +241,7 @@
     .mcard-top { display: flex; align-items: flex-start; gap: 10px; }
     .mcard-drag { color: var(--muted); font-size: 20px; cursor: grab; padding-top: 2px; flex-shrink: 0; touch-action: none; line-height: 1; }
     .mcard-name-wrap { flex: 1; min-width: 0; }
-    .mcard-name-wrap textarea { font-size: 16px; font-weight: 600; line-height: 1.4; color: var(--text); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; width: 100%; resize: none; overflow: hidden; min-height: 32px; font-family: 'Sora', sans-serif; display: block; box-sizing: border-box; }
+    .mcard-name-wrap textarea { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; width: 100%; resize: none; overflow: hidden; min-height: 30px; font-family: 'Sora', sans-serif; display: block; box-sizing: border-box; }
     .mcard-name-wrap textarea:focus { background: var(--bg); border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px var(--accent-dim); }
     .mcard-name-wrap textarea::placeholder { color: var(--text3); font-weight: 400; }
     
@@ -1529,6 +1529,7 @@ function renderMobile() {
     card.querySelectorAll('[data-field]').forEach(inp => {
       inp.addEventListener('input', () => {
         lista[idx][inp.dataset.field] = inp.value;
+        if (inp.tagName === 'TEXTAREA') autoGrow(inp);
         atualizarPreview(); salvar();
       });
     });
@@ -1565,6 +1566,9 @@ function renderMobile() {
     }
 
     card.dataset.midx = idx; cont.appendChild(card);
+    // Auto-grow imediato para cada textarea no mobile
+    const ta = card.querySelector('textarea');
+    if (ta) setTimeout(() => autoGrow(ta), 0);
   });
 }
 
