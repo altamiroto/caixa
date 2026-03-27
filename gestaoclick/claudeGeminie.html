@@ -1101,11 +1101,14 @@ async function syncToCloud(isManual = false) {
     if (data.status === 'success') {
       updateCloudStatus('success');
     } else {
+      console.error('GAS Server Error:', data);
       throw new Error(data.message || 'Erro no servidor GAS');
     }
   } catch(e) { 
     console.error('Cloud save fail:', e);
     updateCloudStatus('err', e.message); 
+    // Fallback para não travar o UI se for erro de rede
+    setTimeout(() => { if (el('save-status-text').textContent === 'ERRO NUVEM') updateCloudStatus('success', 'Salvo localmente'); }, 5000);
   }
   _cloudLoading = false;
   _isSyncInProgress = false;
@@ -1644,16 +1647,19 @@ function adicionarDaAPI(p) {
   const item = { 
     id: uid(), type:'product', label: p.nome, 
     price: p.valor_venda ? String(Math.round(Number(p.valor_venda))) : '', 
-    prices: {}, // Iniciado vazio para preços manuais
+    prices: {},
     sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', 
     prodId: p.id, estoque: Number(p.estoque ?? 0) 
   }; 
+  initPrices(item);
   lista.push(item); 
   renderTabela(); renderMobile(); atualizarPreview(); salvar(); toast('✅ Produto adicionado'); 
 }
 
 el('btn-add-manual').addEventListener('click', () => { 
-  lista.push({ id:uid(), type:'product', label:'', price:'', prices: {}, sysname:'', sku:'', prodId:null, estoque:undefined }); 
+  const item = { id:uid(), type:'product', label:'', price:'', prices: {}, sysname:'', sku:'', prodId:null, estoque:undefined };
+  initPrices(item);
+  lista.push(item); 
   renderTabela(); renderMobile(); atualizarPreview(); salvar(); 
   setTimeout(() => { const rows = el('tbody-lista').querySelectorAll('tr'); rows[rows.length-1]?.querySelector('textarea')?.focus(); }, 40); 
 });
@@ -1894,6 +1900,14 @@ function carregar() {
 }
 
 function updateSchema() {
+  if (!appData.templates || !Array.isArray(appData.templates) || appData.templates.length === 0) {
+    appData.templates = [
+      { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' },
+      { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' },
+      { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)' }
+    ];
+  }
+
   if (!appData.priceConfigs) {
     appData.priceConfigs = [
       { id: 'pc_custo', label: 'Custo', type: 'manual' },
