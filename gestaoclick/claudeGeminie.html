@@ -1378,13 +1378,18 @@ function renderTabela() {
     tr.addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); tr.classList.add('drag-over'); });
     tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx,1)[0]; lista.splice(idx,0,moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
 
-    tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
+    tr.querySelectorAll('[data-field]').forEach(inp => { 
+      inp.addEventListener('input', () => { 
+        lista[idx][inp.dataset.field] = inp.value; 
+        if (inp.tagName === 'TEXTAREA') autoGrow(inp); 
+        atualizarPreview(); salvar(); 
+      }); 
+    });
     tr.querySelectorAll('[data-confid]').forEach(inp => { 
       inp.addEventListener('input', () => { 
         if (!lista[idx].prices) lista[idx].prices = {};
         lista[idx].prices[inp.dataset.confid] = inp.value; 
         
-        // Atualiza fórmulas dependentes NESTA linha
         tr.querySelectorAll('input.calc-readonly').forEach(formulaInp => {
           const conf = appData.priceConfigs.find(c => c.id === formulaInp.dataset.confid);
           if (conf) formulaInp.value = calculateFormula(lista[idx], conf) || '-';
@@ -1406,18 +1411,26 @@ function renderTabela() {
     }
     setTimeout(() => { const ta = tr.querySelector('.label-ta'); if (ta) autoGrow(ta); }, 0);
 
-    tr.querySelector('.btn-precos')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverPrecos(idx, e.currentTarget); });
-    tr.querySelectorAll('.vincul-rm-inline').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi); salvarVinculos(idx, novos); }); });
-    tr.querySelector('.col-api')?.addEventListener('click', e => { if (e.target.closest('.vincul-rm-inline') || e.target.closest('.btn-precos')) return; abrirPopoverVinculo(idx, tr.querySelector('.col-api')); });
-    tr.querySelector('.del-btn')?.addEventListener('click', () => { lista.splice(idx,1); renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
+    tr.querySelectorAll('.vincul-rm-inline').forEach(btn => { 
+      btn.addEventListener('click', e => { 
+        e.stopPropagation(); 
+        const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi); 
+        salvarVinculos(idx, novos); 
+      }); 
+    });
+    tr.querySelector('.col-api')?.addEventListener('click', e => { 
+      if (e.target.closest('.vincul-rm-inline')) return; 
+      abrirPopoverVinculo(idx, tr.querySelector('.col-api')); 
+    });
+    tr.querySelector('.del-btn')?.addEventListener('click', () => { 
+      lista.splice(idx,1); 
+      renderTabela(); renderMobile(); atualizarPreview(); salvar(); 
+    });
     tr.querySelector('.sync-btn')?.addEventListener('click', () => syncItem(idx));
     tbody.appendChild(tr);
   });
 }
 
-// ════════════════════════════════════
-// RENDERIZAÇÃO MOBILE
-// ════════════════════════════════════
 function renderMobile() {
   const cont = el('lista-mobile'); if (!cont) return; cont.innerHTML = ''; if (lista.length === 0) return;
 
@@ -1475,6 +1488,49 @@ function renderMobile() {
           </div>
         </div>`;
     }
+
+    card.dataset.midx = idx;
+
+    // Listeners Mobile
+    card.querySelector('.mcard-toggle')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const body = card.querySelector('.mcard-body');
+      if (!body) return;
+      const isVisible = (body.style.display || getComputedStyle(body).display) !== 'none';
+      body.style.display = isVisible ? 'none' : 'flex';
+      e.currentTarget.classList.toggle('open', !isVisible);
+    });
+
+    card.querySelector('.mcard-del')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      lista.splice(idx, 1);
+      renderTabela(); renderMobile(); atualizarPreview(); salvar();
+    });
+
+    card.querySelector('.mcard-sync-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      syncItem(idx);
+    });
+
+    card.querySelector('.mcard-vincul-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      abrirPopoverVinculo(idx, e.currentTarget);
+    });
+
+    card.querySelectorAll('.mcard-rm-vinc').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi);
+        salvarVinculos(idx, novos);
+      });
+    });
+
+    card.querySelectorAll('[data-field]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        lista[idx][inp.dataset.field] = inp.value;
+        atualizarPreview(); salvar();
+      });
+    });
 
     card.querySelectorAll('[data-confid]').forEach(inp => { 
       inp.addEventListener('input', () => { 
