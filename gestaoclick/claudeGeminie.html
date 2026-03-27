@@ -725,7 +725,7 @@ function abrirPopoverPrecos(idx, anchorBtn) {
   });
   pop.addEventListener('click', e => e.stopPropagation());
 }
-document.addEventListener('click', () => { fecharPopoverPrecos(); });
+document.addEventListener('click', () => { fecharPopover(); fecharPopoverPrecos(); });
 
 // ════════════════════════════════════
 // APIs, CACHE E BUSCA
@@ -1420,6 +1420,7 @@ function renderTabela() {
     });
     tr.querySelector('.col-api')?.addEventListener('click', e => { 
       if (e.target.closest('.vincul-rm-inline')) return; 
+      e.stopPropagation(); 
       abrirPopoverVinculo(idx, tr.querySelector('.col-api')); 
     });
     tr.querySelector('.del-btn')?.addEventListener('click', () => { 
