@@ -248,6 +248,10 @@
     .mcard-toggle { background: transparent; border: none; font-size: 14px; padding: 4px 8px; color: var(--text3); cursor: pointer; transition: transform 0.2s; }
     .mcard-toggle.open { transform: rotate(180deg); color: var(--accent); }
     .mcard-body { display: none; flex-direction: column; gap: 10px; padding-top: 4px; border-top: 1px dashed var(--border); }
+
+    /* COLLAPSE ANIMATION */
+    .collapse-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease; }
+    .collapse-content.open { max-height: 1200px; padding: 13px; border-top: 1px solid var(--border); }
     .mcard-body.open { display: flex; }
 
     .mcard-del { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px 6px; border-radius: 5px; flex-shrink: 0; transition: color .12s; line-height: 1; }
@@ -504,12 +508,14 @@
     </div>
 
     <div class="card" style="margin-top:10px;">
-      <div class="card-header">
+      <div class="card-header" onclick="togglePriceCollapse()" style="cursor:pointer;">
         <span class="card-title"><span class="dot"></span>Sistema de Preços</span>
-        <button class="btn btn-ghost btn-sm" onclick="abrirModalPrecos()">⚙️ Gerenciar</button>
+        <span id="price-chevron" style="font-size:10px; color:var(--text3); transition: transform 0.3s;">▼</span>
       </div>
-      <div style="padding:13px;">
-        <p style="font-size:11px; color:var(--text3);">Configure fórmulas e preços personalizados (Pix, Atacado, Parcelas, etc).</p>
+      <div id="price-collapse-content" class="collapse-content">
+        <p style="font-size:11px; color:var(--text3); margin-bottom:12px;">Configure fórmulas e preços personalizados (Pix, Atacado, etc).</p>
+        <div id="price-configs-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <button class="btn btn-ghost" style="width:100%; margin-top:12px; border:1px dashed var(--border); font-size:11px;" onclick="addPriceConfig()">＋ Adicionar Novo Preço</button>
       </div>
     </div>
 
@@ -554,23 +560,7 @@
 
 <div id="toast"></div>
 
-<!-- Modal Gerenciar Preços -->
-<div id="price-modal-overlay" class="ia-overlay">
-  <div class="ia-modal" style="max-width:600px;">
-    <div class="ia-header">
-      <h2>⚙️ Gerenciar Configurações de Preços</h2>
-      <button class="btn btn-ghost btn-sm" onclick="fecharModalPrecos()">✕</button>
-    </div>
-    <div style="padding:16px; max-height:70vh; overflow-y:auto;">
-      <div id="price-configs-list" style="display:flex; flex-direction:column; gap:12px;"></div>
-      <button class="btn btn-ghost" style="width:100%; margin-top:15px; border:1px dashed var(--border);" onclick="addPriceConfig()">＋ Adicionar Novo Preço</button>
-    </div>
-    <div class="ia-footer">
-      <p style="font-size:11px; color:var(--text3); flex:1;">Fórmulas são calculadas em tempo real. As tags para o template são o nome da opção em minúsculas (ex: {{pix}}).</p>
-      <button class="btn btn-ia" onclick="fecharModalPrecos()">Concluir</button>
-    </div>
-  </div>
-</div>
+<!-- Modal Gerenciar Preços Removido para usar interface inline no sidebar -->
 
 <script>
 // ════════════════════════════════════
@@ -611,8 +601,20 @@ function createListObj(nome) {
 }
 
 function initPrices(item) {
-  if (item.type === 'product' && !item.prices) {
-    item.prices = { custo: '', atacado: '', pix: '', cartao: '' };
+  if (item.type === 'product') {
+    if (!item.prices) item.prices = {};
+    appData.priceConfigs.forEach(conf => {
+      if (item.prices[conf.id] === undefined) {
+        // Migração de nomes antigos se existirem no item.prices
+        const legacyKey = conf.label.toLowerCase();
+        if (item.prices[legacyKey] !== undefined) {
+          item.prices[conf.id] = item.prices[legacyKey];
+          delete item.prices[legacyKey];
+        } else {
+          item.prices[conf.id] = '';
+        }
+      }
+    });
   }
 }
 
@@ -1266,18 +1268,7 @@ function abrirAuth() {
 }
 function fecharAuth() { el('auth-wall').style.display = 'none'; }
 function logout() { if(confirm('Sair da conta?')) { localStorage.removeItem(CLOUD_KEY); location.reload(); } }
-function carregar() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) { appData = JSON.parse(raw); } else { appData = { listas: [createListObj('Lista 1')], currentId: null }; }
-    if(!appData.templates || appData.templates.length === 0) {
-      appData.templates = [ { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' }, { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' } ];
-    }
-    if(!appData.listas.length) appData.listas.push(createListObj('Lista 1'));
-    if(!appData.currentId) appData.currentId = appData.listas[0].id;
-    switchTab(appData.currentId);
-  } catch(e) {}
-}
+// carregar() foi movido para o final do script para evitar duplicidade e garantir hoisting correto
 
 function el(id) { return document.getElementById(id); } let _tt; function toast(msg, dur=2600) { const t = el('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), dur); }
 function setSync(s,m){ el('sync-dot').className='sync-dot '+s; el('sync-text').textContent=m; } function dataHoje(){ const d=new Date(); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear().toString().slice(2); } function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); } function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -1379,10 +1370,27 @@ function renderTabela() {
       inp.addEventListener('input', () => { 
         if (!lista[idx].prices) lista[idx].prices = {};
         lista[idx].prices[inp.dataset.confid] = inp.value; 
+        
+        // Atualiza fórmulas dependentes NESTA linha
+        tr.querySelectorAll('input.calc-readonly').forEach(formulaInp => {
+          const conf = appData.priceConfigs.find(c => c.id === formulaInp.dataset.confid);
+          if (conf) formulaInp.value = calculateFormula(lista[idx], conf) || '-';
+        });
+
         atualizarPreview(); salvar(); 
       });
       inp.addEventListener('blur', () => renderTabela());
     });
+
+    const basePriceInp = tr.querySelector('[data-field="price"]');
+    if (basePriceInp) {
+      basePriceInp.addEventListener('input', () => {
+        tr.querySelectorAll('input.calc-readonly').forEach(formulaInp => {
+          const conf = appData.priceConfigs.find(c => c.id === formulaInp.dataset.confid);
+          if (conf) formulaInp.value = calculateFormula(lista[idx], conf) || '-';
+        });
+      });
+    }
     setTimeout(() => { const ta = tr.querySelector('.label-ta'); if (ta) autoGrow(ta); }, 0);
 
     tr.querySelector('.btn-precos')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverPrecos(idx, e.currentTarget); });
@@ -1449,15 +1457,36 @@ function renderMobile() {
         </div>`;
     }
 
-    card.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
-    setTimeout(() => { const ta = card.querySelector('.mcard-name-wrap textarea'); if (ta) autoGrow(ta); }, 0);
+    card.querySelectorAll('[data-confid]').forEach(inp => { 
+      inp.addEventListener('input', () => { 
+        if (!lista[idx].prices) lista[idx].prices = {};
+        lista[idx].prices[inp.dataset.confid] = inp.value; 
 
-    card.querySelector('.mcard-toggle')?.addEventListener('click', function() { const body = card.querySelector('.mcard-body'); body.classList.toggle('open'); this.classList.toggle('open'); });
-    card.querySelector('.btn-precos')?.addEventListener('click', e => { e.stopPropagation(); abrirPopoverPrecos(idx, e.currentTarget); });
-    card.querySelector('.mcard-del')?.addEventListener('click', () => { lista.splice(idx, 1); renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
-    card.querySelectorAll('.mcard-rm-vinc').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi); salvarVinculos(idx, novos); }); });
-    card.querySelector('.sync-btn')?.addEventListener('click', () => syncItem(idx));
-    const vincBtn = card.querySelector('.mcard-vincul-btn'); if (vincBtn) { vincBtn.addEventListener('click', e => { e.stopPropagation(); abrirPopoverVinculo(idx, vincBtn); }); }
+        // Atualiza fórmulas no card
+        card.querySelectorAll('input[readonly]').forEach(formulaInp => {
+          const confId = formulaInp.dataset.confid;
+          const conf = appData.priceConfigs.find(c => c.id === confId);
+          if (conf && conf.type === 'formula') {
+            formulaInp.value = calculateFormula(lista[idx], conf) || '-';
+          }
+        });
+
+        atualizarPreview(); salvar(); 
+      });
+    });
+
+    const mobileBasePriceInp = card.querySelector('[data-field="price"]');
+    if (mobileBasePriceInp) {
+      mobileBasePriceInp.addEventListener('input', () => {
+        card.querySelectorAll('input[readonly]').forEach(formulaInp => {
+          const confId = formulaInp.dataset.confid;
+          const conf = appData.priceConfigs.find(c => c.id === confId);
+          if (conf && conf.type === 'formula') {
+            formulaInp.value = calculateFormula(lista[idx], conf) || '-';
+          }
+        });
+      });
+    }
 
     card.dataset.midx = idx; cont.appendChild(card);
   });
@@ -1755,13 +1784,19 @@ function importFromCSV(input) {
 // ════════════════════════════════════
 // GERENCIAMENTO DE PREÇOS DINÂMICOS
 // ════════════════════════════════════
-function abrirModalPrecos() {
-  renderPriceConfigs();
-  el('price-modal-overlay').classList.add('open');
-}
-
-function fecharModalPrecos() {
-  el('price-modal-overlay').classList.remove('open');
+function togglePriceCollapse() {
+  const content = el('price-collapse-content');
+  const chevron = el('price-chevron');
+  const isOpen = content.classList.contains('open');
+  
+  if (isOpen) {
+    content.classList.remove('open');
+    chevron.style.transform = 'rotate(0deg)';
+  } else {
+    content.classList.add('open');
+    chevron.style.transform = 'rotate(180deg)';
+    renderPriceConfigs();
+  }
 }
 
 function renderPriceConfigs() {
@@ -1771,36 +1806,36 @@ function renderPriceConfigs() {
   appData.priceConfigs.forEach((conf, idx) => {
     const div = document.createElement('div');
     div.className = 'price-config-card';
-    div.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:8px;';
+    div.style.cssText = 'background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;';
     
     const isManual = conf.type === 'manual';
     
     div.innerHTML = `
-      <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" value="${esc(conf.label)}" onchange="updatePriceConf(${idx}, 'label', this.value)" placeholder="Nome (ex: Pix)" style="flex:1; font-weight:700;"/>
-        <select onchange="updatePriceConf(${idx}, 'type', this.value)" style="width:100px;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <input type="text" value="${esc(conf.label)}" onchange="updatePriceConf(${idx}, 'label', this.value)" placeholder="Nome" style="flex:1; font-weight:700; font-size:12px; padding:4px 6px;"/>
+        <select onchange="updatePriceConf(${idx}, 'type', this.value)" style="width:80px; font-size:11px; padding:3px 5px;">
           <option value="manual" ${isManual?'selected':''}>Manual</option>
           <option value="formula" ${!isManual?'selected':''}>Fórmula</option>
         </select>
-        <button class="btn btn-danger btn-sm" onclick="removePriceConf(${idx})">✕</button>
+        <button class="btn btn-danger btn-sm" onclick="removePriceConf(${idx})" style="padding:2px 5px; font-size:10px;">✕</button>
       </div>
       ${!isManual ? `
-        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px;">
+        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap; font-size:11px; color:var(--text2);">
           <span>Base:</span>
-          <select onchange="updatePriceConf(${idx}, 'base', this.value)">
-            <option value="price" ${conf.base==='price'?'selected':''}>Preço Base</option>
+          <select onchange="updatePriceConf(${idx}, 'base', this.value)" style="font-size:10px; max-width:70px;">
+            <option value="price" ${conf.base==='price'?'selected':''}>Base</option>
             ${appData.priceConfigs.filter((c, i) => i < idx).map(c => `<option value="${c.id}" ${conf.base===c.id?'selected':''}>${c.label}</option>`).join('')}
           </select>
-          <select onchange="updatePriceConf(${idx}, 'op', this.value)" style="width:45px;">
+          <select onchange="updatePriceConf(${idx}, 'op', this.value)" style="width:38px; font-size:10px;">
             <option value="+" ${conf.op==='+'?'selected':''}>+</option>
             <option value="-" ${conf.op==='-'?'selected':''}>-</option>
             <option value="*" ${conf.op==='*'?'selected':''}>×</option>
             <option value="/" ${conf.op==='/'?'selected':''}>÷</option>
           </select>
-          <input type="number" value="${conf.val || 0}" onchange="updatePriceConf(${idx}, 'val', this.value)" style="width:60px;"/>
-          <label style="display:flex; align-items:center; gap:3px;"><input type="checkbox" ${conf.isPct?'checked':''} onchange="updatePriceConf(${idx}, 'isPct', this.checked)"/> %</label>
-          <span style="margin-left:5px;">Divisor:</span>
-          <input type="number" value="${conf.divisor || 1}" onchange="updatePriceConf(${idx}, 'divisor', this.value)" style="width:50px;" placeholder="1"/>
+          <input type="number" value="${conf.val || 0}" onchange="updatePriceConf(${idx}, 'val', this.value)" style="width:45px; font-size:10px; padding:2px 4px;"/>
+          <label style="display:flex; align-items:center; gap:2px; font-size:10px;"><input type="checkbox" ${conf.isPct?'checked':''} onchange="updatePriceConf(${idx}, 'isPct', this.checked)"/> %</label>
+          <span style="font-size:10px;">÷</span>
+          <input type="number" value="${conf.divisor || 1}" onchange="updatePriceConf(${idx}, 'divisor', this.value)" style="width:35px; font-size:10px; padding:2px 4px;" placeholder="1"/>
         </div>
       ` : ''}
     `;
@@ -1809,7 +1844,9 @@ function renderPriceConfigs() {
 }
 
 function addPriceConfig() {
-  const newConf = { id: 'pc_' + uid(), label: 'Novo Preço', type: 'manual' };
+  const label = prompt('Nome do preço (ex: Pix, Varejo, etc):');
+  if (!label) return;
+  const newConf = { id: 'pc_' + uid(), label: label, type: 'manual' };
   appData.priceConfigs.push(newConf);
   renderPriceConfigs();
   salvar();
