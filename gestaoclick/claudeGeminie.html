@@ -486,6 +486,18 @@
           </div>
           <textarea id="cfg-template-body" rows="4" style="font-size:13px; font-family:'JetBrains Mono', monospace;" placeholder="Ex: {{nome}}\nPix: R$ {{pix}}\nCartão: R$ {{cartao}}"></textarea>
         </div>
+
+        <div style="border-top:1px solid var(--border); margin: 4px 0;"></div>
+        
+        <div class="field-group">
+          <span class="field-label">Backup de Dados (CSV)</span>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="exportToCSV()">📤 Exportar CSV</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="el('csv-import-input').click()">📥 Importar CSV</button>
+            <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importFromCSV(this)">
+          </div>
+          <p style="font-size:10px; color:var(--text3); margin-top:5px;">Opcional: Use para fazer backup manual no seu computador ou restaurar listas antigas.</p>
+        </div>
         
       </div>
     </div>
@@ -1506,6 +1518,103 @@ el('fab-preview').addEventListener('click', () => { document.querySelector('.pan
 el('btn-abrir-ia').addEventListener('click', iaAbrir); el('ia-fechar').addEventListener('click', iaFechar); el('ia-overlay').addEventListener('click', e => { if (e.target === el('ia-overlay')) iaFechar(); }); el('ia-processar').addEventListener('click', iaProcessar); el('ia-voltar').addEventListener('click', () => iaSetStep(1)); el('ia-confirmar').addEventListener('click', iaConfirmar); el('ia-raw').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); iaProcessar(); } });
 
 const TEMA_KEY = 'jeta_tema'; function aplicarTema(t) { document.documentElement.setAttribute('data-theme', t); el('btn-tema').textContent = t === 'dark' ? '☀️' : '🌙'; localStorage.setItem(TEMA_KEY, t); } el('btn-tema').addEventListener('click', () => { const atual = document.documentElement.getAttribute('data-theme') || 'light'; aplicarTema(atual === 'dark' ? 'light' : 'dark'); }); aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
+
+// ════════════════════════════════════
+// EXPORT/IMPORT CSV
+// ════════════════════════════════════
+function exportToCSV() {
+  const header = ['Lista', 'Tipo', 'Item', 'Preco', 'Custo', 'Atacado', 'Pix', 'Cartao', 'SKU', 'Sistema_Nome'];
+  let csvContent = header.join(';') + '\n';
+  
+  appData.listas.forEach(l => {
+    l.lista.forEach(item => {
+      const row = [
+        l.nome,
+        item.type,
+        item.label || '',
+        item.price || '',
+        (item.prices && item.prices.custo) || '',
+        (item.prices && item.prices.atacado) || '',
+        (item.prices && item.prices.pix) || '',
+        (item.prices && item.prices.cartao) || '',
+        item.sku || '',
+        item.sysname || ''
+      ];
+      csvContent += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';') + '\n';
+    });
+  });
+
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `backup_jetas_listas_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast('✅ CSV Exportado!');
+}
+
+function importFromCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  if (!confirm('⚠️ ATENÇÃO: Isso irá SOBRESCREVER todas as suas listas atuais por esta versão do backup. Deseja continuar?')) {
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n').filter(l => l.trim() !== '');
+    if (lines.length < 2) { toast('❌ Arquivo inválido'); return; }
+
+    const newAppData = { listas: [], currentId: null, templates: appData.templates };
+    const listsMap = {};
+
+    for (let i = 1; i < lines.length; i++) {
+      // Split robusto que ignora ';' dentro de aspas
+      const cols = lines[i].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+      if (cols.length < 3) continue;
+
+      const listName = cols[0];
+      if (!listsMap[listName]) {
+        listsMap[listName] = createListObj(listName);
+        newAppData.listas.push(listsMap[listName]);
+      }
+
+      const item = {
+        id: uid(),
+        type: cols[1],
+        label: cols[2],
+        price: cols[3] || '',
+        prices: {
+          custo: cols[4] || '',
+          atacado: cols[5] || '',
+          pix: cols[6] || '',
+          cartao: cols[7] || ''
+        },
+        sku: cols[8] || '',
+        sysname: cols[9] || ''
+      };
+      listsMap[listName].lista.push(item);
+    }
+
+    if (newAppData.listas.length > 0) {
+      newAppData.currentId = newAppData.listas[0].id;
+      appData = newAppData;
+      salvar();
+      renderTabs();
+      switchTab(appData.currentId);
+      toast('✅ Backup restaurado com sucesso!');
+    } else {
+      toast('❌ Falha ao processar CSV');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
 
 carregar();
 initAuth();
