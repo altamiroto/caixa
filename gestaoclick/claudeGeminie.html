@@ -2658,6 +2658,7 @@ Exemplo de saída:
 
     let _saveTimer = null;
     function salvar() {
+      if (!appData || !appData.listas) return; // Segurança contra salvamento em branco
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         if (!_currentUser) {
@@ -2819,6 +2820,7 @@ Exemplo de saída:
         })();
       } else {
         _syncReady = true; // Mesmo sem logado, permitimos operar localmente
+        switchTab(appData.currentId || appData.listas[0].id); // Garante renderização offline
       }
 
       setTimeout(() => {
@@ -3568,14 +3570,15 @@ Exemplo de saída:
           if (parsed && Array.isArray(parsed.listas)) appData = parsed;
         } catch (e) { }
       }
-      updateSchema();
       if (!appData.listas || !appData.listas.length) {
         appData.listas = [createListObj('Lista 1')];
         appData.currentId = appData.listas[0].id;
       }
+      updateSchema();
     }
 
     function updateSchema() {
+      if (!appData || !appData.listas) return;
       if (!appData.templates || !Array.isArray(appData.templates) || appData.templates.length === 0) {
         appData.templates = [
           { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' },
