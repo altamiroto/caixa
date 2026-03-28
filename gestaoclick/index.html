@@ -338,7 +338,7 @@
     .ia-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6b6b6b; margin-bottom:4px; display:block; }
     .ia-ta { width:100%; min-height:130px; max-height:240px; border:1px solid #e0e0e0; border-radius:8px; padding:10px 12px; font-family:'DM Mono',monospace; font-size:13px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
     .ia-ta:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
-    .ia-prompt-ta { width:100%; min-height:90px; border:1px solid #e0e0e0; border-radius:8px; padding:9px 12px; font-family:'DM Mono',monospace; font-size:12px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
+    .ia-prompt-ta { width:100%; min-height:110px; border:1px solid #e0e0e0; border-radius:8px; padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px; line-height:1.6; resize:vertical; color:#1a1a1a; background:#f5f5f5; box-sizing:border-box; }
     .ia-prompt-ta:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
     .ia-prompt-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
     .ia-btn-restaurar { background:transparent; border:1px solid #e0e0e0; border-radius:6px; color:#6b6b6b; font-size:11px; cursor:pointer; padding:3px 9px; }
@@ -363,17 +363,24 @@
     .ia-cand-btn { border:none; border-radius:5px; padding:2px 9px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; }
     .ia-cand-btn.add  { background:#27ae60; color:#fff; }
     .ia-cand-btn.dis  { background:#e0e0e0; color:#aaa; cursor:not-allowed; }
-    .ia-card-head { display:flex; align-items:center; gap:8px; }
+    .ia-card-head { display:flex; align-items:flex-start; gap:8px; }
     .ia-badge { font-size:12px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
     .ia-badge.ok   { background:rgba(39,174,96,.12); color:#27ae60; }
     .ia-badge.zero { background:rgba(192,57,43,.12); color:#c0392b; }
     .ia-badge.nf   { background:#f0f0f0; color:#888; }
-    .ia-btn-trocar { background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0; border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer; flex-shrink:0; white-space:nowrap; }
+    .ia-btn-trocar { background:#f0f0f0; color:#6b6b6b; border:1px solid #e0e0e0; border-radius:6px; padding:2px 9px; font-size:11px; cursor:pointer; flex-shrink:0; white-space:nowrap; margin-top: 2px;}
     .ia-lote-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 18px; border-top:1px solid #e0e0e0; background:#fafafa; flex-wrap:wrap; }
     .ia-btn-fechar { background:transparent; border:1px solid #e0e0e0; border-radius:7px; color:#6b6b6b; font-size:13px; cursor:pointer; padding:7px 14px; font-weight:600; }
     .ia-btn-fechar:hover { background:#f0f0f0; }
     .ia-btn-add-todos { background:#27ae60; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; display:none; }
     .ia-btn-add-todos:hover { opacity:.85; }
+
+    /* Dropdown Busca Inline IA */
+    .ia-dd-area { display: none; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e0e0; }
+    .ia-dd-area.open { display: flex; }
+    .ia-dd-search { padding: 6px 10px; border: 1px solid #c8c8c8; border-radius: 6px; font-size: 12px; width: 100%; font-family: inherit; }
+    .ia-dd-search:focus { outline: none; border-color: #7c3aed; }
+    .ia-dd-results { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -443,8 +450,6 @@
 
   </div>
 
-
-  <!-- MODAL BUSCA EM LOTE IA -->
   <div id="ia-lote-overlay">
     <div id="ia-lote-modal">
       <div class="ia-lh">
@@ -991,8 +996,9 @@
     // ════════════════════════
     // BUSCA EM LOTE POR IA
     // ════════════════════════
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v2';
-    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em listas de produtos para revenda.\nAnalise a lista e extraia APENAS os nomes dos produtos, sem preço, sem cor, sem informações de marketing.\nMantenha: modelo, capacidade de armazenamento (ex: 256gb, 4/128gb), conectividade (4G, 5G) se estiver.\nRemova: preço, emojis, marcadores de lista, cores, datas, categorias, especificações técnicas longas.\nRetorne APENAS JSON válido, sem markdown, sem explicações.\n\nExemplo de saída:\n[\"Motorola Moto G15 256gb 4G\",\"Realme Note 60 4/256gb\",\"Samsung Galaxy A36 5G 8/256gb\",\"Redmi Note 14 Pro 5G 8/256gb\"]";
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v3';
+    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em processar listas de produtos.\nAnalise a lista bruta e retorne um array de objetos JSON.\nPara cada produto encontrado, extraia:\n- \"original\": a linha original completa exatamente como o usuário colou (com cor, preço, etc).\n- \"busca\": o nome limpo do produto (remova preço, cor e marketing, mantendo apenas marca, modelo, memória e conectividade).\n\nRetorne APENAS JSON válido, sem markdown.\n\nExemplo de saída:\n[\n  {\"original\": \"Motorola Moto G15 256gb 4G - Bege - 650\", \"busca\": \"Motorola Moto G15 256gb 4G\"},\n  {\"original\": \"Realme Note 60 4/256gb Verde\", \"busca\": \"Realme Note 60 4/256gb\"}\n]";
+    
     let _iaResultados = [];
 
     // Declara variáveis do cache (usadas pelo motor injetado)
@@ -1002,391 +1008,397 @@
 
     // ── Motor de busca inteligente (mesmo do gerador de lista) ──
     function extrairMem(s) {
-  const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
-  return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
-}
+      const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
+      return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
+    }
 
-function extrairStorage(s) {
-  // Só pega se não houver padrão X/Y antes
-  if (/\d+\s*\/\s*\d+/i.test(s)) return [];
-  return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || [])
-    .map(m => m.replace(/\s/g,'').toLowerCase());
-}
+    function extrairStorage(s) {
+      if (/\d+\s*\/\s*\d+/i.test(s)) return [];
+      return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || [])
+        .map(m => m.replace(/\s/g,'').toLowerCase());
+    }
 
-function extrairRede(s) {
-  const m = s.match(/\b(4g|5g)\b/gi);
-  return m ? m.map(x => x.toLowerCase()) : [];
-}
+    function extrairRede(s) {
+      const m = s.match(/\b(4g|5g)\b/gi);
+      return m ? m.map(x => x.toLowerCase()) : [];
+    }
 
-function extrairPolegadas(s) {
-  // Padrão: número seguido de " ou pol ou " antes de palavras como smart/tv/led
-  const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
-            s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
-  return m ? m.map(x => x.match(/\d+/)[0]) : [];
-}
+    function extrairPolegadas(s) {
+      const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
+                s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
+      return m ? m.map(x => x.match(/\d+/)[0]) : [];
+    }
 
-function normStr(s) {
-  return s.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    // "pro +" e "pro+" → "pro plus" antes de remover símbolos
-    .replace(/\bpro\s*\+/g, 'pro plus')
-    .replace(/\+/g, ' plus ')          // "+" avulso também vira "plus"
-    .replace(/[^a-z0-9\s\/]/g, ' ')
-    .replace(/\s+/g, ' ').trim();
-}
+    function normStr(s) {
+      return s.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/\bpro\s*\+/g, 'pro plus')
+        .replace(/\+/g, ' plus ')
+        .replace(/[^a-z0-9\s\/]/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+    }
 
-function ehAcessorio(nome) {
-  return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
-}
+    function ehAcessorio(nome) {
+      return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
+    }
 
-function extrairVariante(s) {
-  const n = normStr(s);
-  const vs = [];
-  if (/\bpro\b/.test(n))   vs.push('pro');
-  if (/\bplus\b/.test(n))  vs.push('plus');
-  if (/\bultra\b/.test(n)) vs.push('ultra');
-  if (/\bmax\b/.test(n))   vs.push('max');
-  if (/\blite\b/.test(n))  vs.push('lite');
-  if (/\bneo\b/.test(n))   vs.push('neo');
-  if (/\bfe\b/.test(n))    vs.push('fe');
-  // Sufixo "S" colado a número: note14s — mas NÃO "5g" ou "s" solto
-  if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
-  return vs;
-}
+    function extrairVariante(s) {
+      const n = normStr(s);
+      const vs = [];
+      if (/\bpro\b/.test(n))   vs.push('pro');
+      if (/\bplus\b/.test(n))  vs.push('plus');
+      if (/\bultra\b/.test(n)) vs.push('ultra');
+      if (/\bmax\b/.test(n))   vs.push('max');
+      if (/\blite\b/.test(n))  vs.push('lite');
+      if (/\bneo\b/.test(n))   vs.push('neo');
+      if (/\bfe\b/.test(n))    vs.push('fe');
+      if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
+      return vs;
+    }
 
-function extrairSerie(s) {
-  const n = normStr(s);
-  const series = [];
-  // Ordem importa: "redmi note" antes de "redmi"
-  if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
-  else if (/\bredmi\b/.test(n))         series.push('redmi');
-  if (/\bpoco\b/.test(n))               series.push('poco');
-  if (/\brealme\b/.test(n))             series.push('realme');
-  if (/\biphone\b/.test(n))             series.push('iphone');
-  if (/\bgalaxy\b/.test(n))             series.push('galaxy');
-  if (/\bmoto\b/.test(n))               series.push('moto');
-  if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
-  return series;
-}
+    function extrairSerie(s) {
+      const n = normStr(s);
+      const series = [];
+      if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
+      else if (/\bredmi\b/.test(n))         series.push('redmi');
+      if (/\bpoco\b/.test(n))               series.push('poco');
+      if (/\brealme\b/.test(n))             series.push('realme');
+      if (/\biphone\b/.test(n))             series.push('iphone');
+      if (/\bgalaxy\b/.test(n))             series.push('galaxy');
+      if (/\bmoto\b/.test(n))               series.push('moto');
+      if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
+      return series;
+    }
 
-function serieCompativel(lS, pS) {
-  if (!lS.length || !pS.length) return true;
-  if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
-  if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
-  return lS.some(s => pS.includes(s));
-}
+    function serieCompativel(lS, pS) {
+      if (!lS.length || !pS.length) return true;
+      if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
+      if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
+      return lS.some(s => pS.includes(s));
+    }
 
-function tokensModelo(label) {
-  const stop = new Set(['de','do','da','com','para','a','o','e','em',
-    'smart','tv','led','oled','full','hd','4k','wi','fi',
-    'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
-    'prata','bege','vermelho','amarelo','grafite','gold','creme',
-    'titanium','aurora','marrom','laranja','vinho','preta',
-    'silver','blue','black','white','purple','gray','transparente']);
+    function tokensModelo(label) {
+      const stop = new Set(['de','do','da','com','para','a','o','e','em',
+        'smart','tv','led','oled','full','hd','4k','wi','fi',
+        'preto','branco','azul','verde','roxo','cinza','dourado','rosa',
+        'prata','bege','vermelho','amarelo','grafite','gold','creme',
+        'titanium','aurora','marrom','laranja','vinho','preta',
+        'silver','blue','black','white','purple','gray','transparente']);
 
-  // Remove cores antes de tokenizar
-  const n = normStr(label)
-    .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
-    .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
-    .replace(/\s+/g, ' ').trim();
+      const n = normStr(label)
+        .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
+        .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
+        .replace(/\s+/g, ' ').trim();
 
-  return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
-}
+      return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
+    }
 
-async function carregarCacheProdutos(onProgress) {
-  // Usa cache se ainda for válido
-  if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
-
-  const base = "https://caixa-three.vercel.app/api/produtos";
-  const loja = lojaIdJeta;
-  const delay = ms => new Promise(r => setTimeout(r, ms));
-
-  // Primeira página para saber total
-  const url1 = new URL(base);
-  url1.searchParams.set('loja_id', loja);
-  url1.searchParams.set('limite', '100');
-  url1.searchParams.set('pagina', '1');
-  const r1 = await fetch(url1.toString());
-  if (!r1.ok) throw new Error('HTTP ' + r1.status);
-  const d1 = await r1.json();
-  if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
-
-  const totalPaginas = d1.meta?.total_paginas || 1;
-  let todos = [...(d1.data || [])];
-
-  if (onProgress) onProgress(1, totalPaginas, todos.length);
-
-  // Páginas restantes em lotes de 3 (rate limit)
-  for (let p = 2; p <= totalPaginas; p++) {
-    const url = new URL(base);
-    url.searchParams.set('loja_id', loja);
-    url.searchParams.set('limite', '100');
-    url.searchParams.set('pagina', p);
-    try {
-      const r = await fetch(url.toString());
-      if (r.ok) {
-        const d = await r.json();
-        if (d.code === 200 && d.data) todos = todos.concat(d.data);
+    function filtroTecnico(label, nomeAPI) {
+      const lMem=extrairMem(label), pMem=extrairMem(nomeAPI);
+      const lRede=extrairRede(label), pRede=extrairRede(nomeAPI);
+      const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
+      const lStor=extrairStorage(label);
+      if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
+      const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
+      if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
+      if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
+      if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
+      if (lStor.length) {
+        const pMem2=extrairMem(nomeAPI);
+        const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,''));
+        const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];
+        if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false;
       }
-    } catch(e) { /* ignora página com falha */ }
-
-    if (onProgress) onProgress(p, totalPaginas, todos.length);
-
-    // Delay a cada 3 páginas
-    if ((p - 1) % 3 === 0) await delay(1100);
-  }
-
-  _prodCache = todos;
-  _prodCacheTs = Date.now();
-  return _prodCache;
-}
-
-function buscarNoCacheLocal(q) {
-  if (!q || !_prodCache.length) return [];
-  const tokens = tokensModelo(q);
-  if (!tokens.length) return [];
-
-  // Memória: X/Y ou X/Ygb
-  const memTok   = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t));
-  const storTok  = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t));
-  const redeTok  = tokens.filter(t => /^(4g|5g)$/i.test(t));
-  // Alfanumérico de modelo (g15, note14, x7, c75, a36) — NÃO inclui 4g/5g
-  const modelTok = tokens.filter(t =>
-    /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
-    !/^(4g|5g|gb|tb)$/i.test(t) &&
-    !memTok.includes(t));
-  // Número puro de modelo (14, 15, 60)
-  const numTok = tokens.filter(t =>
-    /^\d+$/.test(t) && t.length >= 2 &&
-    !memTok.includes(t) && !storTok.includes(t));
-  const txtTok = tokens.filter(t =>
-    !memTok.includes(t) && !storTok.includes(t) &&
-    !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
-
-  const lV = extrairVariante(q);
-  const lS = extrairSerie(q);
-
-  return _prodCache.filter(p => {
-    if (ehAcessorio(p.nome)) return false;
-    const pn = normStr(p.nome);
-
-    // Série incompatível: redmi ≠ redmi-note, realme ≠ poco
-    if (lS.length) {
-      const pS = extrairSerie(p.nome);
-      if (!serieCompativel(lS, pS)) return false;
+      return true;
     }
 
-    // Variante incompatível: PRO, Plus, S, Ultra, Max
-    const pV = extrairVariante(p.nome);
-    if (lV.includes('pro')      !== pV.includes('pro'))      return false;
-    if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false;
-    for (const v of ['plus','ultra','max']) {
-      if (lV.includes(v) !== pV.includes(v)) return false;
+    function scoreNome(label, nomeAPI) {
+      const tokens = tokensModelo(label);
+      if (!tokens.length) return 0;
+      const pn = normStr(nomeAPI);
+      const modelTok = tokens.filter(t =>
+        /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+        !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
+      const restTok = tokens.filter(t => !modelTok.includes(t));
+      const mScore = modelTok.length
+        ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1;
+      const rScore = restTok.length
+        ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
+      return mScore * 0.7 + rScore * 0.3;
     }
 
-    // Memória: "8/256" ou "8/256gb" presentes como substring
-    if (memTok.length && !memTok.every(t => {
-      const base = t.replace(/(gb|tb)$/i,'');
-      return pn.includes(base);
-    })) return false;
-
-    // Storage solo
-    if (storTok.length && !storTok.every(t => {
-      const n = t.replace(/[^\d]/g,'');
-      return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
-    })) return false;
-
-    // Conectividade: filtro BIDIRECIONAL apenas para smartphones
-    // TVs, iPads e tablets não têm 4G/5G — não aplicar esse filtro
-    const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
-    const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
-    const pTem5g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
-    const pTem4g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
-    if (redeTok.length) {
-      // Label especifica rede → produto deve ter a mesma
-      if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
-    } else if (ehSmartphone) {
-      // Smartphone sem rede explícita → rejeita se produto tem 5G ou 4G
-      if (pTem5g || pTem4g) return false;
+    async function buscarEstoqueDoItem(item) {
+      const vs = await buscarVinculosDoItem(item);
+      if (!vs.length) return null;
+      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
+      return { estoque: estoqueTotal, prodId: vs[0].id };
     }
 
-    // Modelo alfanumérico: palavra inteira
-    if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+    async function carregarCacheProdutos(onProgress) {
+      if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
 
-    // Número puro: palavra inteira
-    if (numTok.length && !numTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+      const base = "https://caixa-three.vercel.app/api/produtos";
+      const loja = lojaIdJeta;
+      const delay = ms => new Promise(r => setTimeout(r, ms));
 
-    // Tokens de texto: ≥ 50%
-    if (txtTok.length) {
-      const hits = txtTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length;
-      if (hits < Math.ceil(txtTok.length * 0.5)) return false;
+      const url1 = new URL(base);
+      url1.searchParams.set('loja_id', loja);
+      url1.searchParams.set('limite', '100');
+      url1.searchParams.set('pagina', '1');
+      const r1 = await fetch(url1.toString());
+      if (!r1.ok) throw new Error('HTTP ' + r1.status);
+      const d1 = await r1.json();
+      if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+
+      const totalPaginas = d1.meta?.total_paginas || 1;
+      let todos = [...(d1.data || [])];
+
+      if (onProgress) onProgress(1, totalPaginas, todos.length);
+
+      for (let p = 2; p <= totalPaginas; p++) {
+        const url = new URL(base);
+        url.searchParams.set('loja_id', loja);
+        url.searchParams.set('limite', '100');
+        url.searchParams.set('pagina', p);
+        try {
+          const r = await fetch(url.toString());
+          if (r.ok) {
+            const d = await r.json();
+            if (d.code === 200 && d.data) todos = todos.concat(d.data);
+          }
+        } catch(e) { /* ignora página com falha */ }
+
+        if (onProgress) onProgress(p, totalPaginas, todos.length);
+        if ((p - 1) % 3 === 0) await delay(1100);
+      }
+
+      _prodCache = todos;
+      _prodCacheTs = Date.now();
+      return _prodCache;
     }
-    return true;
-  });
-}
 
-function gerarQueries(label) {
-  const queries = [];
+    function buscarNoCacheLocal(q) {
+      if (!q || !_prodCache.length) return [];
+      const tokens = tokensModelo(q);
+      if (!tokens.length) return [];
 
-  // Remove informações de marketing e especificações técnicas longas que não existem no sistema
-  // Ex: "Gaming Hub, HDR com comando de Voz", "HDR10, HDMI, USB, Dolby Audio, Wi-Fi"
-  let limpo = label
-    .replace(/,\s*[^,]{10,}/g, '')          // Remove segmentos longos após vírgula
-    .replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '')
-    .replace(/\s+/g, ' ').trim();
+      const memTok   = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t));
+      const storTok  = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t));
+      const redeTok  = tokens.filter(t => /^(4g|5g)$/i.test(t));
+      const modelTok = tokens.filter(t =>
+        /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
+        !/^(4g|5g|gb|tb)$/i.test(t) &&
+        !memTok.includes(t));
+      const numTok = tokens.filter(t =>
+        /^\d+$/.test(t) && t.length >= 2 &&
+        !memTok.includes(t) && !storTok.includes(t));
+      const txtTok = tokens.filter(t =>
+        !memTok.includes(t) && !storTok.includes(t) &&
+        !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
 
-  // Remove cor
-  limpo = limpo
-    .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '')
-    .replace(/\s+/g, ' ').trim();
+      const lV = extrairVariante(q);
+      const lS = extrairSerie(q);
 
-  // Remove último traço e o que vem depois
-  const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
-  if (comMem.length > 3) queries.push(comMem);
+      return _prodCache.filter(p => {
+        if (ehAcessorio(p.nome)) return false;
+        const pn = normStr(p.nome);
 
-  // Sem memória/storage
-  const semMem = comMem
-    .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
-    .replace(/\s+\d+(gb|tb)/gi, '')
-    .replace(/\s+/g, ' ').trim();
-  if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+        if (lS.length) {
+          const pS = extrairSerie(p.nome);
+          if (!serieCompativel(lS, pS)) return false;
+        }
 
-  // Sem conectividade
-  const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
-  if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+        const pV = extrairVariante(p.nome);
+        if (lV.includes('pro')      !== pV.includes('pro'))      return false;
+        if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false;
+        for (const v of ['plus','ultra','max']) {
+          if (lV.includes(v) !== pV.includes(v)) return false;
+        }
 
-  // Query curta para TVs: marca + polegadas + modelo (ex: "Samsung 43" U8100")
-  const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
-  if (tvMatch) {
-    const marca = tvMatch[1].trim();
-    const pol   = tvMatch[2];
-    const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
-    const cod = codMatch ? codMatch[1] : '';
-    const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
-    if (qTV.length > 3) queries.push(qTV);
-    queries.push((marca + ' ' + pol + '"').trim());
-  }
+        if (memTok.length && !memTok.every(t => {
+          const base = t.replace(/(gb|tb)$/i,'');
+          return pn.includes(base);
+        })) return false;
 
-  // Query baseada em código de modelo para TVs (U8100F, 43S5045, 32PHG)
-  const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
-  if (codModelo) {
-    codModelo.forEach(cod => {
-      if (cod.length >= 4) queries.push(cod);
-    });
-  }
+        if (storTok.length && !storTok.every(t => {
+          const n = t.replace(/[^\d]/g,'');
+          return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
+        })) return false;
 
-  // Extra: marca principal + polegadas para qualquer TV
-  const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
-  if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
+        const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
+        const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
+        const pTem5g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
+        const pTem4g   = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
+        if (redeTok.length) {
+          if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
+        } else if (ehSmartphone) {
+          if (pTem5g || pTem4g) return false;
+        }
 
-  // Query para iPad/tablet: "ipad 10 64gb" → "ipad 64gb" ou "ipad 10"
-  if (/\bipad\b/i.test(label)) {
-    const gen = label.match(/\bipad\s+(\d+)\b/i);
-    const mem = label.match(/\b(\d+)\s*gb\b/i);
-    if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
-    if (gen)        queries.push(`ipad ${gen[1]}`);
-    queries.push('ipad');
-  }
-
-  if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
-  return [...new Set(queries.filter(q => q.length > 2))];
-}
-
-async function buscarVinculosDoItem(item) {
-  let candidatos = [];
-  if (_prodCache.length) {
-    const queries = gerarQueries(item.label || item.sysname || '');
-    for (const q of queries) {
-      buscarNoCacheLocal(q).forEach(p => {
-        if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
+        if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+        if (numTok.length && !numTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
+        if (txtTok.length) {
+          const hits = txtTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length;
+          if (hits < Math.ceil(txtTok.length * 0.5)) return false;
+        }
+        return true;
       });
-      if (candidatos.length >= 30) break;
     }
-    if (!candidatos.length && item.sku?.trim()) {
-      const skuN = item.sku.trim().toLowerCase();
-      _prodCache.filter(p =>
-        (p.codigo_interno||'').toLowerCase() === skuN ||
-        (p.codigo_barra||'').toLowerCase() === skuN
-      ).forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+
+    function gerarQueries(label) {
+      const queries = [];
+      let limpo = label
+        .replace(/,\s*[^,]{10,}/g, '')
+        .replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '')
+        .replace(/\s+/g, ' ').trim();
+
+      limpo = limpo
+        .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '')
+        .replace(/\s+/g, ' ').trim();
+
+      const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+      if (comMem.length > 3) queries.push(comMem);
+
+      const semMem = comMem
+        .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
+        .replace(/\s+\d+(gb|tb)/gi, '')
+        .replace(/\s+/g, ' ').trim();
+      if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+
+      const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
+      if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+
+      const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
+      if (tvMatch) {
+        const marca = tvMatch[1].trim();
+        const pol   = tvMatch[2];
+        const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
+        const cod = codMatch ? codMatch[1] : '';
+        const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
+        if (qTV.length > 3) queries.push(qTV);
+        queries.push((marca + ' ' + pol + '"').trim());
+      }
+
+      const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
+      if (codModelo) {
+        codModelo.forEach(cod => {
+          if (cod.length >= 4) queries.push(cod);
+        });
+      }
+
+      const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
+      if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
+
+      if (/\bipad\b/i.test(label)) {
+        const gen = label.match(/\bipad\s+(\d+)\b/i);
+        const mem = label.match(/\b(\d+)\s*gb\b/i);
+        if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
+        if (gen)        queries.push(`ipad ${gen[1]}`);
+        queries.push('ipad');
+      }
+
+      if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
+      return [...new Set(queries.filter(q => q.length > 2))];
     }
-  } else {
-    const queries = gerarQueries(item.label || item.sysname || '');
-    for (const q of queries) {
-      try {
-        const d = await apiGet({ nome: q });
-        if (d.code === 200 && d.data?.length)
-          d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
-      } catch(e) {}
-      if (candidatos.length >= 10) break;
+
+    async function buscarVinculosDoItem(item) {
+      let candidatos = [];
+      if (_prodCache.length) {
+        const queries = gerarQueries(item.label || item.sysname || '');
+        for (const q of queries) {
+          buscarNoCacheLocal(q).forEach(p => {
+            if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
+          });
+          if (candidatos.length >= 30) break;
+        }
+        if (!candidatos.length && item.sku?.trim()) {
+          const skuN = item.sku.trim().toLowerCase();
+          _prodCache.filter(p =>
+            (p.codigo_interno||'').toLowerCase() === skuN ||
+            (p.codigo_barra||'').toLowerCase() === skuN
+          ).forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+        }
+      } else {
+        const queries = gerarQueries(item.label || item.sysname || '');
+        for (const q of queries) {
+          try {
+            const d = await apiGet({ nome: q });
+            if (d.code === 200 && d.data?.length)
+              d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
+          } catch(e) {}
+          if (candidatos.length >= 10) break;
+        }
+      }
+      if (!candidatos.length) return [];
+      const label = item.label || item.sysname || '';
+      const ehTV      = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
+      const threshold = ehTV ? 0.20 : 0.55;
+      return candidatos
+        .filter(p => !ehAcessorio(p.nome))
+        .filter(p => filtroTecnico(label, p.nome))
+        .map(p => ({ p, score: scoreNome(label, p.nome) }))
+        .filter(({ score }) => score >= threshold)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map(({ p }) => ({
+          id: p.id, nome: p.nome,
+          sku: p.codigo_interno || p.codigo_barra || '',
+          estoque: Number(p.estoque ?? 0),
+        }));
     }
-  }
-  if (!candidatos.length) return [];
-  const label = item.label || item.sysname || '';
-  // Threshold mais permissivo para TVs e tablets (nomes muito diferentes entre lista e sistema)
-  const ehTV      = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
-  const threshold = ehTV ? 0.20 : 0.55;
-  return candidatos
-    .filter(p => !ehAcessorio(p.nome))
-    .filter(p => filtroTecnico(label, p.nome))
-    .map(p => ({ p, score: scoreNome(label, p.nome) }))
-    .filter(({ score }) => score >= threshold)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 8)
-    .map(({ p }) => ({
-      id: p.id, nome: p.nome,
-      sku: p.codigo_interno || p.codigo_barra || '',
-      estoque: Number(p.estoque ?? 0),
-    }));
-}
 
-function filtroTecnico(label, nomeAPI) {
-  const lMem=extrairMem(label), pMem=extrairMem(nomeAPI);
-  const lRede=extrairRede(label), pRede=extrairRede(nomeAPI);
-  const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
-  const lStor=extrairStorage(label);
-  if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
-  // Conectividade bidirecional — apenas para smartphones (TVs/iPads nunca têm 4G/5G)
-  const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
-  if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
-  if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
-  if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
-  if (lStor.length) {
-    const pMem2=extrairMem(nomeAPI);
-    const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,''));
-    const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];
-    if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false;
-  }
-  return true;
-}
+    // NOVA FUNÇÃO PARA BUSCA DINÂMICA DENTRO DO CARD DO MODAL DA IA
+    async function triggerBuscaModalIA(idx, q) {
+      const resDiv = document.getElementById('ia-dd-res-' + idx);
+      q = q.trim();
+      if (q.length < 2) { resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Digite pelo menos 2 caracteres...</div>'; return; }
+      resDiv.innerHTML = '<div style="font-size:11px;color:#888;">⏳ Buscando na API...</div>';
 
-function scoreNome(label, nomeAPI) {
-  const tokens = tokensModelo(label);
-  if (!tokens.length) return 0;
-  const pn = normStr(nomeAPI);
-  const modelTok = tokens.filter(t =>
-    /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
-    !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
-  const restTok = tokens.filter(t => !modelTok.includes(t));
-  const mScore = modelTok.length
-    ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1;
-  const rScore = restTok.length
-    ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
-  return mScore * 0.7 + rScore * 0.3;
-}
+      let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
+      if (!prods.length) {
+        try {
+          const url = new URL("https://caixa-three.vercel.app/api/produtos");
+          url.searchParams.append("loja_id", lojaIdJeta);
+          url.searchParams.append("limite", "20");
+          url.searchParams.append("nome", q);
+          const r = await fetch(url.toString());
+          const d = await r.json();
+          if (d.code === 200 && d.data) prods = d.data;
+        } catch(e){}
+      }
 
-async function buscarEstoqueDoItem(item) {
-  const vs = await buscarVinculosDoItem(item);
-  if (!vs.length) return null;
-  const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
-  return { estoque: estoqueTotal, prodId: vs[0].id };
-}
+      if (!prods.length) {
+        resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Nenhum resultado encontrado.</div>';
+        return;
+      }
 
-    // Função helper para o motor
+      resDiv.innerHTML = prods.slice(0, 15).map(p => {
+        const est = Number(p.estoque || 0);
+        const ok = est > 0;
+        return `<div class="ia-cand-row">
+                  <span class="ia-cand-nome" title="${p.nome}">${p.nome}</span>
+                  <span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span>
+                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" 
+                          data-pid="${p.id}" 
+                          data-pnome="${encodeURIComponent(p.nome)}" 
+                          data-pest="${est}" 
+                          ${!ok ? 'disabled' : ''}>+</button>
+                </div>`;
+      }).join('');
+
+      resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
+        b.addEventListener('click', function() {
+          adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) });
+          this.textContent = '✓';
+          this.className = 'ia-cand-btn dis';
+          this.disabled = true;
+        });
+      });
+    }
+
     function el(id) { return document.getElementById(id); }
 
-    // Inicializa prompt
-    document.getElementById('ia-prompt').value =
-      localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT;
+    document.getElementById('ia-prompt').value = localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT;
 
     document.getElementById('ia-prompt').addEventListener('input', function() {
       localStorage.setItem(IA_PROMPT_KEY, this.value);
@@ -1398,7 +1410,6 @@ async function buscarEstoqueDoItem(item) {
       mostrarToast('↺ Prompt restaurado');
     });
 
-    // Abrir / fechar
     document.getElementById('btn-abrir-ia-lote').addEventListener('click', function() {
       document.getElementById('ia-passo1').style.display = 'flex';
       document.getElementById('ia-passo2').style.display = 'none';
@@ -1418,7 +1429,6 @@ async function buscarEstoqueDoItem(item) {
       if (e.target === this) fecharIaLote();
     });
 
-    // Chamar Groq
     async function chamarGroq(system, user) {
       const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
         method:'POST',
@@ -1432,7 +1442,6 @@ async function buscarEstoqueDoItem(item) {
       throw new Error('Resposta inesperada do Groq');
     }
 
-    // Processar
     document.getElementById('ia-processar').addEventListener('click', async function() {
       const raw = document.getElementById('ia-raw').value.trim();
       if (!raw) {
@@ -1448,15 +1457,13 @@ async function buscarEstoqueDoItem(item) {
         const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         localStorage.setItem(IA_PROMPT_KEY, prompt);
 
-        // 1. IA extrai nomes
         const resposta = await chamarGroq(
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
           prompt + '\n\nLista:\n' + raw
         );
-        const nomes = JSON.parse(resposta.replace(/```json|```/g, '').trim());
-        if (!Array.isArray(nomes) || !nomes.length) throw new Error('IA não retornou lista válida.');
+        const itens = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        if (!Array.isArray(itens) || !itens.length) throw new Error('IA não retornou lista válida.');
 
-        // 2. Muda para passo 2
         document.getElementById('ia-passo1').style.display = 'none';
         document.getElementById('ia-passo2').style.display = 'flex';
 
@@ -1466,7 +1473,6 @@ async function buscarEstoqueDoItem(item) {
         grid.innerHTML = '';
         _iaResultados = [];
 
-        // 3. Baixa catálogo completo
         status.textContent = 'Baixando catálogo de produtos…';
         prog.style.width = '5%';
         await carregarCacheProdutos(function(pag, total) {
@@ -1476,22 +1482,33 @@ async function buscarEstoqueDoItem(item) {
 
         var comEst = 0, semEst = 0, naoAch = 0;
 
-        // 4. Resolve cada produto offline com o motor completo
-        for (var i = 0; i < nomes.length; i++) {
-          const nome = nomes[i];
-          status.textContent = '(' + (i+1) + '/' + nomes.length + ') ' + nome.substring(0,45) + '…';
-          prog.style.width = (40 + Math.round(((i+1)/nomes.length)*60)) + '%';
+        for (var i = 0; i < itens.length; i++) {
+          let itemRaw = itens[i];
+          let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto");
+          let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
 
-          const vinculos = await buscarVinculosDoItem({ label: nome, sysname:'', sku:'', prodId:null });
+          status.textContent = '(' + (i+1) + '/' + itens.length + ') ' + nomeOriginal.substring(0,45) + '…';
+          prog.style.width = (40 + Math.round(((i+1)/itens.length)*60)) + '%';
+
+          const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname:'', sku:'', prodId:null });
           const card = document.createElement('div');
+          
+          let baseHtml = '';
+
+          // Escapa aspas duplas de polegadas (ex: 32") para não quebrar o HTML e evita o erro URI malformed
+          let tituloEscapado = nomeOriginal.replace(/"/g, '&quot;');
+          
+          let infoHtml = '<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">' +
+                           '<span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + tituloEscapado + '">' + nomeOriginal + '</span>' +
+                           (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
+                         '</div>';
 
           if (!vinculos || !vinculos.length) {
-            card.className = 'ia-card nao-enc';
-            card.innerHTML =
-              '<div class="ia-card-head">' +
-                '<span class="ia-nome">' + nome + '</span>' +
-                '<span class="ia-badge nf">N/A</span>' +
-                '<button class="ia-btn-trocar ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '">🔍 Buscar</button>' +
+            baseHtml =
+              '<div class="ia-card-head" style="align-items:flex-start;">' +
+                infoHtml +
+                '<span class="ia-badge nf" style="margin-top:2px;">N/A</span>' +
+                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button>' +
               '</div>' +
               '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
@@ -1512,31 +1529,55 @@ async function buscarEstoqueDoItem(item) {
                 '</div>';
             });
 
-            card.className = 'ia-card ' + (temEst?'com-est':'sem-est');
-            card.innerHTML =
-              '<div class="ia-card-head">' +
-                '<span class="ia-nome">' + nome + '</span>' +
-                '<span class="ia-badge ' + (temEst?'ok':'zero') + '">' + (temEst?'✓ ':'⚠ ') + total + '</span>' +
-                '<button class="ia-btn-trocar ia-busca-manual" data-nome="' + encodeURIComponent(nome) + '">🔄 Trocar</button>' +
+            baseHtml =
+              '<div class="ia-card-head" style="align-items:flex-start;">' +
+                infoHtml +
+                '<span class="ia-badge ' + (temEst?'ok':'zero') + '" style="margin-top:2px;">' + (temEst?'✓ ':'⚠ ') + total + '</span>' +
+                '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button>' +
               '</div>' +
               candidatos;
           }
+
+          // Adiciona a área oculta de busca em todos os cards
+          baseHtml += 
+            '<div class="ia-dd-area" id="ia-dd-area-' + i + '">' +
+              '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '">' +
+              '<div class="ia-dd-results" id="ia-dd-res-' + i + '"></div>' +
+            '</div>';
+
+          card.className = 'ia-card ' + (!vinculos || !vinculos.length ? 'nao-enc' : (vinculos.reduce((s,v)=>s+v.estoque,0)>0 ? 'com-est' : 'sem-est'));
+          card.innerHTML = baseHtml;
+          
           grid.appendChild(card);
-          _iaResultados.push({ nome: nome, vinculos: vinculos || [] });
+          _iaResultados.push({ nome: nomeOriginal, vinculos: vinculos || [] });
         }
 
-        // Eventos
         grid.querySelectorAll('.ia-add-vinc').forEach(function(b) {
           b.addEventListener('click', function() {
             adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
           });
         });
-        grid.querySelectorAll('.ia-busca-manual').forEach(function(b) {
+
+        grid.querySelectorAll('.ia-toggle-search').forEach(function(b) {
           b.addEventListener('click', function() {
-            fecharIaLote();
-            document.getElementById('campo-busca').value = decodeURIComponent(b.dataset.nome);
-            document.getElementById('btn-buscar').click();
+            const idx = this.dataset.idx;
+            const area = document.getElementById('ia-dd-area-' + idx);
+            area.classList.toggle('open');
+            if (area.classList.contains('open')) {
+              const inp = document.getElementById('ia-dd-search-' + idx);
+              inp.focus();
+              triggerBuscaModalIA(idx, inp.value);
+            }
+          });
+        });
+
+        grid.querySelectorAll('.ia-dd-search').forEach(function(inp) {
+          let timer;
+          inp.addEventListener('input', function() {
+            clearTimeout(timer);
+            const idx = this.id.replace('ia-dd-search-', '');
+            timer = setTimeout(function() { triggerBuscaModalIA(idx, inp.value); }, 400);
           });
         });
 
