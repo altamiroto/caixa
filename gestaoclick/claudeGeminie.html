@@ -600,6 +600,51 @@ function createListObj(nome) {
   };
 }
 
+// ════════════════════════════════════
+// PERSISTÊNCIA CATÁLOGO (INDEXEDDB)
+// ════════════════════════════════════
+const DB_NAME = 'JetaCatalogDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'catalog';
+
+function dbOpen() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+    };
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror = e => reject(e.target.error);
+  });
+}
+
+async function dbSaveCatalog(data) {
+  try {
+    const db = await dbOpen();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put({ products: data, ts: Date.now() }, 'prodCache');
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch(e) { console.error('DB Save error:', e); }
+}
+
+async function dbGetCatalog() {
+  try {
+    const db = await dbOpen();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get('prodCache');
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } catch(e) { console.error('DB Get error:', e); return null; }
+}
+
 function initPrices(item) {
   if (item.type === 'product') {
     if (!item.prices) item.prices = {};
@@ -742,9 +787,27 @@ async function apiGet(params) {
   return res.json();
 }
 
-let _prodCache = [], _prodCacheTs = 0; const CACHE_TTL = 5 * 60 * 1000;
-async function carregarCacheProdutos(onProgress) {
-  if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
+let _prodCache = [], _prodCacheTs = 0; const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h para re-sync forçado
+
+async function carregarCacheProdutos(onProgress, forceRefresh = false) {
+  // 1. Tentar recuperar do IndexedDB primeiro (se não estiver em memória)
+  if (!forceRefresh && !_prodCache.length) {
+    const cached = await dbGetCatalog();
+    if (cached && cached.products && cached.products.length) {
+      _prodCache = cached.products;
+      _prodCacheTs = cached.ts || 0;
+      console.log('Catálogo carregado do IndexedDB:', _prodCache.length, 'itens');
+      
+      // Se o cache é recente (menos de 2h), não precisa re-baixar agora
+      if (Date.now() - _prodCacheTs < 2 * 60 * 60 * 1000) return _prodCache;
+      // Caso contrário, continua para atualizar em segundo plano se solicitado (ou retorna)
+      if (!forceRefresh) return _prodCache;
+    }
+  }
+
+  // Se já tem em memória e não é forçado, retorna
+  if (!forceRefresh && _prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
+
   const base = 'https://caixa-three.vercel.app/api/produtos', loja = '361408';
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -761,7 +824,9 @@ async function carregarCacheProdutos(onProgress) {
     if (onProgress) onProgress(p, totalPaginas, todos.length);
     if ((p - 1) % 3 === 0) await delay(1100);
   }
-  _prodCache = todos; _prodCacheTs = Date.now(); return _prodCache;
+  _prodCache = todos; _prodCacheTs = Date.now(); 
+  dbSaveCatalog(_prodCache); // Salva no persistente
+  return _prodCache;
 }
 
 function normStr(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\bpro\s*\+/g, 'pro plus').replace(/\+/g, ' plus ').replace(/[^a-z0-9\s\/]/g, ' ').replace(/\s+/g, ' ').trim(); }
@@ -1172,55 +1237,58 @@ async function initAuth() {
   if(_currentUser) {
     if(!_currentUser.email) { logout(); return; }
     renderUser(_currentUser);
-    _cloudLoading = true;
-    updateCloudStatus('loading');
-    try {
-      const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
-      if (!resp.ok) throw new Error('Servidor não respondeu (CORS/Network)');
-      let data = await resp.json();
-      
-      // MIGRATION: Se o dado veio no formato legado { appData: {...}, lista: [...] }
-      if (data && data.appData && data.lista) {
-         console.log('Ambiente: Detectado formato legado. Migrando...');
-         const oldLists = data.appData.listas || [];
-         const currentLista = data.lista; 
-         // Se a lista principal não está em "listas", cria uma
-         if (oldLists.length === 0 && currentLista.length > 0) {
-            const nova = createListObj('Lista Recuperada');
-            nova.lista = currentLista;
-            data = { listas: [nova], currentId: nova.id, templates: data.appData.templates };
-         } else {
-            data = data.appData; // Tenta o objeto interno
-            if (currentLista.length > 0 && data.listas && data.listas[0]) data.listas[0].lista = currentLista;
-         }
-      }
+    
+    // UI INSTANTÂNEA: O appData local já foi carregado por carregar().
+    // Marcamos como pronto para não travar o salvamento caso o usuário comece a digitar.
+    _syncReady = true; 
+    updateCloudStatus('success', 'Usando dados locais (sincronizando...)');
 
-      const totalItensNuvem = (data.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-      const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+    // Sincronização em segundo plano
+    (async () => {
+      try {
+        const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+        if (!resp.ok) throw new Error('Nuvem offline');
+        let data = await resp.json();
+        
+        // MIGRATION check...
+        if (data && data.appData && data.lista) {
+           const oldLists = data.appData.listas || [];
+           const currentLista = data.lista; 
+           if (oldLists.length === 0 && currentLista.length > 0) {
+              const nova = createListObj('Lista Recuperada');
+              nova.lista = currentLista;
+              data = { listas: [nova], currentId: nova.id, templates: data.appData.templates };
+           } else {
+              data = data.appData;
+              if (currentLista.length > 0 && data.listas && data.listas[0]) data.listas[0].lista = currentLista;
+           }
+        }
 
-      if (totalItensLocal > 0 && totalItensNuvem === 0) {
-         // Conflito: Local tem itens, nuvem não. Pergunta antes de sobrescrever.
-         _pendingCloudData = data;
-         el('conflict-modal').style.display = 'flex';
-         updateCloudStatus('success');
-      } else if(data && data.listas && data.listas.length > 0) {
-        appData = data;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-        switchTab(appData.currentId || appData.listas[0].id);
-        toast('☁️ Nuvem sincronizada');
-        _syncReady = true;
+        if(data && data.listas && data.listas.length > 0) {
+          const totalItensNuvem = data.listas.reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+          const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+
+          // Se a nuvem tem dados e o local está vazio ou idêntico, aplica silenciosamente
+          // Caso contrário, se houver divergência, poderíamos alertar, mas por enquanto priorizamos nuvem se local for inicial
+          if (totalItensLocal === 0 || totalItensNuvem > 0) {
+             const localStr = JSON.stringify(appData);
+             const remoteStr = JSON.stringify(data);
+             if (localStr !== remoteStr) {
+                appData = data;
+                localStorage.setItem(STORAGE_KEY, remoteStr);
+                switchTab(appData.currentId || appData.listas[0].id);
+                toast('☁️ Sincronizado com a nuvem');
+             }
+          }
+        }
         updateCloudStatus('success');
-      } else {
-        _syncReady = true;
-        updateCloudStatus('success');
+      } catch(e) { 
+        console.warn('Sync background falhou:', e.message);
+        // Não incomodamos o usuário, ele continua usando local.
       }
-    } catch(e) { 
-      console.error('Cloud load fail:', e); 
-      updateCloudStatus('err', e.message);
-    }
-    _cloudLoading = false;
+    })();
   } else {
-    _syncReady = false;
+    _syncReady = true; // Mesmo sem logado, permitimos operar localmente
   }
   
   setTimeout(() => {
