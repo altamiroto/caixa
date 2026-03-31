@@ -1353,6 +1353,20 @@
       max-height: 160px;
       overflow-y: auto;
     }
+    .ia-balanco-ctrl { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); }
+    .ia-field-group { display: flex; flex-direction: column; gap: 5px; }
+    .ia-select { padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; }
+    .ia-actions-row { display: flex; gap: 10px; }
+    .ia-btn-processar, .ia-btn-balanco { flex: 1; padding: 12px; border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+    .ia-btn-processar { background: var(--accent-color); }
+    .ia-btn-processar:hover { opacity: 0.9; transform: translateY(-1px); }
+    .ia-btn-balanco { background: #2ecc71; }
+    .ia-btn-balanco:hover { background: #27ae60; transform: translateY(-1px); }
+    .ia-balanco-results { margin-bottom: 15px; padding: 12px; background: #fff9e6; border-left: 4px solid #f1c40f; border-radius: 4px; font-size: 13px; color: #856404; }
+    .ia-balanco-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .ia-balanco-item:last-child { border-bottom: none; }
+    .ia-balanco-badge { background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .ia-balanco-results h4 { margin: 0 0 8px 0; color: #795548; display: flex; align-items: center; gap: 6px; }
   </style>
 </head>
 
@@ -1468,13 +1482,25 @@
           <textarea class="ia-prompt-ta" id="ia-prompt"></textarea>
         </div>
         <div id="ia-erro" class="ia-erro"></div>
-        <button class="ia-btn-processar" id="ia-processar">🤖 Processar e consultar estoque →</button>
+        <div class="ia-balanco-ctrl">
+          <div class="ia-field-group">
+            <span class="ia-label">Grupo para Balanço</span>
+            <select id="ia-grupo-ref" class="ia-select">
+              <option value="">Carregando grupos...</option>
+            </select>
+          </div>
+          <div class="ia-actions-row">
+            <button class="ia-btn-processar" id="ia-processar">🤖 Consultar Lista →</button>
+            <button class="ia-btn-balanco" id="ia-balanco">⚖️ Realizar Balanço (Diff)</button>
+          </div>
+        </div>
       </div>
       <div class="ia-lb" id="ia-passo2" style="display:none;">
         <div class="ia-prog-outer">
           <div class="ia-prog-inner" id="ia-prog"></div>
         </div>
         <div class="ia-res-status" id="ia-status">Processando…</div>
+        <div id="ia-balanco-res" class="ia-balanco-results" style="display:none;"></div>
         <div class="ia-res-grid" id="ia-grid"></div>
       </div>
       <div class="ia-lote-footer">
@@ -2034,8 +2060,16 @@
         if (d.code === 200 && d.data) {
           _listaGrupos = d.data;
           renderizarAbasGrupos();
+          popularSelectGruposIA();
         }
       } catch (e) { console.error("Erro ao carregar grupos:", e); }
+    }
+
+    function popularSelectGruposIA() {
+      const sel = document.getElementById('ia-grupo-ref');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Selecione o Grupo --</option>' +
+        _listaGrupos.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
     }
 
     function renderizarAbasGrupos() {
@@ -2655,7 +2689,7 @@
         document.getElementById('ia-erro').textContent = 'Erro: ' + err.message;
         document.getElementById('ia-erro').style.display = 'block';
       }
-      btn.disabled = false; btn.textContent = '🤖 Processar e consultar estoque →';
+      btn.disabled = false; btn.textContent = '🤖 Consultar Lista →';
     });
 
     document.getElementById('ia-add-todos').addEventListener('click', function () {
@@ -2668,6 +2702,93 @@
       mostrarToast('✅ ' + n + ' produto(s) adicionados');
       fecharIaLote();
     });
+
+    // --- RECONCILIAÇÃO / BALANÇO DE ESTOQUE ---
+    async function carregarProdutosDoGrupo(grupoId) {
+      if (!grupoId) return _prodCache;
+      const url = `${API_HOST}/api/produtos?loja_id=${lojaIdJeta}&grupo_id=${grupoId}&limite=500`;
+      try {
+        const r = await fetch(url);
+        const d = await r.json();
+        return (d.code === 200 && d.data) ? d.data : [];
+      } catch (e) { return []; }
+    }
+
+    async function realizarBalanco() {
+      const raw = el('ia-raw').value.trim();
+      const grupoId = el('ia-grupo-ref').value;
+      if (!raw) { mostrarToast('⚠ Cole a lista primeiro'); return; }
+      if (!grupoId) { mostrarToast('⚠ Selecione um grupo para o balanço'); return; }
+
+      el('ia-passo1').style.display = 'none';
+      el('ia-passo2').style.display = 'flex';
+      el('ia-status').innerHTML = '⚖️ Realizando Balanço...';
+      el('ia-balanco-res').style.display = 'none';
+      el('ia-grid').innerHTML = '';
+      el('ia-add-todos').style.display = 'none';
+
+      try {
+        const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
+        const respText = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
+        let itensListados = JSON.parse(respText.replace(/```json|```/g, '').trim());
+        
+        if (!Array.isArray(itensListados) || !itensListados.length) {
+          el('ia-status').innerHTML = '❌ Não foi possível identificar itens na lista.';
+          return;
+        }
+
+        const produtosNoGrupo = await carregarProdutosDoGrupo(grupoId);
+        const idsListados = new Set();
+        const resultadosBuscaLote = [];
+        
+        el('ia-status').innerHTML = `🔍 Cruzando ${itensListados.length} itens com ${produtosNoGrupo.length} do grupo...`;
+
+        for(let i=0; i < itensListados.length; i++) {
+          const item = itensListados[i];
+          const nomeBusca = typeof item === 'string' ? item : (item.busca || item.original);
+          el('ia-prog').style.width = ((i+1)/itensListados.length * 100) + '%';
+          const vs = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
+          if(vs && vs.length > 0) {
+            idsListados.add(vs[0].id);
+            resultadosBuscaLote.push({ original: (item.original || nomeBusca), vinculo: vs[0] });
+          } else {
+            resultadosBuscaLote.push({ original: (item.original || nomeBusca), vinculo: null });
+          }
+        }
+
+        const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
+        el('ia-status').innerHTML = '✅ Balanço Concluído';
+        
+        if (sobras.length > 0) {
+          el('ia-balanco-res').style.display = 'block';
+          el('ia-balanco-res').innerHTML = `<h4>⚠️ Itens em Estoque NESTE GRUPO não mencionados na lista:</h4>` +
+            sobras.map(p => `<div class="ia-balanco-item"><span>${p.nome.substring(0, 45)}...</span><span class="ia-balanco-badge">${p.estoque} em estoque</span></div>`).join('');
+        } else {
+          el('ia-balanco-res').style.display = 'block';
+          el('ia-balanco-res').innerHTML = '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
+        }
+
+        el('ia-grid').innerHTML = resultadosBuscaLote.map((res, idx) => `
+          <div class="ia-res-card" style="background:#fff; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #eee;">
+            <div style="font-weight:700; font-size:12px; margin-bottom:5px;">${res.original}</div>
+            ${res.vinculo ? `
+              <div class="ia-cand-row" style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:6px; border-radius:6px;">
+                <span style="flex:1; font-size:11px;">${res.vinculo.nome}</span>
+                <span class="ia-cand-est ok" style="font-size:11px;">✓ ${res.vinculo.estoque}</span>
+                <button class="ia-cand-btn add" onclick="adicionarAoCarrinho({id:'${res.vinculo.id}', nome:'${res.vinculo.nome}', estoque:${res.vinculo.estoque}})">+</button>
+              </div>
+            ` : `<div style="font-size:11px; color:#e74c3c;">Não vinculado automaticamente.</div>`}
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error(err);
+        el('ia-status').innerHTML = '❌ Erro ao realizar balanço';
+      }
+      el('ia-balanco').disabled = false;
+    }
+
+    el('ia-balanco').addEventListener('click', () => { el('ia-balanco').disabled = true; realizarBalanco(); });
 
     // Inicialização imediata dos grupos e cache silencioso
     window.addEventListener('DOMContentLoaded', () => {
