@@ -676,7 +676,7 @@
           // Limpa o campo de busca manual e dispara busca pelo grupo
           document.getElementById('campo-busca').value = '';
           document.getElementById('campo-filtro').value = '';
-          carregarProdutos('', grupo.atributo_id, grupo.atributo_conteudo);
+          carregarProdutos('', grupo.atributo_conteudo);
         });
         wrap.appendChild(btn);
       });
@@ -710,20 +710,17 @@
       } catch(e){ return s; }
     }
 
-    // Agora aceita atributo_id e atributo_conteudo opcionais (para filtro por aba)
-    async function buscarProdutos(nome, pag, atributo_id, atributo_conteudo) {
+    async function buscarProdutos(nome, pag) {
       const url = new URL("https://caixa-three.vercel.app/api/produtos");
       url.searchParams.append("loja_id", lojaIdJeta);
       url.searchParams.append("limite", "100");
       url.searchParams.append("pagina", pag || 1);
       if ((nome || "").trim()) url.searchParams.append("nome", nome.trim());
-      if (atributo_id)      url.searchParams.append("atributo_id",      atributo_id);
-      if (atributo_conteudo) url.searchParams.append("atributo_conteudo", atributo_conteudo);
       return await (await fetch(url.toString())).json();
     }
 
-    // Aceita atributo_id e atributo_conteudo opcionais
-    async function carregarProdutos(nome, atributo_id, atributo_conteudo) {
+    // filtroConteudo: string do atributo_conteudo para filtrar no front (ex: 'SMARTPHONE'), ou null para não filtrar
+    async function carregarProdutos(nome, filtroConteudo) {
       nome = nome || "";
       document.getElementById('card-com-estoque').style.display = 'none';
       document.getElementById('card-sem-estoque').style.display = 'none';
@@ -736,11 +733,23 @@
       let pag = 1, tot = 1;
       try {
         do {
-          const d = await buscarProdutos(nome, pag, atributo_id, atributo_conteudo);
+          const d = await buscarProdutos(nome, pag);
           if (d.code !== 200) throw new Error("Erro ao carregar produtos.");
           todosProdutos = todosProdutos.concat(d.data.filter(function(p){ return p.nome; }));
           tot = d.meta.total_paginas; pag++;
         } while (pag <= tot);
+
+        // Se veio de uma aba, filtra no front pelo campo atributos
+        if (filtroConteudo) {
+          todosProdutos = todosProdutos.filter(function(p) {
+            return (p.atributos || []).some(function(a) {
+              return a.atributo &&
+                     a.atributo.descricao === 'GRUPO' &&
+                     (a.atributo.conteudo || '').trim().toUpperCase() === filtroConteudo.toUpperCase();
+            });
+          });
+        }
+
         todosProdutos.sort(function(a,b){ return a.nome.localeCompare(b.nome); });
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
