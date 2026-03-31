@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,access-token,secret-access-token');
 
   if (req.method === 'OPTIONS') {
@@ -37,14 +37,20 @@ export default async function handler(req, res) {
   });
 
   try {
-    const resposta = await fetch(urlApi.toString(), {
-      method: 'GET',
+    const fetchOptions = {
+      method: req.method,
       headers: {
         'Content-Type': 'application/json',
         'access-token': ACCESS_TOKEN,
         'secret-access-token': SECRET_TOKEN,
       },
-    });
+    };
+
+    if (req.method !== 'GET' && req.body) {
+      fetchOptions.body = JSON.stringify(req.body);
+    }
+
+    const resposta = await fetch(urlApi.toString(), fetchOptions);
 
     if (!resposta.ok) {
       const erro = await resposta.json().catch(() => ({}));
