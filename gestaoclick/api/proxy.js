@@ -46,6 +46,12 @@ export default async function handler(req, res) {
       },
     };
 
+    // Propaga loja_id para o cabeçalho caso a API exija (alguns endpoints PUT/POST)
+    if (params.loja_id) {
+      fetchOptions.headers['loja_id'] = params.loja_id;
+      fetchOptions.headers['loja-id'] = params.loja_id; // Variação com hífen por segurança
+    }
+
     if (req.method !== 'GET' && req.body) {
       // Em Vercel, req.body já é um objeto se o content-type for JSON
       fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
