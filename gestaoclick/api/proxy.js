@@ -47,17 +47,22 @@ export default async function handler(req, res) {
     };
 
     if (req.method !== 'GET' && req.body) {
-      fetchOptions.body = JSON.stringify(req.body);
+      // Em Vercel, req.body já é um objeto se o content-type for JSON
+      fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
     const resposta = await fetch(urlApi.toString(), fetchOptions);
 
     if (!resposta.ok) {
-      const erro = await resposta.json().catch(() => ({}));
+      const textoErro = await resposta.text().catch(() => 'Indisponível');
+      let erroObj;
+      try { erroObj = JSON.parse(textoErro); } catch (e) { erroObj = { mensagem: textoErro }; }
+
       return res.status(resposta.status).json({
         code: resposta.status,
         status: 'error',
-        data: erro || { mensagem: 'Erro desconhecido da API Betel' },
+        data: erroObj,
+        debug: { url: urlApi.toString(), method: req.method }
       });
     }
 
