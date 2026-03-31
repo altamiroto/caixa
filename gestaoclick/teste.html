@@ -155,30 +155,40 @@
     .btn-add:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); transform: scale(1.05); }
     .btn-add:disabled { background: var(--border-color); color: #999; border-color: transparent; cursor: default; transform: none; }
 
-    /* ══ ABAS DE GRUPO ══ */
+    /* ═══════════════════════════════════════
+       ABAS DE GRUPO — bloco novo, isolado
+    ═══════════════════════════════════════ */
     #abas-grupo-wrap {
       background: var(--bg-secondary);
       border: 2px solid var(--border-color);
       border-radius: 16px;
       box-shadow: var(--shadow);
-      overflow: hidden;
-      display: none; /* aparece após carregar produtos */
-    }
-
-    #abas-grupo-scroll {
+      padding: 10px 14px;
       display: flex;
+      align-items: center;
+      gap: 8px;
       overflow-x: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
-      padding: 10px 12px;
-      gap: 8px;
-      border-bottom: 1px solid var(--border-color);
     }
-    #abas-grupo-scroll::-webkit-scrollbar { display: none; }
+    #abas-grupo-wrap::-webkit-scrollbar { display: none; }
+
+    #abas-grupo-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding-right: 4px;
+      border-right: 1px solid var(--border-color);
+      margin-right: 4px;
+    }
 
     .aba-grupo {
       flex-shrink: 0;
-      padding: 7px 16px;
+      padding: 6px 14px;
       border-radius: 20px;
       border: 2px solid var(--border-color);
       background: var(--bg-primary);
@@ -186,52 +196,26 @@
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.22s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      transition: all 0.2s ease;
       white-space: nowrap;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
+      font-family: 'DM Sans', sans-serif;
     }
     .aba-grupo:hover {
       border-color: var(--primary-color);
       color: var(--primary-color);
       background: white;
       transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     .aba-grupo.ativa {
       background: var(--primary-color);
       color: white;
       border-color: var(--primary-color);
-      box-shadow: 0 4px 12px rgba(26,26,26,0.25);
+      box-shadow: 0 3px 10px rgba(26,26,26,0.22);
     }
-    .aba-grupo .aba-count {
-      font-size: 10px;
-      font-weight: 800;
-      background: rgba(255,255,255,0.25);
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-family: 'DM Mono', monospace;
-    }
-    .aba-grupo:not(.ativa) .aba-count {
-      background: rgba(0,0,0,0.07);
-      color: var(--text-secondary);
-    }
-
-    #abas-info {
-      padding: 8px 16px;
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .abas-info-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--primary-color); opacity: 0.3;
-    }
+    /* ═══════════════════════════════════════ */
 
     /* CARRINHO ESTILO FLOAT PANEL */
     #carrinho-float { 
@@ -467,6 +451,21 @@
 
   <div class="layout">
 
+    <!-- ══ ABAS DE GRUPO — sempre visíveis no topo, atalhos de busca ══
+         Para adicionar novos grupos: copie um <button> e troque data-grupo e o texto.
+         O valor de data-grupo deve bater EXATAMENTE com o conteúdo do atributo na API. -->
+    <div id="abas-grupo-wrap">
+      <span id="abas-grupo-label">Grupo</span>
+      <button class="aba-grupo" data-grupo="SMARTPHONE">📱 Smartphone</button>
+      <button class="aba-grupo" data-grupo="APPLE">🍎 Apple</button>
+      <!-- Exemplos para quando criar mais grupos:
+      <button class="aba-grupo" data-grupo="TABLET">📱 Tablet</button>
+      <button class="aba-grupo" data-grupo="NOTEBOOK">💻 Notebook</button>
+      <button class="aba-grupo" data-grupo="TV">📺 Smart TV</button>
+      <button class="aba-grupo" data-grupo="ACESSORIO">🎧 Acessório</button>
+      -->
+    </div>
+
     <div class="section-card">
       <div class="section-title" style="display:flex;align-items:center;">🔍 Busca Rápida<button id="btn-abrir-ia-lote" style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">🤖 Busca em Lote por IA</button></div>
       <div class="input-with-icon" style="margin-bottom: 10px;">
@@ -481,17 +480,6 @@
             <span class="input-icon">⚡</span>
             <input type="text" id="campo-filtro" placeholder="Digite para filtrar instantaneamente..." />
         </div>
-      </div>
-    </div>
-
-    <!-- ══ ABAS DE GRUPO ══ -->
-    <div id="abas-grupo-wrap">
-      <div id="abas-grupo-scroll">
-        <!-- Abas geradas dinamicamente pelo JS -->
-      </div>
-      <div id="abas-info">
-        <div class="abas-info-dot"></div>
-        <span id="abas-info-texto">Selecione uma aba para filtrar por grupo</span>
       </div>
     </div>
 
@@ -623,133 +611,95 @@
 
   <script>
     const lojaIdJeta = "361408";
-    const CAMPO_GRUPO = "GRUPO"; // nome do campo extra que identifica o grupo
-
     let todosProdutos = [];
     let produtosFiltrados = [];
     let carrinho = {};
     let carrinhoAberto = false;
     let debounceTimer;
-    let abaAtiva = "TODOS"; // controla qual aba está selecionada
 
-    // ══════════════════════════════════════
-    // UTILITÁRIOS DE GRUPO (atributos API)
-    // ══════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
+    // ABAS DE GRUPO — lógica isolada, não interfere no fluxo normal
+    // Clicar numa aba dispara busca de todos os produtos daquele
+    // atributo. Clicar de novo na mesma aba desfaz a seleção.
+    // Busca manual desfaz a seleção de aba automaticamente.
+    // ══════════════════════════════════════════════════════════════
+    var _abaAtiva = null;
 
-    /** Extrai os valores do campo GRUPO de um produto */
-    function getGrupoProduto(produto) {
-      if (!produto.atributos || !produto.atributos.length) return [];
-      return produto.atributos
-        .filter(function(a) { return a.atributo && a.atributo.descricao === CAMPO_GRUPO; })
-        .map(function(a) { return (a.atributo.conteudo || '').trim().toUpperCase(); })
-        .filter(function(v) { return v; });
+    document.querySelectorAll('.aba-grupo').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var grupo = this.dataset.grupo;
+
+        if (_abaAtiva === grupo) {
+          // Clicou na aba já ativa → deseleciona e volta ao estado inicial
+          _abaAtiva = null;
+          document.querySelectorAll('.aba-grupo').forEach(function(b) { b.classList.remove('ativa'); });
+          _resetarTela();
+          return;
+        }
+
+        // Seleciona a aba e dispara a busca por grupo
+        _abaAtiva = grupo;
+        document.querySelectorAll('.aba-grupo').forEach(function(b) { b.classList.remove('ativa'); });
+        this.classList.add('ativa');
+        document.getElementById('campo-busca').value = '';
+        _carregarPorGrupo(grupo);
+      });
+    });
+
+    function _resetarTela() {
+      todosProdutos = [];
+      produtosFiltrados = [];
+      document.getElementById('card-com-estoque').style.display = 'none';
+      document.getElementById('card-sem-estoque').style.display = 'none';
+      document.getElementById('container-filtro').style.display = 'none';
+      document.getElementById('campo-filtro').value = '';
+      var ph = document.getElementById('card-placeholder');
+      ph.style.display = 'block';
+      ph.querySelector('td').textContent = 'Faça uma busca no campo acima para listar o estoque.';
+      ph.querySelector('td').className = 'status-msg';
     }
 
-    /** Coleta todos os grupos únicos presentes em todosProdutos, com contagem */
-    function coletarGrupos(produtos) {
-      var mapa = {}; // grupo -> { total, comEstoque }
-      produtos.forEach(function(p) {
-        var grupos = getGrupoProduto(p);
-        grupos.forEach(function(g) {
-          if (!mapa[g]) mapa[g] = { total: 0, comEstoque: 0 };
-          mapa[g].total++;
-          if (p.estoque > 0) mapa[g].comEstoque++;
-        });
-      });
-      // Ordena alfabeticamente
-      return Object.keys(mapa).sort().map(function(g) {
-        return { nome: g, total: mapa[g].total, comEstoque: mapa[g].comEstoque };
-      });
-    }
+    // Percorre TODAS as páginas da API e retém só os que têm o atributo GRUPO === grupo
+    async function _carregarPorGrupo(grupo) {
+      document.getElementById('card-com-estoque').style.display = 'none';
+      document.getElementById('card-sem-estoque').style.display = 'none';
+      document.getElementById('container-filtro').style.display = 'none';
+      document.getElementById('campo-filtro').value = '';
+      var ph = document.getElementById('card-placeholder');
+      ph.style.display = 'block';
+      ph.querySelector('td').innerHTML = '<span style="font-size:20px;display:block;margin-bottom:10px;">⏳</span> Carregando grupo ' + grupo + '…';
+      ph.querySelector('td').className = 'status-msg';
+      todosProdutos = [];
 
-    /** Filtra produtos pela aba ativa */
-    function filtrarPorGrupo(produtos) {
-      if (abaAtiva === "TODOS") return produtos;
-      if (abaAtiva === "SEM_GRUPO") {
-        return produtos.filter(function(p) { return getGrupoProduto(p).length === 0; });
+      try {
+        var pag = 1, totalPags = 1;
+        do {
+          var d = await buscarProdutos('', pag);
+          if (d.code !== 200) throw new Error('Erro ao carregar produtos.');
+          // Filtra client-side: produto deve ter atributo GRUPO com conteúdo igual ao grupo
+          d.data.forEach(function(p) {
+            if (!p.nome) return;
+            var grupos = (p.atributos || [])
+              .filter(function(a) {
+                return a.atributo &&
+                       a.atributo.descricao === 'GRUPO' &&
+                       (a.atributo.conteudo || '').trim().toUpperCase() === grupo;
+              });
+            if (grupos.length) todosProdutos.push(p);
+          });
+          totalPags = d.meta.total_paginas;
+          pag++;
+        } while (pag <= totalPags);
+
+        todosProdutos.sort(function(a, b) { return a.nome.localeCompare(b.nome); });
+        renderizarTabela(todosProdutos);
+        document.getElementById('container-filtro').style.display = 'block';
+      } catch(err) {
+        ph.querySelector('td').textContent = err.message;
+        ph.querySelector('td').className = 'status-msg erro';
       }
-      return produtos.filter(function(p) { return getGrupoProduto(p).includes(abaAtiva); });
     }
-
-    /** Renderiza as abas de grupo acima das tabelas */
-    function renderizarAbas(produtos) {
-      var wrap = document.getElementById('abas-grupo-wrap');
-      var scroll = document.getElementById('abas-grupo-scroll');
-      var info = document.getElementById('abas-info-texto');
-
-      if (!produtos.length) { wrap.style.display = 'none'; return; }
-
-      var grupos = coletarGrupos(produtos);
-      if (!grupos.length) { wrap.style.display = 'none'; return; }
-
-      // Conta produtos sem grupo
-      var semGrupo = produtos.filter(function(p) { return getGrupoProduto(p).length === 0; });
-
-      scroll.innerHTML = '';
-
-      // Aba "Todos"
-      var abaTotal = document.createElement('button');
-      abaTotal.className = 'aba-grupo' + (abaAtiva === 'TODOS' ? ' ativa' : '');
-      abaTotal.dataset.grupo = 'TODOS';
-      abaTotal.innerHTML = '📦 Todos <span class="aba-count">' + produtos.length + '</span>';
-      scroll.appendChild(abaTotal);
-
-      // Uma aba por grupo
-      grupos.forEach(function(g) {
-        var btn = document.createElement('button');
-        btn.className = 'aba-grupo' + (abaAtiva === g.nome ? ' ativa' : '');
-        btn.dataset.grupo = g.nome;
-        // Emoji por grupo (fácil de expandir)
-        var emoji = '📁';
-        if (g.nome === 'SMARTPHONE') emoji = '📱';
-        else if (g.nome === 'APPLE') emoji = '🍎';
-        else if (g.nome === 'TABLET') emoji = '📱';
-        else if (g.nome === 'NOTEBOOK') emoji = '💻';
-        else if (g.nome === 'TV') emoji = '📺';
-        else if (g.nome === 'ACESSORIO' || g.nome === 'ACESSÓRIO') emoji = '🎧';
-        btn.innerHTML = emoji + ' ' + g.nome + ' <span class="aba-count">' + g.total + '</span>';
-        scroll.appendChild(btn);
-      });
-
-      // Aba "Sem grupo" só se existir produto sem grupo
-      if (semGrupo.length) {
-        var abaSem = document.createElement('button');
-        abaSem.className = 'aba-grupo' + (abaAtiva === 'SEM_GRUPO' ? ' ativa' : '');
-        abaSem.dataset.grupo = 'SEM_GRUPO';
-        abaSem.innerHTML = '❓ Sem grupo <span class="aba-count">' + semGrupo.length + '</span>';
-        scroll.appendChild(abaSem);
-      }
-
-      // Atualiza info rodapé da aba
-      if (abaAtiva === 'TODOS') {
-        info.textContent = 'Mostrando todos os ' + produtos.length + ' produto(s)';
-      } else if (abaAtiva === 'SEM_GRUPO') {
-        info.textContent = 'Produtos sem grupo definido: ' + semGrupo.length;
-      } else {
-        var g = grupos.find(function(x) { return x.nome === abaAtiva; });
-        if (g) info.textContent = g.comEstoque + ' com estoque · ' + (g.total - g.comEstoque) + ' zerado(s)';
-      }
-
-      // Eventos de clique nas abas
-      scroll.querySelectorAll('.aba-grupo').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          abaAtiva = this.dataset.grupo;
-          // Sincroniza filtro de texto com a nova aba
-          var filtroTexto = document.getElementById('campo-filtro').value.toLowerCase().trim();
-          var base = filtroTexto
-            ? todosProdutos.filter(function(p) { return p.nome.toLowerCase().includes(filtroTexto); })
-            : todosProdutos;
-          renderizarTabela(filtrarPorGrupo(base));
-          renderizarAbas(todosProdutos); // atualiza aba ativa
-        });
-      });
-
-      wrap.style.display = 'block';
-    }
-
-    // ══════════════════════════════════════════
-    // FUNÇÕES ORIGINAIS (com integração de grupo)
-    // ══════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
 
     function formatarData(s) {
       if (!s || s === "null" || s === "") return '<span class="sem-registro">\u2014</span>';
@@ -786,10 +736,12 @@
 
     async function carregarProdutos(nome) {
       nome = nome||"";
-      abaAtiva = "TODOS"; // reset da aba ao fazer nova busca
+      // Busca manual desfaz aba ativa
+      _abaAtiva = null;
+      document.querySelectorAll('.aba-grupo').forEach(function(b) { b.classList.remove('ativa'); });
+
       document.getElementById('card-com-estoque').style.display = 'none';
       document.getElementById('card-sem-estoque').style.display = 'none';
-      document.getElementById('abas-grupo-wrap').style.display = 'none';
       const ph = document.getElementById('card-placeholder');
       ph.style.display = 'block';
       ph.querySelector('td').innerHTML = '<span style="font-size: 20px; display:block; margin-bottom: 10px;">⏳</span> Buscando produtos na nuvem...';
@@ -805,7 +757,6 @@
           tot = d.meta.total_paginas; pag++;
         } while (pag <= tot);
         todosProdutos.sort(function(a,b){return a.nome.localeCompare(b.nome);});
-        renderizarAbas(todosProdutos);          // ← renderiza abas após carregar
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
       } catch(err) {
@@ -832,19 +783,15 @@
       const id = produto.id || produto.nome;
       const ecls = produto.estoque > 0 ? 'tag-estoque-ok' : 'tag-estoque-zero';
       const sem  = produto.estoque <= 0;
-      
       const ultMovHtml = produto.ultimaMov 
             ? '<div class="ult-mov" style="display:block;">Últ. Movimentação: ' + formatarDataComDiaSemana(produto.ultimaMov) + '</div>'
             : '<div class="ult-mov"></div>';
-
       const tr = document.createElement('tr');
       tr.className = 'clicavel';
-      
       tr.innerHTML =
         '<td title="'+produto.nome+'"><div class="prod-nome">'+produto.nome+'</div>' + ultMovHtml + '</td>'+
         '<td><span class="'+ecls+'">'+produto.estoque+'</span></td>'+
         '<td><button class="btn-add" data-id="'+id+'"'+(sem?' disabled':'')+'>+</button></td>';
-        
       tr.addEventListener('click', function(e){
         if (e.target.closest('.btn-add')) return;
         abrirHistorico(produto);
@@ -870,7 +817,7 @@
         bCom.innerHTML = bSem.innerHTML = '';
         cCom.style.display = cSem.style.display = 'none';
         ph.style.display = 'block';
-        ph.querySelector('td').innerHTML = 'Nenhum produto encontrado com esse filtro.';
+        ph.querySelector('td').innerHTML = 'Nenhum produto encontrado com esse nome.';
         return;
       }
       bCom.innerHTML = '';
@@ -889,10 +836,7 @@
 
     function filtrarTabela() {
       const t = document.getElementById('campo-filtro').value.toLowerCase().trim();
-      const base = t
-        ? todosProdutos.filter(function(p){return p.nome.toLowerCase().includes(t);})
-        : todosProdutos;
-      renderizarTabela(filtrarPorGrupo(base));
+      renderizarTabela(todosProdutos.filter(function(p){return p.nome.toLowerCase().includes(t);}));
     }
 
     function ordenarTabela(col, ord) {
@@ -1101,7 +1045,7 @@
       const ov=document.getElementById('modal-overlay'), tb=document.getElementById('tbody-mov');
       document.getElementById('modal-titulo').textContent    = produto.nome;
       document.getElementById('modal-subtitulo').textContent = 'Estoque atual na base: '+produto.estoque+' un.';
-      tb.innerHTML='<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde... Buscando histórico.</td></tr>';
+      tb.innerHTML='<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde... Buscando histórico (isso pode levar alguns segundos devido ao volume de dados).</td></tr>';
       document.getElementById('modal-resumo').textContent='';
       setDatasDefault(); 
       ov.classList.add('visivel'); 
@@ -1145,7 +1089,7 @@
       toastTimer=setTimeout(function(){t.classList.remove('visivel');},2500);
     }
 
-    // EVENTOS
+    // EVENTOS ORIGINAIS — intocados
     document.getElementById('btn-fechar-modal').addEventListener('click',fecharModal);
     document.getElementById('btn-filtrar-datas').addEventListener('click',buscarPeriodo);
     document.getElementById('filtro-data-ini').addEventListener('keypress',function(e){if(e.key==='Enter')buscarPeriodo();});
@@ -1170,168 +1114,49 @@
     // ════════════════════════
     const IA_PROMPT_KEY = 'jeta_ia_lote_v3';
     const IA_PROMPT_DEFAULT = "Você é um assistente especializado em processar listas de produtos.\nAnalise a lista bruta e retorne um array de objetos JSON.\nPara cada produto encontrado, extraia:\n- \"original\": a linha original completa exatamente como o usuário colou (com cor, preço, etc).\n- \"busca\": o nome limpo do produto (remova preço, cor e marketing, mantendo apenas marca, modelo, memória e conectividade).\n\nRetorne APENAS JSON válido, sem markdown.\n\nExemplo de saída:\n[\n  {\"original\": \"Motorola Moto G15 256gb 4G - Bege - 650\", \"busca\": \"Motorola Moto G15 256gb 4G\"},\n  {\"original\": \"Realme Note 60 4/256gb Verde\", \"busca\": \"Realme Note 60 4/256gb\"}\n]";
-    
     let _iaResultados = [];
     let _prodCache = [];
     let _prodCacheTs = 0;
     const CACHE_TTL = 5 * 60 * 1000;
 
-    function extrairMem(s) {
-      const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
-      return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,''));
-    }
-    function extrairStorage(s) {
-      if (/\d+\s*\/\s*\d+/i.test(s)) return [];
-      return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase());
-    }
-    function extrairRede(s) {
-      const m = s.match(/\b(4g|5g)\b/gi);
-      return m ? m.map(x => x.toLowerCase()) : [];
-    }
-    function extrairPolegadas(s) {
-      const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
-                s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
-      return m ? m.map(x => x.match(/\d+/)[0]) : [];
-    }
-    function normStr(s) {
-      return s.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/\bpro\s*\+/g, 'pro plus')
-        .replace(/\+/g, ' plus ')
-        .replace(/[^a-z0-9\s\/]/g, ' ')
-        .replace(/\s+/g, ' ').trim();
-    }
-    function ehAcessorio(nome) {
-      return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
-    }
-    function extrairVariante(s) {
-      const n = normStr(s); const vs = [];
-      if (/\bpro\b/.test(n))   vs.push('pro');
-      if (/\bplus\b/.test(n))  vs.push('plus');
-      if (/\bultra\b/.test(n)) vs.push('ultra');
-      if (/\bmax\b/.test(n))   vs.push('max');
-      if (/\blite\b/.test(n))  vs.push('lite');
-      if (/\bneo\b/.test(n))   vs.push('neo');
-      if (/\bfe\b/.test(n))    vs.push('fe');
-      if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
-      return vs;
-    }
-    function extrairSerie(s) {
-      const n = normStr(s); const series = [];
-      if (/\bredmi\s+note\b/.test(n))       series.push('redmi-note');
-      else if (/\bredmi\b/.test(n))         series.push('redmi');
-      if (/\bpoco\b/.test(n))               series.push('poco');
-      if (/\brealme\b/.test(n))             series.push('realme');
-      if (/\biphone\b/.test(n))             series.push('iphone');
-      if (/\bgalaxy\b/.test(n))             series.push('galaxy');
-      if (/\bmoto\b/.test(n))               series.push('moto');
-      if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
-      return series;
-    }
-    function serieCompativel(lS, pS) {
-      if (!lS.length || !pS.length) return true;
-      if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
-      if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
-      return lS.some(s => pS.includes(s));
-    }
-    function tokensModelo(label) {
-      const stop = new Set(['de','do','da','com','para','a','o','e','em','smart','tv','led','oled','full','hd','4k','wi','fi','preto','branco','azul','verde','roxo','cinza','dourado','rosa','prata','bege','vermelho','amarelo','grafite','gold','creme','titanium','aurora','marrom','laranja','vinho','preta','silver','blue','black','white','purple','gray','transparente']);
-      const n = normStr(label)
-        .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|grey|azul|rosa)\b/gi, '')
-        .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
-        .replace(/\s+/g, ' ').trim();
-      return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
-    }
-    function filtroTecnico(label, nomeAPI) {
-      const lMem=extrairMem(label), pMem=extrairMem(nomeAPI);
-      const lRede=extrairRede(label), pRede=extrairRede(nomeAPI);
-      const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI);
-      const lStor=extrairStorage(label);
-      if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false;
-      const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
-      if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false;
-      if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
-      if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false;
-      if (lStor.length) {
-        const pMem2=extrairMem(nomeAPI);
-        const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,''));
-        const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)];
-        if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false;
-      }
-      return true;
-    }
-    function scoreNome(label, nomeAPI) {
-      const tokens = tokensModelo(label);
-      if (!tokens.length) return 0;
-      const pn = normStr(nomeAPI);
-      const modelTok = tokens.filter(t => /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) && !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
-      const restTok = tokens.filter(t => !modelTok.includes(t));
-      const mScore = modelTok.length ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1;
-      const rScore = restTok.length ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
-      return mScore * 0.7 + rScore * 0.3;
-    }
+    function extrairMem(s) { const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || []; return matches.map(m => m.replace(/\s/g,'').toLowerCase().replace(/gb|tb/gi,'')); }
+    function extrairStorage(s) { if (/\d+\s*\/\s*\d+/i.test(s)) return []; return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || []).map(m => m.replace(/\s/g,'').toLowerCase()); }
+    function extrairRede(s) { const m = s.match(/\b(4g|5g)\b/gi); return m ? m.map(x => x.toLowerCase()) : []; }
+    function extrairPolegadas(s) { const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) || s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi); return m ? m.map(x => x.match(/\d+/)[0]) : []; }
+    function normStr(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\bpro\s*\+/g, 'pro plus').replace(/\+/g, ' plus ').replace(/[^a-z0-9\s\/]/g, ' ').replace(/\s+/g, ' ').trim(); }
+    function ehAcessorio(nome) { return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome); }
+    function extrairVariante(s) { const n = normStr(s); const vs = []; if (/\bpro\b/.test(n)) vs.push('pro'); if (/\bplus\b/.test(n)) vs.push('plus'); if (/\bultra\b/.test(n)) vs.push('ultra'); if (/\bmax\b/.test(n)) vs.push('max'); if (/\blite\b/.test(n)) vs.push('lite'); if (/\bneo\b/.test(n)) vs.push('neo'); if (/\bfe\b/.test(n)) vs.push('fe'); if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix'); return vs; }
+    function extrairSerie(s) { const n = normStr(s); const series = []; if (/\bredmi\s+note\b/.test(n)) series.push('redmi-note'); else if (/\bredmi\b/.test(n)) series.push('redmi'); if (/\bpoco\b/.test(n)) series.push('poco'); if (/\brealme\b/.test(n)) series.push('realme'); if (/\biphone\b/.test(n)) series.push('iphone'); if (/\bgalaxy\b/.test(n)) series.push('galaxy'); if (/\bmoto\b/.test(n)) series.push('moto'); if (/\bnote\b/.test(n) && !series.length) series.push('note-generic'); return series; }
+    function serieCompativel(lS, pS) { if (!lS.length || !pS.length) return true; if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true; if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true; return lS.some(s => pS.includes(s)); }
+    function tokensModelo(label) { const stop = new Set(['de','do','da','com','para','a','o','e','em','smart','tv','led','oled','full','hd','4k','wi','fi','preto','branco','azul','verde','roxo','cinza','dourado','rosa','prata','bege','vermelho','amarelo','grafite','gold','creme','titanium','aurora','marrom','laranja','vinho','preta','silver','blue','black','white','purple','gray','transparente']); const n = normStr(label).replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|grey|azul|rosa)\b/gi, '').replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '').replace(/\s+/g, ' ').trim(); return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t)); }
+    function filtroTecnico(label, nomeAPI) { const lMem=extrairMem(label), pMem=extrairMem(nomeAPI); const lRede=extrairRede(label), pRede=extrairRede(nomeAPI); const lPol=extrairPolegadas(label), pPol=extrairPolegadas(nomeAPI); const lStor=extrairStorage(label); if (lMem.length && pMem.length && !lMem.some(m=>pMem.includes(m))) return false; const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label); if (lRede.length && pRede.length && !lRede.some(r=>pRede.includes(r))) return false; if (!lRede.length && pRede.length && ehSmartphoneFT) return false; if (lPol.length && pPol.length && !lPol.some(p=>pPol.includes(p))) return false; if (lStor.length) { const pMem2=extrairMem(nomeAPI); const lStorNum=lStor.map(s=>s.replace(/[^\d]/g,'')); const pStorNums=[...extrairStorage(nomeAPI).map(s=>s.replace(/[^\d]/g,'')), ...pMem2.map(m=>m.split('/')[1]).filter(Boolean)]; if (pStorNums.length && !lStorNum.some(n=>pStorNums.includes(n))) return false; } return true; }
+    function scoreNome(label, nomeAPI) { const tokens = tokensModelo(label); if (!tokens.length) return 0; const pn = normStr(nomeAPI); const modelTok = tokens.filter(t => /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) && !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t)); const restTok = tokens.filter(t => !modelTok.includes(t)); const mScore = modelTok.length ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1; const rScore = restTok.length ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1; return mScore * 0.7 + rScore * 0.3; }
 
     async function carregarCacheProdutos(onProgress) {
       if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
-      const base = "https://caixa-three.vercel.app/api/produtos";
-      const loja = lojaIdJeta;
-      const delay = ms => new Promise(r => setTimeout(r, ms));
-      const url1 = new URL(base);
-      url1.searchParams.set('loja_id', loja);
-      url1.searchParams.set('limite', '100');
-      url1.searchParams.set('pagina', '1');
-      const r1 = await fetch(url1.toString());
-      if (!r1.ok) throw new Error('HTTP ' + r1.status);
-      const d1 = await r1.json();
-      if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
-      const totalPaginas = d1.meta?.total_paginas || 1;
-      let todos = [...(d1.data || [])];
+      const base = "https://caixa-three.vercel.app/api/produtos"; const loja = lojaIdJeta; const delay = ms => new Promise(r => setTimeout(r, ms));
+      const url1 = new URL(base); url1.searchParams.set('loja_id', loja); url1.searchParams.set('limite', '100'); url1.searchParams.set('pagina', '1');
+      const r1 = await fetch(url1.toString()); if (!r1.ok) throw new Error('HTTP ' + r1.status);
+      const d1 = await r1.json(); if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+      const totalPaginas = d1.meta?.total_paginas || 1; let todos = [...(d1.data || [])];
       if (onProgress) onProgress(1, totalPaginas, todos.length);
-      for (let p = 2; p <= totalPaginas; p++) {
-        const url = new URL(base);
-        url.searchParams.set('loja_id', loja);
-        url.searchParams.set('limite', '100');
-        url.searchParams.set('pagina', p);
-        try {
-          const r = await fetch(url.toString());
-          if (r.ok) { const d = await r.json(); if (d.code === 200 && d.data) todos = todos.concat(d.data); }
-        } catch(e) {}
-        if (onProgress) onProgress(p, totalPaginas, todos.length);
-        if ((p - 1) % 3 === 0) await delay(1100);
-      }
-      _prodCache = todos;
-      _prodCacheTs = Date.now();
-      return _prodCache;
+      for (let p = 2; p <= totalPaginas; p++) { const url = new URL(base); url.searchParams.set('loja_id', loja); url.searchParams.set('limite', '100'); url.searchParams.set('pagina', p); try { const r = await fetch(url.toString()); if (r.ok) { const d = await r.json(); if (d.code === 200 && d.data) todos = todos.concat(d.data); } } catch(e) {} if (onProgress) onProgress(p, totalPaginas, todos.length); if ((p - 1) % 3 === 0) await delay(1100); }
+      _prodCache = todos; _prodCacheTs = Date.now(); return _prodCache;
     }
 
     function buscarNoCacheLocal(q) {
       if (!q || !_prodCache.length) return [];
-      const tokens = tokensModelo(q);
-      if (!tokens.length) return [];
-      const memTok   = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t));
-      const storTok  = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t));
-      const redeTok  = tokens.filter(t => /^(4g|5g)$/i.test(t));
-      const modelTok = tokens.filter(t => /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) && !/^(4g|5g|gb|tb)$/i.test(t) && !memTok.includes(t));
-      const numTok = tokens.filter(t => /^\d+$/.test(t) && t.length >= 2 && !memTok.includes(t) && !storTok.includes(t));
-      const txtTok = tokens.filter(t => !memTok.includes(t) && !storTok.includes(t) && !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
-      const lV = extrairVariante(q);
-      const lS = extrairSerie(q);
+      const tokens = tokensModelo(q); if (!tokens.length) return [];
+      const memTok = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t)); const storTok = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t)); const redeTok = tokens.filter(t => /^(4g|5g)$/i.test(t)); const modelTok = tokens.filter(t => /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) && !/^(4g|5g|gb|tb)$/i.test(t) && !memTok.includes(t)); const numTok = tokens.filter(t => /^\d+$/.test(t) && t.length >= 2 && !memTok.includes(t) && !storTok.includes(t)); const txtTok = tokens.filter(t => !memTok.includes(t) && !storTok.includes(t) && !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
+      const lV = extrairVariante(q); const lS = extrairSerie(q);
       return _prodCache.filter(p => {
-        if (ehAcessorio(p.nome)) return false;
-        const pn = normStr(p.nome);
+        if (ehAcessorio(p.nome)) return false; const pn = normStr(p.nome);
         if (lS.length) { const pS = extrairSerie(p.nome); if (!serieCompativel(lS, pS)) return false; }
-        const pV = extrairVariante(p.nome);
-        if (lV.includes('pro') !== pV.includes('pro')) return false;
-        if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false;
-        for (const v of ['plus','ultra','max']) { if (lV.includes(v) !== pV.includes(v)) return false; }
+        const pV = extrairVariante(p.nome); if (lV.includes('pro') !== pV.includes('pro')) return false; if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false; for (const v of ['plus','ultra','max']) { if (lV.includes(v) !== pV.includes(v)) return false; }
         if (memTok.length && !memTok.every(t => { const base = t.replace(/(gb|tb)$/i,''); return pn.includes(base); })) return false;
         if (storTok.length && !storTok.every(t => { const n = t.replace(/[^\d]/g,''); return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn); })) return false;
-        const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
-        const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
-        const pTem5g = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
-        const pTem4g = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
-        if (redeTok.length) { if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false; }
-        else if (ehSmartphone) { if (pTem5g || pTem4g) return false; }
+        const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q); const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi); const pTem5g = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g'); const pTem4g = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
+        if (redeTok.length) { if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false; } else if (ehSmartphone) { if (pTem5g || pTem4g) return false; }
         if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
         if (numTok.length && !numTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
         if (txtTok.length) { const hits = txtTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length; if (hits < Math.ceil(txtTok.length * 0.5)) return false; }
@@ -1340,142 +1165,50 @@
     }
 
     function gerarQueries(label) {
-      const queries = [];
-      let limpo = label.replace(/,\s*[^,]{10,}/g, '').replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '').replace(/\s+/g, ' ').trim();
+      const queries = []; let limpo = label.replace(/,\s*[^,]{10,}/g, '').replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '').replace(/\s+/g, ' ').trim();
       limpo = limpo.replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '').replace(/\s+/g, ' ').trim();
-      const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
-      if (comMem.length > 3) queries.push(comMem);
-      const semMem = comMem.replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '').replace(/\s+\d+(gb|tb)/gi, '').replace(/\s+/g, ' ').trim();
-      if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
-      const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim();
-      if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
-      const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
-      if (tvMatch) {
-        const marca = tvMatch[1].trim(), pol = tvMatch[2];
-        const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
-        const cod = codMatch ? codMatch[1] : '';
-        const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
-        if (qTV.length > 3) queries.push(qTV);
-        queries.push((marca + ' ' + pol + '"').trim());
-      }
-      const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
-      if (codModelo) codModelo.forEach(cod => { if (cod.length >= 4) queries.push(cod); });
-      const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
-      if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
-      if (/\bipad\b/i.test(label)) {
-        const gen = label.match(/\bipad\s+(\d+)\b/i), mem = label.match(/\b(\d+)\s*gb\b/i);
-        if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
-        if (gen)        queries.push(`ipad ${gen[1]}`);
-        queries.push('ipad');
-      }
+      const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim(); if (comMem.length > 3) queries.push(comMem);
+      const semMem = comMem.replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '').replace(/\s+\d+(gb|tb)/gi, '').replace(/\s+/g, ' ').trim(); if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
+      const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g,' ').trim(); if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
+      const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i); if (tvMatch) { const marca = tvMatch[1].trim(); const pol = tvMatch[2]; const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/); const cod = codMatch ? codMatch[1] : ''; const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim(); if (qTV.length > 3) queries.push(qTV); queries.push((marca + ' ' + pol + '"').trim()); }
+      const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g); if (codModelo) codModelo.forEach(cod => { if (cod.length >= 4) queries.push(cod); });
+      const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i); if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
+      if (/\bipad\b/i.test(label)) { const gen = label.match(/\bipad\s+(\d+)\b/i); const mem = label.match(/\b(\d+)\s*gb\b/i); if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`); if (gen) queries.push(`ipad ${gen[1]}`); queries.push('ipad'); }
       if (!queries.length) queries.push(label.split(/\s+/).slice(0,4).join(' '));
       return [...new Set(queries.filter(q => q.length > 2))];
     }
 
     async function buscarVinculosDoItem(item) {
       let candidatos = [];
-      if (_prodCache.length) {
-        const queries = gerarQueries(item.label || item.sysname || '');
-        for (const q of queries) {
-          buscarNoCacheLocal(q).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
-          if (candidatos.length >= 30) break;
-        }
-        if (!candidatos.length && item.sku?.trim()) {
-          const skuN = item.sku.trim().toLowerCase();
-          _prodCache.filter(p => (p.codigo_interno||'').toLowerCase() === skuN || (p.codigo_barra||'').toLowerCase() === skuN)
-            .forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
-        }
-      } else {
-        const queries = gerarQueries(item.label || item.sysname || '');
-        for (const q of queries) {
-          try {
-            const url = new URL("https://caixa-three.vercel.app/api/produtos");
-            url.searchParams.append("loja_id", lojaIdJeta);
-            url.searchParams.append("limite", "20");
-            url.searchParams.append("nome", q);
-            const r = await fetch(url.toString());
-            const d = await r.json();
-            if (d.code === 200 && d.data?.length) d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); });
-          } catch(e) {}
-          if (candidatos.length >= 10) break;
-        }
-      }
+      if (_prodCache.length) { const queries = gerarQueries(item.label || item.sysname || ''); for (const q of queries) { buscarNoCacheLocal(q).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); }); if (candidatos.length >= 30) break; } if (!candidatos.length && item.sku?.trim()) { const skuN = item.sku.trim().toLowerCase(); _prodCache.filter(p => (p.codigo_interno||'').toLowerCase() === skuN || (p.codigo_barra||'').toLowerCase() === skuN).forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); }); }
+      } else { const queries = gerarQueries(item.label || item.sysname || ''); for (const q of queries) { try { const url = new URL("https://caixa-three.vercel.app/api/produtos"); url.searchParams.append("loja_id", lojaIdJeta); url.searchParams.append("limite", "20"); url.searchParams.append("nome", q); const r = await fetch(url.toString()); const d = await r.json(); if (d.code === 200 && d.data?.length) d.data.forEach(p => { if (!candidatos.find(c=>c.id===p.id)) candidatos.push(p); }); } catch(e) {} if (candidatos.length >= 10) break; } }
       if (!candidatos.length) return [];
-      const label = item.label || item.sysname || '';
-      const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
-      const threshold = ehTV ? 0.20 : 0.55;
-      return candidatos
-        .filter(p => !ehAcessorio(p.nome))
-        .filter(p => filtroTecnico(label, p.nome))
-        .map(p => ({ p, score: scoreNome(label, p.nome) }))
-        .filter(({ score }) => score >= threshold)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
-        .map(({ p }) => ({ id: p.id, nome: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0) }));
+      const label = item.label || item.sysname || ''; const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label); const threshold = ehTV ? 0.20 : 0.55;
+      return candidatos.filter(p => !ehAcessorio(p.nome)).filter(p => filtroTecnico(label, p.nome)).map(p => ({ p, score: scoreNome(label, p.nome) })).filter(({ score }) => score >= threshold).sort((a, b) => b.score - a.score).slice(0, 8).map(({ p }) => ({ id: p.id, nome: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0) }));
     }
 
     async function triggerBuscaModalIA(idx, q) {
-      const resDiv = document.getElementById('ia-dd-res-' + idx);
-      q = q.trim();
+      const resDiv = document.getElementById('ia-dd-res-' + idx); q = q.trim();
       if (q.length < 2) { resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Digite pelo menos 2 caracteres...</div>'; return; }
       resDiv.innerHTML = '<div style="font-size:11px;color:#888;">⏳ Buscando na API...</div>';
       let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
-      if (!prods.length) {
-        try {
-          const url = new URL("https://caixa-three.vercel.app/api/produtos");
-          url.searchParams.append("loja_id", lojaIdJeta);
-          url.searchParams.append("limite", "20");
-          url.searchParams.append("nome", q);
-          const r = await fetch(url.toString());
-          const d = await r.json();
-          if (d.code === 200 && d.data) prods = d.data;
-        } catch(e){}
-      }
+      if (!prods.length) { try { const url = new URL("https://caixa-three.vercel.app/api/produtos"); url.searchParams.append("loja_id", lojaIdJeta); url.searchParams.append("limite", "20"); url.searchParams.append("nome", q); const r = await fetch(url.toString()); const d = await r.json(); if (d.code === 200 && d.data) prods = d.data; } catch(e){} }
       if (!prods.length) { resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Nenhum resultado encontrado.</div>'; return; }
-      resDiv.innerHTML = prods.slice(0, 15).map(p => {
-        const est = Number(p.estoque || 0), ok = est > 0;
-        return `<div class="ia-cand-row">
-                  <span class="ia-cand-nome" title="${p.nome}">${p.nome}</span>
-                  <span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span>
-                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" data-pid="${p.id}" data-pnome="${encodeURIComponent(p.nome)}" data-pest="${est}" ${!ok ? 'disabled' : ''}>+</button>
-                </div>`;
-      }).join('');
-      resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
-        b.addEventListener('click', function() {
-          adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) });
-          this.textContent = '✓'; this.className = 'ia-cand-btn dis'; this.disabled = true;
-        });
-      });
+      resDiv.innerHTML = prods.slice(0, 15).map(p => { const est = Number(p.estoque || 0); const ok = est > 0; return `<div class="ia-cand-row"><span class="ia-cand-nome" title="${p.nome}">${p.nome}</span><span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span><button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" data-pid="${p.id}" data-pnome="${encodeURIComponent(p.nome)}" data-pest="${est}" ${!ok ? 'disabled' : ''}>+</button></div>`; }).join('');
+      resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => { b.addEventListener('click', function() { adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) }); this.textContent = '✓'; this.className = 'ia-cand-btn dis'; this.disabled = true; }); });
     }
 
     document.getElementById('ia-prompt').value = localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT;
     document.getElementById('ia-prompt').addEventListener('input', function() { localStorage.setItem(IA_PROMPT_KEY, this.value); });
-    document.getElementById('ia-restaurar').addEventListener('click', function() {
-      document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT;
-      localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT);
-      mostrarToast('↺ Prompt restaurado');
-    });
-
-    document.getElementById('btn-abrir-ia-lote').addEventListener('click', function() {
-      document.getElementById('ia-passo1').style.display = 'flex';
-      document.getElementById('ia-passo2').style.display = 'none';
-      document.getElementById('ia-erro').style.display = 'none';
-      document.getElementById('ia-add-todos').style.display = 'none';
-      document.getElementById('ia-resumo').textContent = '';
-      document.getElementById('ia-lote-overlay').classList.add('open');
-      setTimeout(function(){ document.getElementById('ia-raw').focus(); }, 80);
-    });
-
+    document.getElementById('ia-restaurar').addEventListener('click', function() { document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT; localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT); mostrarToast('↺ Prompt restaurado'); });
+    document.getElementById('btn-abrir-ia-lote').addEventListener('click', function() { document.getElementById('ia-passo1').style.display = 'flex'; document.getElementById('ia-passo2').style.display = 'none'; document.getElementById('ia-erro').style.display = 'none'; document.getElementById('ia-add-todos').style.display = 'none'; document.getElementById('ia-resumo').textContent = ''; document.getElementById('ia-lote-overlay').classList.add('open'); setTimeout(function(){ document.getElementById('ia-raw').focus(); }, 80); });
     function fecharIaLote() { document.getElementById('ia-lote-overlay').classList.remove('open'); }
     document.getElementById('ia-lote-fechar-topo').addEventListener('click', fecharIaLote);
     document.getElementById('ia-fechar-rodape').addEventListener('click', fecharIaLote);
     document.getElementById('ia-lote-overlay').addEventListener('click', function(e) { if (e.target === this) fecharIaLote(); });
 
     async function chamarGroq(system, user) {
-      const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ systemPrompt: system, messages: user })
-      });
+      const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ systemPrompt: system, messages: user }) });
       if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
       const d = await resp.json();
       if (d.choices && d.choices[0] && d.choices[0].message) return d.choices[0].message.content.trim();
@@ -1484,108 +1217,49 @@
 
     document.getElementById('ia-processar').addEventListener('click', async function() {
       const raw = document.getElementById('ia-raw').value.trim();
-      if (!raw) {
-        document.getElementById('ia-erro').textContent = 'Cole a lista antes de processar.';
-        document.getElementById('ia-erro').style.display = 'block';
-        return;
-      }
+      if (!raw) { document.getElementById('ia-erro').textContent = 'Cole a lista antes de processar.'; document.getElementById('ia-erro').style.display = 'block'; return; }
       document.getElementById('ia-erro').style.display = 'none';
-      const btn = this;
-      btn.disabled = true; btn.textContent = '⏳ Processando…';
+      const btn = this; btn.disabled = true; btn.textContent = '⏳ Processando…';
       try {
-        const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
-        localStorage.setItem(IA_PROMPT_KEY, prompt);
+        const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT; localStorage.setItem(IA_PROMPT_KEY, prompt);
         const resposta = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
         const itens = JSON.parse(resposta.replace(/```json|```/g, '').trim());
         if (!Array.isArray(itens) || !itens.length) throw new Error('IA não retornou lista válida.');
-        document.getElementById('ia-passo1').style.display = 'none';
-        document.getElementById('ia-passo2').style.display = 'flex';
-        const grid = document.getElementById('ia-grid');
-        const prog = document.getElementById('ia-prog');
-        const status = document.getElementById('ia-status');
-        grid.innerHTML = '';
-        _iaResultados = [];
-        status.textContent = 'Baixando catálogo de produtos…';
-        prog.style.width = '5%';
-        await carregarCacheProdutos(function(pag, total) {
-          prog.style.width = Math.round((pag/total)*40) + '%';
-          status.textContent = 'Catálogo: ' + pag + '/' + total + '…';
-        });
+        document.getElementById('ia-passo1').style.display = 'none'; document.getElementById('ia-passo2').style.display = 'flex';
+        const grid = document.getElementById('ia-grid'); const prog = document.getElementById('ia-prog'); const status = document.getElementById('ia-status');
+        grid.innerHTML = ''; _iaResultados = [];
+        status.textContent = 'Baixando catálogo de produtos…'; prog.style.width = '5%';
+        await carregarCacheProdutos(function(pag, total) { prog.style.width = Math.round((pag/total)*40) + '%'; status.textContent = 'Catálogo: ' + pag + '/' + total + '…'; });
         var comEst = 0, semEst = 0, naoAch = 0;
         for (var i = 0; i < itens.length; i++) {
-          let itemRaw = itens[i];
-          let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto");
-          let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
-          status.textContent = '(' + (i+1) + '/' + itens.length + ') ' + nomeOriginal.substring(0,45) + '…';
-          prog.style.width = (40 + Math.round(((i+1)/itens.length)*60)) + '%';
+          let itemRaw = itens[i]; let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto"); let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
+          status.textContent = '(' + (i+1) + '/' + itens.length + ') ' + nomeOriginal.substring(0,45) + '…'; prog.style.width = (40 + Math.round(((i+1)/itens.length)*60)) + '%';
           const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname:'', sku:'', prodId:null });
-          const card = document.createElement('div');
-          let baseHtml = '';
-          let tituloEscapado = nomeOriginal.replace(/"/g, '&quot;');
+          const card = document.createElement('div'); let baseHtml = ''; let tituloEscapado = nomeOriginal.replace(/"/g, '&quot;');
           let infoHtml = '<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;"><span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + tituloEscapado + '">' + nomeOriginal + '</span>' + (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') + '</div>';
-          if (!vinculos || !vinculos.length) {
-            baseHtml = '<div class="ia-card-head" style="align-items:flex-start;">' + infoHtml + '<span class="ia-badge nf" style="margin-top:2px;">N/A</span><button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button></div><div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
-            naoAch++;
+          if (!vinculos || !vinculos.length) { baseHtml = '<div class="ia-card-head" style="align-items:flex-start;">' + infoHtml + '<span class="ia-badge nf" style="margin-top:2px;">N/A</span><button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button></div><div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>'; naoAch++;
           } else {
-            const total = vinculos.reduce(function(s,v){return s+v.estoque;},0);
-            const temEst = total > 0;
-            if (temEst) comEst++; else semEst++;
-            var candidatos = '';
-            vinculos.forEach(function(v) {
-              candidatos += '<div class="ia-cand-row"><span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span><span class="ia-cand-est ' + (v.estoque>0?'ok':'zero') + '">' + (v.estoque>0?'✓ ':'⚠ ') + v.estoque + '</span>' + (v.estoque > 0 ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>' : '<button class="ia-cand-btn dis" disabled>+</button>') + '</div>';
-            });
+            const total = vinculos.reduce(function(s,v){return s+v.estoque;},0); const temEst = total > 0; if (temEst) comEst++; else semEst++;
+            var candidatos = ''; vinculos.forEach(function(v) { candidatos += '<div class="ia-cand-row"><span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span><span class="ia-cand-est ' + (v.estoque>0?'ok':'zero') + '">' + (v.estoque>0?'✓ ':'⚠ ') + v.estoque + '</span>' + (v.estoque > 0 ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>' : '<button class="ia-cand-btn dis" disabled>+</button>') + '</div>'; });
             baseHtml = '<div class="ia-card-head" style="align-items:flex-start;">' + infoHtml + '<span class="ia-badge ' + (temEst?'ok':'zero') + '" style="margin-top:2px;">' + (temEst?'✓ ':'⚠ ') + total + '</span><button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button></div>' + candidatos;
           }
           baseHtml += '<div class="ia-dd-area" id="ia-dd-area-' + i + '"><input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '"><div class="ia-dd-results" id="ia-dd-res-' + i + '"></div></div>';
-          card.className = 'ia-card ' + (!vinculos || !vinculos.length ? 'nao-enc' : (vinculos.reduce((s,v)=>s+v.estoque,0)>0 ? 'com-est' : 'sem-est'));
-          card.innerHTML = baseHtml;
-          grid.appendChild(card);
+          card.className = 'ia-card ' + (!vinculos || !vinculos.length ? 'nao-enc' : (vinculos.reduce((s,v)=>s+v.estoque,0)>0 ? 'com-est' : 'sem-est')); card.innerHTML = baseHtml; grid.appendChild(card);
           _iaResultados.push({ nome: nomeOriginal, vinculos: vinculos || [] });
         }
-        grid.querySelectorAll('.ia-add-vinc').forEach(function(b) {
-          b.addEventListener('click', function() {
-            adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
-            b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
-          });
-        });
-        grid.querySelectorAll('.ia-toggle-search').forEach(function(b) {
-          b.addEventListener('click', function() {
-            const idx = this.dataset.idx;
-            const area = document.getElementById('ia-dd-area-' + idx);
-            area.classList.toggle('open');
-            if (area.classList.contains('open')) { const inp = document.getElementById('ia-dd-search-' + idx); inp.focus(); triggerBuscaModalIA(idx, inp.value); }
-          });
-        });
-        grid.querySelectorAll('.ia-dd-search').forEach(function(inp) {
-          let timer;
-          inp.addEventListener('input', function() {
-            clearTimeout(timer);
-            const idx = this.id.replace('ia-dd-search-', '');
-            timer = setTimeout(function() { triggerBuscaModalIA(idx, inp.value); }, 400);
-          });
-        });
-        status.textContent = 'Concluído!';
-        prog.style.width = '100%';
+        grid.querySelectorAll('.ia-add-vinc').forEach(function(b) { b.addEventListener('click', function() { adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) }); b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true; }); });
+        grid.querySelectorAll('.ia-toggle-search').forEach(function(b) { b.addEventListener('click', function() { const idx = this.dataset.idx; const area = document.getElementById('ia-dd-area-' + idx); area.classList.toggle('open'); if (area.classList.contains('open')) { const inp = document.getElementById('ia-dd-search-' + idx); inp.focus(); triggerBuscaModalIA(idx, inp.value); } }); });
+        grid.querySelectorAll('.ia-dd-search').forEach(function(inp) { let timer; inp.addEventListener('input', function() { clearTimeout(timer); const idx = this.id.replace('ia-dd-search-', ''); timer = setTimeout(function() { triggerBuscaModalIA(idx, inp.value); }, 400); }); });
+        status.textContent = 'Concluído!'; prog.style.width = '100%';
         document.getElementById('ia-resumo').textContent = '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
         if (comEst > 0) document.getElementById('ia-add-todos').style.display = 'block';
-      } catch(err) {
-        document.getElementById('ia-passo1').style.display = 'flex';
-        document.getElementById('ia-passo2').style.display = 'none';
-        document.getElementById('ia-erro').textContent = 'Erro: ' + err.message;
-        document.getElementById('ia-erro').style.display = 'block';
-      }
+      } catch(err) { document.getElementById('ia-passo1').style.display = 'flex'; document.getElementById('ia-passo2').style.display = 'none'; document.getElementById('ia-erro').textContent = 'Erro: ' + err.message; document.getElementById('ia-erro').style.display = 'block'; }
       btn.disabled = false; btn.textContent = '🤖 Processar e consultar estoque →';
     });
 
     document.getElementById('ia-add-todos').addEventListener('click', function() {
-      var n = 0;
-      _iaResultados.forEach(function(r) {
-        r.vinculos.forEach(function(v) {
-          if (v.estoque > 0) { adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque }); n++; }
-        });
-      });
-      mostrarToast('✅ ' + n + ' produto(s) adicionados');
-      fecharIaLote();
+      var n = 0; _iaResultados.forEach(function(r) { r.vinculos.forEach(function(v) { if (v.estoque > 0) { adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque }); n++; } }); });
+      mostrarToast('✅ ' + n + ' produto(s) adicionados'); fecharIaLote();
     });
   </script>
 </body>
