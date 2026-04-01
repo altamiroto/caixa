@@ -30,11 +30,7 @@
       --radius: 12px;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'DM Sans', sans-serif;
@@ -62,6 +58,7 @@
       font-weight: 700;
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.02em;
     }
@@ -84,9 +81,7 @@
       transition: all 0.3s ease;
     }
 
-    .section-card:hover {
-      box-shadow: var(--shadow-hover);
-    }
+    .section-card:hover { box-shadow: var(--shadow-hover); }
 
     .section-title {
       font-size: 1rem;
@@ -100,16 +95,9 @@
       letter-spacing: 0.05em;
     }
 
-    .input-group {
-      margin-bottom: 15px;
-      position: relative;
-    }
+    .input-group { margin-bottom: 15px; position: relative; }
 
-    .input-with-icon {
-      position: relative;
-      display: flex;
-      gap: 10px;
-    }
+    .input-with-icon { position: relative; display: flex; gap: 10px; }
 
     .input-icon {
       position: absolute;
@@ -140,9 +128,7 @@
       box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
     }
 
-    input::placeholder {
-      color: #999;
-    }
+    input::placeholder { color: #999; }
 
     .btn {
       padding: 10px 20px;
@@ -158,14 +144,8 @@
       gap: 8px;
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
+    .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    .btn:active { transform: translateY(0); }
 
     .btn-primary {
       background: linear-gradient(135deg, var(--primary-color) 0%, #333 100%);
@@ -178,22 +158,19 @@
       color: var(--text-primary);
     }
 
-    .btn-outline:hover {
-      background: var(--bg-primary);
-      border-color: var(--primary-color);
-    }
+    .btn-outline:hover { background: var(--bg-primary); border-color: var(--primary-color); }
 
-    /* Estilos para Abas de Grupo */
+    /* ── ABAS DE GRUPO ── */
     .tabs-container {
       display: flex;
-      flex-wrap: wrap; /* Permite quebrar linha para não truncar */
-      gap: 6px;       /* Espaçamento menor entre abas */
+      flex-wrap: wrap;
+      gap: 6px;
       padding: 8px 0;
     }
-    
+
     #container-abas-grupos {
       position: sticky;
-      top: 70px; /* Logo abaixo do header */
+      top: 70px;
       background: var(--bg-primary);
       z-index: 40;
       margin-bottom: 15px;
@@ -201,22 +178,20 @@
       border-bottom: 1px solid var(--border-color);
     }
 
-    .tabs-container::-webkit-scrollbar {
-      display: none;
-    }
+    .tabs-container::-webkit-scrollbar { display: none; }
 
     .tab-item {
-      padding: 6px 12px; /* Padding reduzido */
+      padding: 6px 12px;
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      font-size: 11px;    /* Fonte menor para caber mais itens */
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-secondary);
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       text-transform: uppercase;
     }
 
@@ -231,36 +206,33 @@
       background: var(--primary-color);
       color: white;
       border-color: var(--primary-color);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .tab-count {
       margin-left: 6px;
       font-size: 11px;
       opacity: 0.7;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       padding: 2px 6px;
       border-radius: 10px;
     }
 
     .tab-item:not(.active) .tab-count {
-      background: rgba(0,0,0,0.05);
+      background: rgba(0, 0, 0, 0.05);
       color: var(--text-secondary);
     }
 
+    /* ── TABELA ── */
     .table-wrapper {
       overflow: hidden;
       border-radius: 12px;
       border: 1px solid var(--border-color);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    table { width: 100%; border-collapse: collapse; }
 
-    th,
-    td {
+    th, td {
       padding: 8px 12px;
       text-align: left;
       font-size: 13px;
@@ -283,53 +255,21 @@
       padding: 10px 12px;
     }
 
-    th:hover {
-      color: var(--primary-color);
-    }
+    th:hover { color: var(--primary-color); }
+    th.ordenado-asc::after { content: ' \2191'; color: var(--primary-color); }
+    th.ordenado-desc::after { content: ' \2193'; color: var(--primary-color); }
 
-    th.ordenado-asc::after {
-      content: ' \2191';
-      color: var(--primary-color);
-    }
+    tbody tr { transition: background 0.2s; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #f8f9fa; }
 
-    th.ordenado-desc::after {
-      content: ' \2193';
-      color: var(--primary-color);
-    }
-
-    tbody tr {
-      transition: background 0.2s;
-    }
-
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    tbody tr:hover {
-      background: #f8f9fa;
-    }
-
-    .tabela-produtos-base td:nth-child(1) {
-      word-break: break-word;
-    }
-
+    .tabela-produtos-base td:nth-child(1) { word-break: break-word; }
     .tabela-produtos-base th:nth-child(2),
-    .tabela-produtos-base td:nth-child(2) {
-      width: 80px;
-      text-align: center;
-      white-space: nowrap;
-    }
-
+    .tabela-produtos-base td:nth-child(2) { width: 80px; text-align: center; white-space: nowrap; }
     .tabela-produtos-base th:nth-child(3),
-    .tabela-produtos-base td:nth-child(3) {
-      width: 50px;
-      text-align: center;
-      white-space: nowrap;
-    }
+    .tabela-produtos-base td:nth-child(3) { width: 50px; text-align: center; white-space: nowrap; }
 
-    .tabela-produtos-base tbody tr.clicavel {
-      cursor: pointer;
-    }
+    .tabela-produtos-base tbody tr.clicavel { cursor: pointer; }
 
     .tabela-produtos-base tbody tr.clicavel .prod-nome {
       font-size: 13px;
@@ -345,6 +285,44 @@
       text-underline-offset: 3px;
     }
 
+    /* ── MINIATURA NA LINHA DA TABELA ── */
+    .thumb-lista {
+      width: 36px;
+      height: 36px;
+      object-fit: cover;
+      border-radius: 7px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .thumb-lista:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .thumb-placeholder {
+      width: 36px;
+      height: 36px;
+      border-radius: 7px;
+      border: 1px dashed var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      background: var(--bg-primary);
+    }
+
+    .prod-info-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .ult-mov {
       font-size: 10px;
       font-weight: 500;
@@ -354,9 +332,7 @@
       line-height: 1;
     }
 
-    .sem-registro {
-      color: var(--text-muted);
-    }
+    .sem-registro { color: var(--text-muted); }
 
     .tag-estoque-ok {
       color: var(--success-color);
@@ -384,10 +360,7 @@
       font-weight: 500;
     }
 
-    .status-msg.erro {
-      color: var(--danger-color);
-      background: rgba(192, 57, 43, 0.05);
-    }
+    .status-msg.erro { color: var(--danger-color); background: rgba(192, 57, 43, 0.05); }
 
     .btn-add {
       width: 28px;
@@ -420,7 +393,420 @@
       transform: none;
     }
 
-    /* CARRINHO ESTILO FLOAT PANEL */
+    /* ══════════════════════════════════
+       TOGGLE VIEW (LISTA / GRADE)
+    ══════════════════════════════════ */
+    .view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .view-toggle-btn {
+      width: 30px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .view-toggle-btn:hover { color: var(--text-primary); }
+
+    .view-toggle-btn.active {
+      background: var(--bg-secondary);
+      color: var(--primary-color);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    /* ══════════════════════════════════
+       GRADE DE PRODUTOS
+    ══════════════════════════════════ */
+    .grade-produtos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .card-produto-grade {
+      background: var(--bg-secondary);
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card-produto-grade:hover {
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-3px);
+    }
+
+    .card-produto-grade .foto-wrapper {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: var(--bg-primary);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .card-produto-grade .foto-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .card-produto-grade:hover .foto-wrapper img {
+      transform: scale(1.06);
+    }
+
+    .foto-sem-img {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 28px;
+    }
+
+    .foto-sem-img span {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .foto-count-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-produto-grade .card-body {
+      padding: 10px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .card-produto-grade .card-nome {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-produto-grade .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+    }
+
+    .card-produto-grade .btn-add-grade {
+      width: 26px;
+      height: 26px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-produto-grade .btn-add-grade:hover {
+      background: #333;
+      transform: scale(1.1);
+    }
+
+    .card-produto-grade .btn-add-grade:disabled {
+      background: var(--border-color);
+      color: #aaa;
+      cursor: default;
+      transform: none;
+    }
+
+    .grade-status-msg {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* ══════════════════════════════════
+       SECAO HEADER (COM TOGGLE)
+    ══════════════════════════════════ */
+    .secao-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-color);
+      background: #fafafa;
+    }
+
+    .secao-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .secao-ok { color: var(--success-color); }
+    .secao-zero { color: var(--danger-color); }
+
+    .secao-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+
+    /* ══════════════════════════════════
+       LIGHTBOX DE FOTOS
+    ══════════════════════════════════ */
+    #lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #lightbox-overlay.visivel {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #lightbox-box {
+      background: #111;
+      border-radius: 20px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: scale(0.93) translateY(16px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    #lightbox-overlay.visivel #lightbox-box {
+      transform: scale(1) translateY(0);
+    }
+
+    .lb-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      gap: 12px;
+    }
+
+    .lb-titulo {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f0f0f0;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .lb-subtitulo {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .lb-fechar {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #333;
+      background: #222;
+      color: #aaa;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .lb-fechar:hover { background: #c0392b; color: white; border-color: #c0392b; }
+
+    .lb-foto-principal {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #0a0a0a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lb-foto-principal img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity 0.25s ease;
+    }
+
+    .lb-foto-principal img.trocando { opacity: 0; }
+
+    /* Setas de navegação */
+    .lb-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 2;
+      backdrop-filter: blur(4px);
+    }
+
+    .lb-nav:hover { background: rgba(255,255,255,0.2); }
+    .lb-nav:disabled { opacity: 0.2; cursor: default; }
+    .lb-nav-prev { left: 10px; }
+    .lb-nav-next { right: 10px; }
+
+    /* Contador */
+    .lb-counter {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Miniaturas do lightbox */
+    .lb-thumbs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px 16px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+
+    .lb-thumbs::-webkit-scrollbar { height: 4px; }
+    .lb-thumbs::-webkit-scrollbar-track { background: transparent; }
+    .lb-thumbs::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    .lb-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      opacity: 0.55;
+    }
+
+    .lb-thumb:hover { opacity: 0.85; }
+    .lb-thumb.ativo { border-color: white; opacity: 1; }
+
+    .lb-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Sem fotos no lightbox */
+    .lb-sem-foto {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #555;
+      font-size: 48px;
+    }
+
+    .lb-sem-foto p {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ══════════════════════════════════
+       CARRINHO FLOAT
+    ══════════════════════════════════ */
     #carrinho-float {
       position: fixed;
       bottom: 20px;
@@ -475,14 +861,8 @@
       position: relative;
     }
 
-    .fab-pill:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.32);
-    }
-
-    .fab-pill:active {
-      transform: translateY(0);
-    }
+    .fab-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.32); }
+    .fab-pill:active { transform: translateY(0); }
 
     #badge-float {
       position: absolute;
@@ -501,9 +881,7 @@
       border: 2px solid var(--bg-secondary);
     }
 
-    #badge-float.visivel {
-      display: flex;
-    }
+    #badge-float.visivel { display: flex; }
 
     .carrinho-header {
       padding: 14px 16px;
@@ -514,23 +892,10 @@
       background: #fafafa;
     }
 
-    .carrinho-header h2 {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--primary-color);
-    }
+    .carrinho-header h2 { font-size: 14px; font-weight: 700; color: var(--primary-color); }
+    .carrinho-header span { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
 
-    .carrinho-header span {
-      font-size: 11px;
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
-
-    #lista-carrinho {
-      max-height: 280px;
-      overflow-y: auto;
-      padding: 6px 0;
-    }
+    #lista-carrinho { max-height: 280px; overflow-y: auto; padding: 6px 0; }
 
     #lista-carrinho:empty::after {
       content: '🛒 Seu carrinho está vazio.';
@@ -551,28 +916,14 @@
       animation: fadeIn 0.2s ease;
     }
 
-    .item-carrinho:last-child {
-      border-bottom: none;
-    }
+    .item-carrinho:last-child { border-bottom: none; }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: none;
-      }
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: none; }
     }
 
-    .item-nome {
-      flex: 1;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
+    .item-nome { flex: 1; font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
     .qty-control {
       display: flex;
@@ -600,60 +951,21 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
-    .qty-btn:hover {
-      background: var(--primary-color);
-      color: white;
-    }
+    .qty-btn:hover { background: var(--primary-color); color: white; }
+    .qty-num { font-size: 12px; font-weight: 700; min-width: 18px; text-align: center; font-family: 'DM Mono', monospace; }
 
-    .qty-num {
-      font-size: 12px;
-      font-weight: 700;
-      min-width: 18px;
-      text-align: center;
-      font-family: 'DM Mono', monospace;
-    }
+    .btn-remover { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; padding: 2px; transition: color 0.2s; }
+    .btn-remover:hover { color: var(--danger-color); }
 
-    .btn-remover {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 16px;
-      padding: 2px;
-      transition: color 0.2s;
-    }
+    .carrinho-footer { padding: 14px 16px; border-top: 1px solid var(--border-color); background: #fafafa; }
+    .acoes-carrinho { display: grid; grid-template-columns: 1fr; gap: 8px; }
 
-    .btn-remover:hover {
-      color: var(--danger-color);
-    }
+    #btn-copiar { width: 100%; padding: 12px; font-size: 13px; }
+    #btn-limpar { padding: 6px; font-size: 12px; }
 
-    .carrinho-footer {
-      padding: 14px 16px;
-      border-top: 1px solid var(--border-color);
-      background: #fafafa;
-    }
+    #btn-copiar.copiado { background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%); }
 
-    .acoes-carrinho {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
-    #btn-copiar {
-      width: 100%;
-      padding: 12px;
-      font-size: 13px;
-    }
-
-    #btn-limpar {
-      padding: 6px;
-      font-size: 12px;
-    }
-
-    #btn-copiar.copiado {
-      background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
-    }
-
+    /* ── TOAST ── */
     #toast {
       position: fixed;
       bottom: 20px;
@@ -672,12 +984,9 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
-    #toast.visivel {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+    #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* MODAL DE HISTÓRICO */
+    /* ── MODAL HISTÓRICO ── */
     #modal-overlay {
       position: fixed;
       inset: 0;
@@ -694,10 +1003,7 @@
       transition: opacity 0.3s ease;
     }
 
-    #modal-overlay.visivel {
-      opacity: 1;
-      pointer-events: all;
-    }
+    #modal-overlay.visivel { opacity: 1; pointer-events: all; }
 
     #modal {
       background: var(--bg-secondary);
@@ -714,9 +1020,7 @@
       overflow: hidden;
     }
 
-    #modal-overlay.visivel #modal {
-      transform: translateY(0) scale(1);
-    }
+    #modal-overlay.visivel #modal { transform: translateY(0) scale(1); }
 
     .modal-header {
       padding: 16px 20px;
@@ -727,18 +1031,8 @@
       background: #fafafa;
     }
 
-    .modal-header-info h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--primary-color);
-      margin-bottom: 4px;
-    }
-
-    .modal-header-info span {
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
+    .modal-header-info h3 { font-size: 1.05rem; font-weight: 700; color: var(--primary-color); margin-bottom: 4px; }
+    .modal-header-info span { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
 
     #btn-fechar-modal {
       background: var(--bg-primary);
@@ -755,11 +1049,7 @@
       justify-content: center;
     }
 
-    #btn-fechar-modal:hover {
-      color: var(--danger-color);
-      border-color: var(--danger-color);
-      background: rgba(192, 57, 43, 0.05);
-    }
+    #btn-fechar-modal:hover { color: var(--danger-color); border-color: var(--danger-color); background: rgba(192, 57, 43, 0.05); }
 
     #modal-filtro-datas {
       display: flex;
@@ -770,12 +1060,7 @@
       flex-wrap: wrap;
     }
 
-    #modal-filtro-datas label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-    }
+    #modal-filtro-datas label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
 
     #modal-filtro-datas input[type="date"] {
       border: 2px solid var(--border-color);
@@ -790,179 +1075,19 @@
       transition: border-color 0.2s;
     }
 
-    #modal-filtro-datas input[type="date"]:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      background: white;
-    }
+    #modal-filtro-datas input[type="date"]:focus { outline: none; border-color: var(--primary-color); background: white; }
+    #modal-resumo { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-left: auto; }
 
-    #modal-resumo {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-left: auto;
-    }
+    #modal-body { overflow-y: auto; flex: 1; padding: 0 10px; }
 
-    #modal-body {
-      overflow-y: auto;
-      flex: 1;
-      padding: 0 10px;
-    }
+    #tabela-mov { width: 100%; border-collapse: separate; border-spacing: 0; }
+    #tabela-mov th, #tabela-mov td { padding: 10px 12px; font-size: 12px; border-bottom: 1px solid var(--border-color); }
+    #tabela-mov th { background: white; position: sticky; top: 0; z-index: 10; font-size: 10px; }
 
-    #tabela-mov {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-    }
+    .mov-entrada { color: var(--success-color); font-weight: 700; }
+    .mov-saida { color: var(--danger-color); font-weight: 700; }
 
-    #tabela-mov th,
-    #tabela-mov td {
-      padding: 10px 12px;
-      font-size: 12px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    #tabela-mov th {
-      background: white;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      font-size: 10px;
-    }
-
-    .mov-entrada {
-      color: var(--success-color);
-      font-weight: 700;
-    }
-
-    .mov-saida {
-      color: var(--danger-color);
-      font-weight: 700;
-    }
-
-    .secao-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 2px solid var(--border-color);
-      background: #fafafa;
-    }
-
-    .secao-label {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .secao-ok {
-      color: var(--success-color);
-    }
-
-    .secao-zero {
-      color: var(--danger-color);
-    }
-
-    .secao-count {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: var(--bg-primary);
-      padding: 4px 8px;
-      border-radius: 12px;
-    }
-
-    @media (max-width: 600px) {
-      .layout {
-        padding: 12px 8px 100px;
-      }
-
-      .section-card {
-        padding: 12px;
-      }
-
-      th,
-      td {
-        padding: 8px 6px;
-        font-size: 12px;
-      }
-
-      .tabela-produtos-base tbody tr.clicavel .prod-nome {
-        font-size: 12px;
-      }
-
-      .ult-mov {
-        font-size: 9px;
-        margin-top: 1px;
-      }
-
-      .tabela-produtos-base th:nth-child(2),
-      .tabela-produtos-base td:nth-child(2) {
-        width: 50px;
-        padding: 8px 4px;
-      }
-
-      .tabela-produtos-base th:nth-child(3),
-      .tabela-produtos-base td:nth-child(3) {
-        width: 40px;
-        padding: 8px 2px;
-      }
-
-      .btn-add {
-        width: 26px;
-        height: 26px;
-        font-size: 15px;
-      }
-
-      #carrinho-float {
-        right: 8px;
-        bottom: 8px;
-        width: calc(100vw - 16px);
-      }
-
-      #modal-overlay {
-        padding: 0;
-        align-items: flex-end;
-      }
-
-      #modal {
-        max-width: 100%;
-        max-height: 90vh;
-        border-radius: 20px 20px 0 0;
-        transform: translateY(100%);
-      }
-
-      #modal-overlay.visivel #modal {
-        transform: translateY(0);
-      }
-
-      #modal-filtro-datas {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px 16px;
-      }
-
-      .data-inputs {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      #modal-resumo {
-        text-align: center;
-        margin-left: 0;
-        padding-top: 8px;
-        border-top: 1px dashed var(--border-color);
-      }
-    }
-
-    /* ══ MODAL BUSCA EM LOTE IA ══ */
+    /* ── IA LOTE MODAL ── */
     #ia-lote-overlay {
       display: none;
       position: fixed;
@@ -976,9 +1101,7 @@
       overflow-y: auto;
     }
 
-    #ia-lote-overlay.open {
-      display: flex;
-    }
+    #ia-lote-overlay.open { display: flex; }
 
     #ia-lote-modal {
       background: #fff;
@@ -993,380 +1116,113 @@
       border: 2px solid #e0e0e0;
     }
 
-    .ia-lh {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px;
-      background: #fafafa;
-      border-bottom: 1px solid #e0e0e0;
-    }
+    .ia-lh { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #fafafa; border-bottom: 1px solid #e0e0e0; }
+    .ia-lh h2 { font-size: 15px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
+    .ia-lb { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+    .ia-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b6b6b; margin-bottom: 4px; display: block; }
 
-    .ia-lh h2 {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1a1a1a;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .ia-ta { width: 100%; min-height: 130px; max-height: 240px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.6; resize: vertical; color: #1a1a1a; background: #f5f5f5; box-sizing: border-box; }
+    .ia-ta:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, .15); }
 
-    .ia-lb {
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .ia-prompt-ta { width: 100%; min-height: 110px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 9px 12px; font-family: 'DM Mono', monospace; font-size: 11px; line-height: 1.6; resize: vertical; color: #1a1a1a; background: #f5f5f5; box-sizing: border-box; }
+    .ia-prompt-ta:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, .15); }
 
-    .ia-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: #6b6b6b;
-      margin-bottom: 4px;
-      display: block;
-    }
+    .ia-prompt-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .ia-btn-restaurar { background: transparent; border: 1px solid #e0e0e0; border-radius: 6px; color: #6b6b6b; font-size: 11px; cursor: pointer; padding: 3px 9px; }
+    .ia-btn-restaurar:hover { background: #f0f0f0; }
 
-    .ia-ta {
-      width: 100%;
-      min-height: 130px;
-      max-height: 240px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      resize: vertical;
-      color: #1a1a1a;
-      background: #f5f5f5;
-      box-sizing: border-box;
-    }
+    .ia-btn-processar { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; align-self: flex-end; }
+    .ia-btn-processar:disabled { opacity: .5; cursor: not-allowed; }
 
-    .ia-ta:focus {
-      outline: none;
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, .15);
-    }
+    .ia-erro { display: none; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 7px; padding: 9px 12px; font-size: 12px; color: #dc2626; }
 
-    .ia-prompt-ta {
-      width: 100%;
-      min-height: 110px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 9px 12px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      line-height: 1.6;
-      resize: vertical;
-      color: #1a1a1a;
-      background: #f5f5f5;
-      box-sizing: border-box;
-    }
+    .ia-prog-outer { height: 5px; background: #e0e0e0; border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
+    .ia-prog-inner { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); width: 0%; transition: width .3s; border-radius: 99px; }
+    .ia-res-status { font-size: 12px; color: #6b6b6b; margin-bottom: 12px; }
 
-    .ia-prompt-ta:focus {
-      outline: none;
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, .15);
-    }
+    .ia-res-grid { display: flex; flex-direction: column; gap: 6px; max-height: 45vh; overflow-y: auto; }
 
-    .ia-prompt-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
+    .ia-card { border: 1px solid #e0e0e0; border-radius: 9px; padding: 9px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; background: #f9f9f9; }
+    .ia-card.com-est { border-color: #34d399; background: #f0fdf4; }
+    .ia-card.sem-est { border-color: #fbbf24; background: #fffbeb; }
+    .ia-card.nao-enc { border-color: #fca5a5; background: #fef2f2; }
 
-    .ia-btn-restaurar {
-      background: transparent;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      color: #6b6b6b;
-      font-size: 11px;
-      cursor: pointer;
-      padding: 3px 9px;
-    }
+    .ia-nome { font-weight: 700; color: #1a1a1a; }
 
-    .ia-btn-restaurar:hover {
-      background: #f0f0f0;
-    }
+    .ia-cand-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px solid #f0f0f0; min-width: 0; }
+    .ia-cand-nome { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4a4a4a; }
+    .ia-cand-est { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .ia-cand-est.ok { color: #27ae60; }
+    .ia-cand-est.zero { color: #c0392b; }
 
-    .ia-btn-processar {
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      align-self: flex-end;
-    }
+    .ia-cand-btn { border: none; border-radius: 5px; padding: 2px 9px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .ia-cand-btn.add { background: #27ae60; color: #fff; }
+    .ia-cand-btn.dis { background: #e0e0e0; color: #aaa; cursor: not-allowed; }
 
-    .ia-btn-processar:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
+    .ia-card-head { display: flex; align-items: flex-start; gap: 8px; }
 
-    .ia-erro {
-      display: none;
-      background: #fef2f2;
-      border: 1px solid #fca5a5;
-      border-radius: 7px;
-      padding: 9px 12px;
-      font-size: 12px;
-      color: #dc2626;
-    }
+    .ia-badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+    .ia-badge.ok { background: rgba(39, 174, 96, .12); color: #27ae60; }
+    .ia-badge.zero { background: rgba(192, 57, 43, .12); color: #c0392b; }
+    .ia-badge.nf { background: #f0f0f0; color: #888; }
 
-    .ia-prog-outer {
-      height: 5px;
-      background: #e0e0e0;
-      border-radius: 99px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
+    .ia-btn-trocar { background: #f0f0f0; color: #6b6b6b; border: 1px solid #e0e0e0; border-radius: 6px; padding: 2px 9px; font-size: 11px; cursor: pointer; flex-shrink: 0; white-space: nowrap; margin-top: 2px; }
 
-    .ia-prog-inner {
-      height: 100%;
-      background: linear-gradient(90deg, #7c3aed, #a78bfa);
-      width: 0%;
-      transition: width .3s;
-      border-radius: 99px;
-    }
+    .ia-lote-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; border-top: 1px solid #e0e0e0; background: #fafafa; flex-wrap: wrap; }
+    .ia-btn-fechar { background: transparent; border: 1px solid #e0e0e0; border-radius: 7px; color: #6b6b6b; font-size: 13px; cursor: pointer; padding: 7px 14px; font-weight: 600; }
+    .ia-btn-fechar:hover { background: #f0f0f0; }
+    .ia-btn-add-todos { background: #27ae60; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; display: none; }
+    .ia-btn-add-todos:hover { opacity: .85; }
 
-    .ia-res-status {
-      font-size: 12px;
-      color: #6b6b6b;
-      margin-bottom: 12px;
-    }
+    .ia-dd-area { display: none; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e0e0e0; }
+    .ia-dd-area.open { display: flex; }
+    .ia-dd-search { padding: 6px 10px; border: 1px solid #c8c8c8; border-radius: 6px; font-size: 12px; width: 100%; font-family: inherit; }
+    .ia-dd-search:focus { outline: none; border-color: #7c3aed; }
+    .ia-dd-results { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
 
-    .ia-res-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 45vh;
-      overflow-y: auto;
-    }
-
-    .ia-card {
-      border: 1px solid #e0e0e0;
-      border-radius: 9px;
-      padding: 9px 12px;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      background: #f9f9f9;
-    }
-
-    .ia-card.com-est {
-      border-color: #34d399;
-      background: #f0fdf4;
-    }
-
-    .ia-card.sem-est {
-      border-color: #fbbf24;
-      background: #fffbeb;
-    }
-
-    .ia-card.nao-enc {
-      border-color: #fca5a5;
-      background: #fef2f2;
-    }
-
-    .ia-nome {
-      font-weight: 700;
-      color: #1a1a1a;
-    }
-
-    .ia-cand-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 3px 0;
-      border-bottom: 1px solid #f0f0f0;
-      min-width: 0;
-    }
-
-    .ia-cand-nome {
-      flex: 1;
-      min-width: 0;
-      font-size: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: #4a4a4a;
-    }
-
-    .ia-cand-est {
-      font-size: 11px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .ia-cand-est.ok {
-      color: #27ae60;
-    }
-
-    .ia-cand-est.zero {
-      color: #c0392b;
-    }
-
-    .ia-cand-btn {
-      border: none;
-      border-radius: 5px;
-      padding: 2px 9px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .ia-cand-btn.add {
-      background: #27ae60;
-      color: #fff;
-    }
-
-    .ia-cand-btn.dis {
-      background: #e0e0e0;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-
-    .ia-card-head {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .ia-badge {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 20px;
-      flex-shrink: 0;
-    }
-
-    .ia-badge.ok {
-      background: rgba(39, 174, 96, .12);
-      color: #27ae60;
-    }
-
-    .ia-badge.zero {
-      background: rgba(192, 57, 43, .12);
-      color: #c0392b;
-    }
-
-    .ia-badge.nf {
-      background: #f0f0f0;
-      color: #888;
-    }
-
-    .ia-btn-trocar {
-      background: #f0f0f0;
-      color: #6b6b6b;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 2px 9px;
-      font-size: 11px;
-      cursor: pointer;
-      flex-shrink: 0;
-      white-space: nowrap;
-      margin-top: 2px;
-    }
-
-    .ia-lote-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 18px;
-      border-top: 1px solid #e0e0e0;
-      background: #fafafa;
-      flex-wrap: wrap;
-    }
-
-    .ia-btn-fechar {
-      background: transparent;
-      border: 1px solid #e0e0e0;
-      border-radius: 7px;
-      color: #6b6b6b;
-      font-size: 13px;
-      cursor: pointer;
-      padding: 7px 14px;
-      font-weight: 600;
-    }
-
-    .ia-btn-fechar:hover {
-      background: #f0f0f0;
-    }
-
-    .ia-btn-add-todos {
-      background: #27ae60;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      display: none;
-    }
-
-    .ia-btn-add-todos:hover {
-      opacity: .85;
-    }
-
-    /* Dropdown Busca Inline IA */
-    .ia-dd-area {
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px dashed #e0e0e0;
-    }
-
-    .ia-dd-area.open {
-      display: flex;
-    }
-
-    .ia-dd-search {
-      padding: 6px 10px;
-      border: 1px solid #c8c8c8;
-      border-radius: 6px;
-      font-size: 12px;
-      width: 100%;
-      font-family: inherit;
-    }
-
-    .ia-dd-search:focus {
-      outline: none;
-      border-color: #7c3aed;
-    }
-
-    .ia-dd-results {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-height: 160px;
-      overflow-y: auto;
-    }
     .ia-balanco-ctrl { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); }
     .ia-field-group { display: flex; flex-direction: column; gap: 5px; }
     .ia-select { padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; }
     .ia-actions-row { display: flex; gap: 10px; }
-    .ia-btn-processar, .ia-btn-balanco { flex: 1; padding: 12px; border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+
+    .ia-btn-processar, .ia-btn-balanco {
+      flex: 1; padding: 12px; border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
+    }
     .ia-btn-processar { background: var(--accent-color); }
     .ia-btn-processar:hover { opacity: 0.9; transform: translateY(-1px); }
     .ia-btn-balanco { background: #2ecc71; }
     .ia-btn-balanco:hover { background: #27ae60; transform: translateY(-1px); }
+
     .ia-balanco-results { margin-bottom: 15px; padding: 12px; background: #fff9e6; border-left: 4px solid #f1c40f; border-radius: 4px; font-size: 13px; color: #856404; }
     .ia-balanco-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .ia-balanco-item:last-child { border-bottom: none; }
     .ia-balanco-badge { background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
     .ia-balanco-results h4 { margin: 0 0 8px 0; color: #795548; display: flex; align-items: center; gap: 6px; }
+
+    .ia-btn-mover { background: #3498db; flex: 1; padding: 12px; border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+    .ia-btn-mover:hover { background: #2980b9; transform: translateY(-1px); }
+
+    /* ── RESPONSIVO ── */
+    @media (max-width: 600px) {
+      .layout { padding: 12px 8px 100px; }
+      .section-card { padding: 12px; }
+      th, td { padding: 8px 6px; font-size: 12px; }
+      .tabela-produtos-base tbody tr.clicavel .prod-nome { font-size: 12px; }
+      .ult-mov { font-size: 9px; margin-top: 1px; }
+      .tabela-produtos-base th:nth-child(2), .tabela-produtos-base td:nth-child(2) { width: 50px; padding: 8px 4px; }
+      .tabela-produtos-base th:nth-child(3), .tabela-produtos-base td:nth-child(3) { width: 40px; padding: 8px 2px; }
+      .btn-add { width: 26px; height: 26px; font-size: 15px; }
+      #carrinho-float { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
+      #modal-overlay { padding: 0; align-items: flex-end; }
+      #modal { max-width: 100%; max-height: 90vh; border-radius: 20px 20px 0 0; transform: translateY(100%); }
+      #modal-overlay.visivel #modal { transform: translateY(0); }
+      #modal-filtro-datas { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 16px; }
+      .data-inputs { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+      #modal-resumo { text-align: center; margin-left: 0; padding-top: 8px; border-top: 1px dashed var(--border-color); }
+      .grade-produtos { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 12px; }
+      #lightbox-overlay { padding: 0; align-items: flex-end; }
+      #lightbox-box { max-height: 95vh; border-radius: 20px 20px 0 0; }
+    }
   </style>
 </head>
 
@@ -1378,7 +1234,6 @@
 
   <div class="layout">
 
-    <!-- Container de Abas Dinâmicas por Grupo (Fixo no Topo) -->
     <div id="container-abas-grupos" style="margin-bottom: 5px;">
       <div id="tabs-grupos" class="tabs-container">
         <div class="tab-item active" onclick="selecionarAbaGrupo('TODOS', null)">TODOS</div>
@@ -1386,9 +1241,11 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title" style="display:flex;align-items:center;">🔍 Busca Rápida<button id="btn-abrir-ia-lote"
+      <div class="section-title" style="display:flex;align-items:center;">🔍 Busca Rápida
+        <button id="btn-abrir-ia-lote"
           style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">🤖
-          Busca em Lote por IA</button></div>
+          Busca em Lote por IA</button>
+      </div>
       <div class="input-with-icon" style="margin-bottom: 10px;">
         <span class="input-icon">🔎</span>
         <input type="text" id="campo-busca" placeholder="Buscar produto pelo nome completo..." />
@@ -1407,13 +1264,26 @@
       </div>
     </div>
 
-
+    <!-- SEÇÃO COM ESTOQUE -->
     <div class="section-card" id="card-com-estoque" style="display:none; padding: 0; overflow: hidden;">
       <div class="secao-header">
         <span class="secao-label secao-ok">✅ Com estoque</span>
-        <span class="secao-count" id="count-com-estoque"></span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="secao-count" id="count-com-estoque"></span>
+          <!-- TOGGLE LISTA/GRADE -->
+          <div class="view-toggle" id="toggle-view-com">
+            <button class="view-toggle-btn active" id="btn-lista-com" title="Visualização em lista" onclick="setView('lista')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
+            </button>
+            <button class="view-toggle-btn" id="btn-grade-com" title="Visualização em grade" onclick="setView('grade')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="table-wrapper" style="border: none; border-radius: 0;">
+
+      <!-- LISTA -->
+      <div class="table-wrapper" id="wrap-lista-com" style="border: none; border-radius: 0;">
         <table id="tabela-produtos" class="tabela-produtos-base">
           <thead>
             <tr>
@@ -1423,20 +1293,34 @@
             </tr>
           </thead>
           <tbody id="tbody-com-estoque">
-            <tr>
-              <td colspan="3" class="status-msg">Faça uma busca para ver os produtos.</td>
-            </tr>
+            <tr><td colspan="3" class="status-msg">Faça uma busca para ver os produtos.</td></tr>
           </tbody>
         </table>
       </div>
+      <!-- GRADE -->
+      <div id="wrap-grade-com" style="display:none;">
+        <div class="grade-produtos" id="grade-com-estoque"></div>
+      </div>
     </div>
 
+    <!-- SEÇÃO SEM ESTOQUE -->
     <div class="section-card" id="card-sem-estoque" style="display:none; padding: 0; overflow: hidden;">
       <div class="secao-header">
         <span class="secao-label secao-zero">⚠️ Sem estoque / Negativos</span>
-        <span class="secao-count" id="count-sem-estoque"></span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="secao-count" id="count-sem-estoque"></span>
+          <div class="view-toggle" id="toggle-view-sem">
+            <button class="view-toggle-btn active" id="btn-lista-sem" title="Visualização em lista" onclick="setView('lista')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
+            </button>
+            <button class="view-toggle-btn" id="btn-grade-sem" title="Visualização em grade" onclick="setView('grade')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="table-wrapper" style="border: none; border-radius: 0;">
+      <!-- LISTA -->
+      <div class="table-wrapper" id="wrap-lista-sem" style="border: none; border-radius: 0;">
         <table id="tabela-produtos-zero" class="tabela-produtos-base">
           <thead>
             <tr>
@@ -1448,14 +1332,17 @@
           <tbody id="tbody-sem-estoque"></tbody>
         </table>
       </div>
+      <!-- GRADE -->
+      <div id="wrap-grade-sem" style="display:none;">
+        <div class="grade-produtos" id="grade-sem-estoque"></div>
+      </div>
     </div>
 
     <div class="section-card" id="card-placeholder" style="padding: 0; overflow: hidden;">
       <table style="border: none;">
         <tbody style="border: none;">
           <tr>
-            <td colspan="3" class="status-msg" style="border: none;">Faça uma busca no campo acima para listar o
-              estoque.</td>
+            <td colspan="3" class="status-msg" style="border: none;">Faça uma busca no campo acima para listar o estoque.</td>
           </tr>
         </tbody>
       </table>
@@ -1463,6 +1350,28 @@
 
   </div>
 
+  <!-- ══ LIGHTBOX DE FOTOS ══ -->
+  <div id="lightbox-overlay">
+    <div id="lightbox-box">
+      <div class="lb-header">
+        <div>
+          <div class="lb-titulo" id="lb-titulo">Fotos do Produto</div>
+          <div class="lb-subtitulo" id="lb-subtitulo"></div>
+        </div>
+        <button class="lb-fechar" id="lb-fechar">✕</button>
+      </div>
+
+      <!-- Foto principal -->
+      <div class="lb-foto-principal" id="lb-foto-principal">
+        <!-- preenchido via JS -->
+      </div>
+
+      <!-- Miniaturas -->
+      <div class="lb-thumbs" id="lb-thumbs"></div>
+    </div>
+  </div>
+
+  <!-- ══ IA LOTE MODAL ══ -->
   <div id="ia-lote-overlay">
     <div id="ia-lote-modal">
       <div class="ia-lh">
@@ -1490,15 +1399,14 @@
             </select>
           </div>
           <div class="ia-actions-row">
-            <button class="ia-btn-processar" id="ia-processar">🤖 Consultar Lista →</button>
-            <button class="ia-btn-balanco" id="ia-balanco">⚖️ Realizar Balanço (Diff)</button>
+            <button class="ia-btn-processar" id="ia-processar" style="flex:1;">🤖 Consultar Lista →</button>
+            <button class="ia-btn-balanco" id="ia-balanco" style="flex:1;">⚖️ Balanço</button>
+            <button class="ia-btn-mover" id="ia-mover-grupo">📦 Mover p/ Grupo</button>
           </div>
         </div>
       </div>
       <div class="ia-lb" id="ia-passo2" style="display:none;">
-        <div class="ia-prog-outer">
-          <div class="ia-prog-inner" id="ia-prog"></div>
-        </div>
+        <div class="ia-prog-outer"><div class="ia-prog-inner" id="ia-prog"></div></div>
         <div class="ia-res-status" id="ia-status">Processando…</div>
         <div id="ia-balanco-res" class="ia-balanco-results" style="display:none;"></div>
         <div class="ia-res-grid" id="ia-grid"></div>
@@ -1511,6 +1419,7 @@
     </div>
   </div>
 
+  <!-- ══ MODAL HISTÓRICO ══ -->
   <div id="modal-overlay">
     <div id="modal">
       <div class="modal-header">
@@ -1525,44 +1434,36 @@
           <label>De:</label><input type="date" id="filtro-data-ini" />
           <label>Até:</label><input type="date" id="filtro-data-fim" />
         </div>
-        <button class="btn btn-primary" id="btn-filtrar-datas"
-          style="padding: 8px 14px; font-size: 12px;">Atualizar</button>
+        <button class="btn btn-primary" id="btn-filtrar-datas" style="padding: 8px 14px; font-size: 12px;">Atualizar</button>
         <span id="modal-resumo"></span>
       </div>
       <div id="modal-body">
         <table id="tabela-mov">
           <thead>
             <tr>
-              <th>Data</th>
-              <th>Cliente/Fornecedor</th>
-              <th>Tipo</th>
-              <th>Qtd</th>
-              <th>Descrição</th>
+              <th>Data</th><th>Cliente/Fornecedor</th><th>Tipo</th><th>Qtd</th><th>Descrição</th>
             </tr>
           </thead>
           <tbody id="tbody-mov">
-            <tr>
-              <td colspan="5" class="status-msg">Carregando dados...</td>
-            </tr>
+            <tr><td colspan="5" class="status-msg">Carregando dados...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
+  <!-- ══ CARRINHO FLOAT ══ -->
   <div id="carrinho-float">
     <div id="carrinho-painel" class="minimizado">
       <div class="carrinho-header">
         <h2>🛒 Carrinho Rápido</h2>
-        <span id="qtd-itens" style="background: var(--bg-primary); padding: 4px 10px; border-radius: 20px;">0
-          itens</span>
+        <span id="qtd-itens" style="background: var(--bg-primary); padding: 4px 10px; border-radius: 20px;">0 itens</span>
       </div>
       <div id="lista-carrinho"></div>
       <div class="carrinho-footer">
         <div class="acoes-carrinho">
           <button class="btn btn-primary" id="btn-copiar">📋 Copiar para WhatsApp</button>
-          <button class="btn btn-outline" id="btn-limpar"
-            style="border: none; color: var(--danger-color); padding: 6px;">🗑️ Limpar</button>
+          <button class="btn btn-outline" id="btn-limpar" style="border: none; color: var(--danger-color); padding: 6px;">🗑️ Limpar</button>
         </div>
       </div>
     </div>
@@ -1576,12 +1477,138 @@
 
   <script>
     const lojaIdJeta = "361408";
+    let resultadosBuscaLoteGlobal = [];
     let todosProdutos = [];
     let produtosFiltrados = [];
     let carrinho = {};
     let carrinhoAberto = false;
     let debounceTimer;
 
+    // ══════════════════════════════════
+    // ESTADO DE VISUALIZAÇÃO (lista/grade)
+    // ══════════════════════════════════
+    let modoView = 'lista'; // 'lista' | 'grade'
+
+    function setView(modo) {
+      modoView = modo;
+
+      // Atualiza botões de ambas as seções
+      ['com', 'sem'].forEach(function(sec) {
+        const btnLista = document.getElementById('btn-lista-' + sec);
+        const btnGrade = document.getElementById('btn-grade-' + sec);
+        const wrapLista = document.getElementById('wrap-lista-' + sec);
+        const wrapGrade = document.getElementById('wrap-grade-' + sec);
+        if (!btnLista) return;
+        if (modo === 'lista') {
+          btnLista.classList.add('active');
+          btnGrade.classList.remove('active');
+          wrapLista.style.display = '';
+          wrapGrade.style.display = 'none';
+        } else {
+          btnGrade.classList.add('active');
+          btnLista.classList.remove('active');
+          wrapLista.style.display = 'none';
+          wrapGrade.style.display = '';
+        }
+      });
+    }
+
+    // ══════════════════════════════════
+    // LIGHTBOX
+    // ══════════════════════════════════
+    let _lbFotos = [];
+    let _lbIdx = 0;
+
+    function abrirLightbox(produto) {
+      _lbFotos = produto.fotos && produto.fotos.length ? produto.fotos : [];
+      _lbIdx = 0;
+
+      document.getElementById('lb-titulo').textContent = produto.nome;
+      document.getElementById('lb-subtitulo').textContent =
+        _lbFotos.length
+          ? _lbFotos.length + ' foto' + (_lbFotos.length > 1 ? 's' : '') + ' · Estoque: ' + produto.estoque
+          : 'Sem fotos cadastradas · Estoque: ' + produto.estoque;
+
+      renderLightbox();
+      document.getElementById('lightbox-overlay').classList.add('visivel');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function renderLightbox() {
+      const principal = document.getElementById('lb-foto-principal');
+      const thumbsEl = document.getElementById('lb-thumbs');
+
+      if (!_lbFotos.length) {
+        principal.innerHTML = '<div class="lb-sem-foto"><span>📷</span><p>Sem fotos cadastradas</p></div>';
+        thumbsEl.innerHTML = '';
+        return;
+      }
+
+      // Foto principal
+      principal.innerHTML =
+        '<img id="lb-img-principal" src="' + _lbFotos[_lbIdx] + '" alt="Foto do produto" />' +
+        (_lbFotos.length > 1
+          ? '<button class="lb-nav lb-nav-prev" id="lb-prev" ' + (_lbIdx === 0 ? 'disabled' : '') + '>&#8249;</button>' +
+            '<button class="lb-nav lb-nav-next" id="lb-next" ' + (_lbIdx === _lbFotos.length - 1 ? 'disabled' : '') + '>&#8250;</button>' +
+            '<div class="lb-counter">' + (_lbIdx + 1) + ' / ' + _lbFotos.length + '</div>'
+          : '');
+
+      // Miniaturas
+      if (_lbFotos.length > 1) {
+        thumbsEl.innerHTML = _lbFotos.map(function(url, i) {
+          return '<div class="lb-thumb ' + (i === _lbIdx ? 'ativo' : '') + '" data-i="' + i + '">' +
+            '<img src="' + url + '" alt="Foto ' + (i+1) + '" loading="lazy" />' +
+            '</div>';
+        }).join('');
+
+        thumbsEl.querySelectorAll('.lb-thumb').forEach(function(el) {
+          el.addEventListener('click', function() {
+            trocarFotoLb(parseInt(this.dataset.i));
+          });
+        });
+      } else {
+        thumbsEl.innerHTML = '';
+      }
+
+      // Eventos setas
+      const prev = document.getElementById('lb-prev');
+      const next = document.getElementById('lb-next');
+      if (prev) prev.addEventListener('click', function() { trocarFotoLb(_lbIdx - 1); });
+      if (next) next.addEventListener('click', function() { trocarFotoLb(_lbIdx + 1); });
+    }
+
+    function trocarFotoLb(novoIdx) {
+      if (novoIdx < 0 || novoIdx >= _lbFotos.length) return;
+      const img = document.getElementById('lb-img-principal');
+      if (img) img.classList.add('trocando');
+      setTimeout(function() {
+        _lbIdx = novoIdx;
+        renderLightbox();
+        // Scroll do thumb ativo para vista
+        const thumbAtivo = document.querySelector('.lb-thumb.ativo');
+        if (thumbAtivo) thumbAtivo.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 180);
+    }
+
+    function fecharLightbox() {
+      document.getElementById('lightbox-overlay').classList.remove('visivel');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('lb-fechar').addEventListener('click', fecharLightbox);
+    document.getElementById('lightbox-overlay').addEventListener('click', function(e) {
+      if (e.target === this) fecharLightbox();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (!document.getElementById('lightbox-overlay').classList.contains('visivel')) return;
+      if (e.key === 'ArrowLeft') trocarFotoLb(_lbIdx - 1);
+      else if (e.key === 'ArrowRight') trocarFotoLb(_lbIdx + 1);
+      else if (e.key === 'Escape') fecharLightbox();
+    });
+
+    // ══════════════════════════════════
+    // HELPERS
+    // ══════════════════════════════════
     function formatarData(s) {
       if (!s || s === "null" || s === "") return '<span class="sem-registro">\u2014</span>';
       try {
@@ -1599,11 +1626,9 @@
         const d = p[0].split('-');
         if (d.length !== 3) return s;
         const h = p[1] ? p[1].substring(0, 5) : '';
-
         const dataObj = new Date(d[0], d[1] - 1, d[2]);
         const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         const diaSemana = dias[dataObj.getDay()];
-
         return diaSemana + ', ' + d[2] + '/' + d[1] + '/' + d[0] + (h ? ' ' + h : '');
       } catch (e) { return s; }
     }
@@ -1633,10 +1658,10 @@
         do {
           const d = await buscarProdutos(nome, pag, grupoId);
           if (d.code !== 200) throw new Error("Erro ao carregar produtos.");
-          todosProdutos = todosProdutos.concat(d.data.filter(function (p) { return p.nome; }));
+          todosProdutos = todosProdutos.concat(d.data.filter(function(p) { return p.nome; }));
           tot = d.meta.total_paginas; pag++;
         } while (pag <= tot);
-        todosProdutos.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+        todosProdutos.sort(function(a, b) { return a.nome.localeCompare(b.nome); });
         renderizarTabela(todosProdutos);
         document.getElementById('container-filtro').style.display = 'block';
       } catch (err) {
@@ -1647,7 +1672,7 @@
     }
 
     function atualizarCelulaData(nomeProduto, dataStr) {
-      document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(function (linha) {
+      document.querySelectorAll('.tabela-produtos-base tbody tr').forEach(function(linha) {
         const td = linha.querySelector('td:first-child');
         if (td && td.getAttribute('title') === nomeProduto) {
           const ultMovDiv = td.querySelector('.ult-mov');
@@ -1659,10 +1684,13 @@
       });
     }
 
+    // ── CRIA LINHA DE TABELA (com miniatura) ──
     function criarLinhaProduto(produto) {
       const id = produto.id || produto.nome;
       const ecls = produto.estoque > 0 ? 'tag-estoque-ok' : 'tag-estoque-zero';
       const sem = produto.estoque <= 0;
+      const temFoto = produto.fotos && produto.fotos.length > 0;
+      const fotoUrl = temFoto ? produto.fotos[0] : null;
 
       const ultMovHtml = produto.ultimaMov
         ? '<div class="ult-mov" style="display:block;">Últ. Movimentação: ' + formatarDataComDiaSemana(produto.ultimaMov) + '</div>'
@@ -1671,61 +1699,169 @@
       const tr = document.createElement('tr');
       tr.className = 'clicavel';
 
+      // Miniatura inline
+      const thumbHtml = fotoUrl
+        ? '<img class="thumb-lista" src="' + fotoUrl + '" alt="" loading="lazy" data-id="' + id + '" />'
+        : '<div class="thumb-placeholder">📷</div>';
+
       tr.innerHTML =
-        '<td title="' + produto.nome + '"><div class="prod-nome">' + produto.nome + '</div>' + ultMovHtml + '</td>' +
+        '<td title="' + produto.nome + '">' +
+          '<div class="prod-info-cell">' +
+            thumbHtml +
+            '<div style="flex:1;min-width:0;">' +
+              '<div class="prod-nome">' + produto.nome + '</div>' +
+              ultMovHtml +
+            '</div>' +
+          '</div>' +
+        '</td>' +
         '<td><span class="' + ecls + '">' + produto.estoque + '</span></td>' +
         '<td><button class="btn-add" data-id="' + id + '"' + (sem ? ' disabled' : '') + '>+</button></td>';
 
-      tr.addEventListener('click', function (e) {
-        if (e.target.closest('.btn-add')) return;
+      // Clique na miniatura → lightbox
+      const thumbEl = tr.querySelector('.thumb-lista');
+      if (thumbEl) {
+        thumbEl.addEventListener('click', function(e) {
+          e.stopPropagation();
+          abrirLightbox(produto);
+        });
+      }
+
+      // Clique na linha → histórico
+      tr.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-add') || e.target.closest('.thumb-lista')) return;
         abrirHistorico(produto);
       });
-      tr.querySelector('.btn-add').addEventListener('click', function () {
-        const p = todosProdutos.find(function (x) { return (x.id || x.nome) == id; });
+
+      tr.querySelector('.btn-add').addEventListener('click', function() {
+        const p = todosProdutos.find(function(x) { return (x.id || x.nome) == id; });
         if (p) adicionarAoCarrinho(p);
       });
+
       return tr;
     }
 
+    // ── CRIA CARD DE GRADE ──
+    function criarCardGrade(produto) {
+      const id = produto.id || produto.nome;
+      const sem = produto.estoque <= 0;
+      const temFoto = produto.fotos && produto.fotos.length > 0;
+      const fotoUrl = temFoto ? produto.fotos[0] : null;
+      const qtdFotos = temFoto ? produto.fotos.length : 0;
+      const ecls = produto.estoque > 0 ? 'tag-estoque-ok' : 'tag-estoque-zero';
+
+      const div = document.createElement('div');
+      div.className = 'card-produto-grade';
+
+      let fotoHtml = '';
+      if (fotoUrl) {
+        fotoHtml =
+          '<div class="foto-wrapper">' +
+            '<img src="' + fotoUrl + '" alt="' + produto.nome + '" loading="lazy" />' +
+            (qtdFotos > 1 ? '<div class="foto-count-badge">+' + (qtdFotos - 1) + '</div>' : '') +
+          '</div>';
+      } else {
+        fotoHtml =
+          '<div class="foto-wrapper">' +
+            '<div class="foto-sem-img"><span>📷</span><span>Sem foto</span></div>' +
+          '</div>';
+      }
+
+      div.innerHTML =
+        fotoHtml +
+        '<div class="card-body">' +
+          '<div class="card-nome" title="' + produto.nome + '">' + produto.nome + '</div>' +
+          '<div class="card-footer">' +
+            '<span class="' + ecls + '">' + produto.estoque + '</span>' +
+            '<button class="btn-add-grade" data-id="' + id + '"' + (sem ? ' disabled' : '') + '>+</button>' +
+          '</div>' +
+        '</div>';
+
+      // Clique no card → lightbox
+      div.querySelector('.foto-wrapper').addEventListener('click', function(e) {
+        e.stopPropagation();
+        abrirLightbox(produto);
+      });
+
+      // Clique no nome → histórico
+      div.querySelector('.card-nome').addEventListener('click', function(e) {
+        e.stopPropagation();
+        abrirHistorico(produto);
+      });
+
+      // Botão adicionar
+      div.querySelector('.btn-add-grade').addEventListener('click', function(e) {
+        e.stopPropagation();
+        const p = todosProdutos.find(function(x) { return (x.id || x.nome) == id; });
+        if (p) adicionarAoCarrinho(p);
+      });
+
+      return div;
+    }
+
+    // ── RENDERIZAR AMBAS AS VIEWS ──
     function renderizarTabela(produtos) {
       produtosFiltrados = produtos;
-      const com = produtos.filter(function (p) { return p.estoque > 0; });
-      const sem = produtos.filter(function (p) { return p.estoque <= 0; });
+      const com = produtos.filter(function(p) { return p.estoque > 0; });
+      const sem = produtos.filter(function(p) { return p.estoque <= 0; });
       const ph = document.getElementById('card-placeholder');
       const cCom = document.getElementById('card-com-estoque');
       const cSem = document.getElementById('card-sem-estoque');
       const bCom = document.getElementById('tbody-com-estoque');
       const bSem = document.getElementById('tbody-sem-estoque');
+      const gCom = document.getElementById('grade-com-estoque');
+      const gSem = document.getElementById('grade-sem-estoque');
+
       ph.style.display = 'none';
+
       if (!produtos.length) {
         bCom.innerHTML = bSem.innerHTML = '';
+        gCom.innerHTML = gSem.innerHTML = '';
         cCom.style.display = cSem.style.display = 'none';
         ph.style.display = 'block';
         ph.querySelector('td').innerHTML = 'Nenhum produto encontrado com esse nome.';
         return;
       }
+
+      // Seção COM estoque
       bCom.innerHTML = '';
+      gCom.innerHTML = '';
       if (com.length) {
         cCom.style.display = 'block';
         document.getElementById('count-com-estoque').textContent = com.length + ' produto' + (com.length !== 1 ? 's' : '');
-        com.forEach(function (p) { bCom.appendChild(criarLinhaProduto(p)); });
-      } else { cCom.style.display = 'none'; }
+        com.forEach(function(p) {
+          bCom.appendChild(criarLinhaProduto(p));
+          gCom.appendChild(criarCardGrade(p));
+        });
+      } else {
+        cCom.style.display = 'none';
+      }
+
+      // Seção SEM estoque
       bSem.innerHTML = '';
+      gSem.innerHTML = '';
       if (sem.length) {
         cSem.style.display = 'block';
         document.getElementById('count-sem-estoque').textContent = sem.length + ' produto' + (sem.length !== 1 ? 's' : '');
-        sem.forEach(function (p) { bSem.appendChild(criarLinhaProduto(p)); });
-      } else { cSem.style.display = 'none'; }
+        sem.forEach(function(p) {
+          bSem.appendChild(criarLinhaProduto(p));
+          gSem.appendChild(criarCardGrade(p));
+        });
+      } else {
+        cSem.style.display = 'none';
+      }
+
+      // Mantém o modo de view atual após re-render
+      setView(modoView);
     }
 
     function filtrarTabela() {
       const t = document.getElementById('campo-filtro').value.toLowerCase().trim();
-      renderizarTabela(todosProdutos.filter(function (p) { return p.nome.toLowerCase().includes(t); }));
+      renderizarTabela(todosProdutos.filter(function(p) { return p.nome.toLowerCase().includes(t); }));
     }
 
     function ordenarTabela(col, ord) {
       if (!produtosFiltrados.length) return;
-      const s = produtosFiltrados.slice().sort(function (a, b) {
+      const s = produtosFiltrados.slice().sort(function(a, b) {
         const vA = a[col] != null ? a[col] : '', vB = b[col] != null ? b[col] : '';
         if (col === 'estoque') return ord === 'asc' ? Number(vA) - Number(vB) : Number(vB) - Number(vA);
         return ord === 'asc' ? vA.toString().localeCompare(vB.toString()) : vB.toString().localeCompare(vA.toString());
@@ -1734,11 +1870,11 @@
     }
 
     function setupOrdenacao(tbl) {
-      tbl.querySelectorAll('th[data-coluna]').forEach(function (th) {
-        th.addEventListener('click', function () {
+      tbl.querySelectorAll('th[data-coluna]').forEach(function(th) {
+        th.addEventListener('click', function() {
           const col = th.dataset.coluna;
           const nova = (th.dataset.ordem || 'asc') === 'asc' ? 'desc' : 'asc';
-          document.querySelectorAll('.tabela-produtos-base th').forEach(function (t) {
+          document.querySelectorAll('.tabela-produtos-base th').forEach(function(t) {
             t.classList.remove('ordenado-asc', 'ordenado-desc'); t.dataset.ordem = 'asc';
           });
           th.classList.add(nova === 'asc' ? 'ordenado-asc' : 'ordenado-desc');
@@ -1748,6 +1884,9 @@
       });
     }
 
+    // ══════════════════════════════════
+    // CARRINHO
+    // ══════════════════════════════════
     function toggleCarrinho() {
       carrinhoAberto = !carrinhoAberto;
       document.getElementById('carrinho-painel').classList.toggle('minimizado', !carrinhoAberto);
@@ -1784,52 +1923,51 @@
     function atualizarCarrinho() {
       const lista = document.getElementById('lista-carrinho');
       const itens = Object.entries(carrinho);
-      const tot = itens.reduce(function (a, kv) { return a + kv[1].qty; }, 0);
+      const tot = itens.reduce(function(a, kv) { return a + kv[1].qty; }, 0);
       const badge = document.getElementById('badge-float');
-
       badge.textContent = tot;
       badge.classList.toggle('visivel', tot > 0);
       document.getElementById('qtd-itens').textContent = tot + ' ' + (tot === 1 ? 'item' : 'itens');
       lista.innerHTML = '';
-
-      itens.forEach(function (kv) {
+      itens.forEach(function(kv) {
         const id = kv[0], p = kv[1].produto, q = kv[1].qty;
         const div = document.createElement('div');
         div.className = 'item-carrinho';
         div.innerHTML =
           '<div class="item-nome" title="' + p.nome + '">' + p.nome + '</div>' +
           '<div class="qty-control">' +
-          '<button class="qty-btn" data-id="' + id + '" data-delta="-1">\u2212</button>' +
-          '<span class="qty-num">' + q + '</span>' +
-          '<button class="qty-btn" data-id="' + id + '" data-delta="1">+</button>' +
+            '<button class="qty-btn" data-id="' + id + '" data-delta="-1">\u2212</button>' +
+            '<span class="qty-num">' + q + '</span>' +
+            '<button class="qty-btn" data-id="' + id + '" data-delta="1">+</button>' +
           '</div>' +
           '<button class="btn-remover" data-id="' + id + '" title="Remover item">🗑️</button>';
         lista.appendChild(div);
       });
-
-      lista.querySelectorAll('.qty-btn').forEach(function (b) {
-        b.addEventListener('click', function () { alterarQtd(b.dataset.id, parseInt(b.dataset.delta)); });
+      lista.querySelectorAll('.qty-btn').forEach(function(b) {
+        b.addEventListener('click', function() { alterarQtd(b.dataset.id, parseInt(b.dataset.delta)); });
       });
-      lista.querySelectorAll('.btn-remover').forEach(function (b) {
-        b.addEventListener('click', function () { removerItem(b.dataset.id); });
+      lista.querySelectorAll('.btn-remover').forEach(function(b) {
+        b.addEventListener('click', function() { removerItem(b.dataset.id); });
       });
     }
 
     function copiarPedido() {
       const itens = Object.values(carrinho);
       if (!itens.length) { mostrarToast('⚠️ O carrinho está vazio'); return; }
-      const linhas = itens.map(function (v) { return '\u2022 ' + v.produto.nome + ' \u2014 ' + v.qty + 'x'; });
+      const linhas = itens.map(function(v) { return '\u2022 ' + v.produto.nome + ' \u2014 ' + v.qty + 'x'; });
       const texto = '📦 PEDIDO \u2014 ' + new Date().toLocaleDateString('pt-BR') + '\n' + '\u2500'.repeat(30) + '\n' + linhas.join('\n');
-      navigator.clipboard.writeText(texto).then(function () {
+      navigator.clipboard.writeText(texto).then(function() {
         const btn = document.getElementById('btn-copiar');
         btn.textContent = '✅ Copiado com sucesso!'; btn.classList.add('copiado');
-        setTimeout(function () { btn.innerHTML = '📋 Copiar para WhatsApp'; btn.classList.remove('copiado'); }, 2000);
-      }).catch(function () { mostrarToast('Erro ao copiar.'); });
+        setTimeout(function() { btn.innerHTML = '📋 Copiar para WhatsApp'; btn.classList.remove('copiado'); }, 2000);
+      }).catch(function() { mostrarToast('Erro ao copiar.'); });
     }
 
+    // ══════════════════════════════════
+    // MODAL HISTÓRICO
+    // ══════════════════════════════════
     let _produtoAtual = null, _todasMovs = [];
 
-    // CONFIGURAÇÃO DE DATAS: Padrão 3 Meses
     function setDatasDefault() {
       const h = new Date(), a = new Date();
       a.setMonth(h.getMonth() - 3);
@@ -1839,17 +1977,14 @@
 
     function renderMovs(movs) {
       const tbody = document.getElementById('tbody-mov');
-      const ent = movs.filter(function (m) { return m.isEntrada; }).reduce(function (s, m) { return s + (m.qtd || 0); }, 0);
-      const sai = movs.filter(function (m) { return !m.isEntrada; }).reduce(function (s, m) { return s + (m.qtd || 0); }, 0);
-
+      const ent = movs.filter(function(m) { return m.isEntrada; }).reduce(function(s, m) { return s + (m.qtd || 0); }, 0);
+      const sai = movs.filter(function(m) { return !m.isEntrada; }).reduce(function(s, m) { return s + (m.qtd || 0); }, 0);
       document.getElementById('modal-resumo').innerHTML = movs.length ?
         '<span class="mov-entrada">🟢 +' + ent + '</span> &nbsp;|&nbsp; ' +
         '<span class="mov-saida">🔴 \u2212' + sai + '</span> &nbsp;|&nbsp; (' + movs.length + ' reg.)' : '';
-
       if (!movs.length) { tbody.innerHTML = '<tr><td colspan="5" class="status-msg">Nenhuma movimentação encontrada neste período.</td></tr>'; return; }
-
       tbody.innerHTML = '';
-      movs.forEach(function (mov) {
+      movs.forEach(function(mov) {
         const tc = mov.isEntrada ? 'mov-entrada' : 'mov-saida', s = mov.isEntrada ? '+' : '\u2212';
         const tr = document.createElement('tr');
         tr.innerHTML =
@@ -1862,56 +1997,28 @@
       });
     }
 
-    // NOVA FUNÇÃO OTIMIZADA: Com requisições em Lotes (Rate Limit respeitado) e Filtro de Datas Nativo!
     async function buscarTodasPaginas(rota, di, df) {
       const base = 'https://caixa-three.vercel.app/api/proxy';
       const params = new URLSearchParams({ rota: rota, loja_id: lojaIdJeta, limite: 100, pagina: 1 });
-
-      // Aplicar filtro de datas nativo da API para vendas (Conforme documentação oficial)
-      if (rota === 'vendas') {
-        if (di) params.append('data_inicio', di);
-        if (df) params.append('data_fim', df);
-      }
-
-      // Busca a primeira página para saber o total de páginas existentes no período
+      if (rota === 'vendas') { if (di) params.append('data_inicio', di); if (df) params.append('data_fim', df); }
       const res1 = await fetch(base + '?' + params).then(x => x.json()).catch(() => null);
       if (!res1 || res1.code !== 200 || !res1.data) return [];
-
       let todos = [...res1.data];
       const tot = (res1.meta && res1.meta.total_paginas) ? res1.meta.total_paginas : 1;
-
-      // Cria a fila de páginas que precisam ser baixadas
       const paginasRestantes = [];
       for (let p = 2; p <= tot; p++) paginasRestantes.push(p);
-
       const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
-      // BATCHING: Dispara 3 requisições por vez e aguarda 1 segundo. Isso evita o limite "Too Many Requests" (Status 429) da documentação!
       for (let i = 0; i < paginasRestantes.length; i += 3) {
         const lote = paginasRestantes.slice(i, i + 3);
         const promises = lote.map(p => {
           const pParams = new URLSearchParams({ rota: rota, loja_id: lojaIdJeta, limite: 100, pagina: p });
-          if (rota === 'vendas') {
-            if (di) pParams.append('data_inicio', di);
-            if (df) pParams.append('data_fim', df);
-          }
+          if (rota === 'vendas') { if (di) pParams.append('data_inicio', di); if (df) pParams.append('data_fim', df); }
           return fetch(base + '?' + pParams).then(x => x.json()).catch(() => null);
         });
-
         const resultadosLote = await Promise.all(promises);
-        resultadosLote.forEach(res => {
-          if (res && res.code === 200 && res.data) {
-            todos.push(...res.data);
-          }
-        });
-
-        // Se ainda tem página na fila, espera 1 segundo para respeitar a API
-        if (i + 3 < paginasRestantes.length) {
-          await delay(1000);
-        }
+        resultadosLote.forEach(res => { if (res && res.code === 200 && res.data) todos.push(...res.data); });
+        if (i + 3 < paginasRestantes.length) await delay(1000);
       }
-
-      // Filtro manual de datas exclusivo para a rota de /compras (já que a doc oficial não suporta data_inicio lá)
       if (rota === 'compras' && (di || df)) {
         todos = todos.filter(c => {
           const d = c.data_emissao || (c.cadastrado_em ? c.cadastrado_em.split(' ')[0] : '');
@@ -1921,39 +2028,33 @@
           return true;
         });
       }
-
       return todos;
     }
 
     async function buscarMovimentacoesPeriodo(produto, di, df) {
       const pid = String(produto.id);
-
-      // As duas buscas rodando ao mesmo tempo (já preparadas para não quebrar limite)
       const res = await Promise.all([buscarTodasPaginas('vendas', di, df), buscarTodasPaginas('compras', di, df)]);
       const movs = [];
-
-      res[0].forEach(function (v) {
-        const its = (v.produtos || []).filter(function (p) { return p.produto && String(p.produto.produto_id) === pid; });
+      res[0].forEach(function(v) {
+        const its = (v.produtos || []).filter(function(p) { return p.produto && String(p.produto.produto_id) === pid; });
         if (!its.length) return;
-        const q = its.reduce(function (s, p) { return s + Number(p.produto.quantidade || 1); }, 0);
+        const q = its.reduce(function(s, p) { return s + Number(p.produto.quantidade || 1); }, 0);
         const ts = v.cadastrado_em || v.data || '', pp = ts.split(' ');
         movs.push({ dataISO: pp[0] || '', hora: pp[1] ? pp[1].substring(0, 5) : '', cliente: v.nome_cliente || '\u2014', qtd: q, descricao: 'Venda n\u00ba ' + v.codigo, isEntrada: false });
       });
-      res[1].forEach(function (c) {
-        const its = (c.produtos || []).filter(function (p) { return p.produto && String(p.produto.produto_id) === pid; });
+      res[1].forEach(function(c) {
+        const its = (c.produtos || []).filter(function(p) { return p.produto && String(p.produto.produto_id) === pid; });
         if (!its.length) return;
-        const q = its.reduce(function (s, p) { return s + Number(p.produto.quantidade || 1); }, 0);
+        const q = its.reduce(function(s, p) { return s + Number(p.produto.quantidade || 1); }, 0);
         const ts = c.cadastrado_em || c.data_emissao || '', pp = ts.split(' ');
         movs.push({ dataISO: pp[0] || '', hora: pp[1] ? pp[1].substring(0, 5) : '', cliente: c.nome_fornecedor || c.nome_cliente || '\u2014', qtd: q, descricao: 'Compra n\u00ba ' + (c.codigo || c.id), isEntrada: true });
       });
-
       if (produto.modificado_em && produto.cadastrado_em && produto.modificado_em !== produto.cadastrado_em) {
         const pe = produto.modificado_em.split(' '), de = pe[0];
-        if ((!di || de >= di) && (!df || de <= df) && !movs.some(function (m) { return m.dataISO === de && m.isEntrada; }))
+        if ((!di || de >= di) && (!df || de <= df) && !movs.some(function(m) { return m.dataISO === de && m.isEntrada; }))
           movs.push({ dataISO: de, hora: pe[1] ? pe[1].substring(0, 5) : '', cliente: '\u2014', qtd: null, descricao: 'Entrada manual', isEntrada: true });
       }
-
-      movs.sort(function (a, b) { return (b.dataISO + b.hora).localeCompare(a.dataISO + a.hora); });
+      movs.sort(function(a, b) { return (b.dataISO + b.hora).localeCompare(a.dataISO + a.hora); });
       return movs;
     }
 
@@ -1962,15 +2063,11 @@
       const ov = document.getElementById('modal-overlay'), tb = document.getElementById('tbody-mov');
       document.getElementById('modal-titulo').textContent = produto.nome;
       document.getElementById('modal-subtitulo').textContent = 'Estoque atual na base: ' + produto.estoque + ' un.';
-
-      // Aviso ajustado para refletir o tempo
       tb.innerHTML = '<tr><td colspan="5" class="status-msg"><span style="font-size:18px">⏳</span><br>Aguarde... Buscando histórico (isso pode levar alguns segundos devido ao volume de dados).</td></tr>';
       document.getElementById('modal-resumo').textContent = '';
-
       setDatasDefault();
       ov.classList.add('visivel');
       document.body.style.overflow = 'hidden';
-
       try {
         const ini = document.getElementById('filtro-data-ini').value, fim = document.getElementById('filtro-data-fim').value;
         _todasMovs = await buscarMovimentacoesPeriodo(produto, ini, fim);
@@ -2007,25 +2104,30 @@
       const t = document.getElementById('toast');
       t.textContent = msg; t.classList.add('visivel');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(function () { t.classList.remove('visivel'); }, 2500);
+      toastTimer = setTimeout(function() { t.classList.remove('visivel'); }, 2500);
     }
 
+    // ══════════════════════════════════
     // EVENTOS
+    // ══════════════════════════════════
     document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
     document.getElementById('btn-filtrar-datas').addEventListener('click', buscarPeriodo);
-    document.getElementById('filtro-data-ini').addEventListener('keypress', function (e) { if (e.key === 'Enter') buscarPeriodo(); });
-    document.getElementById('filtro-data-fim').addEventListener('keypress', function (e) { if (e.key === 'Enter') buscarPeriodo(); });
+    document.getElementById('filtro-data-ini').addEventListener('keypress', function(e) { if (e.key === 'Enter') buscarPeriodo(); });
+    document.getElementById('filtro-data-fim').addEventListener('keypress', function(e) { if (e.key === 'Enter') buscarPeriodo(); });
 
     setupOrdenacao(document.getElementById('tabela-produtos'));
     setupOrdenacao(document.getElementById('tabela-produtos-zero'));
 
-    document.getElementById('modal-overlay').addEventListener('click', function (e) { if (e.target === document.getElementById('modal-overlay')) fecharModal(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fecharModal(); });
+    document.getElementById('modal-overlay').addEventListener('click', function(e) { if (e.target === document.getElementById('modal-overlay')) fecharModal(); });
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('lightbox-overlay').classList.contains('visivel')) return; // lightbox trata ele mesmo
+      if (e.key === 'Escape') fecharModal();
+    });
 
-    document.getElementById('btn-buscar').addEventListener('click', function () { carregarProdutos(document.getElementById('campo-busca').value); });
-    document.getElementById('campo-busca').addEventListener('keypress', function (e) { if (e.key === 'Enter') document.getElementById('btn-buscar').click(); });
+    document.getElementById('btn-buscar').addEventListener('click', function() { carregarProdutos(document.getElementById('campo-busca').value); });
+    document.getElementById('campo-busca').addEventListener('keypress', function(e) { if (e.key === 'Enter') document.getElementById('btn-buscar').click(); });
 
-    document.getElementById('campo-filtro').addEventListener('input', function () {
+    document.getElementById('campo-filtro').addEventListener('input', function() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(filtrarTabela, 300);
     });
@@ -2036,15 +2138,14 @@
 
     atualizarCarrinho();
 
-    // ════════════════════════
+    // ══════════════════════════════════
     // BUSCA EM LOTE POR IA
-    // ════════════════════════
+    // ══════════════════════════════════
     const IA_PROMPT_KEY = 'jeta_ia_lote_v3';
     const IA_PROMPT_DEFAULT = "Você é um assistente especializado em processar listas de produtos.\nAnalise a lista bruta e retorne um array de objetos JSON.\nPara cada produto encontrado, extraia:\n- \"original\": a linha original completa exatamente como o usuário colou (com cor, preço, etc).\n- \"busca\": o nome limpo do produto (remova preço, cor e marketing, mantendo apenas marca, modelo, memória e conectividade).\n\nRetorne APENAS JSON válido, sem markdown.\n\nExemplo de saída:\n[\n  {\"original\": \"Motorola Moto G15 256gb 4G - Bege - 650\", \"busca\": \"Motorola Moto G15 256gb 4G\"},\n  {\"original\": \"Realme Note 60 4/256gb Verde\", \"busca\": \"Realme Note 60 4/256gb\"}\n]";
 
     let _iaResultados = [];
 
-    // Declara variáveis do cache (usadas pelo motor injetado)
     const API_HOST = window.location.origin.includes('vercel.app') ? "" : "https://caixa-three.vercel.app";
     let _listaGrupos = [];
     let _prodCache = [];
@@ -2073,203 +2174,62 @@
     }
 
     function renderizarAbasGrupos() {
-      const container = document.getElementById('container-abas-grupos');
       const tabs = document.getElementById('tabs-grupos');
-      
-      container.style.display = 'block';
       let html = `<div class="tab-item ${_abaAtiva === 'TODOS' ? 'active' : ''}" onclick="selecionarAbaGrupo('TODOS', null)">TODOS</div>`;
-      
       _listaGrupos.forEach(g => {
         html += `<div class="tab-item ${_abaAtiva === g.id ? 'active' : ''}" onclick="selecionarAbaGrupo(${g.id}, '${g.nome}')">
                    ${g.nome.toUpperCase()}
                  </div>`;
       });
-
       tabs.innerHTML = html;
     }
 
     function selecionarAbaGrupo(id, nome) {
       _abaAtiva = id || 'TODOS';
       renderizarAbasGrupos();
-      
       if (_abaAtiva === 'TODOS') {
-        // Volta para a busca vazia ou atual
         carregarProdutos(document.getElementById('campo-busca').value);
       } else {
-        // Carrega produtos do grupo específico
         carregarProdutos("", _abaAtiva);
       }
     }
 
-    // ── Motor de busca inteligente (mesmo do gerador de lista) ──
-    function extrairMem(s) {
-      const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || [];
-      return matches.map(m => m.replace(/\s/g, '').toLowerCase().replace(/gb|tb/gi, ''));
-    }
-
-    function extrairStorage(s) {
-      if (/\d+\s*\/\s*\d+/i.test(s)) return [];
-      return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || [])
-        .map(m => m.replace(/\s/g, '').toLowerCase());
-    }
-
-    function extrairRede(s) {
-      const m = s.match(/\b(4g|5g)\b/gi);
-      return m ? m.map(x => x.toLowerCase()) : [];
-    }
-
-    function extrairPolegadas(s) {
-      const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) ||
-        s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi);
-      return m ? m.map(x => x.match(/\d+/)[0]) : [];
-    }
-
-    function normStr(s) {
-      return s.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/\bpro\s*\+/g, 'pro plus')
-        .replace(/\+/g, ' plus ')
-        .replace(/[^a-z0-9\s\/]/g, ' ')
-        .replace(/\s+/g, ' ').trim();
-    }
-
-    function ehAcessorio(nome) {
-      return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome);
-    }
-
-    function extrairVariante(s) {
-      const n = normStr(s);
-      const vs = [];
-      if (/\bpro\b/.test(n)) vs.push('pro');
-      if (/\bplus\b/.test(n)) vs.push('plus');
-      if (/\bultra\b/.test(n)) vs.push('ultra');
-      if (/\bmax\b/.test(n)) vs.push('max');
-      if (/\blite\b/.test(n)) vs.push('lite');
-      if (/\bneo\b/.test(n)) vs.push('neo');
-      if (/\bfe\b/.test(n)) vs.push('fe');
-      if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix');
-      return vs;
-    }
-
-    function extrairSerie(s) {
-      const n = normStr(s);
-      const series = [];
-      if (/\bredmi\s+note\b/.test(n)) series.push('redmi-note');
-      else if (/\bredmi\b/.test(n)) series.push('redmi');
-      if (/\bpoco\b/.test(n)) series.push('poco');
-      if (/\brealme\b/.test(n)) series.push('realme');
-      if (/\biphone\b/.test(n)) series.push('iphone');
-      if (/\bgalaxy\b/.test(n)) series.push('galaxy');
-      if (/\bmoto\b/.test(n)) series.push('moto');
-      if (/\bnote\b/.test(n) && !series.length) series.push('note-generic');
-      return series;
-    }
-
-    function serieCompativel(lS, pS) {
-      if (!lS.length || !pS.length) return true;
-      if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true;
-      if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true;
-      return lS.some(s => pS.includes(s));
-    }
-
-    function tokensModelo(label) {
-      const stop = new Set(['de', 'do', 'da', 'com', 'para', 'a', 'o', 'e', 'em',
-        'smart', 'tv', 'led', 'oled', 'full', 'hd', '4k', 'wi', 'fi',
-        'preto', 'branco', 'azul', 'verde', 'roxo', 'cinza', 'dourado', 'rosa',
-        'prata', 'bege', 'vermelho', 'amarelo', 'grafite', 'gold', 'creme',
-        'titanium', 'aurora', 'marrom', 'laranja', 'vinho', 'preta',
-        'silver', 'blue', 'black', 'white', 'purple', 'gray', 'transparente']);
-
-      const n = normStr(label)
-        .replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|transparente)\b/gi, '')
-        .replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi, '')
-        .replace(/\s+/g, ' ').trim();
-
-      return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t));
-    }
-
-    function filtroTecnico(label, nomeAPI) {
-      const lMem = extrairMem(label), pMem = extrairMem(nomeAPI);
-      const lRede = extrairRede(label), pRede = extrairRede(nomeAPI);
-      const lPol = extrairPolegadas(label), pPol = extrairPolegadas(nomeAPI);
-      const lStor = extrairStorage(label);
-      if (lMem.length && pMem.length && !lMem.some(m => pMem.includes(m))) return false;
-      const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label);
-      if (lRede.length && pRede.length && !lRede.some(r => pRede.includes(r))) return false;
-      if (!lRede.length && pRede.length && ehSmartphoneFT) return false;
-      if (lPol.length && pPol.length && !lPol.some(p => pPol.includes(p))) return false;
-      if (lStor.length) {
-        const pMem2 = extrairMem(nomeAPI);
-        const lStorNum = lStor.map(s => s.replace(/[^\d]/g, ''));
-        const pStorNums = [...extrairStorage(nomeAPI).map(s => s.replace(/[^\d]/g, '')), ...pMem2.map(m => m.split('/')[1]).filter(Boolean)];
-        if (pStorNums.length && !lStorNum.some(n => pStorNums.includes(n))) return false;
-      }
-      return true;
-    }
-
-    function scoreNome(label, nomeAPI) {
-      const tokens = tokensModelo(label);
-      if (!tokens.length) return 0;
-      const pn = normStr(nomeAPI);
-      const modelTok = tokens.filter(t =>
-        /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
-        !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t));
-      const restTok = tokens.filter(t => !modelTok.includes(t));
-      const mScore = modelTok.length
-        ? modelTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length / modelTok.length : 1;
-      const rScore = restTok.length
-        ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1;
-      return mScore * 0.7 + rScore * 0.3;
-    }
-
-    async function buscarEstoqueDoItem(item) {
-      const vs = await buscarVinculosDoItem(item);
-      if (!vs.length) return null;
-      const estoqueTotal = vs.reduce((s, v) => s + v.estoque, 0);
-      return { estoque: estoqueTotal, prodId: vs[0].id };
-    }
+    // Motor de busca inteligente
+    function extrairMem(s) { const matches = s.match(/(\d+)\s*\/\s*(\d+)\s*(gb|tb)?/gi) || []; return matches.map(m => m.replace(/\s/g, '').toLowerCase().replace(/gb|tb/gi, '')); }
+    function extrairStorage(s) { if (/\d+\s*\/\s*\d+/i.test(s)) return []; return (s.match(/\b(\d+)\s*(gb|tb)\b/gi) || []).map(m => m.replace(/\s/g, '').toLowerCase()); }
+    function extrairRede(s) { const m = s.match(/\b(4g|5g)\b/gi); return m ? m.map(x => x.toLowerCase()) : []; }
+    function extrairPolegadas(s) { const m = s.match(/\b(\d{2})\s*(?:"|pol|polegadas?|inches?)/gi) || s.match(/\b(\d{2})\s+(?:hd|fhd|4k|full|led|oled)/gi); return m ? m.map(x => x.match(/\d+/)[0]) : []; }
+    function normStr(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\bpro\s*\+/g, 'pro plus').replace(/\+/g, ' plus ').replace(/[^a-z0-9\s\/]/g, ' ').replace(/\s+/g, ' ').trim(); }
+    function ehAcessorio(nome) { return /\b(pelicula|película|peliculas|películas|capinha|capa\b|case\b|protetor|vidro temperado|anel|suporte|cabo|carregador|fone|earphone|headphone|funda|cover|película|notebook|chromebook|dell|hp\b|lenovo\b)\b/i.test(nome); }
+    function extrairVariante(s) { const n = normStr(s); const vs = []; if (/\bpro\b/.test(n)) vs.push('pro'); if (/\bplus\b/.test(n)) vs.push('plus'); if (/\bultra\b/.test(n)) vs.push('ultra'); if (/\bmax\b/.test(n)) vs.push('max'); if (/\blite\b/.test(n)) vs.push('lite'); if (/\bneo\b/.test(n)) vs.push('neo'); if (/\bfe\b/.test(n)) vs.push('fe'); if (/\b\d+s\b/.test(n) && !/\b\d+s[dg]\b/.test(n)) vs.push('s-suffix'); return vs; }
+    function extrairSerie(s) { const n = normStr(s); const series = []; if (/\bredmi\s+note\b/.test(n)) series.push('redmi-note'); else if (/\bredmi\b/.test(n)) series.push('redmi'); if (/\bpoco\b/.test(n)) series.push('poco'); if (/\brealme\b/.test(n)) series.push('realme'); if (/\biphone\b/.test(n)) series.push('iphone'); if (/\bgalaxy\b/.test(n)) series.push('galaxy'); if (/\bmoto\b/.test(n)) series.push('moto'); if (/\bnote\b/.test(n) && !series.length) series.push('note-generic'); return series; }
+    function serieCompativel(lS, pS) { if (!lS.length || !pS.length) return true; if (lS.includes('note-generic') && pS.some(s => s.includes('note'))) return true; if (pS.includes('note-generic') && lS.some(s => s.includes('note'))) return true; return lS.some(s => pS.includes(s)); }
+    function tokensModelo(label) { const stop = new Set(['de','do','da','com','para','a','o','e','em','smart','tv','led','oled','full','hd','4k','wi','fi','preto','branco','azul','verde','roxo','cinza','dourado','rosa','prata','bege','vermelho','amarelo','grafite','gold','creme','titanium','aurora','marrom','laranja','vinho','preta','silver','blue','black','white','purple','gray','transparente']); const n = normStr(label).replace(/\b(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|titanium|aurora|marrom|laranja|vinho|preta|silver|blue|black|white|purple|gray|grey|azul|rosa)\b/gi,'').replace(/\/\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|grafite|gold|creme|marrom)\b/gi,'').replace(/\s+/g,' ').trim(); return n.split(/\s+/).filter(t => t.length >= 2 && !stop.has(t)); }
+    function filtroTecnico(label, nomeAPI) { const lMem = extrairMem(label), pMem = extrairMem(nomeAPI); const lRede = extrairRede(label), pRede = extrairRede(nomeAPI); const lPol = extrairPolegadas(label), pPol = extrairPolegadas(nomeAPI); const lStor = extrairStorage(label); if (lMem.length && pMem.length && !lMem.some(m => pMem.includes(m))) return false; const ehSmartphoneFT = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(label); if (lRede.length && pRede.length && !lRede.some(r => pRede.includes(r))) return false; if (!lRede.length && pRede.length && ehSmartphoneFT) return false; if (lPol.length && pPol.length && !lPol.some(p => pPol.includes(p))) return false; if (lStor.length) { const pMem2 = extrairMem(nomeAPI); const lStorNum = lStor.map(s => s.replace(/[^\d]/g,'')); const pStorNums = [...extrairStorage(nomeAPI).map(s => s.replace(/[^\d]/g,'')), ...pMem2.map(m => m.split('/')[1]).filter(Boolean)]; if (pStorNums.length && !lStorNum.some(n => pStorNums.includes(n))) return false; } return true; }
+    function scoreNome(label, nomeAPI) { const tokens = tokensModelo(label); if (!tokens.length) return 0; const pn = normStr(nomeAPI); const modelTok = tokens.filter(t => /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) && !/^(4g|5g|gb|tb|pro|max|plus|ultra|mini)$/i.test(t)); const restTok = tokens.filter(t => !modelTok.includes(t)); const mScore = modelTok.length ? modelTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length / modelTok.length : 1; const rScore = restTok.length ? restTok.filter(t => pn.includes(t)).length / restTok.length : 1; return mScore * 0.7 + rScore * 0.3; }
 
     async function carregarCacheProdutos(onProgress) {
       if (_prodCache.length && (Date.now() - _prodCacheTs) < CACHE_TTL) return _prodCache;
-      // Se não houver callback, tenta ler do IndexedDB (se implementado) ou apenas segue com fetch
-
       const base = `${API_HOST}/api/produtos`;
       const loja = lojaIdJeta;
       const delay = ms => new Promise(r => setTimeout(r, ms));
-
       const url1 = new URL(base);
-      url1.searchParams.set('loja_id', loja);
-      url1.searchParams.set('limite', '100');
-      url1.searchParams.set('pagina', '1');
+      url1.searchParams.set('loja_id', loja); url1.searchParams.set('limite', '100'); url1.searchParams.set('pagina', '1');
       const r1 = await fetch(url1.toString());
       if (!r1.ok) throw new Error('HTTP ' + r1.status);
       const d1 = await r1.json();
       if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
-
       const totalPaginas = d1.meta?.total_paginas || 1;
       let todos = [...(d1.data || [])];
-
       if (onProgress) onProgress(1, totalPaginas, todos.length);
-
       for (let p = 2; p <= totalPaginas; p++) {
         const url = new URL(base);
-        url.searchParams.set('loja_id', loja);
-        url.searchParams.set('limite', '100');
-        url.searchParams.set('pagina', p);
-        try {
-          const r = await fetch(url.toString());
-          if (r.ok) {
-            const d = await r.json();
-            if (d.code === 200 && d.data) todos = todos.concat(d.data);
-          }
-        } catch (e) { /* ignora página com falha */ }
-
+        url.searchParams.set('loja_id', loja); url.searchParams.set('limite', '100'); url.searchParams.set('pagina', p);
+        try { const r = await fetch(url.toString()); if (r.ok) { const d = await r.json(); if (d.code === 200 && d.data) todos = todos.concat(d.data); } } catch (e) { }
         if (onProgress) onProgress(p, totalPaginas, todos.length);
         if ((p - 1) % 3 === 0) await delay(1100);
       }
-
-      _prodCache = todos;
-      _prodCacheTs = Date.now();
+      _prodCache = todos; _prodCacheTs = Date.now();
       return _prodCache;
     }
 
@@ -2277,122 +2237,54 @@
       if (!q || !_prodCache.length) return [];
       const tokens = tokensModelo(q);
       if (!tokens.length) return [];
-
       const memTok = tokens.filter(t => /^\d+\/\d+(gb|tb)?$/i.test(t));
       const storTok = tokens.filter(t => /^\d+(gb|tb)$/i.test(t) && !memTok.includes(t));
       const redeTok = tokens.filter(t => /^(4g|5g)$/i.test(t));
-      const modelTok = tokens.filter(t =>
-        /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) &&
-        !/^(4g|5g|gb|tb)$/i.test(t) &&
-        !memTok.includes(t));
-      const numTok = tokens.filter(t =>
-        /^\d+$/.test(t) && t.length >= 2 &&
-        !memTok.includes(t) && !storTok.includes(t));
-      const txtTok = tokens.filter(t =>
-        !memTok.includes(t) && !storTok.includes(t) &&
-        !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
-
+      const modelTok = tokens.filter(t => /^[a-z]+\d+$|^\d+[a-z]+$|^[a-z]\d+[a-z]*$/.test(t) && !/^(4g|5g|gb|tb)$/i.test(t) && !memTok.includes(t));
+      const numTok = tokens.filter(t => /^\d+$/.test(t) && t.length >= 2 && !memTok.includes(t) && !storTok.includes(t));
+      const txtTok = tokens.filter(t => !memTok.includes(t) && !storTok.includes(t) && !redeTok.includes(t) && !modelTok.includes(t) && !numTok.includes(t));
       const lV = extrairVariante(q);
       const lS = extrairSerie(q);
-
       return _prodCache.filter(p => {
         if (ehAcessorio(p.nome)) return false;
         const pn = normStr(p.nome);
-
-        if (lS.length) {
-          const pS = extrairSerie(p.nome);
-          if (!serieCompativel(lS, pS)) return false;
-        }
-
+        if (lS.length) { const pS = extrairSerie(p.nome); if (!serieCompativel(lS, pS)) return false; }
         const pV = extrairVariante(p.nome);
         if (lV.includes('pro') !== pV.includes('pro')) return false;
         if (lV.includes('s-suffix') !== pV.includes('s-suffix')) return false;
-        for (const v of ['plus', 'ultra', 'max']) {
-          if (lV.includes(v) !== pV.includes(v)) return false;
-        }
-
-        if (memTok.length && !memTok.every(t => {
-          const base = t.replace(/(gb|tb)$/i, '');
-          return pn.includes(base);
-        })) return false;
-
-        if (storTok.length && !storTok.every(t => {
-          const n = t.replace(/[^\d]/g, '');
-          return pn.includes(t) || new RegExp('\\b' + n + '\\b').test(pn);
-        })) return false;
-
+        for (const v of ['plus','ultra','max']) { if (lV.includes(v) !== pV.includes(v)) return false; }
+        if (memTok.length && !memTok.every(t => { const base = t.replace(/(gb|tb)$/i,''); return pn.includes(base); })) return false;
+        if (storTok.length && !storTok.every(t => { const n = t.replace(/[^\d]/g,''); return pn.includes(t) || new RegExp('\\b'+n+'\\b').test(pn); })) return false;
         const ehSmartphone = /\b(redmi|note|poco|galaxy|iphone|moto|realme)\b/i.test(q);
         const pRedeTok2 = normStr(p.nome).match(/\b(4g|5g)\b/gi);
         const pTem5g = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '5g');
         const pTem4g = pRedeTok2 && pRedeTok2.some(r => r.toLowerCase() === '4g');
-        if (redeTok.length) {
-          if (!redeTok.every(t => new RegExp('\\b' + t + '\\b').test(normStr(p.nome)))) return false;
-        } else if (ehSmartphone) {
-          if (pTem5g || pTem4g) return false;
-        }
-
-        if (modelTok.length && !modelTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
-        if (numTok.length && !numTok.every(t => new RegExp('\\b' + t + '\\b').test(pn))) return false;
-        if (txtTok.length) {
-          const hits = txtTok.filter(t => new RegExp('\\b' + t + '\\b').test(pn)).length;
-          if (hits < Math.ceil(txtTok.length * 0.5)) return false;
-        }
+        if (redeTok.length) { if (!redeTok.every(t => new RegExp('\\b'+t+'\\b').test(normStr(p.nome)))) return false; }
+        else if (ehSmartphone) { if (pTem5g || pTem4g) return false; }
+        if (modelTok.length && !modelTok.every(t => new RegExp('\\b'+t+'\\b').test(pn))) return false;
+        if (numTok.length && !numTok.every(t => new RegExp('\\b'+t+'\\b').test(pn))) return false;
+        if (txtTok.length) { const hits = txtTok.filter(t => new RegExp('\\b'+t+'\\b').test(pn)).length; if (hits < Math.ceil(txtTok.length * 0.5)) return false; }
         return true;
       });
     }
 
     function gerarQueries(label) {
       const queries = [];
-      let limpo = label
-        .replace(/,\s*[^,]{10,}/g, '')
-        .replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi, '')
-        .replace(/\s+/g, ' ').trim();
-
-      limpo = limpo
-        .replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi, '')
-        .replace(/\s+/g, ' ').trim();
-
-      const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/, '').trim();
+      let limpo = label.replace(/,\s*[^,]{10,}/g,'').replace(/\b(gaming hub|hdr10?|hdmi|usb|dolby|wi-fi|wifi|bluetooth|alexa|google|android tv|vidaa|tizen|webos|roku|processador|command[o]? de voz|ultra hd|crystal|super upscaling|otimizador|controle|bixby|qled|amoled|oled|ips|va\b)\b.*/gi,'').replace(/\s+/g,' ').trim();
+      limpo = limpo.replace(/\s*[-–]\s*(preto|branco|azul|verde|roxo|cinza|dourado|rosa|prata|bege|vermelho|amarelo|titanium|grafite|gold|creme|marrom|laranja|vinho|aurora|black|white|blue|silver|purple|gray|grey|azul|rosa)[\w/]*/gi,'').replace(/\s+/g,' ').trim();
+      const comMem = limpo.replace(/\s*[-–]\s*\S+.*$/,'').trim();
       if (comMem.length > 3) queries.push(comMem);
-
-      const semMem = comMem
-        .replace(/\s+\d+\/\d+\s*(gb|tb)?/gi, '')
-        .replace(/\s+\d+(gb|tb)/gi, '')
-        .replace(/\s+/g, ' ').trim();
+      const semMem = comMem.replace(/\s+\d+\/\d+\s*(gb|tb)?/gi,'').replace(/\s+\d+(gb|tb)/gi,'').replace(/\s+/g,' ').trim();
       if (semMem && semMem !== comMem && semMem.length > 3) queries.push(semMem);
-
-      const semRede = semMem.replace(/\s+\d+g\b/gi, '').replace(/\s+/g, ' ').trim();
+      const semRede = semMem.replace(/\s+\d+g\b/gi,'').replace(/\s+/g,' ').trim();
       if (semRede && semRede !== semMem && semRede.length > 3) queries.push(semRede);
-
       const tvMatch = label.match(/\b(\w+(?:\s+\w+)?)\s+(\d{2})[""']\s*(.{2,20})/i);
-      if (tvMatch) {
-        const marca = tvMatch[1].trim();
-        const pol = tvMatch[2];
-        const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/);
-        const cod = codMatch ? codMatch[1] : '';
-        const qTV = [marca, pol + '"', cod].filter(Boolean).join(' ').trim();
-        if (qTV.length > 3) queries.push(qTV);
-        queries.push((marca + ' ' + pol + '"').trim());
-      }
-
+      if (tvMatch) { const marca = tvMatch[1].trim(); const pol = tvMatch[2]; const codMatch = label.match(/\b([A-Z0-9]{4,12}F?\b)/); const cod = codMatch ? codMatch[1] : ''; const qTV = [marca, pol+'"', cod].filter(Boolean).join(' ').trim(); if (qTV.length > 3) queries.push(qTV); queries.push((marca+' '+pol+'"').trim()); }
       const codModelo = label.match(/\b([A-Z]{1,5}\d{1,5}[A-Z0-9]{0,6})\b/g);
-      if (codModelo) {
-        codModelo.forEach(cod => {
-          if (cod.length >= 4) queries.push(cod);
-        });
-      }
-
+      if (codModelo) codModelo.forEach(cod => { if (cod.length >= 4) queries.push(cod); });
       const marcaPol = label.match(/\b(samsung|philips|lg\b|tcl|aoc|semp|hisense|panasonic|sony)\b.{0,10}(\d{2})["]/i);
-      if (marcaPol) queries.push(marcaPol[1] + ' ' + marcaPol[2] + '"');
-
-      if (/\bipad\b/i.test(label)) {
-        const gen = label.match(/\bipad\s+(\d+)\b/i);
-        const mem = label.match(/\b(\d+)\s*gb\b/i);
-        if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`);
-        if (gen) queries.push(`ipad ${gen[1]}`);
-        queries.push('ipad');
-      }
-
+      if (marcaPol) queries.push(marcaPol[1]+' '+marcaPol[2]+'"');
+      if (/\bipad\b/i.test(label)) { const gen = label.match(/\bipad\s+(\d+)\b/i); const mem = label.match(/\b(\d+)\s*gb\b/i); if (gen && mem) queries.push(`ipad ${gen[1]} ${mem[1]}gb`); if (gen) queries.push(`ipad ${gen[1]}`); queries.push('ipad'); }
       if (!queries.length) queries.push(label.split(/\s+/).slice(0, 4).join(' '));
       return [...new Set(queries.filter(q => q.length > 2))];
     }
@@ -2401,401 +2293,212 @@
       let candidatos = [];
       if (_prodCache.length) {
         const queries = gerarQueries(item.label || item.sysname || '');
-        for (const q of queries) {
-          buscarNoCacheLocal(q).forEach(p => {
-            if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
-          });
-          if (candidatos.length >= 30) break;
-        }
-        if (!candidatos.length && item.sku?.trim()) {
-          const skuN = item.sku.trim().toLowerCase();
-          _prodCache.filter(p =>
-            (p.codigo_interno || '').toLowerCase() === skuN ||
-            (p.codigo_barra || '').toLowerCase() === skuN
-          ).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
-        }
+        for (const q of queries) { buscarNoCacheLocal(q).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); }); if (candidatos.length >= 30) break; }
+        if (!candidatos.length && item.sku?.trim()) { const skuN = item.sku.trim().toLowerCase(); _prodCache.filter(p => (p.codigo_interno||'').toLowerCase() === skuN || (p.codigo_barra||'').toLowerCase() === skuN).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); }); }
       } else {
         const queries = gerarQueries(item.label || item.sysname || '');
-        for (const q of queries) {
-          try {
-            const d = await apiGet({ nome: q });
-            if (d.code === 200 && d.data?.length)
-              d.data.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
-          } catch (e) { }
-          if (candidatos.length >= 10) break;
-        }
+        for (const q of queries) { try { const d = await apiGet({ nome: q }); if (d.code === 200 && d.data?.length) d.data.forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); }); } catch (e) { } if (candidatos.length >= 10) break; }
       }
       if (!candidatos.length) return [];
       const label = item.label || item.sysname || '';
       const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
       const threshold = ehTV ? 0.20 : 0.55;
-      return candidatos
-        .filter(p => !ehAcessorio(p.nome))
-        .filter(p => filtroTecnico(label, p.nome))
-        .map(p => ({ p, score: scoreNome(label, p.nome) }))
-        .filter(({ score }) => score >= threshold)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
-        .map(({ p }) => ({
-          id: p.id, nome: p.nome,
-          sku: p.codigo_interno || p.codigo_barra || '',
-          estoque: Number(p.estoque ?? 0),
-        }));
+      return candidatos.filter(p => !ehAcessorio(p.nome)).filter(p => filtroTecnico(label, p.nome)).map(p => ({ p, score: scoreNome(label, p.nome) })).filter(({ score }) => score >= threshold).sort((a, b) => b.score - a.score).slice(0, 8).map(({ p }) => ({ id: p.id, nome: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0), grupo_id: p.grupo_id, nome_grupo: p.grupo_nome || p.grupo || '' }));
     }
 
-    // NOVA FUNÇÃO PARA BUSCA DINÂMICA DENTRO DO CARD DO MODAL DA IA
     async function triggerBuscaModalIA(idx, q) {
       const resDiv = document.getElementById('ia-dd-res-' + idx);
       q = q.trim();
       if (q.length < 2) { resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Digite pelo menos 2 caracteres...</div>'; return; }
       resDiv.innerHTML = '<div style="font-size:11px;color:#888;">⏳ Buscando na API...</div>';
-
       let prods = _prodCache.length ? buscarNoCacheLocal(q) : [];
       if (!prods.length) {
-        try {
-          const url = new URL("https://caixa-three.vercel.app/api/produtos");
-          url.searchParams.append("loja_id", lojaIdJeta);
-          url.searchParams.append("limite", "20");
-          url.searchParams.append("nome", q);
-          const r = await fetch(url.toString());
-          const d = await r.json();
-          if (d.code === 200 && d.data) prods = d.data;
-        } catch (e) { }
+        try { const url = new URL("https://caixa-three.vercel.app/api/produtos"); url.searchParams.append("loja_id", lojaIdJeta); url.searchParams.append("limite", "20"); url.searchParams.append("nome", q); const r = await fetch(url.toString()); const d = await r.json(); if (d.code === 200 && d.data) prods = d.data; } catch (e) { }
       }
-
-      if (!prods.length) {
-        resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Nenhum resultado encontrado.</div>';
-        return;
-      }
-
-      resDiv.innerHTML = prods.slice(0, 15).map(p => {
-        const est = Number(p.estoque || 0);
-        const ok = est > 0;
-        return `<div class="ia-cand-row">
-                  <span class="ia-cand-nome" title="${p.nome}">${p.nome}</span>
-                  <span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span>
-                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" 
-                          data-pid="${p.id}" 
-                          data-pnome="${encodeURIComponent(p.nome)}" 
-                          data-pest="${est}" 
-                          ${!ok ? 'disabled' : ''}>+</button>
-                </div>`;
-      }).join('');
-
-      resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
-        b.addEventListener('click', function () {
-          adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) });
-          this.textContent = '✓';
-          this.className = 'ia-cand-btn dis';
-          this.disabled = true;
-        });
-      });
+      if (!prods.length) { resDiv.innerHTML = '<div style="font-size:11px;color:#888;">Nenhum resultado encontrado.</div>'; return; }
+      resDiv.innerHTML = prods.slice(0, 15).map(p => { const est = Number(p.estoque || 0); const ok = est > 0; return `<div class="ia-cand-row"><span class="ia-cand-nome" title="${p.nome}">${p.nome}</span><span class="ia-cand-est ${ok?'ok':'zero'}">${ok?'✓ ':'⚠ '} ${est}</span><button class="ia-cand-btn ${ok?'add ia-add-vinc-dinamico':'dis'}" data-pid="${p.id}" data-pnome="${encodeURIComponent(p.nome)}" data-pest="${est}" ${!ok?'disabled':''}>+</button></div>`; }).join('');
+      resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => { b.addEventListener('click', function() { adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) }); this.textContent = '✓'; this.className = 'ia-cand-btn dis'; this.disabled = true; }); });
     }
 
-    function el(id) { return document.getElementById(id); }
-
     document.getElementById('ia-prompt').value = localStorage.getItem(IA_PROMPT_KEY) || IA_PROMPT_DEFAULT;
+    document.getElementById('ia-prompt').addEventListener('input', function() { localStorage.setItem(IA_PROMPT_KEY, this.value); });
+    document.getElementById('ia-restaurar').addEventListener('click', function() { document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT; localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT); mostrarToast('↺ Prompt restaurado'); });
 
-    document.getElementById('ia-prompt').addEventListener('input', function () {
-      localStorage.setItem(IA_PROMPT_KEY, this.value);
-    });
-
-    document.getElementById('ia-restaurar').addEventListener('click', function () {
-      document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT;
-      localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT);
-      mostrarToast('↺ Prompt restaurado');
-    });
-
-    document.getElementById('btn-abrir-ia-lote').addEventListener('click', function () {
+    document.getElementById('btn-abrir-ia-lote').addEventListener('click', function() {
       document.getElementById('ia-passo1').style.display = 'flex';
       document.getElementById('ia-passo2').style.display = 'none';
       document.getElementById('ia-erro').style.display = 'none';
       document.getElementById('ia-add-todos').style.display = 'none';
       document.getElementById('ia-resumo').textContent = '';
       document.getElementById('ia-lote-overlay').classList.add('open');
-      setTimeout(function () { document.getElementById('ia-raw').focus(); }, 80);
+      setTimeout(function() { document.getElementById('ia-raw').focus(); }, 80);
     });
 
-    function fecharIaLote() {
-      document.getElementById('ia-lote-overlay').classList.remove('open');
-    }
+    function fecharIaLote() { document.getElementById('ia-lote-overlay').classList.remove('open'); }
     document.getElementById('ia-lote-fechar-topo').addEventListener('click', fecharIaLote);
     document.getElementById('ia-fechar-rodape').addEventListener('click', fecharIaLote);
-    document.getElementById('ia-lote-overlay').addEventListener('click', function (e) {
-      if (e.target === this) fecharIaLote();
-    });
+    document.getElementById('ia-lote-overlay').addEventListener('click', function(e) { if (e.target === this) fecharIaLote(); });
 
     async function chamarGroq(system, user) {
-      const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt: system, messages: user })
-      });
+      const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemPrompt: system, messages: user }) });
       if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
       const d = await resp.json();
-      if (d.choices && d.choices[0] && d.choices[0].message)
-        return d.choices[0].message.content.trim();
+      if (d.choices && d.choices[0] && d.choices[0].message) return d.choices[0].message.content.trim();
       throw new Error('Resposta inesperada do Groq');
     }
 
-    document.getElementById('ia-processar').addEventListener('click', async function () {
+    document.getElementById('ia-processar').addEventListener('click', async function() {
       const raw = document.getElementById('ia-raw').value.trim();
-      if (!raw) {
-        document.getElementById('ia-erro').textContent = 'Cole a lista antes de processar.';
-        document.getElementById('ia-erro').style.display = 'block';
-        return;
-      }
+      if (!raw) { document.getElementById('ia-erro').textContent = 'Cole a lista antes de processar.'; document.getElementById('ia-erro').style.display = 'block'; return; }
       document.getElementById('ia-erro').style.display = 'none';
       const btn = this;
       btn.disabled = true; btn.textContent = '⏳ Processando…';
-
       try {
         const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         localStorage.setItem(IA_PROMPT_KEY, prompt);
-
-        const resposta = await chamarGroq(
-          'Você retorna apenas JSON válido, sem markdown, sem explicações.',
-          prompt + '\n\nLista:\n' + raw
-        );
+        const resposta = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
         const itens = JSON.parse(resposta.replace(/```json|```/g, '').trim());
         if (!Array.isArray(itens) || !itens.length) throw new Error('IA não retornou lista válida.');
-
         document.getElementById('ia-passo1').style.display = 'none';
         document.getElementById('ia-passo2').style.display = 'flex';
-
         const grid = document.getElementById('ia-grid');
         const prog = document.getElementById('ia-prog');
         const status = document.getElementById('ia-status');
-        grid.innerHTML = '';
-        _iaResultados = [];
-
+        grid.innerHTML = ''; _iaResultados = [];
         status.textContent = 'Baixando catálogo de produtos…';
         prog.style.width = '5%';
-        await carregarCacheProdutos(function (pag, total) {
-          prog.style.width = Math.round((pag / total) * 40) + '%';
-          status.textContent = 'Catálogo: ' + pag + '/' + total + '…';
-        });
-
+        await carregarCacheProdutos(function(pag, total) { prog.style.width = Math.round((pag / total) * 40) + '%'; status.textContent = 'Catálogo: ' + pag + '/' + total + '…'; });
         var comEst = 0, semEst = 0, naoAch = 0;
-
         for (var i = 0; i < itens.length; i++) {
           let itemRaw = itens[i];
           let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto");
           let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
-
           status.textContent = '(' + (i + 1) + '/' + itens.length + ') ' + nomeOriginal.substring(0, 45) + '…';
           prog.style.width = (40 + Math.round(((i + 1) / itens.length) * 60)) + '%';
-
           const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
           const card = document.createElement('div');
-
           let baseHtml = '';
-
-          // Escapa aspas duplas de polegadas (ex: 32") para não quebrar o HTML e evita o erro URI malformed
           let tituloEscapado = nomeOriginal.replace(/"/g, '&quot;');
-
-          let infoHtml = '<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">' +
-            '<span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + tituloEscapado + '">' + nomeOriginal + '</span>' +
-            (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
-            '</div>';
-
+          let infoHtml = '<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;"><span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + tituloEscapado + '">' + nomeOriginal + '</span>' + (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') + '</div>';
           if (!vinculos || !vinculos.length) {
-            baseHtml =
-              '<div class="ia-card-head" style="align-items:flex-start;">' +
-              infoHtml +
-              '<span class="ia-badge nf" style="margin-top:2px;">N/A</span>' +
-              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button>' +
-              '</div>' +
-              '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
+            baseHtml = '<div class="ia-card-head" style="align-items:flex-start;">' + infoHtml + '<span class="ia-badge nf" style="margin-top:2px;">N/A</span><button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button></div><div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
           } else {
-            const total = vinculos.reduce(function (s, v) { return s + v.estoque; }, 0);
+            const total = vinculos.reduce(function(s, v) { return s + v.estoque; }, 0);
             const temEst = total > 0;
             if (temEst) comEst++; else semEst++;
-
             var candidatos = '';
-            vinculos.forEach(function (v) {
-              candidatos +=
-                '<div class="ia-cand-row">' +
-                '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
-                '<span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' +
-                (v.estoque > 0
-                  ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
-                  : '<button class="ia-cand-btn dis" disabled>+</button>') +
-                '</div>';
-            });
-
-            baseHtml =
-              '<div class="ia-card-head" style="align-items:flex-start;">' +
-              infoHtml +
-              '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '" style="margin-top:2px;">' + (temEst ? '✓ ' : '⚠ ') + total + '</span>' +
-              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button>' +
-              '</div>' +
-              candidatos;
+            vinculos.forEach(function(v) { candidatos += '<div class="ia-cand-row"><span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span><span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' + (v.estoque > 0 ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>' : '<button class="ia-cand-btn dis" disabled>+</button>') + '</div>'; });
+            baseHtml = '<div class="ia-card-head" style="align-items:flex-start;">' + infoHtml + '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '" style="margin-top:2px;">' + (temEst ? '✓ ' : '⚠ ') + total + '</span><button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button></div>' + candidatos;
           }
-
-          // Adiciona a área oculta de busca em todos os cards
-          baseHtml +=
-            '<div class="ia-dd-area" id="ia-dd-area-' + i + '">' +
-            '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '">' +
-            '<div class="ia-dd-results" id="ia-dd-res-' + i + '"></div>' +
-            '</div>';
-
+          baseHtml += '<div class="ia-dd-area" id="ia-dd-area-' + i + '"><input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '"><div class="ia-dd-results" id="ia-dd-res-' + i + '"></div></div>';
           card.className = 'ia-card ' + (!vinculos || !vinculos.length ? 'nao-enc' : (vinculos.reduce((s, v) => s + v.estoque, 0) > 0 ? 'com-est' : 'sem-est'));
           card.innerHTML = baseHtml;
-
           grid.appendChild(card);
           _iaResultados.push({ nome: nomeOriginal, vinculos: vinculos || [] });
         }
-
-        grid.querySelectorAll('.ia-add-vinc').forEach(function (b) {
-          b.addEventListener('click', function () {
-            adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
-            b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
-          });
-        });
-
-        grid.querySelectorAll('.ia-toggle-search').forEach(function (b) {
-          b.addEventListener('click', function () {
-            const idx = this.dataset.idx;
-            const area = document.getElementById('ia-dd-area-' + idx);
-            area.classList.toggle('open');
-            if (area.classList.contains('open')) {
-              const inp = document.getElementById('ia-dd-search-' + idx);
-              inp.focus();
-              triggerBuscaModalIA(idx, inp.value);
-            }
-          });
-        });
-
-        grid.querySelectorAll('.ia-dd-search').forEach(function (inp) {
-          let timer;
-          inp.addEventListener('input', function () {
-            clearTimeout(timer);
-            const idx = this.id.replace('ia-dd-search-', '');
-            timer = setTimeout(function () { triggerBuscaModalIA(idx, inp.value); }, 400);
-          });
-        });
-
-        status.textContent = 'Concluído!';
-        prog.style.width = '100%';
-        document.getElementById('ia-resumo').textContent =
-          '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+        grid.querySelectorAll('.ia-add-vinc').forEach(function(b) { b.addEventListener('click', function() { adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) }); b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true; }); });
+        grid.querySelectorAll('.ia-toggle-search').forEach(function(b) { b.addEventListener('click', function() { const idx = this.dataset.idx; const area = document.getElementById('ia-dd-area-' + idx); area.classList.toggle('open'); if (area.classList.contains('open')) { const inp = document.getElementById('ia-dd-search-' + idx); inp.focus(); triggerBuscaModalIA(idx, inp.value); } }); });
+        grid.querySelectorAll('.ia-dd-search').forEach(function(inp) { let timer; inp.addEventListener('input', function() { clearTimeout(timer); const idx = this.id.replace('ia-dd-search-', ''); timer = setTimeout(function() { triggerBuscaModalIA(idx, inp.value); }, 400); }); });
+        status.textContent = 'Concluído!'; prog.style.width = '100%';
+        document.getElementById('ia-resumo').textContent = '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
         if (comEst > 0) document.getElementById('ia-add-todos').style.display = 'block';
-
       } catch (err) {
-        document.getElementById('ia-passo1').style.display = 'flex';
-        document.getElementById('ia-passo2').style.display = 'none';
-        document.getElementById('ia-erro').textContent = 'Erro: ' + err.message;
-        document.getElementById('ia-erro').style.display = 'block';
+        document.getElementById('ia-passo1').style.display = 'flex'; document.getElementById('ia-passo2').style.display = 'none';
+        document.getElementById('ia-erro').textContent = 'Erro: ' + err.message; document.getElementById('ia-erro').style.display = 'block';
       }
       btn.disabled = false; btn.textContent = '🤖 Consultar Lista →';
     });
 
-    document.getElementById('ia-add-todos').addEventListener('click', function () {
+    document.getElementById('ia-add-todos').addEventListener('click', function() {
       var n = 0;
-      _iaResultados.forEach(function (r) {
-        r.vinculos.forEach(function (v) {
-          if (v.estoque > 0) { adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque }); n++; }
-        });
-      });
+      _iaResultados.forEach(function(r) { r.vinculos.forEach(function(v) { if (v.estoque > 0) { adicionarAoCarrinho({ id: v.id, nome: v.nome, estoque: v.estoque }); n++; } }); });
       mostrarToast('✅ ' + n + ' produto(s) adicionados');
       fecharIaLote();
     });
 
-    // --- RECONCILIAÇÃO / BALANÇO DE ESTOQUE ---
+    // ── BALANÇO ──
     async function carregarProdutosDoGrupo(grupoId) {
       if (!grupoId) return _prodCache;
       const url = `${API_HOST}/api/produtos?loja_id=${lojaIdJeta}&grupo_id=${grupoId}&limite=500`;
-      try {
-        const r = await fetch(url);
-        const d = await r.json();
-        return (d.code === 200 && d.data) ? d.data : [];
-      } catch (e) { return []; }
+      try { const r = await fetch(url); const d = await r.json(); return (d.code === 200 && d.data) ? d.data : []; } catch (e) { return []; }
     }
+
+    function elById(id) { return document.getElementById(id); }
 
     async function realizarBalanco() {
-      const raw = el('ia-raw').value.trim();
-      const grupoId = el('ia-grupo-ref').value;
+      const raw = elById('ia-raw').value.trim();
+      const grupoId = elById('ia-grupo-ref').value;
       if (!raw) { mostrarToast('⚠ Cole a lista primeiro'); return; }
       if (!grupoId) { mostrarToast('⚠ Selecione um grupo para o balanço'); return; }
-
-      el('ia-passo1').style.display = 'none';
-      el('ia-passo2').style.display = 'flex';
-      el('ia-status').innerHTML = '⚖️ Realizando Balanço...';
-      el('ia-balanco-res').style.display = 'none';
-      el('ia-grid').innerHTML = '';
-      el('ia-add-todos').style.display = 'none';
-
+      elById('ia-passo1').style.display = 'none'; elById('ia-passo2').style.display = 'flex';
+      elById('ia-status').innerHTML = '⚖️ Realizando Balanço...';
+      elById('ia-balanco-res').style.display = 'none'; elById('ia-grid').innerHTML = ''; elById('ia-add-todos').style.display = 'none';
       try {
-        const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
+        const prompt = elById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         const respText = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
-        let itensListados = JSON.parse(respText.replace(/```json|```/g, '').trim());
-        
-        if (!Array.isArray(itensListados) || !itensListados.length) {
-          el('ia-status').innerHTML = '❌ Não foi possível identificar itens na lista.';
-          return;
-        }
-
+        let itensListados;
+        try { itensListados = JSON.parse(respText.replace(/```json|```/g, '').trim()); } catch (e) { elById('ia-status').innerHTML = '❌ Resposta da IA com formato inválido. Tente novamente.'; elById('ia-balanco').disabled = false; return; }
+        if (!Array.isArray(itensListados) || !itensListados.length) { elById('ia-status').innerHTML = '❌ Não foi possível identificar itens na lista.'; return; }
         const produtosNoGrupo = await carregarProdutosDoGrupo(grupoId);
         const idsListados = new Set();
-        const resultadosBuscaLote = [];
-        
-        el('ia-status').innerHTML = `🔍 Cruzando ${itensListados.length} itens com ${produtosNoGrupo.length} do grupo...`;
-
-        for(let i=0; i < itensListados.length; i++) {
+        resultadosBuscaLoteGlobal = [];
+        elById('ia-status').innerHTML = `🔍 Cruzando ${itensListados.length} itens com ${produtosNoGrupo.length} do grupo...`;
+        for (let i = 0; i < itensListados.length; i++) {
           const item = itensListados[i];
+          const nomeOriginal = typeof item === 'string' ? item : (item.original || item.busca || "Produto");
           const nomeBusca = typeof item === 'string' ? item : (item.busca || item.original);
-          el('ia-prog').style.width = ((i+1)/itensListados.length * 100) + '%';
+          elById('ia-prog').style.width = ((i + 1) / itensListados.length * 100) + '%';
           const vs = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
-          if(vs && vs.length > 0) {
-            idsListados.add(vs[0].id);
-            resultadosBuscaLote.push({ original: (item.original || nomeBusca), vinculo: vs[0] });
-          } else {
-            resultadosBuscaLote.push({ original: (item.original || nomeBusca), vinculo: null });
-          }
+          if (vs && vs.length > 0) { const v = vs[0]; idsListados.add(v.id); const foraDoGrupo = String(v.grupo_id) !== String(grupoId); resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: v, foraDoGrupo }); }
+          else { resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: null }); }
         }
-
         const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
-        el('ia-status').innerHTML = '✅ Balanço Concluído';
-        
-        if (sobras.length > 0) {
-          el('ia-balanco-res').style.display = 'block';
-          el('ia-balanco-res').innerHTML = `<h4>⚠️ Itens em Estoque NESTE GRUPO não mencionados na lista:</h4>` +
-            sobras.map(p => `<div class="ia-balanco-item"><span>${p.nome.substring(0, 45)}...</span><span class="ia-balanco-badge">${p.estoque} em estoque</span></div>`).join('');
-        } else {
-          el('ia-balanco-res').style.display = 'block';
-          el('ia-balanco-res').innerHTML = '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
-        }
-
-        el('ia-grid').innerHTML = resultadosBuscaLote.map((res, idx) => `
-          <div class="ia-res-card" style="background:#fff; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #eee;">
-            <div style="font-weight:700; font-size:12px; margin-bottom:5px;">${res.original}</div>
-            ${res.vinculo ? `
-              <div class="ia-cand-row" style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:6px; border-radius:6px;">
-                <span style="flex:1; font-size:11px;">${res.vinculo.nome}</span>
-                <span class="ia-cand-est ok" style="font-size:11px;">✓ ${res.vinculo.estoque}</span>
-                <button class="ia-cand-btn add" onclick="adicionarAoCarrinho({id:'${res.vinculo.id}', nome:'${res.vinculo.nome}', estoque:${res.vinculo.estoque}})">+</button>
-              </div>
-            ` : `<div style="font-size:11px; color:#e74c3c;">Não vinculado automaticamente.</div>`}
-          </div>
-        `).join('');
-
-      } catch (err) {
-        console.error(err);
-        el('ia-status').innerHTML = '❌ Erro ao realizar balanço';
-      }
-      el('ia-balanco').disabled = false;
+        elById('ia-status').innerHTML = '✅ Balanço Concluído';
+        elById('ia-mover-grupo').style.display = 'flex';
+        if (sobras.length > 0) { elById('ia-balanco-res').style.display = 'block'; elById('ia-balanco-res').innerHTML = `<h4>⚠️ Itens em Estoque NESTE GRUPO não mencionados na lista:</h4>` + sobras.map(p => `<div class="ia-balanco-item"><span>${p.nome.substring(0, 45)}...</span><span class="ia-balanco-badge">${p.estoque} em estoque</span></div>`).join(''); }
+        else { elById('ia-balanco-res').style.display = 'block'; elById('ia-balanco-res').innerHTML = '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>'; }
+        elById('ia-grid').innerHTML = resultadosBuscaLoteGlobal.map((res, idx) => `<div class="ia-res-card" style="background:#fff; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid ${res.foraDoGrupo ? '#e74c3c' : '#eee'};"><div style="font-weight:700; font-size:12px; margin-bottom:2px; display:flex; align-items:center; gap:8px;">${res.original}${res.foraDoGrupo ? '<span title="Este produto pertence a OUTRO grupo" style="background:#e74c3c; color:#fff; font-size:9px; padding:1px 5px; border-radius:4px;">🚩 OUTRO GRUPO</span>' : ''}</div>${res.vinculo ? `<div class="ia-cand-row" style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:6px; border-radius:6px;"><span style="flex:1; font-size:11px;">${res.vinculo.nome}</span><span class="ia-cand-est ok" style="font-size:11px;">✓ ${res.vinculo.estoque}</span><button class="ia-cand-btn add" onclick="adicionarAoCarrinho({id:'${res.vinculo.id}', nome:'${res.vinculo.nome}', estoque:${res.vinculo.estoque}})">+</button></div>${res.foraDoGrupo ? `<div style="font-size:10px; color:#c0392b; margin-top:4px;">Grupo Atual: <b>${res.vinculo.nome_grupo || 'Não definido'}</b></div>` : ''}` : `<div style="font-size:11px; color:#e74c3c;">Não vinculado automaticamente.</div>`}</div>`).join('');
+      } catch (err) { console.error(err); elById('ia-status').innerHTML = '❌ Erro ao realizar balanço'; }
+      elById('ia-balanco').disabled = false;
     }
 
-    el('ia-balanco').addEventListener('click', () => { el('ia-balanco').disabled = true; realizarBalanco(); });
+    async function moverProdutosParaGrupo() {
+      const grupoId = elById('ia-grupo-ref').value;
+      const vinculados = resultadosBuscaLoteGlobal.filter(r => r.vinculo);
+      if (!vinculados.length) { mostrarToast('⚠️ Nenhum produto vinculado para mover.'); return; }
+      if (!confirm(`Deseja mover ${vinculados.length} produtos para este grupo?`)) return;
+      elById('ia-mover-grupo').disabled = true; elById('ia-prog').style.width = '0%';
+      let sucessos = 0;
+      for (let i = 0; i < vinculados.length; i++) {
+        const item = vinculados[i];
+        elById('ia-status').innerHTML = `📦 Movendo (${i+1}/${vinculados.length}): ${item.vinculo.nome.substring(0, 30)}...`;
+        elById('ia-prog').style.width = ((i+1) / vinculados.length * 100) + '%';
+        try {
+          let produtoParaUpdate = null;
+          const resGetP = await fetch(`${API_HOST}/api/proxy?rota=produtos/${item.vinculo.id}&loja_id=${lojaIdJeta}`);
+          const dataGetP = await resGetP.json();
+          if (dataGetP.code === 200) { produtoParaUpdate = dataGetP.data; }
+          else { const resGetS = await fetch(`${API_HOST}/api/proxy?rota=servicos/${item.vinculo.id}&loja_id=${lojaIdJeta}`); const dataGetS = await resGetS.json(); if (dataGetS.code === 200) produtoParaUpdate = dataGetS.data; }
+          let res;
+          if (produtoParaUpdate) { produtoParaUpdate.grupo_id = Number(grupoId); res = await fetch(`${API_HOST}/api/proxy?rota=${produtoParaUpdate.id_servico ? 'servicos' : 'produtos'}/${item.vinculo.id}&loja_id=${lojaIdJeta}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(produtoParaUpdate) }); }
+          else { res = await fetch(`${API_HOST}/api/proxy?rota=produtos/${item.vinculo.id}&loja_id=${lojaIdJeta}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grupo_id: Number(grupoId) }) }); }
+          if (res.ok) { sucessos++; } else { const errData = await res.json().catch(() => ({})); console.error('Falha ao mover:', item.vinculo.nome, errData); }
+        } catch (e) { console.error('Erro de rede ao mover:', item.vinculo.nome, e); }
+        if (i > 0 && i % 3 === 0) await new Promise(r => setTimeout(r, 800));
+      }
+      elById('ia-status').innerHTML = `✅ Concluído: ${sucessos} movidos com sucesso!`;
+      elById('ia-mover-grupo').disabled = false;
+      mostrarToast(`📦 ${sucessos} produtos movidos.`);
+    }
 
-    // Inicialização imediata dos grupos e cache silencioso
+    elById('ia-balanco').addEventListener('click', () => { elById('ia-balanco').disabled = true; realizarBalanco(); });
+    elById('ia-mover-grupo').addEventListener('click', moverProdutosParaGrupo);
+
     window.addEventListener('DOMContentLoaded', () => {
       carregarGrupos();
-      carregarCacheProdutos(); // Carrega em background para a IA e busca inteligente
+      carregarCacheProdutos();
     });
   </script>
 </body>
-
 </html>
