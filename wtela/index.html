@@ -428,9 +428,9 @@
             <div class="control-group" id="proxyModelGroup" style="display:none; margin-bottom:12px;">
                 <label for="proxyModelName" style="display:block;">🧠 Modelo Proxy:</label>
                 <span style="font-size:11px; color:#666; margin-bottom:4px; display:inline-block;">Digite o nome do modelo (ex: gemini-3-flash) ou escolha na lista</span>
-                <input type="text" id="proxyModelName" list="proxyModelListOptions" placeholder="Padrão atual: gemini-3.1-flash-lite-preview" oninput="saveToken()">
+                <input type="text" id="proxyModelName" list="proxyModelListOptions" placeholder="Padrão atual: gemini-3-flash-preview" oninput="saveToken()">
                 <datalist id="proxyModelListOptions">
-                    <option value="gemini-3.1-flash-lite-preview">
+                    <option value="gemini-3-flash-preview">
                     <option value="gemini-3.1-flash-preview">
                     <option value="gemini-2.5-flash-preview-04-17">
                     <option value="gemini-2.5-pro-preview-03-25">
@@ -446,7 +446,7 @@
             <div class="control-group" id="geminiModelGroup" style="display:none; margin-bottom:12px;">
                 <label for="geminiModelSelect">🧠 Modelo Gemini:</label>
                 <select id="geminiModelSelect" onchange="saveToken()">
-                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite (padrão)</option>
+                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (padrão)</option>
                     <option value="gemini-3.1-flash-preview">Gemini 3.1 Flash</option>
                     <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash Preview</option>
                     <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro Preview</option>
@@ -1125,7 +1125,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             if (document.getElementById('aiModelName')) document.getElementById('aiModelName').value = orModel;
 
             // Se não houver nada salvo, o texto na caixa vira o padrão para deixar explícito
-            const proxyModel = localStorage.getItem('ai_proxy_model') || 'gemini-3.1-flash-lite-preview';
+            const proxyModel = localStorage.getItem('ai_proxy_model') || 'gemini-3-flash-preview';
             if (document.getElementById('proxyModelName')) document.getElementById('proxyModelName').value = proxyModel;
 
             const geminiModel = localStorage.getItem('ai_gemini_model') || '';
@@ -1145,7 +1145,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
                     url: "https://caixa-kal3.vercel.app/api/gemini",
                     headers: { "Content-Type": "application/json" },
                     type: 'gemini',
-                    model: proxyModel || 'gemini-3.1-flash-lite-preview'
+                    model: proxyModel || 'gemini-3-flash-preview'
                 };
             }
             if (model === 'gemini_direct') {
