@@ -1,40 +1,48 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  // 1. Agora permitimos conexões GET (para buscar a lista de modelos)
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
   
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'GEMINI_API_KEY não encontrada no servidor.' });
   }
+
+  // 2. NOVA RESPOSTA: Se a tela pedir a lista de modelos, ele usa seu token interno pra devolver
+  if (req.method === 'GET') {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const data = await response.json();
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(500).json({ error: "Erro ao buscar modelos" });
+    }
+  }
+  
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
   
   try {
-    const { messages, systemPrompt } = req.body;
+    // 3. AGORA NÓS RECEBEMOS O MODELO QUE A TELA ESCOLHER! (req.body.model)
+    const { messages, systemPrompt, model } = req.body;
     if (!messages || !systemPrompt) {
       return res.status(400).json({ error: 'Parâmetros "messages" e "systemPrompt" são obrigatórios.' });
     }
     
-    const MODEL = "gemini-2.5-flash";
+    // Se a tela não enviar nada, ele usa o 2.5 Flash, senão, usa o modelo que a tela mandou!
+    const MODEL = model || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemPrompt }]
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: messages }]
-          }
-        ],
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [ { role: "user", parts: [{ text: messages }] } ],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 65536, // ← MÁXIMO GRATUITO CORRETO!
+          maxOutputTokens: 65536, // ← Seu MÁXIMO GRATUITO original preservado
           topP: 0.95,
           topK: 40
         },
@@ -51,7 +59,7 @@ export default async function handler(req, res) {
     
     if (!response.ok) {
       return res.status(response.status).json({
-        error: "Erro na API Gemini 2.5",
+        error: "Erro na API Gemini",
         details: responseData
       });
     }
@@ -59,39 +67,16 @@ export default async function handler(req, res) {
     const candidate = responseData.candidates?.[0];
     const cleanText = candidate?.content?.parts?.[0]?.text || "";
     
-    // Log detalhado para monitoramento
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📊 Estatísticas da Requisição:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('✅ Finish Reason:', candidate?.finishReason);
-    console.log('📥 Tokens Input:', responseData.usageMetadata?.promptTokenCount);
-    console.log('📤 Tokens Output:', responseData.usageMetadata?.candidatesTokenCount);
-    console.log('📊 Total Tokens:', responseData.usageMetadata?.totalTokenCount);
-    console.log('📝 Caracteres Output:', cleanText.length);
-    
-    if (candidate?.finishReason === 'MAX_TOKENS') {
-      console.warn('⚠️  ATENÇÃO: Resposta truncada por limite de tokens!');
-      console.warn('💡 Considere dividir a lista em partes menores.');
-    } else if (candidate?.finishReason === 'STOP') {
-      console.log('✅ Processamento completo!');
-    }
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
     return res.status(200).json({
-      choices: [
-        {
-          message: {
-            role: "assistant",
-            content: cleanText
-          },
-          finishReason: candidate?.finishReason,
-          tokensUsed: {
-            input: responseData.usageMetadata?.promptTokenCount,
-            output: responseData.usageMetadata?.candidatesTokenCount,
-            total: responseData.usageMetadata?.totalTokenCount
-          }
+      choices: [{
+        message: { role: "assistant", content: cleanText },
+        finishReason: candidate?.finishReason,
+        tokensUsed: {
+          input: responseData.usageMetadata?.promptTokenCount,
+          output: responseData.usageMetadata?.candidatesTokenCount,
+          total: responseData.usageMetadata?.totalTokenCount
         }
-      ],
+      }],
       usage: responseData.usageMetadata
     });
     
