@@ -400,31 +400,58 @@
             <span class="toggle-icon" id="toggleIcon">▼</span>
         </div>
         <div class="advanced-content" id="advancedContent">
-            <!-- Seletor de modelo de IA -->
-<div class="control-row" style="margin-bottom: 12px;">
-    <div class="control-group">
-        <label for="aiModelSelect">🤖 Modelo de IA:</label>
-        <select id="aiModelSelect" onchange="onModelChange()">
-            <option value="gemini_default">Gemini (padrão — via proxy)</option>
-            <option value="openai">OpenAI (ChatGPT)</option>
-            <option value="custom">Outro (URL personalizada)</option>
-        </select>
-    </div>
-    <div class="control-group" id="tokenGroup">
-        <label for="aiToken">🔑 Token de acesso:</label>
-        <input type="password" id="aiToken" placeholder="Cole seu token aqui..."
-               oninput="saveToken()" autocomplete="current-password">
-    </div>
-</div>
-<div class="control-group" id="customUrlGroup" style="display:none; margin-bottom:12px;">
-    <label for="aiCustomUrl">🌐 URL da API:</label>
-    <input type="text" id="aiCustomUrl" placeholder="https://..." oninput="saveToken()">
-</div>
-            
-            
-            <div class="api-info">
+
+            <!-- Seletor de provedor -->
+            <div class="control-row" style="margin-bottom: 12px;">
+                <div class="control-group">
+                    <label for="aiModelSelect">🤖 Provedor de IA:</label>
+                    <select id="aiModelSelect" onchange="onModelChange()">
+                        <option value="gemini_default">Gemini via proxy (padrão — sem token)</option>
+                        <option value="gemini_direct">Gemini direto (Google AI Studio)</option>
+                        <option value="openrouter">OpenRouter</option>
+                        <option value="openai">OpenAI (ChatGPT)</option>
+                        <option value="custom">Outro (URL personalizada)</option>
+                    </select>
+                </div>
+                <div class="control-group" id="tokenGroup" style="display:none;">
+                    <label for="aiToken">🔑 Token de acesso:</label>
+                    <input type="password" id="aiToken" placeholder="Cole seu token aqui..."
+                           oninput="saveToken()" autocomplete="current-password">
+                </div>
+            </div>
+
+            <!-- Seletor de modelo Gemini direto -->
+            <div class="control-group" id="geminiModelGroup" style="display:none; margin-bottom:12px;">
+                <label for="geminiModelSelect">🧠 Modelo Gemini:</label>
+                <select id="geminiModelSelect" onchange="saveToken()">
+                    <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash Preview (padrão)</option>
+                    <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro Preview</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                    <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (1M ctx)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                </select>
+                <button class="btn btn-outline" style="margin-top:6px; font-size:12px; min-height:32px; padding: 4px 12px;" onclick="listModels()">🔄 Atualizar lista da API</button>
+            </div>
+
+            <!-- Seletor de modelo OpenRouter -->
+            <div class="control-group" id="modelNameGroup" style="display:none; margin-bottom:12px;">
+                <label for="aiModelName">🧠 Modelo OpenRouter:</label>
+                <input type="text" id="aiModelName" placeholder="Ex: meta-llama/llama-3.3-70b-instruct:free" oninput="saveToken()">
+                <select id="aiModelList" style="margin-top:6px;" onchange="document.getElementById('aiModelName').value = this.value; saveToken();">
+                    <option value="">⏳ Clique em "Listar Modelos" para carregar...</option>
+                </select>
+            </div>
+
+            <!-- URL personalizada -->
+            <div class="control-group" id="customUrlGroup" style="display:none; margin-bottom:12px;">
+                <label for="aiCustomUrl">🌐 URL da API:</label>
+                <input type="text" id="aiCustomUrl" placeholder="https://..." oninput="saveToken()">
+            </div>
+
+            <div class="api-info" id="apiInfoBox">
                 <strong>ℹ️ Análise Inteligente:</strong><br>
-                Modelo: Gemini 2.5 Flash - Alta qualidade e totalmente gratuito<br>
+                Modelo: Gemini 2.5 Flash via proxy — sem necessidade de token<br>
                 Analise automaticamente os melhores preços entre todos os fornecedores
             </div>
 
@@ -1000,64 +1027,148 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
         // ============================================================
         
         // ============================================================
-// CONFIG DE MODELO / TOKEN (salvo no localStorage)
-// ============================================================
-function onModelChange() {
-    const model = document.getElementById('aiModelSelect').value;
-    const tokenGroup = document.getElementById('tokenGroup');
-    const customUrlGroup = document.getElementById('customUrlGroup');
-    // Gemini padrão não precisa de token
-    tokenGroup.style.display = (model === 'gemini_default') ? 'none' : 'flex';
-    customUrlGroup.style.display = (model === 'custom') ? 'block' : 'none';
-    saveToken();
-}
+        // CONFIG DE MODELO / TOKEN (salvo no localStorage)
+        // ============================================================
+        const API_INFO_TEXTS = {
+            gemini_default: 'Modelo: Gemini 2.5 Flash via proxy — sem necessidade de token',
+            gemini_direct:  'Modelo: Gemini direto pelo Google AI Studio — insira seu token e escolha o modelo',
+            openrouter:     'Modelo: OpenRouter — insira seu token e clique em "Listar Modelos" para escolher',
+            openai:         'Modelo: OpenAI ChatGPT — insira seu token da API da OpenAI',
+            custom:         'Modelo: URL personalizada — informe a URL e o token se necessário'
+        };
 
-function saveToken() {
-    const model = document.getElementById('aiModelSelect').value;
-    const token = document.getElementById('aiToken').value;
-    const url   = document.getElementById('aiCustomUrl').value;
-    localStorage.setItem('ai_model', model);
-    localStorage.setItem('ai_token_' + model, token);
-    if (model === 'custom') localStorage.setItem('ai_custom_url', url);
-}
+        function onModelChange() {
+            const model = document.getElementById('aiModelSelect').value;
+            const tokenGroup      = document.getElementById('tokenGroup');
+            const customUrlGroup  = document.getElementById('customUrlGroup');
+            const modelNameGroup  = document.getElementById('modelNameGroup');
+            const geminiModelGroup= document.getElementById('geminiModelGroup');
+            const apiInfoBox      = document.getElementById('apiInfoBox');
 
-function loadSavedModel() {
-    const saved = localStorage.getItem('ai_model') || 'gemini_default';
-    document.getElementById('aiModelSelect').value = saved;
-    const token = localStorage.getItem('ai_token_' + saved) || '';
-    document.getElementById('aiToken').value = token;
-    const customUrl = localStorage.getItem('ai_custom_url') || '';
-    document.getElementById('aiCustomUrl').value = customUrl;
-    onModelChange();
-}
+            tokenGroup.style.display       = (model === 'gemini_default') ? 'none' : 'flex';
+            customUrlGroup.style.display   = (model === 'custom')         ? 'block' : 'none';
+            modelNameGroup.style.display   = (model === 'openrouter')     ? 'block' : 'none';
+            geminiModelGroup.style.display = (model === 'gemini_direct')  ? 'block' : 'none';
 
-function getAIConfig() {
-    const model = document.getElementById('aiModelSelect').value;
-    const token = document.getElementById('aiToken').value.trim();
-    const customUrl = document.getElementById('aiCustomUrl').value.trim();
+            if (apiInfoBox) {
+                apiInfoBox.innerHTML = `<strong>ℹ️ Análise Inteligente:</strong><br>${API_INFO_TEXTS[model] || ''}<br>Analise automaticamente os melhores preços entre todos os fornecedores`;
+            }
+            saveToken();
+        }
 
-    if (model === 'gemini_default') {
-        return { url: "https://caixa-kal3.vercel.app/api/gemini", headers: { "Content-Type": "application/json" }, type: 'gemini' };
-    }
-    if (model === 'openai') {
-        if (!token) throw new Error('Token da OpenAI não informado.');
-        return { url: "https://api.openai.com/v1/chat/completions", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token }, type: 'openai' };
-    }
-    if (model === 'custom') {
-        if (!customUrl) throw new Error('URL da API personalizada não informada.');
-        const h = { "Content-Type": "application/json" };
-        if (token) h["Authorization"] = "Bearer " + token;
-        return { url: customUrl, headers: h, type: 'custom' };
-    }
-    throw new Error('Modelo desconhecido.');
-}
+        function saveToken() {
+            const model    = document.getElementById('aiModelSelect').value;
+            const token    = document.getElementById('aiToken').value;
+            const url      = document.getElementById('aiCustomUrl')?.value || '';
+            const modelName= document.getElementById('aiModelName')?.value || '';
+            const geminiM  = document.getElementById('geminiModelSelect')?.value || '';
+            localStorage.setItem('ai_model', model);
+            localStorage.setItem('ai_token_' + model, token);
+            if (model === 'custom')        localStorage.setItem('ai_custom_url', url);
+            if (model === 'openrouter')    localStorage.setItem('ai_openrouter_model', modelName);
+            if (model === 'gemini_direct') localStorage.setItem('ai_gemini_model', geminiM);
+        }
 
-function parseAIResponse(data, type) {
-    // Tenta compatibilidade com formato OpenAI e Gemini
-    return data.choices?.[0]?.message?.content
-        || data.candidates?.[0]?.content?.parts?.[0]?.text
-        || null;
-}
+        function loadSavedModel() {
+            const saved = localStorage.getItem('ai_model') || 'gemini_default';
+            document.getElementById('aiModelSelect').value = saved;
+            const token = localStorage.getItem('ai_token_' + saved) || '';
+            document.getElementById('aiToken').value = token;
+
+            const customUrl = localStorage.getItem('ai_custom_url') || '';
+            if (document.getElementById('aiCustomUrl')) document.getElementById('aiCustomUrl').value = customUrl;
+
+            const orModel = localStorage.getItem('ai_openrouter_model') || '';
+            if (document.getElementById('aiModelName')) document.getElementById('aiModelName').value = orModel;
+
+            const geminiModel = localStorage.getItem('ai_gemini_model') || '';
+            if (geminiModel && document.getElementById('geminiModelSelect')) {
+                document.getElementById('geminiModelSelect').value = geminiModel;
+            }
+            onModelChange();
+        }
+
+        function getAIConfig() {
+            const model = document.getElementById('aiModelSelect').value;
+            const token = document.getElementById('aiToken').value.trim();
+
+            if (model === 'gemini_default') {
+                return {
+                    url: "https://caixa-kal3.vercel.app/api/gemini",
+                    headers: { "Content-Type": "application/json" },
+                    type: 'gemini'
+                };
+            }
+            if (model === 'gemini_direct') {
+                if (!token) throw new Error('Token do Google AI Studio não informado. Acesse ai.google.dev para obter.');
+                const geminiModel = document.getElementById('geminiModelSelect').value || 'gemini-2.5-flash-preview-04-17';
+                return {
+                    url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${token}`,
+                    headers: { "Content-Type": "application/json" },
+                    type: 'gemini_direct',
+                    model: geminiModel
+                };
+            }
+            if (model === 'openrouter') {
+                if (!token) throw new Error('Token do OpenRouter não informado.');
+                const modelName = document.getElementById('aiModelName').value.trim();
+                if (!modelName) throw new Error('Selecione um modelo do OpenRouter (clique em "Listar Modelos" primeiro).');
+                return {
+                    url: "https://openrouter.ai/api/v1/chat/completions",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token,
+                        "HTTP-Referer": window.location.href,
+                        "X-Title": "Comparador de Fornecedores"
+                    },
+                    type: 'openai',
+                    model: modelName
+                };
+            }
+            if (model === 'openai') {
+                if (!token) throw new Error('Token da OpenAI não informado.');
+                return {
+                    url: "https://api.openai.com/v1/chat/completions",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                    type: 'openai',
+                    model: 'gpt-4o-mini'
+                };
+            }
+            if (model === 'custom') {
+                const customUrl = document.getElementById('aiCustomUrl').value.trim();
+                if (!customUrl) throw new Error('URL da API personalizada não informada.');
+                const h = { "Content-Type": "application/json" };
+                if (token) h["Authorization"] = "Bearer " + token;
+                return { url: customUrl, headers: h, type: 'openai' };
+            }
+            throw new Error('Provedor desconhecido.');
+        }
+
+        function buildRequestBody(cfg, systemPrompt, userMessage) {
+            if (cfg.type === 'gemini_direct') {
+                // Formato nativo da API Gemini REST
+                return JSON.stringify({
+                    system_instruction: { parts: [{ text: systemPrompt }] },
+                    contents: [{ role: "user", parts: [{ text: userMessage }] }],
+                    generationConfig: { maxOutputTokens: 8192 }
+                });
+            }
+            // Formato OpenAI-compatible (proxy Gemini, OpenRouter, OpenAI, custom)
+            return JSON.stringify({
+                ...(cfg.model ? { model: cfg.model } : {}),
+                systemPrompt,
+                messages: userMessage
+            });
+        }
+
+        function parseAIResponse(data, type) {
+            if (type === 'gemini_direct') {
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            }
+            return data.choices?.[0]?.message?.content
+                || data.candidates?.[0]?.content?.parts?.[0]?.text
+                || null;
+        }
         async function listModels() {
             const resultDiv = document.getElementById('aiResult');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -1066,14 +1177,65 @@ function parseAIResponse(data, type) {
             btn.disabled = true;
             resultDiv.classList.remove('show');
             try {
+                const selectedProvider = document.getElementById('aiModelSelect').value;
+
+                if (selectedProvider === 'openrouter') {
+                    const token = document.getElementById('aiToken').value.trim();
+                    if (!token) throw new Error('Token do OpenRouter não informado.');
+                    const res = await fetch("https://openrouter.ai/api/v1/models", {
+                        headers: { "Authorization": "Bearer " + token }
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || "Erro na API OpenRouter");
+                    const modelos = data.data
+                        .filter(m => m.id.endsWith(':free') || (m.context_length >= 100000))
+                        .sort((a, b) => (b.context_length || 0) - (a.context_length || 0));
+                    const select = document.getElementById('aiModelList');
+                    select.innerHTML = '<option value="">Selecione um modelo...</option>';
+                    modelos.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        const ctx = m.context_length ? ` [${(m.context_length/1000).toFixed(0)}k ctx]` : '';
+                        const free = m.id.endsWith(':free') ? ' 🆓' : '';
+                        opt.textContent = `${m.id}${ctx}${free}`;
+                        select.appendChild(opt);
+                    });
+                    resultDiv.textContent = `✅ ${modelos.length} modelos carregados (contexto ≥ 100k ou gratuitos 🆓). Selecione um acima.`;
+                    resultDiv.classList.add('show');
+                    showToast(`✅ ${modelos.length} modelos carregados!`);
+                    return;
+                }
+
+                if (selectedProvider === 'gemini_direct') {
+                    const token = document.getElementById('aiToken').value.trim();
+                    if (!token) throw new Error('Token do Google AI Studio não informado.');
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${token}`);
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || "Erro na API Gemini");
+                    const modelos = (data.models || []).filter(m => m.name.includes('gemini'));
+                    const select = document.getElementById('aiModelList');
+                    select.innerHTML = '<option value="">Selecione um modelo...</option>';
+                    modelos.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.name.replace('models/', '');
+                        const ctx = m.inputTokenLimit ? ` [${(m.inputTokenLimit/1000).toFixed(0)}k ctx]` : '';
+                        opt.textContent = `${m.displayName || m.name}${ctx}`;
+                        select.appendChild(opt);
+                    });
+                    resultDiv.textContent = `✅ ${modelos.length} modelos Gemini encontrados. Selecione um acima.`;
+                    resultDiv.classList.add('show');
+                    showToast(`✅ ${modelos.length} modelos Gemini carregados!`);
+                    return;
+                }
+
                 const cfg = getAIConfig();
                 const response = await fetch(cfg.url, {
                     method: "POST",
                     headers: cfg.headers,
-                    body: JSON.stringify({ systemPrompt: "Liste os modelos disponíveis.", messages: "Quais modelos estão disponíveis?" })
+                    body: buildRequestBody(cfg, "Liste os modelos disponíveis.", "Quais modelos estão disponíveis?")
                 });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "Erro na API");
+                if (!response.ok) throw new Error(data.error?.message || data.error || "Erro na API");
                 resultDiv.textContent = parseAIResponse(data, cfg.type) || "⚠️ Resposta inesperada.";
                 resultDiv.classList.add('show');
                 showToast('✅ Modelos listados');
@@ -1116,13 +1278,12 @@ function parseAIResponse(data, type) {
                 const response = await fetch(cfg.url, {
                     method: "POST",
                     headers: cfg.headers,
-                    body: JSON.stringify({
-                        systemPrompt: "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
-                        messages: finalPrompt
-                    })
+                    body: buildRequestBody(cfg,
+                        "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
+                        finalPrompt)
                 });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "Erro na API");
+                if (!response.ok) throw new Error(data.error?.message || data.error || "Erro na API");
                 const content = parseAIResponse(data, cfg.type);
                 if (content) {
                     resultDiv.textContent = content;
