@@ -355,7 +355,11 @@
 
         <div class="control-row">
             <div class="control-group">
-                <label for="contextLines">📝 Linhas de contexto:</label>
+                <label for="supplierFilterInput">🏢 Filtrar tela por fornecedor:</label>
+                <input type="text" id="supplierFilterInput" placeholder="Ex: Nome da loja...">
+            </div>
+            <div class="control-group">
+                <label for="contextLines">📝 Linhas de contexto na busca:</label>
                 <input type="number" id="contextLines" value="2" min="0" max="10">
             </div>
         </div>
@@ -420,11 +424,31 @@
                 </div>
             </div>
 
+            <!-- Seletor de modelo do Proxy Vercel -->
+            <div class="control-group" id="proxyModelGroup" style="display:none; margin-bottom:12px;">
+                <label for="proxyModelName" style="display:block;">🧠 Modelo Proxy:</label>
+                <span style="font-size:11px; color:#666; margin-bottom:4px; display:inline-block;">Digite o nome do modelo (ex: gemini-3-flash) ou escolha na lista</span>
+                <input type="text" id="proxyModelName" list="proxyModelListOptions" placeholder="Padrão atual: gemini-3.1-flash-lite-preview" oninput="saveToken()">
+                <datalist id="proxyModelListOptions">
+                    <option value="gemini-3.1-flash-lite-preview">
+                    <option value="gemini-3.1-flash-preview">
+                    <option value="gemini-2.5-flash-preview-04-17">
+                    <option value="gemini-2.5-pro-preview-03-25">
+                    <option value="gemini-2.0-flash">
+                    <option value="gemini-2.0-flash-lite">
+                    <option value="gemini-1.5-pro">
+                    <option value="gemini-1.5-flash">
+                </datalist>
+                <button class="btn btn-outline" style="margin-top:6px; font-size:12px; min-height:32px; padding: 4px 12px;" onclick="listModels()">🔄 Atualizar lista pelo Proxy (requer proxy atualizado)</button>
+            </div>
+
             <!-- Seletor de modelo Gemini direto -->
             <div class="control-group" id="geminiModelGroup" style="display:none; margin-bottom:12px;">
                 <label for="geminiModelSelect">🧠 Modelo Gemini:</label>
                 <select id="geminiModelSelect" onchange="saveToken()">
-                    <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash Preview (padrão)</option>
+                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite (padrão)</option>
+                    <option value="gemini-3.1-flash-preview">Gemini 3.1 Flash</option>
+                    <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash Preview</option>
                     <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro Preview</option>
                     <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                     <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
@@ -741,6 +765,8 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             wrapper.appendChild(textarea);
             wrapper.appendChild(resultDiv);
 
+            input.addEventListener('input', applyFilter);
+
             textarea.addEventListener('input', (e) => {
                 e.target.dataset.originalContent = e.target.value;
                 delete lineCache[e.target.id]; // invalida cache desta textarea
@@ -844,12 +870,26 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             const normSearch    = normalizeForSearch(searchTerm);
             const normSubSearch = normalizeForSearch(subSearchTerm);
 
+            const supplierFilterTerm = document.getElementById('supplierFilterInput')?.value.trim() || '';
+            const normSupplierFilter = normalizeForSearch(supplierFilterTerm);
+
             document.getElementById('searchLegend')
                 .classList.toggle('show', normSearch.length > 0 && normSubSearch.length > 0);
 
             const textareas = container.querySelectorAll('textarea');
 
             textareas.forEach(textarea => {
+                const wrapper = textarea.closest('.text-area-wrapper');
+                const titleInput = wrapper.querySelector('.supplier-header input[type="text"]');
+                const normTitle = normalizeForSearch(titleInput?.value || '');
+
+                if (normSupplierFilter && !normTitle.includes(normSupplierFilter)) {
+                    wrapper.style.display = 'none';
+                    return; // Pula este fornecedor completamente
+                } else {
+                    wrapper.style.display = '';
+                }
+
                 const idx       = textarea.id.replace('fornecedor', '');
                 const resultDiv = document.getElementById(`resultado${idx}`);
 
@@ -1043,12 +1083,14 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             const customUrlGroup  = document.getElementById('customUrlGroup');
             const modelNameGroup  = document.getElementById('modelNameGroup');
             const geminiModelGroup= document.getElementById('geminiModelGroup');
+            const proxyModelGroup= document.getElementById('proxyModelGroup');
             const apiInfoBox      = document.getElementById('apiInfoBox');
 
             tokenGroup.style.display       = (model === 'gemini_default') ? 'none' : 'flex';
             customUrlGroup.style.display   = (model === 'custom')         ? 'block' : 'none';
             modelNameGroup.style.display   = (model === 'openrouter')     ? 'block' : 'none';
             geminiModelGroup.style.display = (model === 'gemini_direct')  ? 'block' : 'none';
+            if(proxyModelGroup) proxyModelGroup.style.display = (model === 'gemini_default') ? 'block' : 'none';
 
             if (apiInfoBox) {
                 apiInfoBox.innerHTML = `<strong>ℹ️ Análise Inteligente:</strong><br>${API_INFO_TEXTS[model] || ''}<br>Analise automaticamente os melhores preços entre todos os fornecedores`;
@@ -1067,6 +1109,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             if (model === 'custom')        localStorage.setItem('ai_custom_url', url);
             if (model === 'openrouter')    localStorage.setItem('ai_openrouter_model', modelName);
             if (model === 'gemini_direct') localStorage.setItem('ai_gemini_model', geminiM);
+            if (model === 'gemini_default') localStorage.setItem('ai_proxy_model', document.getElementById('proxyModelName')?.value || '');
         }
 
         function loadSavedModel() {
@@ -1081,6 +1124,10 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             const orModel = localStorage.getItem('ai_openrouter_model') || '';
             if (document.getElementById('aiModelName')) document.getElementById('aiModelName').value = orModel;
 
+            // Se não houver nada salvo, o texto na caixa vira o padrão para deixar explícito
+            const proxyModel = localStorage.getItem('ai_proxy_model') || 'gemini-3.1-flash-lite-preview';
+            if (document.getElementById('proxyModelName')) document.getElementById('proxyModelName').value = proxyModel;
+
             const geminiModel = localStorage.getItem('ai_gemini_model') || '';
             if (geminiModel && document.getElementById('geminiModelSelect')) {
                 document.getElementById('geminiModelSelect').value = geminiModel;
@@ -1093,10 +1140,12 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             const token = document.getElementById('aiToken').value.trim();
 
             if (model === 'gemini_default') {
+                const proxyModel = document.getElementById('proxyModelName')?.value.trim();
                 return {
                     url: "https://caixa-kal3.vercel.app/api/gemini",
                     headers: { "Content-Type": "application/json" },
-                    type: 'gemini'
+                    type: 'gemini',
+                    model: proxyModel || 'gemini-3.1-flash-lite-preview'
                 };
             }
             if (model === 'gemini_direct') {
@@ -1153,7 +1202,17 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
                     generationConfig: { maxOutputTokens: 8192 }
                 });
             }
-            // Formato OpenAI-compatible (proxy Gemini, OpenRouter, OpenAI, custom)
+            if (cfg.type === 'openai') {
+                // Formato OpenAI-compatible (OpenRouter, OpenAI, custom)
+                return JSON.stringify({
+                    ...(cfg.model ? { model: cfg.model } : {}),
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userMessage }
+                    ]
+                });
+            }
+            // Formato do proxy Vercel (gemini_default)
             return JSON.stringify({
                 ...(cfg.model ? { model: cfg.model } : {}),
                 systemPrompt,
@@ -1225,6 +1284,29 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
                     resultDiv.textContent = `✅ ${modelos.length} modelos Gemini encontrados. Selecione um acima.`;
                     resultDiv.classList.add('show');
                     showToast(`✅ ${modelos.length} modelos Gemini carregados!`);
+                    return;
+                }
+
+                if (selectedProvider === 'gemini_default') {
+                    const cfg = getAIConfig();
+                    const res = await fetch(cfg.url);
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Erro no Proxy");
+                    
+                    const modelos = (data.models || []).filter(m => m.name.includes('gemini'));
+                    if (modelos.length === 0) throw new Error("O proxy não devolveu nenhum modelo (atualize o código do seu proxy no Vercel!)");
+                    
+                    const datalist = document.getElementById('proxyModelListOptions');
+                    datalist.innerHTML = '';
+                    modelos.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.name.replace('models/', '');
+                        datalist.appendChild(opt);
+                    });
+                    
+                    resultDiv.textContent = `✅ ${modelos.length} modelos listados do Proxy com sucesso! (Disponíveis em "Modelo Proxy")`;
+                    resultDiv.classList.add('show');
+                    showToast(`✅ ${modelos.length} modelos carregados do Proxy!`);
                     return;
                 }
 
@@ -1314,6 +1396,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
         searchInput.addEventListener('input', applyFilter);
         subSearchInput.addEventListener('input', applyFilter);
         contextLinesInput.addEventListener('change', applyFilter);
+        document.getElementById('supplierFilterInput')?.addEventListener('input', applyFilter);
 
         numFornecedoresInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') aplicarQuantidade();
