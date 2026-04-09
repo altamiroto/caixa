@@ -1067,17 +1067,14 @@ function parseAIResponse(data, type) {
             resultDiv.classList.remove('show');
             try {
                 const cfg = getAIConfig();
-const response = await fetch(cfg.url, {
-    method: "POST",
-    headers: cfg.headers,
-    body: JSON.stringify({ systemPrompt: "Liste os modelos disponíveis.", messages: "Quais modelos estão disponíveis?" })
-});
-const data = await response.json();
-if (!response.ok) throw new Error(data.error || "Erro na API");
-resultDiv.textContent = parseAIResponse(data, cfg.type) || "⚠️ Resposta inesperada.";;
+                const response = await fetch(cfg.url, {
+                    method: "POST",
+                    headers: cfg.headers,
+                    body: JSON.stringify({ systemPrompt: "Liste os modelos disponíveis.", messages: "Quais modelos estão disponíveis?" })
+                });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Erro na API");
-                resultDiv.textContent = data.choices?.[0]?.message?.content || "⚠️ Resposta inesperada.";
+                resultDiv.textContent = parseAIResponse(data, cfg.type) || "⚠️ Resposta inesperada.";
                 resultDiv.classList.add('show');
                 showToast('✅ Modelos listados');
             } catch (error) {
@@ -1115,23 +1112,20 @@ resultDiv.textContent = parseAIResponse(data, cfg.type) || "⚠️ Resposta ines
             resultDiv.classList.remove('show');
 
             try {
-const cfg = getAIConfig();
-const response = await fetch(cfg.url, {
-    method: "POST",
-    headers: cfg.headers,
-    body: JSON.stringify({
-        systemPrompt: "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
-        messages: finalPrompt
-    })
-});
-const data = await response.json();
-if (!response.ok) throw new Error(data.error || "Erro na API");
-const content = parseAIResponse(data, cfg.type);
-if (content) { ... } // resto do código que já existe;
+                const cfg = getAIConfig();
+                const response = await fetch(cfg.url, {
+                    method: "POST",
+                    headers: cfg.headers,
+                    body: JSON.stringify({
+                        systemPrompt: "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
+                        messages: finalPrompt
+                    })
+                });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Erro na API");
-                if (data.choices?.[0]?.message?.content) {
-                    resultDiv.textContent = data.choices[0].message.content;
+                const content = parseAIResponse(data, cfg.type);
+                if (content) {
+                    resultDiv.textContent = content;
                     resultDiv.classList.add('show');
                     showToast('✅ Análise concluída!');
                     setTimeout(() => resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
@@ -1171,4 +1165,3 @@ if (content) { ... } // resto do código que já existe;
     </script>
 </body>
 </html>
-
