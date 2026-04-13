@@ -2205,12 +2205,45 @@ Capa silicone R$ 50,00
             if (!list) { displayErrorList('Por favor, cole a lista de produtos.'); return; }
             productListLoading.classList.add('active'); productListResult.innerHTML = '';
             try {
-                products = parseProducts(list);
-                productAdjustments = {};
-                displayTable(products);
-                selectedProducts = [];
-                handleProductSelection();
-                enviarLog('processou_lista');
+                const novosProdutos = parseProducts(list);
+                // Se já existem produtos processados, pergunta se deseja mesclar ou substituir
+                if (products && products.length > 0) {
+                    const opcao = confirm(
+                        `⚠️ Você já tem ${products.length} produto(s) processado(s).\n\n` +
+                        `Clique em OK para ADICIONAR os ${novosProdutos.length} novo(s) produto(s) à lista existente.\n\n` +
+                        `Clique em Cancelar para SUBSTITUIR tudo pelos novos produtos.`
+                    );
+                    if (opcao) {
+                        // Mescla: adiciona novos ao final, mantendo ajustes e seleções existentes
+                        const offsetIdx = products.length;
+                        novosProdutos.forEach(p => products.push(p));
+                        displayTable(products);
+                        // Restaura checkboxes que já estavam selecionados
+                        const selectedIdxs = new Set(selectedProducts.map(p => p._idx));
+                        document.querySelectorAll('.product-checkbox').forEach(cb => {
+                            if (selectedIdxs.has(parseInt(cb.value))) cb.checked = true;
+                        });
+                        handleProductSelection();
+                        showToast(`✅ ${novosProdutos.length} produto(s) adicionado(s) à lista!`);
+                        enviarLog('mesclou_lista');
+                    } else {
+                        // Substitui tudo
+                        products = novosProdutos;
+                        productAdjustments = {};
+                        displayTable(products);
+                        selectedProducts = [];
+                        handleProductSelection();
+                        enviarLog('substituiu_lista');
+                    }
+                } else {
+                    // Sem produtos anteriores: comportamento original
+                    products = novosProdutos;
+                    productAdjustments = {};
+                    displayTable(products);
+                    selectedProducts = [];
+                    handleProductSelection();
+                    enviarLog('processou_lista');
+                }
             } catch (error) { displayErrorList(`❌ Erro: ${error.message}`); }
             finally { productListLoading.classList.remove('active'); }
         }
