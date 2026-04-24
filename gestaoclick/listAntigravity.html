@@ -2156,13 +2156,11 @@
 
     <div id="conflict-modal">
       <div class="conflict-card">
-        <h3>⚠️ Conflito de Dados</h3>
-        <p>Existem itens no seu computador que não estão na nuvem. O que deseja fazer?</p>
+        <h3>⚠️ Conflito de Versões</h3>
+        <p id="conflict-msg">Existem dados diferentes entre seu computador e a nuvem. O que deseja fazer?</p>
         <div class="conflict-btns">
-          <button class="btn btn-primary" onclick="resolveConflict('push')">📤 Enviar meus dados locais para a
-            nuvem</button>
-          <button class="btn btn-ghost" onclick="resolveConflict('pull')">📥 Baixar dados da nuvem (descarta
-            locais)</button>
+          <button class="btn btn-primary" onclick="resolveConflict('push')">📤 Usar meus dados locais (enviar para nuvem)</button>
+          <button class="btn btn-ghost" onclick="resolveConflict('pull')">📥 Usar dados da nuvem (substituir local)</button>
         </div>
       </div>
     </div>
@@ -2997,10 +2995,16 @@ Exemplo de saída:
     function autoGrowAll() { document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow); }
 
     let _saveTimer = null;
+    let _pendingSaveCount = 0; // rastreia saves pendentes de envio
+
     function salvar() {
       try {
+        appData.savedAt = Date.now(); // timestamp local — fundamental para resolver conflitos
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         if (!_currentUser) { setSync('ok', 'Salvo Localmente'); return; }
+        // Marcar que há dados pendentes de sincronização
+        setSync('loading', 'Aguardando…');
+        _pendingSaveCount++;
         clearTimeout(_saveTimer);
         _saveTimer = setTimeout(() => { syncToCloud(false); }, 2000);
       } catch (e) { setSync('err', 'Erro ao salvar'); }
@@ -3012,16 +3016,35 @@ Exemplo de saída:
     async function syncToCloud(isManual = false) {
       if (_cloudLoading || !_syncReady) return;
       _isSyncInProgress = true;
+      _cloudLoading = true;
       updateCloudStatus('syncing');
       if (isManual) el('sync-overlay').classList.add('active');
+      const countAtStart = _pendingSaveCount;
       try {
         const resp = await fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ email: _currentUser.email, payload: appData, _t: Date.now() }) });
-        if (!resp.ok) throw new Error('CORS/Network error ' + resp.status);
+        if (!resp.ok) throw new Error('Erro de rede: ' + resp.status);
         const data = await resp.json();
-        if (data.status === 'success') { updateCloudStatus('success'); } else { throw new Error(data.message || 'Erro no servidor GAS'); }
+        if (data.status === 'success') {
+          // Só mostra salvo se nenhuma edição nova veio durante o envio
+          if (_pendingSaveCount === countAtStart) {
+            _pendingSaveCount = 0;
+            updateCloudStatus('success');
+          } else {
+            // Ainda há edições pendentes — reagendar
+            updateCloudStatus('syncing');
+            setTimeout(() => syncToCloud(false), 1500);
+          }
+        } else {
+          throw new Error(data.message || 'Erro no servidor');
+        }
       } catch (e) {
-        console.error('Cloud save fail:', e); updateCloudStatus('err', e.message);
-        setTimeout(() => { if (el('save-status-text').textContent === 'ERRO NUVEM') updateCloudStatus('success', 'Salvo localmente'); }, 5000);
+        console.error('Cloud save fail:', e);
+        // NUNCA mostrar "salvo" em caso de falha — mostrar erro real
+        updateCloudStatus('err', 'Falha ao salvar na nuvem: ' + e.message);
+        // Tentar novamente em 30s automaticamente
+        setTimeout(() => {
+          if (_pendingSaveCount > 0 && _currentUser && _syncReady) syncToCloud(false);
+        }, 30000);
       }
       _cloudLoading = false; _isSyncInProgress = false; el('sync-overlay').classList.remove('active');
     }
@@ -3033,27 +3056,46 @@ Exemplo de saída:
     function resolveConflict(choice) {
       el('conflict-modal').style.display = 'none';
       if (choice === 'pull' && _pendingCloudData) {
+        // Segurança: nunca aceitar dados claramente vazios da nuvem
+        const totalItensNuvem = (_pendingCloudData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+        const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+        if (totalItensNuvem === 0 && totalItensLocal > 0) {
+          toast('⚠️ Nuvem está vazia — dados locais mantidos por segurança');
+          _syncReady = true;
+          salvar(); // forçar upload dos dados locais
+          return;
+        }
         appData = _pendingCloudData;
-        updateSchema(); // IMPORTANTE
+        updateSchema();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         switchTab(appData.currentId || appData.listas[0].id);
+        renderQuickCopy();
         toast('📥 Dados da nuvem carregados');
       }
+      _pendingCloudData = null;
       _syncReady = true;
-      if (choice === 'push') { toast('📤 Dados locais prontos para nuvem'); salvar(); }
-      updateCloudStatus('success');
+      if (choice === 'push') { toast('📤 Enviando dados locais para nuvem…'); salvar(); }
+      else updateCloudStatus('success');
     }
 
     function updateCloudStatus(type, errMsg = '') {
       const pill = el('save-status-pill'); if (!pill) return;
       const dot = pill.querySelector('.sync-dot'); const txt = el('save-status-text');
       pill.style.display = 'flex'; pill.title = errMsg || '';
-      dot.className = 'sync-dot ' + (type === 'syncing' ? 'loading' : type === 'success' ? 'ok' : 'err');
-      if (type === 'syncing') { txt.textContent = 'SINCRONIZANDO...'; }
+      dot.className = 'sync-dot ' + (type === 'syncing' ? 'loading' : type === 'success' ? 'ok' : type === 'loading' ? 'loading' : 'err');
+      if (type === 'syncing') { txt.textContent = 'SALVANDO...'; }
       else if (type === 'loading') { txt.textContent = 'CARREGANDO...'; }
-      else if (type === 'success') { const agora = new Date(); const hh = String(agora.getHours()).padStart(2, '0'); const mm = String(agora.getMinutes()).padStart(2, '0'); txt.textContent = `SALVO ÀS ${hh}:${mm}`; }
-      else { txt.textContent = 'ERRO NUVEM'; }
-      if (type === 'success') { setTimeout(() => { if (txt.textContent.includes('SALVO')) pill.style.opacity = '0.6'; }, 3000); } else pill.style.opacity = '1';
+      else if (type === 'success') {
+        const agora = new Date();
+        const hh = String(agora.getHours()).padStart(2, '0');
+        const mm = String(agora.getMinutes()).padStart(2, '0');
+        const ss = String(agora.getSeconds()).padStart(2, '0');
+        txt.textContent = `✅ SALVO ÀS ${hh}:${mm}:${ss}`;
+        // Reduz opacidade depois de 8s — mas só se ainda estiver mostrando sucesso
+        setTimeout(() => { if (txt.textContent.includes('SALVO')) pill.style.opacity = '0.7'; }, 8000);
+      }
+      else { txt.textContent = '❌ ERRO: ' + (errMsg || 'Falha ao salvar'); pill.style.opacity = '1'; }
+      if (type !== 'success') pill.style.opacity = '1';
     }
 
     async function initAuth() {
@@ -3073,21 +3115,65 @@ Exemplo de saída:
             if (oldLists.length === 0 && currentLista.length > 0) { const nova = createListObj('Lista Recuperada'); nova.lista = currentLista; data = { listas: [nova], currentId: nova.id, templates: data.appData.templates }; }
             else { data = data.appData; if (currentLista.length > 0 && data.listas && data.listas[0]) data.listas[0].lista = currentLista; }
           }
-          const totalItensNuvem = (data.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+
+          const totalItensNuvem = (data && data.listas ? data.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
           const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-          if (totalItensLocal > 0 && totalItensNuvem === 0) { _pendingCloudData = data; el('conflict-modal').style.display = 'flex'; updateCloudStatus('success'); }
-          else if (data && data.listas && data.listas.length > 0) {
-            appData = data;
-            updateSchema(); // Garantir novos campos
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            switchTab(appData.currentId || appData.listas[0].id);
-            renderQuickCopy(); // Atualizar UI
-            toast('☁️ Nuvem sincronizada');
+
+          // Timestamps para decidir qual versão é mais recente
+          const tsNuvem = (data && data.savedAt) ? data.savedAt : 0;
+          const tsLocal = appData.savedAt || 0;
+
+          if (totalItensNuvem === 0 && totalItensLocal === 0) {
+            // Ambos vazios — ok, apenas ativar sync
+            _syncReady = true; updateCloudStatus('success');
+          } else if (totalItensNuvem === 0 && totalItensLocal > 0) {
+            // Nuvem vazia, local tem dados → upload automático (nuvem nunca foi populada ou foi apagada)
+            _pendingCloudData = data;
             _syncReady = true;
             updateCloudStatus('success');
+            salvar(); // faz upload automaticamente
+            toast('☁️ Dados locais enviados para nuvem');
+          } else if (totalItensLocal === 0 && totalItensNuvem > 0) {
+            // Local vazio, nuvem tem dados → baixar sem perigo
+            appData = data;
+            updateSchema();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            switchTab(appData.currentId || appData.listas[0].id);
+            renderQuickCopy();
+            _syncReady = true;
+            updateCloudStatus('success');
+            toast('☁️ Dados carregados da nuvem');
+          } else if (data && data.listas && data.listas.length > 0) {
+            // Ambos têm dados — usar timestamp para decidir
+            if (tsLocal > tsNuvem + 5000) {
+              // Local é mais recente (mais de 5s) → mostrar conflito com aviso claro
+              _pendingCloudData = data;
+              const dataLocal = tsLocal ? new Date(tsLocal).toLocaleTimeString('pt-BR') : 'desconhecida';
+              const dataNuvem = tsNuvem ? new Date(tsNuvem).toLocaleTimeString('pt-BR') : 'desconhecida';
+              el('conflict-msg').textContent = `Seus dados locais (${dataLocal}) são mais recentes que a nuvem (${dataNuvem}). Qual versão deseja usar?`;
+              el('conflict-modal').style.display = 'flex';
+              updateCloudStatus('success');
+            } else {
+              // Nuvem é mais recente ou igual → usar nuvem (comportamento padrão seguro)
+              appData = data;
+              updateSchema();
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+              switchTab(appData.currentId || appData.listas[0].id);
+              renderQuickCopy();
+              _syncReady = true;
+              updateCloudStatus('success');
+              toast('☁️ Nuvem sincronizada');
+            }
+          } else {
+            _syncReady = true; updateCloudStatus('success');
           }
-          else { _syncReady = true; updateCloudStatus('success'); }
-        } catch (e) { console.error('Cloud load fail:', e); updateCloudStatus('err', e.message); }
+        } catch (e) {
+          console.error('Cloud load fail:', e);
+          // Em caso de falha ao carregar nuvem, continuar com dados locais e avisar
+          updateCloudStatus('err', 'Falha ao conectar com nuvem: ' + e.message);
+          toast('⚠️ Não foi possível acessar a nuvem. Usando dados locais.');
+          _syncReady = true; // permite salvar quando editar
+        }
         _cloudLoading = false;
       } else { _syncReady = false; }
 
@@ -3106,13 +3192,29 @@ Exemplo de saída:
                 const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
                 const d = await r.json();
                 if (d && d.listas) {
-                  appData = d;
-                  updateSchema();
-                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                  switchTab(appData.currentId || appData.listas[0].id);
-                  renderQuickCopy();
+                  const totalNuvem = (d.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+                  const totalLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+                  if (totalNuvem > 0 && totalLocal > 0 && (d.savedAt || 0) < (appData.savedAt || 0) - 5000) {
+                    // Local mais recente que nuvem → perguntar
+                    _pendingCloudData = d;
+                    const tL = appData.savedAt ? new Date(appData.savedAt).toLocaleTimeString('pt-BR') : '?';
+                    const tN = d.savedAt ? new Date(d.savedAt).toLocaleTimeString('pt-BR') : '?';
+                    el('conflict-msg').textContent = `Seus dados locais (${tL}) são mais recentes que a nuvem (${tN}). Qual versão usar?`;
+                    el('conflict-modal').style.display = 'flex';
+                  } else if (totalNuvem > 0) {
+                    appData = d;
+                    updateSchema();
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                    switchTab(appData.currentId || appData.listas[0].id);
+                    renderQuickCopy();
+                    toast('☁️ Dados da nuvem carregados');
+                  } else if (totalLocal > 0) {
+                    // Nuvem vazia → subir dados locais
+                    toast('☁️ Enviando dados locais para nuvem…');
+                    salvar();
+                  }
                 }
-              } catch (e) { }
+              } catch (e) { console.error('Login cloud load fail:', e); toast('⚠️ Falha ao carregar nuvem. Usando dados locais.'); }
               _cloudLoading = false; _syncReady = true;
             }
           });
