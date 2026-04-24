@@ -112,9 +112,38 @@
     .tab-close:hover { opacity: 1; background: var(--danger-dim); color: var(--danger); }
     .tab-add { background: transparent; border: 1px dashed var(--border2); }
 
-    .app { display: grid; grid-template-columns: 1fr 420px; min-height: calc(100vh - 105px); width: 100%; max-width: 100vw; overflow: visible; }
+    .app { 
+      display: grid; 
+      grid-template-columns: 1fr var(--sidebar-w, 420px); 
+      min-height: calc(100vh - 105px); 
+      width: 100%; 
+      max-width: 100vw; 
+      overflow: visible; 
+      transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
     .panel-left { padding: 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 13px; min-width: 0; }
-    .panel-right { padding: 16px; display: flex; flex-direction: column; gap: 13px; background: var(--surface); min-width: 0; height: fit-content; }
+    .panel-right { 
+      padding: 16px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 13px; 
+      background: var(--surface); 
+      min-width: 0; 
+      height: fit-content;
+      transition: opacity 0.2s ease, transform 0.3s ease;
+      transform-origin: right;
+    }
+
+    /* Sidebar Recolhida */
+    .sidebar-collapsed { --sidebar-w: 0px !important; }
+    .sidebar-collapsed .panel-right { 
+      display: none !important;
+      opacity: 0; 
+      pointer-events: none; 
+      padding: 0;
+      overflow: hidden;
+    }
+    .sidebar-collapsed .panel-left { border-right: none; }
 
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
     .card-header { padding: 9px 13px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
@@ -436,6 +465,7 @@
       <div id="user-area">
         <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Log In</button>
       </div>
+      <button id="btn-sidebar" class="btn btn-ghost btn-sm" title="Recolher/Expandir Painel" style="font-size: 16px;">◫</button>
       <button id="btn-tema" title="Alternar tema">🌙</button>
       <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
     </div>
@@ -482,6 +512,7 @@
         <div class="card-header">
           <span class="card-title"><span class="dot"></span>Itens da Lista</span>
           <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirConfigColunas()" title="Configurar Colunas da Tabela">⚙️</button>
             <span id="count-badge" style="font-size:.7rem; color:var(--text3);"></span>
             <button class="btn btn-danger btn-sm btn-icon" id="btn-limpar-lista" title="Limpar lista">🗑️</button>
           </div>
@@ -710,7 +741,17 @@
         { id: 'pc_cartao', label: 'Cartão', type: 'manual' }
       ],
       knownExtraFields: [],
-      quickCopyRules: []
+      quickCopyRules: [],
+      tableCols: [
+        { id: 'col-drag', label: '⠿', width: '24px', visible: true, fixed: true },
+        { id: 'col-order', label: '#', width: '38px', visible: true },
+        { id: 'col-label', label: 'Nome na Lista', width: '220px', visible: true },
+        { id: 'col-price', label: 'Preço Base', width: '100px', visible: true },
+        { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
+        { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
+        { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
+      ],
+      lastModified: Date.now()
     };
 
     let _currentUser = null;
@@ -1216,6 +1257,7 @@ Exemplo de saída:
     let _saveTimer = null;
     function salvar() {
       try {
+        appData.lastModified = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         if (!_currentUser) { setSync('ok', 'Salvo Localmente'); return; }
         clearTimeout(_saveTimer);
@@ -1292,16 +1334,27 @@ Exemplo de saída:
           }
           const totalItensNuvem = (data.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
           const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-          if (totalItensLocal > 0 && totalItensNuvem === 0) { _pendingCloudData = data; el('conflict-modal').style.display = 'flex'; updateCloudStatus('success'); }
-          else if (data && data.listas && data.listas.length > 0) { 
-            appData = data; 
-            updateSchema(); // Garantir novos campos
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); 
-            switchTab(appData.currentId || appData.listas[0].id); 
-            renderQuickCopy(); // Atualizar UI
-            toast('☁️ Nuvem sincronizada'); 
-            _syncReady = true; 
-            updateCloudStatus('success'); 
+          const cloudTime = data.lastModified || 0;
+          const localTime = appData.lastModified || 0;
+
+          if (data && data.listas && data.listas.length > 0) {
+            // CONFLITO: Nuvem tem dados, mas local é mais novo ou igual
+            if (localTime > cloudTime && totalItensLocal > 0) {
+              _pendingCloudData = data;
+              el('conflict-modal').style.display = 'flex';
+              updateCloudStatus('success');
+            } 
+            // NUVEM É MAIS NOVA: Atualizar local
+            else {
+              appData = data;
+              updateSchema();
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+              switchTab(appData.currentId || appData.listas[0].id);
+              renderQuickCopy();
+              toast('☁️ Nuvem sincronizada');
+              _syncReady = true;
+              updateCloudStatus('success');
+            }
           }
           else { _syncReady = true; updateCloudStatus('success'); }
         } catch (e) { console.error('Cloud load fail:', e); updateCloudStatus('err', e.message); }
@@ -1387,159 +1440,160 @@ Exemplo de saída:
     function renderTabela() {
       const tbody = el('tbody-lista');
       const theadRow = document.querySelector('#card-tabela thead tr');
+      theadRow.innerHTML = '';
 
-      // Atualiza Headers Dinâmicos
-      // Layout fixo: Drag(0), Ordem(1), Nome(2), Preço Base(3), [DYNAMIC], API(last-1), Act(last)
-      const currentHeaders = Array.from(theadRow.querySelectorAll('th'));
-      // Remove headers dinâmicos (entre idx 4 e os 2 últimos)
-      for (let i = currentHeaders.length - 1; i >= 4; i--) {
-        const th = currentHeaders[i];
-        if (th.classList.contains('col-dprice')) theadRow.removeChild(th);
-      }
-
-      // Insere colunas dinâmicas antes da penúltima th (col-api)
-      const refNode = theadRow.querySelector('.col-api');
-      appData.priceConfigs.forEach(conf => {
-        const th = document.createElement('th');
-        th.className = 'col-dprice';
-        th.textContent = (conf.type === 'atributo' ? '📡 ' : '') + conf.label;
-        th.style.fontSize = '10px'; th.style.width = '75px';
-        if (conf.type === 'atributo') th.style.color = 'var(--accent)';
-        theadRow.insertBefore(th, refNode);
+      // 1. Build Headers
+      appData.tableCols.forEach(col => {
+        if (!col.visible) return;
+        if (col.id === 'col-dprices') {
+          appData.priceConfigs.forEach(conf => {
+            const th = document.createElement('th');
+            th.className = 'col-dprice';
+            th.textContent = (conf.type === 'atributo' ? '📡 ' : '') + conf.label;
+            th.style.cssText = `font-size:10px; width:80px; ${conf.type === 'atributo' ? 'color:var(--accent);' : ''}`;
+            theadRow.appendChild(th);
+          });
+        } else {
+          const th = document.createElement('th');
+          th.className = col.id;
+          th.textContent = col.label;
+          if (col.width && col.width !== 'auto') th.style.width = col.width;
+          theadRow.appendChild(th);
+        }
       });
 
+      // 2. Build Body
       tbody.innerHTML = '';
       const nProd = lista.filter(i => i.type === 'product').length;
       el('count-badge').textContent = nProd + ' produto' + (nProd !== 1 ? 's' : '');
       el('empty-table').style.display = lista.length === 0 ? 'block' : 'none';
 
+      let totalCols = 0;
+      appData.tableCols.forEach(c => {
+        if (!c.visible) return;
+        if (c.id === 'col-dprices') totalCols += appData.priceConfigs.length;
+        else totalCols++;
+      });
+
       let _prodZebra = 0;
       lista.forEach((item, idx) => {
-        const tr = document.createElement('tr'); tr.dataset.idx = idx;
+        const tr = document.createElement('tr'); 
+        tr.dataset.idx = idx;
 
         if (item.type === 'header') {
           tr.className = 'row-header';
           const iconOpts = HEADER_ICONS.map(v => `<option value="${esc(v)}" ${(item.icon === undefined && v === '📌') || item.icon === v ? 'selected' : ''}>${v || 'Nenhum'}</option>`).join('');
-          tr.innerHTML = `<td class="col-drag">⠿</td><td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}" title="Mover para posição"></td><td colspan="${2 + appData.priceConfigs.length}" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td><td class="col-api"></td><td class="col-act"><div style="display:flex;gap:3px;justify-content:center;"><button class="btn btn-ghost btn-icon btn-sm dup-btn" title="Duplicar linha">⎘</button><button class="btn btn-danger btn-icon btn-sm del-btn">✕</button></div></td>`;
-        } else if (item.type === 'free') {
+          let leadingCols = 0;
+          let html = '';
+          if (appData.tableCols.find(c => c.id === 'col-drag')?.visible) { html += `<td class="col-drag">⠿</td>`; leadingCols++; }
+          if (appData.tableCols.find(c => c.id === 'col-order')?.visible) { html += `<td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}"></td>`; leadingCols++; }
+          html += `<td colspan="${totalCols - leadingCols - 1}" style="padding:4px 6px;"><div style="display:flex; align-items:center; gap:7px;"><select class="hdr-icon-sel" data-field="icon">${iconOpts}</select><input type="text" data-field="label" value="${esc(item.label)}" placeholder="Ex: MOTOROLA" style="flex:1; font-weight:700; font-size:.82rem;" /></div></td>`;
+          html += `<td class="col-act"><div style="display:flex;gap:3px;justify-content:center;"><button class="btn btn-ghost btn-icon btn-sm dup-btn" title="Duplicar linha">⎘</button><button class="btn btn-danger btn-icon btn-sm del-btn">✕</button></div></td>`;
+          tr.innerHTML = html;
+        } 
+        else if (item.type === 'free') {
           tr.className = 'row-free';
-          tr.innerHTML = `<td class="col-drag">⠿</td><td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}" title="Mover para posição"></td><td colspan="${2 + appData.priceConfigs.length}" style="padding:4px 6px;"><textarea data-field="text" rows="2" style="min-height:34px; resize:vertical;" placeholder="Texto livre…">${esc(item.text || '')}</textarea></td><td class="col-api"></td><td class="col-act"><div style="display:flex;gap:3px;justify-content:center;"><button class="btn btn-ghost btn-icon btn-sm dup-btn" title="Duplicar linha">⎘</button><button class="btn btn-danger btn-icon btn-sm del-btn">✕</button></div></td>`;
-        } else {
+          let leadingCols = 0;
+          let html = '';
+          if (appData.tableCols.find(c => c.id === 'col-drag')?.visible) { html += `<td class="col-drag">⠿</td>`; leadingCols++; }
+          if (appData.tableCols.find(c => c.id === 'col-order')?.visible) { html += `<td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}"></td>`; leadingCols++; }
+          html += `<td colspan="${totalCols - leadingCols - 1}" style="padding:4px 6px;"><textarea data-field="text" rows="2" style="min-height:34px; resize:vertical;" placeholder="Texto livre…">${esc(item.text || '')}</textarea></td>`;
+          html += `<td class="col-act"><div style="display:flex;gap:3px;justify-content:center;"><button class="btn btn-ghost btn-icon btn-sm dup-btn" title="Duplicar linha">⎘</button><button class="btn btn-danger btn-icon btn-sm del-btn">✕</button></div></td>`;
+          tr.innerHTML = html;
+        } 
+        else {
           _prodZebra++;
           const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
           const estoqueTotal = vinculos ? vinculos.reduce((s, v) => s + v.estoque, 0) : (item.estoque ?? null);
           const semEstoque = estoqueTotal !== null && estoqueTotal <= 0;
           tr.className = (semEstoque ? 'row-sem-estoque ' : '') + (_prodZebra % 2 === 0 ? 'row-even' : '');
-          const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
 
-          let badgeHtml;
-          if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo">🔗 —</span>`;
-          else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`;
-          else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero'; const breakdown = (vinculos && vinculos.length > 1) ? `(${vinculos.map(v => v.estoque).join('+')}) ` : ''; badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${breakdown}${estoqueTotal} un.</span>`; }
-
-          const vinculosList = vinculos ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:4px;min-width:0;"><span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">${esc(v.nome)}</span><span style="font-size:10px; color:${v.estoque > 0 ? 'var(--accent)' : 'var(--warn)'}; font-weight:700; white-space:nowrap;">${v.estoque > 0 ? '✓' : '⚠'}${v.estoque}</span><button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;">✕</button></div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
-
-          let dynamicCols = '';
-          appData.priceConfigs.forEach(conf => {
-            const val = getDynamicPriceValue(item, conf);
-            const isReadonly = conf.type === 'formula' || conf.type === 'atributo';
-            const cssClass = conf.type === 'formula' ? 'calc-readonly' : (conf.type === 'atributo' ? 'attr-readonly' : '');
-            dynamicCols += `<td class="col-dprice"><input type="text" class="mono-inp ${cssClass}" data-idx="${idx}" data-confid="${conf.id}" value="${esc(val)}" ${isReadonly ? 'readonly' : ''} style="width:100%;" placeholder="-"></td>`;
+          let html = '';
+          appData.tableCols.forEach(col => {
+            if (!col.visible) return;
+            if (col.id === 'col-drag') html += `<td class="col-drag">⠿</td>`;
+            else if (col.id === 'col-order') html += `<td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}"></td>`;
+            else if (col.id === 'col-label') html += `<td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td>`;
+            else if (col.id === 'col-price') html += `<td class="col-price"><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:100%;"/></td>`;
+            else if (col.id === 'col-dprices') {
+              appData.priceConfigs.forEach(conf => {
+                const val = getDynamicPriceValue(item, conf);
+                const isReadonly = conf.type === 'formula' || conf.type === 'atributo';
+                const cssClass = conf.type === 'formula' ? 'calc-readonly' : (conf.type === 'atributo' ? 'attr-readonly' : '');
+                html += `<td class="col-dprice"><input type="text" class="mono-inp ${cssClass}" data-idx="${idx}" data-confid="${conf.id}" value="${esc(val)}" ${isReadonly ? 'readonly' : ''} style="width:100%;" placeholder="-"></td>`;
+              });
+            } 
+            else if (col.id === 'col-api') {
+              const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
+              let badgeHtml;
+              if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked" title="Sem vínculo">🔗 —</span>`;
+              else if (estoqueTotal === null || estoqueTotal === undefined) badgeHtml = `<span class="badge badge-unknown">? —</span>`;
+              else { const cls = estoqueTotal > 0 ? 'badge-ok' : 'badge-zero'; const breakdown = (vinculos && vinculos.length > 1) ? `(${vinculos.map(v => v.estoque).join('+')}) ` : ''; badgeHtml = `<span class="badge ${cls}">${estoqueTotal > 0 ? '✓' : '⚠'} ${breakdown}${estoqueTotal} un.</span>`; }
+              const vinculosList = vinculos ? vinculos.map((v, vi) => `<div style="display:flex;align-items:center;gap:4px;min-width:0;"><span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">${esc(v.nome)}</span><span style="font-size:10px; color:${v.estoque > 0 ? 'var(--accent)' : 'var(--warn)'}; font-weight:700; white-space:nowrap;">${v.estoque > 0 ? '✓' : '⚠'}${v.estoque}</span><button class="vincul-rm-inline" data-idx="${idx}" data-vi="${vi}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;">✕</button></div>`).join('') : (item.sysname ? `<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.sysname)}</div>` : `<span style="font-size:12px;color:var(--text3);font-style:italic;">Vincular…</span>`);
+              html += `<td class="col-api vincul-cell" data-vincul-field="sys" style="cursor:pointer;"><div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;">${vinculosList}<div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;"><span style="font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text3);">SKU: ${esc(item.sku || '—')}</span>${badgeHtml}</div><div class="vincul-add-btn" style="font-size:11px;color:var(--accent);display:flex;align-items:center;opacity:.8;"><span>＋ ${temVinculo ? 'add' : 'vincular'}</span></div></div></td>`;
+            } 
+            else if (col.id === 'col-actions') {
+              html += `<td class="col-act"><div style="display:flex; gap:3px; justify-content:center;"><button class="btn btn-ghost btn-icon btn-sm sync-btn" title="Atualizar estoque">🔄</button><button class="btn btn-ghost btn-icon btn-sm dup-btn" title="Duplicar linha" style="font-size:14px;">⎘</button><button class="btn btn-danger btn-icon btn-sm del-btn">✕</button></div></td>`;
+            }
           });
-
-          tr.innerHTML = `
-        <td class="col-drag">⠿</td>
-        <td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}" title="Mover para posição"></td>
-        <td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td>
-        <td class="col-price"><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:100%;"/></td>
-        ${dynamicCols}
-        <td class="col-api vincul-cell" data-vincul-field="sys" style="cursor:pointer;">
-          <div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;">
-            ${vinculosList}
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-              <span style="font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text3);">SKU: ${esc(item.sku || '—')}</span>
-              ${badgeHtml}
-            </div>
-            <div class="vincul-add-btn" style="font-size:11px;color:var(--accent);display:flex;align-items:center;opacity:.8;"><span>＋ ${temVinculo ? 'add' : 'vincular'}</span></div>
-          </div>
-        </td>
-        <td class="col-act"><div style="display:flex; gap:3px; justify-content:center;">
-          <button class="btn btn-ghost btn-icon btn-sm sync-btn" title="Atualizar estoque">🔄</button>
-          <button class="btn btn-ghost btn-icon btn-sm dup-btn" title="Duplicar linha" style="font-size:14px;">⎘</button>
-          <button class="btn btn-danger btn-icon btn-sm del-btn">✕</button>
-        </div></td>`;
+          tr.innerHTML = html;
         }
 
-        // Drag & drop
-        const handle = tr.querySelector('.col-drag'); handle.setAttribute('draggable', 'true');
-        handle.addEventListener('dragstart', e => { dragSrcIdx = idx; tr.style.opacity = '.4'; e.dataTransfer.effectAllowed = 'move'; });
-        handle.addEventListener('dragend', () => { tr.style.opacity = ''; document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); });
+        // Eventos
+        const handle = tr.querySelector('.col-drag'); if (handle) { handle.setAttribute('draggable', 'true'); handle.addEventListener('dragstart', e => { dragSrcIdx = idx; tr.style.opacity = '.4'; e.dataTransfer.effectAllowed = 'move'; }); handle.addEventListener('dragend', () => { tr.style.opacity = ''; document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); }); }
         tr.addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('#tbody-lista tr').forEach(r => r.classList.remove('drag-over')); tr.classList.add('drag-over'); });
         tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx, 1)[0]; lista.splice(idx, 0, moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
-
-        // Input de posição numérica
         const orderInp = tr.querySelector('.order-inp');
-        if (orderInp) {
-          orderInp.addEventListener('change', () => {
-            const novaPosicao = parseInt(orderInp.value, 10) - 1;
-            if (isNaN(novaPosicao) || novaPosicao < 0 || novaPosicao >= lista.length || novaPosicao === idx) { orderInp.value = idx + 1; return; }
-            const moved = lista.splice(idx, 1)[0]; lista.splice(novaPosicao, 0, moved);
-            renderTabela(); renderMobile(); atualizarPreview(); salvar();
-          });
-          orderInp.addEventListener('keydown', e => { if (e.key === 'Enter') orderInp.blur(); });
-          // Evitar que o input de ordem acione o drag
-          orderInp.addEventListener('mousedown', e => e.stopPropagation());
-        }
-
-        tr.querySelectorAll('[data-field]').forEach(inp => {
-          inp.addEventListener('input', () => {
-            lista[idx][inp.dataset.field] = inp.value;
-            if (inp.tagName === 'TEXTAREA') autoGrow(inp);
-            atualizarPreview(); salvar();
-          });
-        });
+        if (orderInp) { orderInp.addEventListener('change', () => { const novaPosicao = parseInt(orderInp.value, 10) - 1; if (isNaN(novaPosicao) || novaPosicao < 0 || novaPosicao >= lista.length || novaPosicao === idx) { orderInp.value = idx + 1; return; } const moved = lista.splice(idx, 1)[0]; lista.splice(novaPosicao, 0, moved); renderTabela(); renderMobile(); atualizarPreview(); salvar(); }); orderInp.addEventListener('mousedown', e => e.stopPropagation()); }
+        tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
         tr.querySelectorAll('[data-confid]').forEach(inp => {
           inp.addEventListener('input', () => {
             if (!lista[idx].prices) lista[idx].prices = {};
             lista[idx].prices[inp.dataset.confid] = inp.value;
-            tr.querySelectorAll('input.calc-readonly').forEach(formulaInp => {
-              const conf = appData.priceConfigs.find(c => c.id === formulaInp.dataset.confid);
-              if (conf) formulaInp.value = calculateFormula(lista[idx], conf) || '-';
-            });
+            tr.querySelectorAll('input.calc-readonly').forEach(fInp => { const conf = appData.priceConfigs.find(c => c.id === fInp.dataset.confid); if (conf) fInp.value = calculateFormula(lista[idx], conf) || '-'; });
             atualizarPreview(); salvar();
           });
           inp.addEventListener('blur', () => renderTabela());
         });
-
         const basePriceInp = tr.querySelector('[data-field="price"]');
-        if (basePriceInp) {
-          basePriceInp.addEventListener('input', () => {
-            tr.querySelectorAll('input.calc-readonly').forEach(formulaInp => {
-              const conf = appData.priceConfigs.find(c => c.id === formulaInp.dataset.confid);
-              if (conf) formulaInp.value = calculateFormula(lista[idx], conf) || '-';
-            });
-          });
-        }
+        if (basePriceInp) { basePriceInp.addEventListener('input', () => { tr.querySelectorAll('input.calc-readonly').forEach(fInp => { const conf = appData.priceConfigs.find(c => c.id === fInp.dataset.confid); if (conf) fInp.value = calculateFormula(lista[idx], conf) || '-'; }); }); }
         setTimeout(() => { const ta = tr.querySelector('.label-ta'); if (ta) autoGrow(ta); }, 0);
-
-        tr.querySelectorAll('.vincul-rm-inline').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi);
-            salvarVinculos(idx, novos);
-          });
-        });
-        // Clique na célula de vínculo abre o popover; stopPropagation para não fechar o popover imediatamente
-        tr.querySelector('.col-api')?.addEventListener('click', e => {
-          if (e.target.closest('.vincul-rm-inline')) return;
-          e.stopPropagation();
-          abrirPopoverVinculo(idx, tr.querySelector('.col-api'));
-        });
+        tr.querySelectorAll('.vincul-rm-inline').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const novos = (lista[idx].vinculos || []).filter((_, j) => j !== +btn.dataset.vi); salvarVinculos(idx, novos); }); });
+        tr.querySelector('.col-api')?.addEventListener('click', e => { if (e.target.closest('.vincul-rm-inline')) return; e.stopPropagation(); abrirPopoverVinculo(idx, tr.querySelector('.col-api')); });
         tr.querySelector('.del-btn')?.addEventListener('click', () => { lista.splice(idx, 1); renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
         tr.querySelector('.dup-btn')?.addEventListener('click', () => duplicarItem(idx));
         tr.querySelector('.sync-btn')?.addEventListener('click', () => syncItem(idx));
         tbody.appendChild(tr);
       });
+    }
+
+    function abrirConfigColunas() {
+      if (el('col-config-overlay')) return;
+      const modal = document.createElement('div');
+      modal.id = 'col-config-overlay';
+      modal.style.cssText = 'position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px;';
+      const box = document.createElement('div');
+      box.className = 'modal-box'; box.style.maxWidth = '500px';
+      const refresh = () => {
+        let html = `<div class="modal-title">Configurar Colunas da Tabela</div><div style="font-size:12px; color:var(--text2); margin-bottom:15px;">Use as setas para reordenar. Defina a largura (ex: 200px ou auto).</div><div style="max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">`;
+        appData.tableCols.forEach((col, idx) => {
+          const isFixed = col.fixed;
+          html += `<div style="display:flex; align-items:center; gap:8px; background:var(--bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
+            <div style="display:flex; flex-direction:column; gap:2px;"><button class="btn btn-ghost btn-xs" onclick="window.moveCol(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button><button class="btn btn-ghost btn-xs" onclick="window.moveCol(${idx}, 1)" ${idx === appData.tableCols.length - 1 ? 'disabled' : ''}>▼</button></div>
+            <div style="flex:1; font-size:12px; font-weight:700;">${esc(col.label)}</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="text" value="${esc(col.width)}" placeholder="auto" onchange="window.updateCol(${idx}, 'width', this.value)" style="width:70px; font-size:11px; padding:3px 6px;">
+              <label style="display:flex; align-items:center; gap:5px; font-size:11px; cursor:pointer;"><input type="checkbox" ${col.visible ? 'checked' : ''} onchange="window.updateCol(${idx}, 'visible', this.checked)" ${isFixed ? 'disabled' : ''}> Visível</label>
+            </div>
+          </div>`;
+        });
+        html += `</div><div class="modal-btns"><button class="btn btn-accent" id="btn-close-col-cfg">Concluir</button></div>`;
+        box.innerHTML = html;
+        box.querySelector('#btn-close-col-cfg').onclick = () => { modal.remove(); renderTabela(); };
+      };
+      window.moveCol = (idx, dir) => { const to = idx + dir; if (to < 0 || to >= appData.tableCols.length) return; const moved = appData.tableCols.splice(idx, 1)[0]; appData.tableCols.splice(to, 0, moved); salvar(); refresh(); };
+      window.updateCol = (idx, field, val) => { appData.tableCols[idx][field] = val; salvar(); };
+      refresh(); modal.appendChild(box); document.body.appendChild(modal);
     }
 
     function renderMobile() {
@@ -1916,6 +1970,16 @@ Exemplo de saída:
     aplicarTema(localStorage.getItem(TEMA_KEY) || 'light');
 
     // ════════════════════════════════════
+    // SIDEBAR RETRÁTIL
+    // ════════════════════════════════════
+    function toggleSidebar() {
+      const isCollapsed = document.querySelector('.app').classList.toggle('sidebar-collapsed');
+      appData.sidebarCollapsed = isCollapsed;
+      salvar();
+    }
+    el('btn-sidebar').addEventListener('click', toggleSidebar);
+
+    // ════════════════════════════════════
     // EXPORT/IMPORT CSV
     // ════════════════════════════════════
     function exportToCSV() {
@@ -2071,6 +2135,23 @@ Exemplo de saída:
       // Garantir que regras de cópia tenham campo 'nome'
       if (appData.quickCopyRules) {
         appData.quickCopyRules.forEach(r => { if (r.nome === undefined) r.nome = ''; });
+      }
+      if (!appData.lastModified) appData.lastModified = Date.now();
+      if (!appData.tableCols || !Array.isArray(appData.tableCols)) {
+        appData.tableCols = [
+          { id: 'col-drag', label: '⠿', width: '24px', visible: true, fixed: true },
+          { id: 'col-order', label: '#', width: '38px', visible: true },
+          { id: 'col-label', label: 'Nome na Lista', width: '220px', visible: true },
+          { id: 'col-price', label: 'Preço Base', width: '100px', visible: true },
+          { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
+          { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
+          { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
+        ];
+      }
+      if (appData.sidebarCollapsed) {
+        document.querySelector('.app').classList.add('sidebar-collapsed');
+      } else {
+        document.querySelector('.app').classList.remove('sidebar-collapsed');
       }
     }
 
