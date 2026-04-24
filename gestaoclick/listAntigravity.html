@@ -1249,7 +1249,13 @@ Exemplo de saída:
     let _pendingCloudData = null;
     function resolveConflict(choice) {
       el('conflict-modal').style.display = 'none';
-      if (choice === 'pull' && _pendingCloudData) { appData = _pendingCloudData; localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); switchTab(appData.currentId || appData.listas[0].id); toast('📥 Dados da nuvem carregados'); }
+      if (choice === 'pull' && _pendingCloudData) { 
+        appData = _pendingCloudData; 
+        updateSchema(); // IMPORTANTE
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); 
+        switchTab(appData.currentId || appData.listas[0].id); 
+        toast('📥 Dados da nuvem carregados'); 
+      }
       _syncReady = true;
       if (choice === 'push') { toast('📤 Dados locais prontos para nuvem'); salvar(); }
       updateCloudStatus('success');
@@ -1287,7 +1293,16 @@ Exemplo de saída:
           const totalItensNuvem = (data.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
           const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
           if (totalItensLocal > 0 && totalItensNuvem === 0) { _pendingCloudData = data; el('conflict-modal').style.display = 'flex'; updateCloudStatus('success'); }
-          else if (data && data.listas && data.listas.length > 0) { appData = data; localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); switchTab(appData.currentId || appData.listas[0].id); toast('☁️ Nuvem sincronizada'); _syncReady = true; updateCloudStatus('success'); }
+          else if (data && data.listas && data.listas.length > 0) { 
+            appData = data; 
+            updateSchema(); // Garantir novos campos
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); 
+            switchTab(appData.currentId || appData.listas[0].id); 
+            renderQuickCopy(); // Atualizar UI
+            toast('☁️ Nuvem sincronizada'); 
+            _syncReady = true; 
+            updateCloudStatus('success'); 
+          }
           else { _syncReady = true; updateCloudStatus('success'); }
         } catch (e) { console.error('Cloud load fail:', e); updateCloudStatus('err', e.message); }
         _cloudLoading = false;
@@ -1307,7 +1322,13 @@ Exemplo de saída:
               try {
                 const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
                 const d = await r.json();
-                if (d && d.listas) { appData = d; localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); switchTab(appData.currentId || appData.listas[0].id); }
+                if (d && d.listas) { 
+                  appData = d; 
+                  updateSchema(); 
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); 
+                  switchTab(appData.currentId || appData.listas[0].id); 
+                  renderQuickCopy();
+                }
               } catch (e) { }
               _cloudLoading = false; _syncReady = true;
             }
@@ -1938,7 +1959,16 @@ Exemplo de saída:
           }
           listsMap[listName].lista.push(item);
         }
-        if (newAppData.listas.length > 0) { newAppData.currentId = newAppData.listas[0].id; appData = newAppData; salvar(); renderTabs(); switchTab(appData.currentId); toast('✅ Backup restaurado com sucesso!'); }
+        if (newAppData.listas.length > 0) { 
+          newAppData.currentId = newAppData.listas[0].id; 
+          appData = newAppData; 
+          updateSchema(); 
+          salvar(); 
+          renderTabs(); 
+          switchTab(appData.currentId); 
+          renderQuickCopy();
+          toast('✅ Backup restaurado com sucesso!'); 
+        }
         else { toast('❌ Falha ao processar CSV'); }
         input.value = '';
       };
