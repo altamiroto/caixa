@@ -541,7 +541,17 @@
               <button class="btn btn-ghost btn-sm" id="btn-novo-template" title="Novo Padrão">＋ Novo</button>
               <button class="btn btn-danger btn-sm" id="btn-del-template" title="Excluir Padrão">✕</button>
             </div>
-            <textarea id="cfg-template-body" rows="4" style="font-size:13px; font-family:'JetBrains Mono', monospace;" placeholder="Ex: {{nome}}\nPix: R$ {{pix}}\nCartão: R$ {{cartao}}"></textarea>
+            <textarea id="cfg-template-body" rows="4" style="font-size:13px; font-family:'JetBrains Mono', monospace;" placeholder="Corpo: {{nome}}\nPix: R$ {{pix}}"></textarea>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:4px;">
+              <div class="field-group">
+                <span class="field-label" style="font-size:9px;">Cabeçalho (Início)</span>
+                <textarea id="cfg-template-header" rows="2" style="font-size:11px; font-family:'JetBrains Mono', monospace;" placeholder="Ex: Promoção do dia {{data}}"></textarea>
+              </div>
+              <div class="field-group">
+                <span class="field-label" style="font-size:9px;">Rodapé (Final)</span>
+                <textarea id="cfg-template-footer" rows="2" style="font-size:11px; font-family:'JetBrains Mono', monospace;" placeholder="Ex: Entregas grátis!"></textarea>
+              </div>
+            </div>
           </div>
           <div style="border-top:1px solid var(--border); margin: 4px 0;"></div>
           <div class="field-group">
@@ -570,6 +580,16 @@
             </div>
           </div>
           <div id="price-configs-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:10px;">
+        <div class="card-header">
+          <span class="card-title"><span class="dot"></span>Atalhos de Cópia (WhatsApp)</span>
+          <button class="btn btn-ghost btn-sm" onclick="abrirConfigCopia()" title="Configurar atalhos">⚙️</button>
+        </div>
+        <div id="quick-copy-list" style="padding:13px; display:flex; flex-direction:column; gap:8px;">
+          <div class="empty-state" style="padding:10px 0; font-size:11px;">Nenhum atalho configurado.</div>
         </div>
       </div>
 
@@ -677,9 +697,9 @@
 
     let appData = {
       templates: [
-        { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' },
-        { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' },
-        { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)' }
+        { id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}', header: '', footer: '' },
+        { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)', header: '', footer: '' },
+        { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)', header: '', footer: '' }
       ],
       priceConfigs: [
         { id: 'pc_custo', label: 'Custo', type: 'manual' },
@@ -687,7 +707,8 @@
         { id: 'pc_pix', label: 'Pix', type: 'manual' },
         { id: 'pc_cartao', label: 'Cartão', type: 'manual' }
       ],
-      knownExtraFields: []
+      knownExtraFields: [],
+      quickCopyRules: []
     };
 
     let _currentUser = null;
@@ -801,6 +822,8 @@
       sel.innerHTML = appData.templates.map(t => `<option value="${t.id}" ${t.id === (currentTabObj.templateId || 't1') ? 'selected' : ''}>${esc(t.nome)}</option>`).join('');
       const t = appData.templates.find(x => x.id === (currentTabObj.templateId || 't1')) || appData.templates[0];
       el('cfg-template-body').value = t ? t.texto : '';
+      el('cfg-template-header').value = (t && t.header) ? t.header : '';
+      el('cfg-template-footer').value = (t && t.footer) ? t.footer : '';
     }
 
     el('cfg-template-select').addEventListener('change', e => {
@@ -810,10 +833,18 @@
       if (!currentTabObj) return; const t = appData.templates.find(x => x.id === (currentTabObj.templateId || 't1'));
       if (t) { t.texto = e.target.value; atualizarPreview(); salvar(); }
     });
+    el('cfg-template-header').addEventListener('input', e => {
+      if (!currentTabObj) return; const t = appData.templates.find(x => x.id === (currentTabObj.templateId || 't1'));
+      if (t) { t.header = e.target.value; atualizarPreview(); salvar(); }
+    });
+    el('cfg-template-footer').addEventListener('input', e => {
+      if (!currentTabObj) return; const t = appData.templates.find(x => x.id === (currentTabObj.templateId || 't1'));
+      if (t) { t.footer = e.target.value; atualizarPreview(); salvar(); }
+    });
     el('btn-novo-template').addEventListener('click', async () => {
       try {
         const nome = await showPrompt('Nome do Novo Padrão', 'Ex: Padrão 4'); if (!nome) return;
-        const novo = { id: uid(), nome, texto: '{{nome}}\n- R$ {{preco}}' };
+        const novo = { id: uid(), nome, texto: '{{nome}}\n- R$ {{preco}}', header: '', footer: '' };
         appData.templates.push(novo); currentTabObj.templateId = novo.id;
         renderTemplatesConfig(); atualizarPreview(); salvar(); toast('✅ Novo padrão criado: ' + nome);
       } catch (e) { console.error('Erro ao criar padrão:', e); }
@@ -1666,15 +1697,36 @@ Exemplo de saída:
     function atualizarPreview() {
       const box = el('preview-box'); const semEst = currentTabObj?.cfgSemEst || 'ocultar';
       const templateSelecionado = appData.templates.find(x => x.id === (currentTabObj?.templateId || 't1'));
-      const templateText = templateSelecionado ? templateSelecionado.texto : '{{nome}} - R$ {{preco}}';
       if (lista.length === 0) { box.innerHTML = '<span class="preview-empty">A lista aparecerá aqui conforme você adiciona itens…</span>'; return; }
-      const linhas = []; const dHoje = dataHoje();
+      
+      const templateText = templateSelecionado ? templateSelecionado.texto : '{{nome}} - R$ {{preco}}';
+      const templateHeader = (templateSelecionado && templateSelecionado.header) ? templateSelecionado.header : '';
+      const templateFooter = (templateSelecionado && templateSelecionado.footer) ? templateSelecionado.footer : '';
+      
+      const dHoje = dataHoje();
+      let linhas = [];
+
+      // Header do Template
+      if (templateHeader) {
+        let h = templateHeader.replace(/\{\{data\}\}/gi, dHoje);
+        linhas.push(h);
+        linhas.push(''); // Linha em branco após header fixo
+      }
+
       lista.forEach(item => {
         if (item.type === 'header') { const icon = item.icon ? item.icon + ' ' : ''; let label = (item.label || 'SEÇÃO').toUpperCase(); label = label.replace(/\{\{data\}\}/gi, dHoje); linhas.push(`${icon}*\`${label}\`*`); }
         else if (item.type === 'free') { let text = item.text || ''; text = text.replace(/\{\{data\}\}/gi, dHoje); linhas.push(text); }
         else { const semEstoque = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0; if (semEstoque && semEst === 'ocultar') return; linhas.push(formatarComTemplate(item, templateText)); }
       });
-      box.textContent = linhas.join('\n');
+
+      // Footer do Template
+      if (templateFooter) {
+        linhas.push(''); // Linha em branco antes footer fixo
+        let f = templateFooter.replace(/\{\{data\}\}/gi, dHoje);
+        linhas.push(f);
+      }
+
+      box.textContent = linhas.join('\n').trim();
     }
 
     // ════════════════════════════════════
@@ -1962,9 +2014,11 @@ Exemplo de saída:
     }
 
     function updateSchema() {
+      if (!appData.quickCopyRules) appData.quickCopyRules = [];
       if (!appData.templates || !Array.isArray(appData.templates) || appData.templates.length === 0) {
-        appData.templates = [{ id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}' }, { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)' }, { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)' }];
+        appData.templates = [{ id: 't1', nome: 'Padrão 1 (Nome - Preço)', texto: '{{nome}} - R$ {{preco}}', header: '', footer: '' }, { id: 't2', nome: 'Padrão 2 (Pix e Cartão)', texto: '{{nome}}\nR$ {{pix}} (Dinheiro/Pix)\nR$ {{cartao}} (10x)', header: '', footer: '' }, { id: 't3', nome: 'Padrão 3 (Atacado e Varejo)', texto: '{{nome}}\nR$ {{preco}} (Varejo)\nR$ {{atacado}} (Atacado)', header: '', footer: '' }];
       }
+      appData.templates.forEach(t => { if (t.header === undefined) t.header = ''; if (t.footer === undefined) t.footer = ''; });
       if (!appData.priceConfigs) { appData.priceConfigs = [{ id: 'pc_custo', label: 'Custo', type: 'manual' }, { id: 'pc_atacado', label: 'Atacado', type: 'manual' }, { id: 'pc_pix', label: 'Pix', type: 'manual' }, { id: 'pc_cartao', label: 'Cartão', type: 'manual' }]; }
       if (appData.listas) appData.listas.forEach(l => {
         (l.lista || []).forEach(item => {
@@ -1979,8 +2033,90 @@ Exemplo de saída:
       if (!appData.knownExtraFields) appData.knownExtraFields = ['Marca', 'Modelo', 'video', 'COMISSAO'];
     }
 
+    // ════════════════════════════════════
+    // ATALHOS DE CÓPIA RÁPIDA
+    // ════════════════════════════════════
+    function renderQuickCopy() {
+      const cont = el('quick-copy-list');
+      if (!appData.quickCopyRules || !appData.quickCopyRules.length) { cont.innerHTML = '<div class="empty-state" style="padding:10px 0; font-size:11px;">Nenhum atalho configurado. Use o ícone ⚙️ para adicionar.</div>'; return; }
+      cont.innerHTML = '';
+      appData.quickCopyRules.forEach(rule => {
+        const tab = appData.listas.find(l => l.id === rule.tabId);
+        const temp = appData.templates.find(t => t.id === rule.templateId);
+        if (!tab || !temp) return;
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-ghost btn-sm';
+        btn.style.cssText = 'justify-content: space-between; padding: 8px 12px; font-size: 11px;';
+        btn.innerHTML = `<span style="text-align:left;"><b>${esc(tab.nome)}</b><br><span style="font-size:9px; opacity:0.7;">${esc(temp.nome)}</span></span><span style="font-size:14px;">📋</span>`;
+        btn.onclick = () => copyQuick(rule.tabId, rule.templateId);
+        cont.appendChild(btn);
+      });
+    }
+
+    function copyQuick(tabId, templateId) {
+      const tabObj = appData.listas.find(l => l.id === tabId);
+      const tempObj = appData.templates.find(t => t.id === templateId);
+      if (!tabObj || !tempObj) return;
+      const semEst = tabObj.cfgSemEst || 'ocultar';
+      const dHoje = dataHoje();
+      let linhas = [];
+      if (tempObj.header) { linhas.push(tempObj.header.replace(/\{\{data\}\}/gi, dHoje)); linhas.push(''); }
+      tabObj.lista.forEach(item => {
+        if (item.type === 'header') { const icon = item.icon ? item.icon + ' ' : ''; let label = (item.label || 'SEÇÃO').toUpperCase(); label = label.replace(/\{\{data\}\}/gi, dHoje); linhas.push(`${icon}*\`${label}\`*`); }
+        else if (item.type === 'free') { let text = item.text || ''; text = text.replace(/\{\{data\}\}/gi, dHoje); linhas.push(text); }
+        else { const semEstoque = item.estoque !== undefined && item.estoque !== null && item.estoque <= 0; if (semEstoque && semEst === 'ocultar') return; linhas.push(formatarComTemplate(item, tempObj.texto)); }
+      });
+      if (tempObj.footer) { linhas.push(''); linhas.push(tempObj.footer.replace(/\{\{data\}\}/gi, dHoje)); }
+      const text = linhas.join('\n').trim();
+      navigator.clipboard.writeText(text).then(() => toast(`✅ Copiado: ${tabObj.nome} (${tempObj.nome})`)).catch(() => toast('Erro ao copiar'));
+    }
+
+    async function abrirConfigCopia() {
+      // Modal simples para gerenciar atalhos
+      const modal = document.createElement('div');
+      modal.id = 'copy-config-overlay';
+      modal.style.cssText = 'position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px;';
+      const box = document.createElement('div');
+      box.className = 'modal-box';
+      box.style.maxWidth = '500px';
+      
+      const renderContent = () => {
+        let html = `<div class="modal-title">Configurar Atalhos de Cópia</div><div style="font-size:12px; color:var(--text2); margin-bottom:10px;">Crie botões de acesso rápido para copiar listas específicas em padrões específicos.</div><div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">`;
+        if (!appData.quickCopyRules.length) html += `<div style="text-align:center; padding:20px; color:var(--text3); font-style:italic;">Nenhum atalho criado.</div>`;
+        appData.quickCopyRules.forEach((rule, idx) => {
+          const tab = appData.listas.find(l => l.id === rule.tabId);
+          const temp = appData.templates.find(t => t.id === rule.templateId);
+          html += `<div style="display:flex; align-items:center; gap:8px; background:var(--bg); padding:8px; border-radius:8px; border:1px solid var(--border);">
+            <div style="flex:1; font-size:11px;"><b>${esc(tab?.nome || 'Excluída')}</b><br>${esc(temp?.nome || 'Excluído')}</div>
+            <button class="btn btn-danger btn-sm" onclick="_delRule(${idx})">✕</button>
+          </div>`;
+        });
+        html += `</div><div style="border-top:1px solid var(--border); padding-top:15px;">
+          <div class="field-label">Novo Atalho</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:5px;">
+            <select id="new-copy-tab" style="font-size:12px;">${appData.listas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('')}</select>
+            <select id="new-copy-temp" style="font-size:12px;">${appData.templates.map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join('')}</select>
+          </div>
+          <button class="btn btn-accent btn-sm" style="width:100%; margin-top:10px;" id="btn-add-rule">＋ Adicionar Atalho</button>
+        </div><div class="modal-btns" style="margin-top:20px;"><button class="btn btn-ghost" id="btn-close-copy">Fechar</button></div>`;
+        box.innerHTML = html;
+        box.querySelector('#btn-close-copy').onclick = () => { modal.remove(); renderQuickCopy(); };
+        box.querySelector('#btn-add-rule').onclick = () => {
+          const tabId = box.querySelector('#new-copy-tab').value;
+          const templateId = box.querySelector('#new-copy-temp').value;
+          appData.quickCopyRules.push({ tabId, templateId });
+          salvar(); renderContent();
+        };
+      };
+      window._delRule = (idx) => { appData.quickCopyRules.splice(idx, 1); salvar(); renderContent(); };
+      renderContent();
+      modal.appendChild(box);
+      document.body.appendChild(modal);
+    }
+
     carregar();
     switchTab(appData.currentId || appData.listas[0].id);
+    renderQuickCopy();
     initAuth();
     setTimeout(autoGrowAll, 60);
   </script>
