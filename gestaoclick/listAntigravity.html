@@ -2038,6 +2038,10 @@ Exemplo de saída:
         });
       });
       if (!appData.knownExtraFields) appData.knownExtraFields = ['Marca', 'Modelo', 'video', 'COMISSAO'];
+      // Garantir que regras de cópia tenham campo 'nome'
+      if (appData.quickCopyRules) {
+        appData.quickCopyRules.forEach(r => { if (r.nome === undefined) r.nome = ''; });
+      }
     }
 
     // ════════════════════════════════════
@@ -2054,10 +2058,15 @@ Exemplo de saída:
         const tab = appData.listas.find(l => l.id === rule.tabId);
         const temp = appData.templates.find(t => t.id === rule.templateId);
         if (!tab || !temp) return;
+        
+        const labelHTML = rule.nome 
+          ? `<b>${esc(rule.nome)}</b><br><span style="font-size:9px; opacity:0.7;">${esc(tab.nome)} / ${esc(temp.nome)}</span>`
+          : `<b>${esc(tab.nome)}</b><br><span style="font-size:9px; opacity:0.7;">${esc(temp.nome)}</span>`;
+
         const btn = document.createElement('button');
         btn.className = 'btn btn-ghost btn-sm';
-        btn.style.cssText = 'justify-content: space-between; padding: 8px 12px; font-size: 11px;';
-        btn.innerHTML = `<span style="text-align:left;"><b>${esc(tab.nome)}</b><br><span style="font-size:9px; opacity:0.7;">${esc(temp.nome)}</span></span><span style="font-size:14px;">📋</span>`;
+        btn.style.cssText = 'justify-content: space-between; padding: 8px 12px; font-size: 11px; align-items: center;';
+        btn.innerHTML = `<span style="text-align:left;">${labelHTML}</span><span style="font-size:14px;">📋</span>`;
         btn.onclick = () => copyQuick(rule.tabId, rule.templateId);
         cont.appendChild(btn);
       });
@@ -2082,47 +2091,60 @@ Exemplo de saída:
     }
 
     function abrirConfigCopia() {
-      if (el('copy-config-overlay')) return;
-      const modal = document.createElement('div');
-      modal.id = 'copy-config-overlay';
-      modal.style.cssText = 'position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px;';
-      const box = document.createElement('div');
-      box.className = 'modal-box';
-      box.style.maxWidth = '500px';
-      
-      const refresh = () => {
-        let html = `<div class="modal-title">Configurar Atalhos de Cópia</div><div style="font-size:12px; color:var(--text2); margin-bottom:10px;">Crie botões de acesso rápido para copiar listas específicas em padrões específicos.</div><div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">`;
-        if (!appData.quickCopyRules.length) html += `<div style="text-align:center; padding:20px; color:var(--text3); font-style:italic;">Nenhum atalho criado.</div>`;
-        appData.quickCopyRules.forEach((rule, idx) => {
-          const tab = appData.listas.find(l => l.id === rule.tabId);
-          const temp = appData.templates.find(t => t.id === rule.templateId);
-          html += `<div style="display:flex; align-items:center; gap:8px; background:var(--bg); padding:8px; border-radius:8px; border:1px solid var(--border);">
-            <div style="flex:1; font-size:11px;"><b>${esc(tab?.nome || 'Excluída')}</b><br>${esc(temp?.nome || 'Excluído')}</div>
-            <button class="btn btn-danger btn-sm" onclick="window._delRule(${idx})">✕</button>
-          </div>`;
-        });
-        html += `</div><div style="border-top:1px solid var(--border); padding-top:15px;">
-          <div class="field-label">Novo Atalho</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:5px;">
-            <select id="new-copy-tab" style="font-size:12px;">${appData.listas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('')}</select>
-            <select id="new-copy-temp" style="font-size:12px;">${appData.templates.map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join('')}</select>
-          </div>
-          <button class="btn btn-accent btn-sm" style="width:100%; margin-top:10px;" id="btn-add-rule">＋ Adicionar Atalho</button>
-        </div><div class="modal-btns" style="margin-top:20px;"><button class="btn btn-ghost" id="btn-close-copy">Fechar</button></div>`;
-        box.innerHTML = html;
-        box.querySelector('#btn-close-copy').onclick = () => { modal.remove(); renderQuickCopy(); };
-        box.querySelector('#btn-add-rule').onclick = () => {
-          const tabId = box.querySelector('#new-copy-tab').value;
-          const templateId = box.querySelector('#new-copy-temp').value;
-          if (!tabId || !templateId) return;
-          appData.quickCopyRules.push({ tabId, templateId });
-          salvar(); refresh();
+      try {
+        if (el('copy-config-overlay')) return;
+        const modal = document.createElement('div');
+        modal.id = 'copy-config-overlay';
+        modal.style.cssText = 'position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px;';
+        const box = document.createElement('div');
+        box.className = 'modal-box';
+        box.style.maxWidth = '500px';
+        
+        const refresh = () => {
+          let html = `<div class="modal-title">Configurar Atalhos de Cópia</div><div style="font-size:12px; color:var(--text2); margin-bottom:10px;">Crie botões de acesso rápido para copiar listas específicas em padrões específicos.</div><div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">`;
+          if (!appData.quickCopyRules.length) html += `<div style="text-align:center; padding:20px; color:var(--text3); font-style:italic;">Nenhum atalho criado.</div>`;
+          appData.quickCopyRules.forEach((rule, idx) => {
+            const tab = appData.listas.find(l => l.id === rule.tabId);
+            const temp = appData.templates.find(t => t.id === rule.templateId);
+            const label = rule.nome ? `<b>${esc(rule.nome)}</b><br>` : '';
+            html += `<div style="display:flex; align-items:center; gap:8px; background:var(--bg); padding:8px; border-radius:8px; border:1px solid var(--border);">
+              <div style="flex:1; font-size:11px;">${label}<b>${esc(tab?.nome || 'Excluída')}</b> / ${esc(temp?.nome || 'Excluído')}</div>
+              <button class="btn btn-danger btn-sm" onclick="window._delRule(${idx})">✕</button>
+            </div>`;
+          });
+          html += `</div><div style="border-top:1px solid var(--border); padding-top:15px;">
+            <div class="field-label">Novo Atalho</div>
+            <input type="text" id="new-copy-name" placeholder="Nome do atalho (Opcional)" style="font-size:12px; width:100%; margin-bottom:8px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:5px;">
+              <select id="new-copy-tab" style="font-size:12px;">${appData.listas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('')}</select>
+              <select id="new-copy-temp" style="font-size:12px;">${appData.templates.map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join('')}</select>
+            </div>
+            <button class="btn btn-accent btn-sm" style="width:100%; margin-top:10px;" id="btn-add-rule">＋ Adicionar Atalho</button>
+          </div><div class="modal-btns" style="margin-top:20px;"><button class="btn btn-ghost" id="btn-close-copy">Fechar</button></div>`;
+          box.innerHTML = html;
+          box.querySelector('#btn-close-copy').onclick = () => { modal.remove(); renderQuickCopy(); };
+          box.querySelector('#btn-add-rule').onclick = () => {
+            const nome = box.querySelector('#new-copy-name').value.trim();
+            const tabId = box.querySelector('#new-copy-tab').value;
+            const templateId = box.querySelector('#new-copy-temp').value;
+            if (!tabId || !templateId) return;
+            appData.quickCopyRules.push({ nome, tabId, templateId });
+            salvar(); refresh();
+          };
         };
-      };
-      window._delRule = (idx) => { appData.quickCopyRules.splice(idx, 1); salvar(); refresh(); };
-      refresh();
-      modal.appendChild(box);
-      document.body.appendChild(modal);
+        window._delRule = (idx) => { 
+          if (appData.quickCopyRules[idx]) {
+            appData.quickCopyRules.splice(idx, 1); 
+            salvar(); refresh(); 
+          }
+        };
+        refresh();
+        modal.appendChild(box);
+        document.body.appendChild(modal);
+      } catch (e) {
+        console.error('Erro ao abrir config cópia:', e);
+        toast('❌ Erro ao carregar configurações de atalhos.');
+      }
     }
 
     carregar();
