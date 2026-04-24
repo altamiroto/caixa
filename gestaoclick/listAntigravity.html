@@ -472,6 +472,24 @@
       top: 0;
       z-index: 2;
       text-align: left;
+      position: relative; /* Para o resizer */
+    }
+
+    .resizer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      cursor: col-resize;
+      user-select: none;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    .resizer:hover,
+    .resizer.resizing {
+      background: var(--accent);
     }
 
     tbody tr {
@@ -972,6 +990,18 @@
     .empty-state[onclick]:hover {
       background: var(--surface2);
       border-radius: 8px;
+    }
+
+    .attr-editable {
+      font-style: italic;
+      color: var(--accent) !important;
+      opacity: 0.9;
+    }
+    .attr-editable.overridden {
+      font-style: normal;
+      color: var(--text) !important;
+      opacity: 1;
+      font-weight: 600;
     }
 
     tr.drag-over {
@@ -2147,7 +2177,9 @@
         <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Log In</button>
       </div>
       <button id="btn-sidebar" class="btn btn-ghost btn-sm" title="Recolher/Expandir Painel"
-        style="font-size: 16px;">◫</button>
+        style="font-size: 18px; display: flex; align-items: center; justify-content: center; color: var(--text);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      </button>
       <button id="btn-tema" title="Alternar tema">🌙</button>
       <button class="btn btn-green btn-sm" id="btn-sync-all">🔄 Atualizar Estoque</button>
     </div>
@@ -3147,16 +3179,19 @@ Exemplo de saída:
           appData.priceConfigs.forEach(conf => {
             const th = document.createElement('th');
             th.className = 'col-dprice';
-            th.textContent = (conf.type === 'atributo' ? '📡 ' : '') + conf.label;
-            th.style.cssText = `font-size:10px; width:80px; ${conf.type === 'atributo' ? 'color:var(--accent);' : ''}`;
+            th.dataset.confid = conf.id;
+            th.innerHTML = (conf.type === 'atributo' ? '📡 ' : '') + esc(conf.label) + '<div class="resizer"></div>';
+            th.style.cssText = `font-size:10px; width:${conf.width || '80px'}; ${conf.type === 'atributo' ? 'color:var(--accent);' : ''}`;
             theadRow.appendChild(th);
+            initResizer(th, 'dynamic', conf.id);
           });
         } else {
           const th = document.createElement('th');
           th.className = col.id;
-          th.textContent = col.label;
+          th.innerHTML = esc(col.label) + '<div class="resizer"></div>';
           if (col.width && col.width !== 'auto') th.style.width = col.width;
           theadRow.appendChild(th);
+          initResizer(th, 'static', col.id);
         }
       });
 
@@ -3216,9 +3251,20 @@ Exemplo de saída:
             else if (col.id === 'col-dprices') {
               appData.priceConfigs.forEach(conf => {
                 const val = getDynamicPriceValue(item, conf);
-                const isReadonly = conf.type === 'formula' || conf.type === 'atributo';
-                const cssClass = conf.type === 'formula' ? 'calc-readonly' : (conf.type === 'atributo' ? 'attr-readonly' : '');
-                html += `<td class="col-dprice"><input type="text" class="mono-inp ${cssClass}" data-idx="${idx}" data-confid="${conf.id}" value="${esc(val)}" ${isReadonly ? 'readonly' : ''} style="width:100%;" placeholder="-"></td>`;
+                const isReadonly = conf.type === 'formula'; // Apenas fórmulas são estritamente bloqueadas
+                const cssClass = conf.type === 'formula' ? 'calc-readonly' : (conf.type === 'atributo' ? 'attr-editable' : '');
+                const isOverridden = conf.type === 'atributo' && item.prices && item.prices[conf.id] !== undefined && item.prices[conf.id] !== '';
+                
+                html += `<td class="col-dprice">
+                  <input type="text" 
+                    class="mono-inp ${cssClass} ${isOverridden ? 'overridden' : ''}" 
+                    data-idx="${idx}" 
+                    data-confid="${conf.id}" 
+                    value="${esc(val)}" 
+                    ${isReadonly ? 'readonly' : ''} 
+                    style="width:100%; ${isOverridden ? 'border-color:var(--accent);' : ''}" 
+                    placeholder="-">
+                </td>`;
               });
             }
             else if (col.id === 'col-api') {
@@ -3429,8 +3475,15 @@ Exemplo de saída:
     }
 
     function getDynamicPriceValue(item, conf) {
-      if (conf.type === 'manual') return (item.prices && item.prices[conf.id]) || '';
+      // Prioridade 1: Valor manual (Override)
+      if (item.prices && item.prices[conf.id] !== undefined && item.prices[conf.id] !== '') {
+        return item.prices[conf.id];
+      }
+      // Prioridade 2: Atributo da API
       if (conf.type === 'atributo') return getNestedValue(item.apiData || {}, conf.apiField || '');
+      // Prioridade 3: Manual puro (se não for atributo nem fórmula)
+      if (conf.type === 'manual') return '';
+      // Prioridade 4: Fórmula
       return calculateFormula(item, conf);
     }
 
@@ -3676,6 +3729,47 @@ Exemplo de saída:
       salvar();
     }
     el('btn-sidebar').addEventListener('click', toggleSidebar);
+
+    // ════════════════════════════════════
+    // REDIMENSIONAMENTO DE COLUNAS
+    // ════════════════════════════════════
+    function initResizer(th, type, id) {
+      const resizer = th.querySelector('.resizer');
+      if (!resizer) return;
+      
+      let startX, startWidth;
+      
+      const onMouseMove = (e) => {
+        const width = startWidth + (e.pageX - startX);
+        if (width > 20) {
+          th.style.width = width + 'px';
+          // Persistir no appData
+          if (type === 'static') {
+            const col = appData.tableCols.find(c => c.id === id);
+            if (col) col.width = width + 'px';
+          } else {
+            const conf = appData.priceConfigs.find(c => c.id === id);
+            if (conf) conf.width = width + 'px';
+          }
+        }
+      };
+      
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        resizer.classList.remove('resizing');
+        salvar();
+      };
+      
+      resizer.addEventListener('mousedown', (e) => {
+        startX = e.pageX;
+        startWidth = th.offsetWidth;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        resizer.classList.add('resizing');
+        e.preventDefault();
+      });
+    }
 
     // ════════════════════════════════════
     // EXPORT/IMPORT CSV
