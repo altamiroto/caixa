@@ -137,11 +137,11 @@
     /* Sidebar Recolhida */
     .sidebar-collapsed { --sidebar-w: 0px !important; }
     .sidebar-collapsed .panel-right { 
-      display: none !important;
       opacity: 0; 
       pointer-events: none; 
       padding: 0;
       overflow: hidden;
+      transform: scaleX(0);
     }
     .sidebar-collapsed .panel-left { border-right: none; }
 
@@ -750,8 +750,7 @@
         { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
         { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
         { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
-      ],
-      lastModified: Date.now()
+      ]
     };
 
     let _currentUser = null;
@@ -1257,7 +1256,6 @@ Exemplo de saída:
     let _saveTimer = null;
     function salvar() {
       try {
-        appData.lastModified = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         if (!_currentUser) { setSync('ok', 'Salvo Localmente'); return; }
         clearTimeout(_saveTimer);
@@ -1334,27 +1332,16 @@ Exemplo de saída:
           }
           const totalItensNuvem = (data.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
           const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-          const cloudTime = data.lastModified || 0;
-          const localTime = appData.lastModified || 0;
-
-          if (data && data.listas && data.listas.length > 0) {
-            // CONFLITO: Nuvem tem dados, mas local é mais novo ou igual
-            if (localTime > cloudTime && totalItensLocal > 0) {
-              _pendingCloudData = data;
-              el('conflict-modal').style.display = 'flex';
-              updateCloudStatus('success');
-            } 
-            // NUVEM É MAIS NOVA: Atualizar local
-            else {
-              appData = data;
-              updateSchema();
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-              switchTab(appData.currentId || appData.listas[0].id);
-              renderQuickCopy();
-              toast('☁️ Nuvem sincronizada');
-              _syncReady = true;
-              updateCloudStatus('success');
-            }
+          if (totalItensLocal > 0 && totalItensNuvem === 0) { _pendingCloudData = data; el('conflict-modal').style.display = 'flex'; updateCloudStatus('success'); }
+          else if (data && data.listas && data.listas.length > 0) { 
+            appData = data; 
+            updateSchema(); // Garantir novos campos
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); 
+            switchTab(appData.currentId || appData.listas[0].id); 
+            renderQuickCopy(); // Atualizar UI
+            toast('☁️ Nuvem sincronizada'); 
+            _syncReady = true; 
+            updateCloudStatus('success'); 
           }
           else { _syncReady = true; updateCloudStatus('success'); }
         } catch (e) { console.error('Cloud load fail:', e); updateCloudStatus('err', e.message); }
@@ -2136,7 +2123,6 @@ Exemplo de saída:
       if (appData.quickCopyRules) {
         appData.quickCopyRules.forEach(r => { if (r.nome === undefined) r.nome = ''; });
       }
-      if (!appData.lastModified) appData.lastModified = Date.now();
       if (!appData.tableCols || !Array.isArray(appData.tableCols)) {
         appData.tableCols = [
           { id: 'col-drag', label: '⠿', width: '24px', visible: true, fixed: true },
