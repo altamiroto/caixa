@@ -3776,13 +3776,13 @@ Exemplo de saída:
     // ════════════════════════════════════
     function exportToCSV() {
       const dynamicHeaders = appData.priceConfigs.map(c => c.label);
-      const header = ['Lista', 'Tipo', 'Item', 'Preço Base', ...dynamicHeaders, 'SKU', 'Sistema_Nome'];
+      const header = ['Lista', 'Tipo', 'Item', 'Preço Base', ...dynamicHeaders, 'SKU', 'Sistema_Nome', 'VINCULOS_DATA'];
       let csvContent = header.join(';') + '\n';
       appData.listas.forEach(l => {
         l.lista.forEach(item => {
           const row = [l.nome, item.type, item.label || '', item.price || ''];
           appData.priceConfigs.forEach(conf => { row.push(getDynamicPriceValue(item, conf)); });
-          row.push(item.sku || '', item.sysname || '');
+          row.push(item.sku || '', item.sysname || '', JSON.stringify(item.vinculos || []));
           csvContent += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';') + '\n';
         });
       });
@@ -3802,6 +3802,10 @@ Exemplo de saída:
         const newAppData = { listas: [], currentId: null, templates: appData.templates, knownExtraFields: appData.knownExtraFields };
         const listsMap = {};
         const headers = lines[0].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        const skuIdx = headers.indexOf('SKU');
+        const sysIdx = headers.indexOf('Sistema_Nome');
+        const vinIdx = headers.indexOf('VINCULOS_DATA');
+
         for (let i = 1; i < lines.length; i++) {
           const cols = lines[i].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
           if (cols.length < 3) continue;
@@ -3809,9 +3813,31 @@ Exemplo de saída:
           if (!listsMap[listName]) { listsMap[listName] = createListObj(listName); newAppData.listas.push(listsMap[listName]); }
           const type = cols[1]; const item = { id: uid(), type: type, label: cols[2], price: cols[3] || '', prices: {}, apiData: {} };
           if (type === 'header') { item.icon = '📌'; } else if (type === 'free') { item.text = cols[2]; } else {
-            const startPriceIdx = 4, endPriceIdx = cols.length - 2;
-            for (let j = startPriceIdx; j < endPriceIdx; j++) { const confLabel = headers[j]; const conf = appData.priceConfigs.find(c => c.label === confLabel); if (conf && conf.type === 'manual') { item.prices[conf.id] = cols[j]; } }
-            item.sku = cols[cols.length - 2] || ''; item.sysname = cols[cols.length - 1] || '';
+            // Importar preços dinâmicos manuais
+            appData.priceConfigs.forEach(conf => {
+              const idx = headers.indexOf(conf.label);
+              if (idx !== -1 && cols[idx] !== undefined && conf.type === 'manual') {
+                item.prices[conf.id] = cols[idx];
+              }
+            });
+            // Importar Vínculos (Novo formato ou Legado)
+            if (vinIdx !== -1 && cols[vinIdx]) {
+              try {
+                item.vinculos = JSON.parse(cols[vinIdx]);
+                if (item.vinculos.length) {
+                  item.estoque = item.vinculos.reduce((s, v) => s + v.estoque, 0);
+                  item.prodId = item.vinculos[0].id;
+                  item.sysname = item.vinculos[0].nome;
+                  item.sku = item.vinculos[0].sku;
+                }
+              } catch (e) { console.error('Erro parse vinculos', e); }
+            } else {
+              item.sku = skuIdx !== -1 ? cols[skuIdx] : '';
+              item.sysname = sysIdx !== -1 ? cols[sysIdx] : '';
+              if (item.sku || item.sysname) {
+                item.vinculos = [{ id: null, nome: item.sysname, sku: item.sku, estoque: 0 }];
+              }
+            }
           }
           listsMap[listName].lista.push(item);
         }
