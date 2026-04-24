@@ -232,6 +232,8 @@
     .empty-state { text-align: center; padding: 36px 20px; color: var(--text3); }
     .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
     .empty-state p { font-size: .82rem; line-height: 1.6; }
+    .empty-state[onclick] { cursor: pointer; transition: background .15s; }
+    .empty-state[onclick]:hover { background: var(--surface2); border-radius: 8px; }
 
     tr.drag-over { outline: 2px dashed var(--accent); outline-offset: -1px; }
 
@@ -2038,7 +2040,10 @@ Exemplo de saída:
     // ════════════════════════════════════
     function renderQuickCopy() {
       const cont = el('quick-copy-list');
-      if (!appData.quickCopyRules || !appData.quickCopyRules.length) { cont.innerHTML = '<div class="empty-state" style="padding:10px 0; font-size:11px;">Nenhum atalho configurado. Use o ícone ⚙️ para adicionar.</div>'; return; }
+      if (!appData.quickCopyRules || !appData.quickCopyRules.length) { 
+        cont.innerHTML = '<div class="empty-state" style="padding:10px 0; font-size:11px; cursor:pointer;" onclick="abrirConfigCopia()">Nenhum atalho configurado.<br>Clique aqui ou no ícone ⚙️ acima para adicionar.</div>'; 
+        return; 
+      }
       cont.innerHTML = '';
       appData.quickCopyRules.forEach(rule => {
         const tab = appData.listas.find(l => l.id === rule.tabId);
