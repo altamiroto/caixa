@@ -3283,11 +3283,15 @@ Exemplo de saída:
         const totalItensNuvem = (_pendingCloudData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
         const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
         if (totalItensNuvem === 0 && totalItensLocal > 0) {
-          // Nuvem vazia — manter local e subir imediatamente para resolver o conflito
-          toast('📤 Nuvem vazia — enviando dados locais para nuvem…');
+          // Nuvem vazia — manter local e subir imediatamente
           _pendingCloudData = null;
           _syncReady = true;
-          salvar(); // sobe imediatamente, sem conflito na próxima carga
+          _cloudLoading = false;
+          appData.savedAt = Date.now();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+          updateCloudStatus('syncing');
+          toast('📤 Nuvem vazia — enviando dados locais para nuvem…');
+          syncToCloud(false);
           return;
         }
         criarBackup('local', appData, true); // salva local como backup antes de sobrescrever
@@ -3304,15 +3308,15 @@ Exemplo de saída:
       }
 
       if (choice === 'push') {
-        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true); // salva nuvem como backup antes de sobrescrever
+        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true);
         _pendingCloudData = null;
         _syncReady = true;
-        // Forçar novo savedAt para que na próxima carga local >= nuvem e não haja conflito
+        _cloudLoading = false; // garantir que não está travado da carga inicial
         appData.savedAt = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         updateCloudStatus('syncing');
         toast('📤 Enviando dados locais para nuvem…');
-        syncToCloud(false); // chama direto, sem debounce de 2s
+        syncToCloud(false);
         return;
       }
 
