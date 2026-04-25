@@ -1868,6 +1868,43 @@
       flex-direction: column;
     }
 
+    .conflict-version-box {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+    .conflict-version-box strong { display: block; font-size: 0.9rem; margin-bottom: 4px; }
+    .conflict-version-box.local-box { border-left: 3px solid var(--warn); }
+    .conflict-version-box.cloud-box { border-left: 3px solid var(--accent); }
+
+    #history-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); display: none;
+      align-items: center; justify-content: center; z-index: 10002;
+    }
+    .history-card {
+      background: var(--surface); width: 92%; max-width: 520px;
+      padding: 25px; border-radius: 15px; border: 2px solid var(--warn);
+      max-height: 85vh; display: flex; flex-direction: column;
+    }
+    .history-card h3 { margin-bottom: 5px; color: var(--warn); }
+    .history-card .history-sub { font-size:0.8rem; color:var(--text3); margin-bottom:15px; }
+    .history-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .history-item {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 12px 15px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .history-item-info { font-size: 0.82rem; line-height: 1.5; }
+    .history-item-info strong { display: block; font-size: 0.88rem; }
+    .history-item-info span { color: var(--text3); }
+    .history-item .btn { flex-shrink: 0; font-size: 0.78rem; padding: 6px 12px; }
+    .history-empty { text-align: center; padding: 30px; color: var(--text3); font-size: 0.88rem; }
+
     .user-pill {
       display: flex;
       align-items: center;
@@ -2157,11 +2194,24 @@
     <div id="conflict-modal">
       <div class="conflict-card">
         <h3>⚠️ Conflito de Versões</h3>
-        <p id="conflict-msg">Existem dados diferentes entre seu computador e a nuvem. O que deseja fazer?</p>
+        <p id="conflict-msg" style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">Há dados diferentes entre este dispositivo e a nuvem.</p>
+        <div id="conflict-local-box" class="conflict-version-box local-box"></div>
+        <div id="conflict-cloud-box" class="conflict-version-box cloud-box"></div>
+        <p style="font-size:0.78rem;color:var(--warn);margin:8px 0 4px;text-align:center;">⚠️ Um backup da versão descartada será salvo automaticamente no histórico.</p>
         <div class="conflict-btns">
-          <button class="btn btn-primary" onclick="resolveConflict('push')">📤 Usar meus dados locais (enviar para nuvem)</button>
-          <button class="btn btn-ghost" onclick="resolveConflict('pull')">📥 Usar dados da nuvem (substituir local)</button>
+          <button class="btn btn-primary" onclick="resolveConflict('pull')">☁️ Usar dados da NUVEM</button>
+          <button class="btn btn-ghost" onclick="resolveConflict('push')">💾 Usar dados deste DISPOSITIVO</button>
+          <button class="btn btn-ghost" style="color:var(--warn);border-color:var(--warn)" onclick="abrirHistorico()">🕓 Ver histórico de versões</button>
         </div>
+      </div>
+    </div>
+
+    <div id="history-modal">
+      <div class="history-card">
+        <h3>🕓 Histórico de Versões</h3>
+        <p class="history-sub">As últimas versões salvas neste dispositivo. Clique em Restaurar para voltar a uma delas.</p>
+        <div class="history-list" id="history-list"></div>
+        <button class="btn btn-ghost" style="margin-top:15px" onclick="fecharHistorico()">Fechar</button>
       </div>
     </div>
 
@@ -2170,6 +2220,7 @@
         <div class="sync-dot"></div>
         <span id="save-status-text">SALVO</span>
         <button class="sync-btn-cloud" onclick="initAuth()" title="Forçar atualização da nuvem">🔄</button>
+        <button class="sync-btn-cloud" onclick="abrirHistorico()" title="Ver histórico de versões" style="font-size:14px">🕓</button>
       </div>
       <div id="user-area">
         <button class="btn btn-ghost btn-sm" onclick="abrirAuth()">Log In</button>
@@ -2466,6 +2517,85 @@
     // ════════════════════════════════════
     const STORAGE_KEY = 'jeta_lista_wpp_v6';
     const CLOUD_KEY = 'jeta_cloud_user';
+    const BACKUP_KEY = 'jeta_backups_v1'; // histórico local — até 20 snapshots
+    const MAX_BACKUPS = 20;
+
+    // ── BACKUP HISTÓRICO ─────────────────────────────────────────────────
+    function criarBackup(origem, dados) {
+      try {
+        const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+        const snap = {
+          ts: Date.now(),
+          origem, // 'local' | 'cloud' | 'pre-merge'
+          totalItens: (dados.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0),
+          totalListas: (dados.listas || []).length,
+          data: JSON.stringify(dados)
+        };
+        backups.unshift(snap);
+        if (backups.length > MAX_BACKUPS) backups.length = MAX_BACKUPS;
+        localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
+      } catch (e) { console.warn('Backup falhou:', e); }
+    }
+
+    function abrirHistorico() {
+      const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+      const list = el('history-list');
+      if (!backups.length) {
+        list.innerHTML = '<div class="history-empty">Nenhuma versão anterior encontrada.</div>';
+      } else {
+        list.innerHTML = backups.map((b, i) => {
+          const dt = new Date(b.ts);
+          const dtStr = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR');
+          const origemLabel = b.origem === 'cloud' ? '☁️ Baixado da nuvem' : b.origem === 'cloud-sent' ? '✅ Enviado à nuvem' : b.origem === 'pre-merge' ? '⚠️ Antes do merge' : '💾 Local';
+          return `<div class="history-item">
+            <div class="history-item-info">
+              <strong>${origemLabel} — ${b.totalItens} item(s) em ${b.totalListas} lista(s)</strong>
+              <span>${dtStr}</span>
+            </div>
+            <button class="btn btn-ghost" onclick="restaurarBackup(${i})">Restaurar</button>
+          </div>`;
+        }).join('');
+      }
+      el('history-modal').style.display = 'flex';
+    }
+
+    function fecharHistorico() { el('history-modal').style.display = 'none'; }
+
+    function restaurarBackup(idx) {
+      const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+      const snap = backups[idx];
+      if (!snap) return;
+      if (!confirm(`Restaurar versão de ${new Date(snap.ts).toLocaleString('pt-BR')}?\nIsso substituirá os dados atuais (um backup será salvo antes).`)) return;
+      criarBackup('pre-merge', appData);
+      appData = JSON.parse(snap.data);
+      updateSchema();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      switchTab(appData.currentId || appData.listas[0].id);
+      renderQuickCopy();
+      fecharHistorico();
+      el('conflict-modal').style.display = 'none';
+      _conflictPending = false; // liberar trava caso restauração venha do modal de conflito
+      _syncReady = true;
+      toast('✅ Versão restaurada com sucesso! Use o botão de sincronizar para enviar à nuvem se desejar.');
+    }
+
+    function _descVerao(dados) {
+      const total = (dados && dados.listas ? dados.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+      const listas = (dados && dados.listas ? dados.listas : []).length;
+      const ts = dados && dados.savedAt ? new Date(dados.savedAt).toLocaleString('pt-BR') : 'data desconhecida';
+      return { total, listas, ts };
+    }
+
+    function mostrarConflito(cloudData, localData) {
+      _pendingCloudData = cloudData;
+      _conflictPending = true; // TRAVA qualquer upload até o usuário decidir
+      _syncReady = false;      // Garantia dupla: sync bloqueado
+      const cl = _descVerao(cloudData);
+      const lo = _descVerao(localData);
+      el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${lo.total} item(s) em ${lo.listas} lista(s)<br>Salvo em: ${lo.ts}`;
+      el('conflict-cloud-box').innerHTML = `<strong>☁️ Nuvem</strong>${cl.total} item(s) em ${cl.listas} lista(s)<br>Salvo em: ${cl.ts}`;
+      el('conflict-modal').style.display = 'flex';
+    }
     const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
     const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
 
@@ -2995,14 +3125,19 @@ Exemplo de saída:
     function autoGrowAll() { document.querySelectorAll('.label-ta, .mcard-name-wrap textarea').forEach(autoGrow); }
 
     let _saveTimer = null;
-    let _pendingSaveCount = 0; // rastreia saves pendentes de envio
+    let _pendingSaveCount = 0;
+    let _lastBackupTs = 0;
 
     function salvar() {
       try {
-        appData.savedAt = Date.now(); // timestamp local — fundamental para resolver conflitos
+        appData.savedAt = Date.now();
+        // Backup local a cada 3 minutos para ter histórico
+        if (appData.savedAt - _lastBackupTs > 3 * 60 * 1000) {
+          criarBackup('local', appData);
+          _lastBackupTs = appData.savedAt;
+        }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         if (!_currentUser) { setSync('ok', 'Salvo Localmente'); return; }
-        // Marcar que há dados pendentes de sincronização
         setSync('loading', 'Aguardando…');
         _pendingSaveCount++;
         clearTimeout(_saveTimer);
@@ -3012,9 +3147,10 @@ Exemplo de saída:
 
     let _cloudLoading = false;
     let _syncReady = false;
+    let _conflictPending = false; // true enquanto modal de conflito estiver aberto — NUNCA subir nada
 
     async function syncToCloud(isManual = false) {
-      if (_cloudLoading || !_syncReady) return;
+      if (_cloudLoading || !_syncReady || _conflictPending) return;
       _isSyncInProgress = true;
       _cloudLoading = true;
       updateCloudStatus('syncing');
@@ -3025,6 +3161,8 @@ Exemplo de saída:
         if (!resp.ok) throw new Error('Erro de rede: ' + resp.status);
         const data = await resp.json();
         if (data.status === 'success') {
+          // Backup local a cada envio bem-sucedido (deduplicado por conteúdo)
+          criarBackup('cloud-sent', appData);
           // Só mostra salvo se nenhuma edição nova veio durante o envio
           if (_pendingSaveCount === countAtStart) {
             _pendingSaveCount = 0;
@@ -3055,27 +3193,43 @@ Exemplo de saída:
     let _pendingCloudData = null;
     function resolveConflict(choice) {
       el('conflict-modal').style.display = 'none';
+      _conflictPending = false; // liberar a trava de upload
+
       if (choice === 'pull' && _pendingCloudData) {
-        // Segurança: nunca aceitar dados claramente vazios da nuvem
         const totalItensNuvem = (_pendingCloudData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
         const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
         if (totalItensNuvem === 0 && totalItensLocal > 0) {
-          toast('⚠️ Nuvem está vazia — dados locais mantidos por segurança');
+          toast('⚠️ Nuvem vazia — dados locais mantidos. Use "Enviar local" para salvar na nuvem.');
+          _pendingCloudData = null;
           _syncReady = true;
-          salvar(); // forçar upload dos dados locais
           return;
         }
+        criarBackup('local', appData); // backup do local ANTES de sobrescrever
         appData = _pendingCloudData;
         updateSchema();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         switchTab(appData.currentId || appData.listas[0].id);
         renderQuickCopy();
-        toast('📥 Dados da nuvem carregados');
+        _pendingCloudData = null;
+        _syncReady = true;
+        updateCloudStatus('success');
+        toast('📥 Dados da nuvem carregados — versão anterior salva no histórico');
+        return;
       }
+
+      if (choice === 'push') {
+        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData); // backup da nuvem ANTES de sobrescrever
+        _pendingCloudData = null;
+        _syncReady = true;
+        toast('📤 Enviando dados locais para nuvem…');
+        salvar();
+        return;
+      }
+
+      // Cancelar — não fazer nada, apenas desbloquear
       _pendingCloudData = null;
       _syncReady = true;
-      if (choice === 'push') { toast('📤 Enviando dados locais para nuvem…'); salvar(); }
-      else updateCloudStatus('success');
+      updateCloudStatus('success');
     }
 
     function updateCloudStatus(type, errMsg = '') {
@@ -3104,75 +3258,69 @@ Exemplo de saída:
         if (!_currentUser.email) { logout(); return; }
         renderUser(_currentUser);
         _cloudLoading = true;
+        _conflictPending = true; // Bloquear qualquer upload durante a verificação
+        _syncReady = false;
         updateCloudStatus('loading');
         try {
           const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
-          if (!resp.ok) throw new Error('Servidor não respondeu (CORS/Network)');
+          if (!resp.ok) throw new Error('Servidor não respondeu (' + resp.status + ')');
           let data = await resp.json();
+
+          // Compatibilidade com formato legado
           if (data && data.appData && data.lista) {
             const oldLists = data.appData.listas || [];
             const currentLista = data.lista;
-            if (oldLists.length === 0 && currentLista.length > 0) { const nova = createListObj('Lista Recuperada'); nova.lista = currentLista; data = { listas: [nova], currentId: nova.id, templates: data.appData.templates }; }
-            else { data = data.appData; if (currentLista.length > 0 && data.listas && data.listas[0]) data.listas[0].lista = currentLista; }
+            if (oldLists.length === 0 && currentLista.length > 0) {
+              const nova = createListObj('Lista Recuperada'); nova.lista = currentLista;
+              data = { listas: [nova], currentId: nova.id, templates: data.appData.templates };
+            } else {
+              data = data.appData;
+              if (currentLista.length > 0 && data.listas && data.listas[0]) data.listas[0].lista = currentLista;
+            }
           }
 
-          const totalItensNuvem = (data && data.listas ? data.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-          const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+          const totalNuvem = (data && data.listas ? data.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+          // Ler do localStorage diretamente — fonte da verdade mais confiável
+          const localRaw = localStorage.getItem(STORAGE_KEY);
+          const localParsed = localRaw ? JSON.parse(localRaw) : null;
+          const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
+          const temDadosLocal = totalLocal > 0;
+          const temDadosNuvem = totalNuvem > 0;
 
-          // Timestamps para decidir qual versão é mais recente
-          const tsNuvem = (data && data.savedAt) ? data.savedAt : 0;
-          const tsLocal = appData.savedAt || 0;
+          if (!temDadosNuvem && !temDadosLocal) {
+            // Caso 1: ambos vazios
+            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
 
-          if (totalItensNuvem === 0 && totalItensLocal === 0) {
-            // Ambos vazios — ok, apenas ativar sync
-            _syncReady = true; updateCloudStatus('success');
-          } else if (totalItensNuvem === 0 && totalItensLocal > 0) {
-            // Nuvem vazia, local tem dados → upload automático (nuvem nunca foi populada ou foi apagada)
-            _pendingCloudData = data;
-            _syncReady = true;
+          } else if (!temDadosNuvem && temDadosLocal) {
+            // Caso 2: nuvem vazia, local tem dados — SEMPRE perguntar
+            mostrarConflito(data, appData);
+            el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
+            el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(localParsed.listas||[]).length} lista(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
+            el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
             updateCloudStatus('success');
-            salvar(); // faz upload automaticamente
-            toast('☁️ Dados locais enviados para nuvem');
-          } else if (totalItensLocal === 0 && totalItensNuvem > 0) {
-            // Local vazio, nuvem tem dados → baixar sem perigo
-            appData = data;
-            updateSchema();
+
+          } else if (!temDadosLocal && temDadosNuvem) {
+            // Caso 3: local vazio, nuvem tem dados — baixar sem risco
+            criarBackup('cloud', data);
+            appData = data; updateSchema();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
             switchTab(appData.currentId || appData.listas[0].id);
             renderQuickCopy();
-            _syncReady = true;
-            updateCloudStatus('success');
+            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
             toast('☁️ Dados carregados da nuvem');
-          } else if (data && data.listas && data.listas.length > 0) {
-            // Ambos têm dados — usar timestamp para decidir
-            if (tsLocal > tsNuvem + 5000) {
-              // Local é mais recente (mais de 5s) → mostrar conflito com aviso claro
-              _pendingCloudData = data;
-              const dataLocal = tsLocal ? new Date(tsLocal).toLocaleTimeString('pt-BR') : 'desconhecida';
-              const dataNuvem = tsNuvem ? new Date(tsNuvem).toLocaleTimeString('pt-BR') : 'desconhecida';
-              el('conflict-msg').textContent = `Seus dados locais (${dataLocal}) são mais recentes que a nuvem (${dataNuvem}). Qual versão deseja usar?`;
-              el('conflict-modal').style.display = 'flex';
-              updateCloudStatus('success');
-            } else {
-              // Nuvem é mais recente ou igual → usar nuvem (comportamento padrão seguro)
-              appData = data;
-              updateSchema();
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-              switchTab(appData.currentId || appData.listas[0].id);
-              renderQuickCopy();
-              _syncReady = true;
-              updateCloudStatus('success');
-              toast('☁️ Nuvem sincronizada');
-            }
+
           } else {
-            _syncReady = true; updateCloudStatus('success');
+            // Caso 4: ambos têm dados — SEMPRE mostrar modal, backup automático
+            criarBackup('cloud', data);
+            mostrarConflito(data, appData);
+            updateCloudStatus('success');
           }
+
         } catch (e) {
           console.error('Cloud load fail:', e);
-          // Em caso de falha ao carregar nuvem, continuar com dados locais e avisar
-          updateCloudStatus('err', 'Falha ao conectar com nuvem: ' + e.message);
-          toast('⚠️ Não foi possível acessar a nuvem. Usando dados locais.');
-          _syncReady = true; // permite salvar quando editar
+          updateCloudStatus('err', 'Falha ao conectar: ' + e.message);
+          toast('⚠️ Não foi possível acessar a nuvem. Usando dados locais. Tente sincronizar manualmente.');
+          _conflictPending = false; _syncReady = true;
         }
         _cloudLoading = false;
       } else { _syncReady = false; }
@@ -3188,34 +3336,56 @@ Exemplo de saída:
               renderUser(_currentUser);
               fecharAuth();
               _cloudLoading = true; updateCloudStatus('loading');
+              // Trava imediata antes de qualquer comparação
+              _conflictPending = true;
+              _syncReady = false;
               try {
                 const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+                if (!r.ok) throw new Error('Servidor não respondeu (' + r.status + ')');
                 const d = await r.json();
-                if (d && d.listas) {
-                  const totalNuvem = (d.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-                  const totalLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-                  if (totalNuvem > 0 && totalLocal > 0 && (d.savedAt || 0) < (appData.savedAt || 0) - 5000) {
-                    // Local mais recente que nuvem → perguntar
-                    _pendingCloudData = d;
-                    const tL = appData.savedAt ? new Date(appData.savedAt).toLocaleTimeString('pt-BR') : '?';
-                    const tN = d.savedAt ? new Date(d.savedAt).toLocaleTimeString('pt-BR') : '?';
-                    el('conflict-msg').textContent = `Seus dados locais (${tL}) são mais recentes que a nuvem (${tN}). Qual versão usar?`;
-                    el('conflict-modal').style.display = 'flex';
-                  } else if (totalNuvem > 0) {
-                    appData = d;
-                    updateSchema();
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                    switchTab(appData.currentId || appData.listas[0].id);
-                    renderQuickCopy();
-                    toast('☁️ Dados da nuvem carregados');
-                  } else if (totalLocal > 0) {
-                    // Nuvem vazia → subir dados locais
-                    toast('☁️ Enviando dados locais para nuvem…');
-                    salvar();
-                  }
+                const totalNuvem = (d && d.listas ? d.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+                // Ler do localStorage diretamente — mais seguro que appData em memória
+                const localRaw = localStorage.getItem(STORAGE_KEY);
+                const localParsed = localRaw ? JSON.parse(localRaw) : null;
+                const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
+                const temDadosLocal = localParsed && (localParsed.listas || []).length > 0 && totalLocal > 0;
+                const temDadosNuvem = totalNuvem > 0;
+
+                if (!temDadosNuvem && !temDadosLocal) {
+                  // Caso 1: Ambos vazios — liberar normalmente
+                  _conflictPending = false;
+                  _syncReady = true; updateCloudStatus('success');
+                } else if (!temDadosNuvem && temDadosLocal) {
+                  // Caso 2: Nuvem vazia, local tem dados — PERGUNTAR, nunca subir automaticamente
+                  mostrarConflito(d || {listas:[]}, appData); // mostrarConflito já seta _conflictPending
+                  el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
+                  el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s)<br>Salvo em: ${appData.savedAt ? new Date(appData.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
+                  el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
+                  updateCloudStatus('success');
+                } else if (!temDadosLocal && temDadosNuvem) {
+                  // Caso 3: Local vazio, nuvem tem dados — baixar sem risco
+                  criarBackup('cloud', d);
+                  appData = d; updateSchema();
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                  switchTab(appData.currentId || appData.listas[0].id);
+                  renderQuickCopy();
+                  _conflictPending = false;
+                  _syncReady = true; updateCloudStatus('success');
+                  toast('☁️ Dados da nuvem carregados');
+                } else {
+                  // Caso 4: Ambos têm dados — SEMPRE mostrar modal, backup automático da nuvem
+                  criarBackup('cloud', d);
+                  mostrarConflito(d, appData); // já seta _conflictPending = true e _syncReady = false
+                  updateCloudStatus('success');
                 }
-              } catch (e) { console.error('Login cloud load fail:', e); toast('⚠️ Falha ao carregar nuvem. Usando dados locais.'); }
-              _cloudLoading = false; _syncReady = true;
+              } catch (e) {
+                console.error('Login cloud load fail:', e);
+                toast('⚠️ Falha ao conectar com nuvem. Usando dados locais.');
+                updateCloudStatus('err', 'Falha ao conectar');
+                _conflictPending = false;
+                _syncReady = true;
+              }
+              _cloudLoading = false;
             }
           });
         }
