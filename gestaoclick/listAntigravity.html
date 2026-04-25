@@ -3287,12 +3287,18 @@ Exemplo de saída:
           const temDadosLocal = totalLocal > 0;
           const temDadosNuvem = totalNuvem > 0;
 
+          // Timestamps para comparar versões
+          const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
+          const tsNuvem = (data && data.savedAt) ? data.savedAt : 0;
+          // Considerar sincronizado se diferença < 30s (margem para latência de rede)
+          const estaSincronizado = Math.abs(tsLocal - tsNuvem) < 30000;
+
           if (!temDadosNuvem && !temDadosLocal) {
             // Caso 1: ambos vazios
             _conflictPending = false; _syncReady = true; updateCloudStatus('success');
 
           } else if (!temDadosNuvem && temDadosLocal) {
-            // Caso 2: nuvem vazia, local tem dados — SEMPRE perguntar
+            // Caso 2: nuvem vazia, local tem dados — perguntar
             mostrarConflito(data, appData);
             el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
             el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(localParsed.listas||[]).length} lista(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
@@ -3309,10 +3315,18 @@ Exemplo de saída:
             _conflictPending = false; _syncReady = true; updateCloudStatus('success');
             toast('☁️ Dados carregados da nuvem');
 
+          } else if (estaSincronizado || tsNuvem >= tsLocal) {
+            // Caso 4: ambos têm dados e nuvem é igual ou mais recente — usar nuvem silenciosamente
+            appData = data; updateSchema();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            switchTab(appData.currentId || appData.listas[0].id);
+            renderQuickCopy();
+            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
+
           } else {
-            // Caso 4: ambos têm dados — SEMPRE mostrar modal, backup automático
+            // Caso 5: local é MAIS RECENTE que a nuvem (mais de 30s) — aí sim há conflito real
             criarBackup('cloud', data);
-            mostrarConflito(data, appData);
+            mostrarConflito(data, localParsed);
             updateCloudStatus('success');
           }
 
@@ -3348,22 +3362,25 @@ Exemplo de saída:
                 const localRaw = localStorage.getItem(STORAGE_KEY);
                 const localParsed = localRaw ? JSON.parse(localRaw) : null;
                 const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
-                const temDadosLocal = localParsed && (localParsed.listas || []).length > 0 && totalLocal > 0;
+                const temDadosLocal = totalLocal > 0;
                 const temDadosNuvem = totalNuvem > 0;
 
+                const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
+                const tsNuvem = (d && d.savedAt) ? d.savedAt : 0;
+                const estaSincronizado = Math.abs(tsLocal - tsNuvem) < 30000;
+
                 if (!temDadosNuvem && !temDadosLocal) {
-                  // Caso 1: Ambos vazios — liberar normalmente
                   _conflictPending = false;
                   _syncReady = true; updateCloudStatus('success');
                 } else if (!temDadosNuvem && temDadosLocal) {
-                  // Caso 2: Nuvem vazia, local tem dados — PERGUNTAR, nunca subir automaticamente
-                  mostrarConflito(d || {listas:[]}, appData); // mostrarConflito já seta _conflictPending
+                  // Nuvem vazia, local tem dados — perguntar
+                  mostrarConflito(d || {listas:[]}, localParsed);
                   el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
-                  el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s)<br>Salvo em: ${appData.savedAt ? new Date(appData.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
+                  el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
                   el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
                   updateCloudStatus('success');
                 } else if (!temDadosLocal && temDadosNuvem) {
-                  // Caso 3: Local vazio, nuvem tem dados — baixar sem risco
+                  // Local vazio, nuvem tem dados — baixar sem risco
                   criarBackup('cloud', d);
                   appData = d; updateSchema();
                   localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
@@ -3372,10 +3389,18 @@ Exemplo de saída:
                   _conflictPending = false;
                   _syncReady = true; updateCloudStatus('success');
                   toast('☁️ Dados da nuvem carregados');
+                } else if (estaSincronizado || tsNuvem >= tsLocal) {
+                  // Nuvem igual ou mais recente — usar nuvem silenciosamente
+                  appData = d; updateSchema();
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                  switchTab(appData.currentId || appData.listas[0].id);
+                  renderQuickCopy();
+                  _conflictPending = false;
+                  _syncReady = true; updateCloudStatus('success');
                 } else {
-                  // Caso 4: Ambos têm dados — SEMPRE mostrar modal, backup automático da nuvem
+                  // Local é mais recente que a nuvem — conflito real
                   criarBackup('cloud', d);
-                  mostrarConflito(d, appData); // já seta _conflictPending = true e _syncReady = false
+                  mostrarConflito(d, localParsed);
                   updateCloudStatus('success');
                 }
               } catch (e) {
