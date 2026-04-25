@@ -2517,66 +2517,155 @@
     // ════════════════════════════════════
     const STORAGE_KEY = 'jeta_lista_wpp_v6';
     const CLOUD_KEY = 'jeta_cloud_user';
-    const BACKUP_KEY = 'jeta_backups_v1'; // histórico local — até 20 snapshots
-    const MAX_BACKUPS = 20;
+    const BACKUP_KEY = 'jeta_backups_meta_v2'; // cache local só de metadados (sem dados completos)
+    const MAX_BACKUPS = 200;
+    const BACKUP_MIN_INTERVAL_MS = 5 * 60 * 1000; // 5 min entre snapshots automáticos
 
-    // ── BACKUP HISTÓRICO ─────────────────────────────────────────────────
-    function criarBackup(origem, dados) {
+    // Hash leve: detecta mudanças reais de conteúdo
+    function _hashDados(dados) {
+      return (dados.listas || []).map(l =>
+        (l.lista || []).length + ':' + (l.lista || []).map(i => (i.label || i.text || '').slice(0, 12)).join('|')
+      ).join(';');
+    }
+
+    // Cache local de metadados (ts, origem, totalItens, totalListas, hash) — sem dados completos
+    function _getMetaCache() {
+      try { return JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]'); } catch(e) { return []; }
+    }
+    function _setMetaCache(metas) {
+      try { localStorage.setItem(BACKUP_KEY, JSON.stringify(metas)); } catch(e) {}
+    }
+
+    // ── CRIAR BACKUP ─────────────────────────────────────────────────────
+    async function criarBackup(origem, dados, forcar = false) {
       try {
-        const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+        const agora = Date.now();
+        const hashNovo = _hashDados(dados);
+        const metas = _getMetaCache();
+
+        // Deduplicação para backups automáticos
+        if (!forcar && (origem === 'local' || origem === 'cloud-sent')) {
+          if (metas.length > 0 && metas[0].hash === hashNovo) return; // conteúdo idêntico
+          const ultimoAuto = metas.find(b => b.origem === 'local' || b.origem === 'cloud-sent');
+          if (ultimoAuto && agora - ultimoAuto.ts < BACKUP_MIN_INTERVAL_MS) return; // muito recente
+        }
+
         const snap = {
-          ts: Date.now(),
-          origem, // 'local' | 'cloud' | 'pre-merge'
+          ts: agora,
+          origem,
+          hash: hashNovo,
           totalItens: (dados.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0),
           totalListas: (dados.listas || []).length,
-          data: JSON.stringify(dados)
+          dados // dados completos — só vão para a nuvem
         };
-        backups.unshift(snap);
-        if (backups.length > MAX_BACKUPS) backups.length = MAX_BACKUPS;
-        localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
+
+        // Atualizar cache de metadados local (sem dados)
+        const meta = { ts: snap.ts, origem, hash: hashNovo, totalItens: snap.totalItens, totalListas: snap.totalListas };
+        metas.unshift(meta);
+        if (metas.length > MAX_BACKUPS) metas.length = MAX_BACKUPS;
+        _setMetaCache(metas);
+
+        // Enviar para a nuvem em background (sem bloquear)
+        if (_currentUser) {
+          fetch(SHEETS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ email: _currentUser.email, action: 'salvar_historico', snap })
+          }).catch(e => console.warn('Backup nuvem falhou:', e));
+        }
       } catch (e) { console.warn('Backup falhou:', e); }
     }
 
-    function abrirHistorico() {
-      const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+    // ── ABRIR HISTÓRICO ──────────────────────────────────────────────────
+    async function abrirHistorico() {
       const list = el('history-list');
-      if (!backups.length) {
-        list.innerHTML = '<div class="history-empty">Nenhuma versão anterior encontrada.</div>';
-      } else {
-        list.innerHTML = backups.map((b, i) => {
-          const dt = new Date(b.ts);
-          const dtStr = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR');
-          const origemLabel = b.origem === 'cloud' ? '☁️ Baixado da nuvem' : b.origem === 'cloud-sent' ? '✅ Enviado à nuvem' : b.origem === 'pre-merge' ? '⚠️ Antes do merge' : '💾 Local';
-          return `<div class="history-item">
-            <div class="history-item-info">
-              <strong>${origemLabel} — ${b.totalItens} item(s) em ${b.totalListas} lista(s)</strong>
-              <span>${dtStr}</span>
-            </div>
-            <button class="btn btn-ghost" onclick="restaurarBackup(${i})">Restaurar</button>
-          </div>`;
-        }).join('');
-      }
+      list.innerHTML = '<div class="history-empty">Carregando histórico da nuvem…</div>';
       el('history-modal').style.display = 'flex';
+
+      let metas = _getMetaCache(); // começa com cache local enquanto carrega
+
+      // Se logado, buscar metadados atualizados da nuvem
+      if (_currentUser) {
+        try {
+          const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email + '&action=historico_meta');
+          if (resp.ok) {
+            const dados = await resp.json();
+            if (Array.isArray(dados) && dados.length > 0) {
+              metas = dados; // usa dados da nuvem
+              _setMetaCache(metas); // atualiza cache local
+            }
+          }
+        } catch(e) { console.warn('Falha ao carregar histórico da nuvem:', e); }
+      }
+
+      _renderHistorico(metas);
+    }
+
+    function _origemLabel(origem) {
+      if (origem === 'cloud') return '☁️ Baixado da nuvem';
+      if (origem === 'cloud-sent') return '✅ Enviado à nuvem';
+      if (origem === 'pre-merge') return '⚠️ Antes do merge';
+      return '💾 Local';
+    }
+
+    function _renderHistorico(metas) {
+      const list = el('history-list');
+      if (!metas || !metas.length) {
+        list.innerHTML = '<div class="history-empty">Nenhuma versão anterior encontrada.</div>';
+        return;
+      }
+      list.innerHTML = metas.map((b, i) => {
+        const dt = new Date(b.ts);
+        const dtStr = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR');
+        return `<div class="history-item">
+          <div class="history-item-info">
+            <strong>${_origemLabel(b.origem)} — ${b.totalItens} item(s) em ${b.totalListas} lista(s)</strong>
+            <span>${dtStr}</span>
+          </div>
+          <button class="btn btn-ghost" onclick="restaurarBackup(${b.ts})">Restaurar</button>
+        </div>`;
+      }).join('');
     }
 
     function fecharHistorico() { el('history-modal').style.display = 'none'; }
 
-    function restaurarBackup(idx) {
-      const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
-      const snap = backups[idx];
-      if (!snap) return;
-      if (!confirm(`Restaurar versão de ${new Date(snap.ts).toLocaleString('pt-BR')}?\nIsso substituirá os dados atuais (um backup será salvo antes).`)) return;
-      criarBackup('pre-merge', appData);
-      appData = JSON.parse(snap.data);
+    // ── RESTAURAR BACKUP ─────────────────────────────────────────────────
+    async function restaurarBackup(ts) {
+      if (!confirm(`Restaurar versão de ${new Date(ts).toLocaleString('pt-BR')}?\nIsso substituirá os dados atuais (um backup será salvo antes).`)) return;
+
+      const list = el('history-list');
+      list.innerHTML = '<div class="history-empty">Buscando versão na nuvem…</div>';
+
+      let dadosSnap = null;
+
+      // Buscar dados completos do snapshot na nuvem
+      if (_currentUser) {
+        try {
+          const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email + '&action=historico_snap&ts=' + ts);
+          if (resp.ok) {
+            const r = await resp.json();
+            if (r.ok && r.dados) dadosSnap = r.dados;
+          }
+        } catch(e) { console.warn('Falha ao buscar snapshot:', e); }
+      }
+
+      if (!dadosSnap) {
+        toast('❌ Não foi possível buscar a versão na nuvem.');
+        fecharHistorico();
+        return;
+      }
+
+      criarBackup('pre-merge', appData, true); // salvar estado atual antes de restaurar
+      appData = dadosSnap;
       updateSchema();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
       switchTab(appData.currentId || appData.listas[0].id);
       renderQuickCopy();
       fecharHistorico();
       el('conflict-modal').style.display = 'none';
-      _conflictPending = false; // liberar trava caso restauração venha do modal de conflito
+      _conflictPending = false;
       _syncReady = true;
-      toast('✅ Versão restaurada com sucesso! Use o botão de sincronizar para enviar à nuvem se desejar.');
+      toast('✅ Versão restaurada! Clique em sincronizar para enviar à nuvem.');
     }
 
     function _descVerao(dados) {
@@ -3126,16 +3215,11 @@ Exemplo de saída:
 
     let _saveTimer = null;
     let _pendingSaveCount = 0;
-    let _lastBackupTs = 0;
 
     function salvar() {
       try {
         appData.savedAt = Date.now();
-        // Backup local a cada 3 minutos para ter histórico
-        if (appData.savedAt - _lastBackupTs > 3 * 60 * 1000) {
-          criarBackup('local', appData);
-          _lastBackupTs = appData.savedAt;
-        }
+        criarBackup('local', appData); // criarBackup decide sozinho se vale registrar (intervalo + hash)
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         if (!_currentUser) { setSync('ok', 'Salvo Localmente'); return; }
         setSync('loading', 'Aguardando…');
@@ -3204,7 +3288,7 @@ Exemplo de saída:
           _syncReady = true;
           return;
         }
-        criarBackup('local', appData); // backup do local ANTES de sobrescrever
+        criarBackup('local', appData, true); // backup do local ANTES de sobrescrever
         appData = _pendingCloudData;
         updateSchema();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
@@ -3218,7 +3302,7 @@ Exemplo de saída:
       }
 
       if (choice === 'push') {
-        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData); // backup da nuvem ANTES de sobrescrever
+        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true); // backup da nuvem ANTES de sobrescrever
         _pendingCloudData = null;
         _syncReady = true;
         toast('📤 Enviando dados locais para nuvem…');
@@ -3307,7 +3391,7 @@ Exemplo de saída:
 
           } else if (!temDadosLocal && temDadosNuvem) {
             // Caso 3: local vazio, nuvem tem dados — baixar sem risco
-            criarBackup('cloud', data);
+            criarBackup('cloud', data, true);
             appData = data; updateSchema();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
             switchTab(appData.currentId || appData.listas[0].id);
@@ -3325,7 +3409,7 @@ Exemplo de saída:
 
           } else {
             // Caso 5: local é MAIS RECENTE que a nuvem (mais de 30s) — aí sim há conflito real
-            criarBackup('cloud', data);
+            criarBackup('cloud', data, true);
             mostrarConflito(data, localParsed);
             updateCloudStatus('success');
           }
@@ -3381,7 +3465,7 @@ Exemplo de saída:
                   updateCloudStatus('success');
                 } else if (!temDadosLocal && temDadosNuvem) {
                   // Local vazio, nuvem tem dados — baixar sem risco
-                  criarBackup('cloud', d);
+                  criarBackup('cloud', d, true);
                   appData = d; updateSchema();
                   localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                   switchTab(appData.currentId || appData.listas[0].id);
@@ -3399,7 +3483,7 @@ Exemplo de saída:
                   _syncReady = true; updateCloudStatus('success');
                 } else {
                   // Local é mais recente que a nuvem — conflito real
-                  criarBackup('cloud', d);
+                  criarBackup('cloud', d, true);
                   mostrarConflito(d, localParsed);
                   updateCloudStatus('success');
                 }
