@@ -14,3 +14,9 @@
   to = "https://caixa-kal3.vercel.app/webhook/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://caixa-three.vercel.app/api/:splat"
+  status = 200
+  force = true
