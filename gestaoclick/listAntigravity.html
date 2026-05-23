@@ -1363,6 +1363,82 @@
       border-radius: 4px;
     }
 
+    /* ── MODO COMPACTO (lista comprimida) ── */
+    #lista-mobile.compact-mode .mcard {
+      padding: 6px 12px;
+      gap: 0;
+      flex-direction: row;
+      align-items: center;
+      min-height: 38px;
+    }
+
+    #lista-mobile.compact-mode .mcard.mcard-header {
+      padding: 5px 12px;
+    }
+
+    #lista-mobile.compact-mode .mcard-body {
+      display: none !important;
+    }
+
+    #lista-mobile.compact-mode .mcard-top {
+      flex: 1;
+      gap: 6px;
+      align-items: center;
+    }
+
+    #lista-mobile.compact-mode .mcard-drag {
+      font-size: 16px;
+      padding-top: 0;
+    }
+
+    #lista-mobile.compact-mode .mcard-name-wrap textarea {
+      font-size: 13px;
+      min-height: 22px;
+      padding: 2px 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #lista-mobile.compact-mode .mcard-toggle {
+      display: none;
+    }
+
+    #lista-mobile.compact-mode .mcard-del {
+      font-size: 14px;
+      padding: 2px 4px;
+    }
+
+    /* Badge visível no modo compacto, inline */
+    #lista-mobile.compact-mode .mcard-compact-badge {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .mcard-compact-badge {
+      display: none;
+    }
+
+    #btn-compact-mode {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 7px;
+      color: var(--text2);
+      font-size: .72rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 5px 9px;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    #btn-compact-mode.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
     /* MODAL IA */
     #ia-overlay {
       display: none;
@@ -2280,6 +2356,7 @@
         <div class="card-header">
           <span class="card-title"><span class="dot"></span>Itens da Lista</span>
           <div style="display:flex; gap:6px; align-items:center;">
+            <button id="btn-compact-mode" title="Modo compacto (uma linha por produto)" onclick="toggleCompactMode()">☰ Compacto</button>
             <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirConfigColunas()"
               title="Configurar Colunas da Tabela">⚙️</button>
             <span id="count-badge" style="font-size:.7rem; color:var(--text3);"></span>
@@ -3232,6 +3309,7 @@ Exemplo de saída:
     let _cloudLoading = false;
     let _syncReady = false;
     let _conflictPending = false; // true enquanto modal de conflito estiver aberto — NUNCA subir nada
+    let _isSyncInProgress = false;
 
     async function syncToCloud(isManual = false) {
       if (_cloudLoading || !_syncReady || _conflictPending) return;
@@ -3271,7 +3349,6 @@ Exemplo de saída:
       _cloudLoading = false; _isSyncInProgress = false; el('sync-overlay').classList.remove('active');
     }
 
-    let _isSyncInProgress = false;
     window.onbeforeunload = (e) => { if (_isSyncInProgress) { e.preventDefault(); return (e.returnValue = 'O salvamento na nuvem ainda não terminou. Deseja realmente sair?'); } };
 
     let _pendingCloudData = null;
@@ -3310,13 +3387,17 @@ Exemplo de saída:
       if (choice === 'push') {
         if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true);
         _pendingCloudData = null;
+        // Garantir reset completo de todos os flags de bloqueio antes de sincronizar
+        _conflictPending = false;
+        _cloudLoading = false;
         _syncReady = true;
-        _cloudLoading = false; // garantir que não está travado da carga inicial
+        _isSyncInProgress = false;
         appData.savedAt = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         updateCloudStatus('syncing');
         toast('📤 Enviando dados locais para nuvem…');
-        syncToCloud(false);
+        // Pequeno delay para garantir que todos os flags foram processados
+        setTimeout(() => syncToCloud(false), 50);
         return;
       }
 
@@ -3756,6 +3837,7 @@ Exemplo de saída:
         <div class="mcard-top">
           <span class="mcard-drag">⠿</span>
           <div class="mcard-name-wrap"><textarea data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></div>
+          <span class="mcard-compact-badge">${badgeHtml}</span>
           <button class="mcard-toggle" data-idx="${idx}">▼</button>
           <button class="mcard-del" data-idx="${idx}">✕</button>
         </div>
@@ -3820,6 +3902,34 @@ Exemplo de saída:
         card.dataset.midx = idx; cont.appendChild(card);
         const ta = card.querySelector('textarea');
         if (ta) setTimeout(() => autoGrow(ta), 0);
+      });
+    }
+
+    function toggleCompactMode() {
+      const cont = el('lista-mobile');
+      const btn = el('btn-compact-mode');
+      if (!cont || !btn) return;
+      const isCompact = cont.classList.toggle('compact-mode');
+      btn.classList.toggle('active', isCompact);
+      btn.textContent = isCompact ? '☰ Expandido' : '☰ Compacto';
+      // No modo compacto, fechar todos os bodies abertos
+      if (isCompact) {
+        cont.querySelectorAll('.mcard-body').forEach(b => b.classList.remove('open'));
+        cont.querySelectorAll('.mcard-toggle').forEach(t => t.classList.remove('open'));
+      }
+      // Adiciona click no mcard para expandir/colapsar no modo compacto
+      cont.querySelectorAll('.mcard[data-midx]').forEach(card => {
+        card._compactExpand = isCompact ? function(e) {
+          if (e.target.closest('.mcard-del, .mcard-drag, [data-field]')) return;
+          const body = card.querySelector('.mcard-body');
+          if (!body) return;
+          const open = body.classList.toggle('open');
+          // mostrar body temporariamente
+          body.style.display = open ? 'flex' : 'none';
+          setTimeout(() => { if (!open) body.style.display = ''; }, 10);
+        } : null;
+        if (isCompact) card.addEventListener('click', card._compactExpand);
+        else if (card._compactExpand) card.removeEventListener('click', card._compactExpand);
       });
     }
 
