@@ -2355,6 +2355,7 @@
         <div class="sync-dot"></div>
         <span id="save-status-text">SALVO</span>
         <button class="sync-btn-cloud" onclick="forceSyncNow()" title="Forçar envio para nuvem agora">🔄</button>
+        <button class="sync-btn-cloud" onclick="abrirDiagnostico()" title="Diagnóstico de conexão com nuvem" style="font-size:13px;">🔬</button>
         <button class="sync-btn-cloud" onclick="abrirHistorico()" title="Ver histórico de versões" style="font-size:14px">🕓</button>
       </div>
       <div id="user-area">
@@ -3438,7 +3439,6 @@ Exemplo de saída:
     async function forceSyncNow() {
       if (!_currentUser) { toast('⚠️ Faça login primeiro para sincronizar.'); return; }
       if (_conflictPending) { toast('⚠️ Resolva o conflito de versões antes de sincronizar.'); return; }
-      // Forçar reset de flags e subir
       _cloudLoading = false;
       _syncReady = true;
       _isSyncInProgress = false;
@@ -3446,6 +3446,113 @@ Exemplo de saída:
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
       toast('📤 Forçando envio para nuvem…');
       await syncToCloud(true);
+    }
+
+    // ── DIAGNÓSTICO DE CONEXÃO COM A NUVEM ─────────────────────────────
+    async function abrirDiagnostico() {
+      if (el('diag-overlay')) return;
+      const ov = document.createElement('div');
+      ov.id = 'diag-overlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;';
+      const box = document.createElement('div');
+      box.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;max-width:560px;width:100%;font-family:monospace;font-size:13px;max-height:80vh;overflow-y:auto;';
+      box.innerHTML = `<div style="font-size:15px;font-weight:700;margin-bottom:16px;font-family:sans-serif;">🔬 Diagnóstico de Conexão com Nuvem</div>
+      <div id="diag-log" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="document.getElementById('diag-overlay').remove()" class="btn btn-ghost">Fechar</button>
+        <button onclick="rodarDiagnostico()" class="btn btn-accent" id="diag-run-btn">▶ Rodar Diagnóstico</button>
+      </div>`;
+      ov.appendChild(box);
+      document.body.appendChild(ov);
+      rodarDiagnostico();
+    }
+
+    function _diagLog(msg, ok = null) {
+      const d = document.getElementById('diag-log');
+      if (!d) return;
+      const icon = ok === true ? '✅' : ok === false ? '❌' : '⏳';
+      const color = ok === true ? 'var(--accent)' : ok === false ? 'var(--danger)' : 'var(--warn)';
+      const div = document.createElement('div');
+      div.style.cssText = `padding:6px 10px;background:var(--bg);border-radius:6px;border-left:3px solid ${color};word-break:break-all;white-space:pre-wrap;`;
+      div.innerHTML = `<span style="color:${color}">${icon}</span> ${msg}`;
+      d.appendChild(div);
+      return div;
+    }
+
+    async function rodarDiagnostico() {
+      const d = document.getElementById('diag-log');
+      if (!d) return;
+      d.innerHTML = '';
+      const btn = document.getElementById('diag-run-btn');
+      if (btn) btn.disabled = true;
+
+      // 1. Usuário logado?
+      if (!_currentUser) { _diagLog('Usuário NÃO logado. Faça login primeiro.', false); return; }
+      _diagLog(`Usuário: ${_currentUser.email}`, true);
+      _diagLog(`URL: ${SHEETS_URL}`);
+
+      // 2. Testar GET
+      let getStep = _diagLog('Testando GET (leitura da nuvem)…', null);
+      try {
+        const r = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email));
+        const txt = await r.text();
+        getStep.innerHTML = getStep.innerHTML.replace('⏳','✅').replace('var(--warn)','var(--accent)');
+        _diagLog(`GET status: ${r.status} | Resposta (primeiros 200 chars):\n${txt.substring(0,200)}`, r.ok);
+      } catch(e) {
+        _diagLog('GET FALHOU: ' + e.message, false);
+      }
+
+      // 3. Testar POST com payload mínimo
+      let postStep = _diagLog('Testando POST (escrita na nuvem) com payload mínimo…', null);
+      const testPayload = {
+        email: _currentUser.email,
+        payload: {
+          _diagTest: true,
+          savedAt: Date.now(),
+          listas: appData.listas || []
+        },
+        _t: Date.now()
+      };
+      try {
+        const r2 = await fetch(SHEETS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(testPayload)
+        });
+        const txt2 = await r2.text();
+        const ok2 = r2.ok && txt2.includes('success');
+        postStep.innerHTML = postStep.innerHTML.replace('⏳', ok2 ? '✅':'❌');
+        _diagLog(`POST status: ${r2.status} | Resposta:\n${txt2.substring(0,300)}`, ok2);
+        if (ok2) {
+          _diagLog('✅ POST funcionou! Verificando se a nuvem foi atualizada…', null);
+          await new Promise(r => setTimeout(r, 1500));
+          const r3 = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email));
+          const txt3 = await r3.text();
+          _diagLog(`GET pós-POST:\n${txt3.substring(0,300)}`, r3.ok);
+        }
+      } catch(e) {
+        _diagLog('POST FALHOU com exceção: ' + e.message, false);
+        _diagLog('Possível causa: CORS bloqueado, redirect não seguido, ou rede offline.', false);
+      }
+
+      // 4. Testar com redirect:follow explícito
+      let redirStep = _diagLog('Testando POST com redirect:follow…', null);
+      try {
+        const r4 = await fetch(SHEETS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ email: _currentUser.email, payload: { _diagTest2: true, savedAt: Date.now(), listas: [] }, _t: Date.now() }),
+          redirect: 'follow'
+        });
+        const txt4 = await r4.text();
+        _diagLog(`redirect:follow — status: ${r4.status} | Resposta:\n${txt4.substring(0,200)}`, r4.ok);
+        redirStep.innerHTML = redirStep.innerHTML.replace('⏳', r4.ok ? '✅':'❌');
+      } catch(e) {
+        _diagLog('redirect:follow FALHOU: ' + e.message, false);
+      }
+
+      _diagLog('Diagnóstico concluído.', null);
+      if (btn) btn.disabled = false;
     }
 
     // Tenta syncToCloud; se não estiver pronto ainda, aguarda e retenta
