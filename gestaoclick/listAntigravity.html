@@ -2762,6 +2762,75 @@
       el('conflict-cloud-box').innerHTML = `<strong>☁️ Nuvem</strong>${cl.total} item(s) em ${cl.listas} lista(s)<br>Salvo em: ${cl.ts}`;
       el('conflict-modal').style.display = 'flex';
     }
+
+    // ── Lógica de decisão de sync ao iniciar ─────────────────────────────
+    // Retorna o que fazer: 'use_cloud' | 'use_local_push' | 'conflict' | 'noop'
+    function _decidirSync(cloudData, localParsed) {
+      const totalNuvem = (cloudData && cloudData.listas ? cloudData.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+      const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
+      const temDadosNuvem = totalNuvem > 0;
+      const temDadosLocal = totalLocal > 0;
+
+      if (!temDadosNuvem && !temDadosLocal) return 'noop';
+      if (!temDadosNuvem && temDadosLocal)  return 'use_local_push'; // nuvem vazia → subir local
+      if (!temDadosLocal && temDadosNuvem)  return 'use_cloud';      // local vazio → baixar nuvem
+
+      // Ambos têm dados: comparar por hash de conteúdo primeiro
+      const hashNuvem = _hashDados(cloudData);
+      const hashLocal = _hashDados(localParsed);
+      if (hashNuvem === hashLocal) return 'noop'; // conteúdo idêntico — nada a fazer
+
+      // Conteúdos diferentes: usar timestamps para desempate
+      const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
+      const tsNuvem = (cloudData && cloudData.savedAt) ? cloudData.savedAt : 0;
+
+      // Margem pequena apenas para latência real de rede (5s), não 30s que mascara conflitos
+      if (Math.abs(tsLocal - tsNuvem) < 5000) return 'noop'; // praticamente simultâneos
+
+      if (tsLocal > tsNuvem) return 'conflict'; // local mais recente → mostrar modal
+      return 'use_cloud'; // nuvem mais recente → usar nuvem silenciosamente
+    }
+
+    async function _aplicarDecisaoSync(decisao, cloudData, localParsed, origem) {
+      if (decisao === 'noop') {
+        _conflictPending = false; _cloudLoading = false; _syncReady = true;
+        updateCloudStatus('success');
+
+      } else if (decisao === 'use_cloud') {
+        criarBackup('cloud', cloudData, false);
+        appData = cloudData; updateSchema();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        switchTab(appData.currentId || appData.listas[0].id);
+        renderQuickCopy();
+        _conflictPending = false; _cloudLoading = false; _syncReady = true;
+        updateCloudStatus('success');
+
+      } else if (decisao === 'use_local_push') {
+        // Nuvem vazia ou sem dados — subir local automaticamente
+        if (cloudData && Object.keys(cloudData).length > 0) criarBackup('cloud', cloudData, false);
+        _conflictPending = false; _cloudLoading = false; _syncReady = true;
+        appData.savedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        updateCloudStatus('syncing');
+        toast('📤 Enviando dados para nuvem…');
+        await syncToCloud(false);
+
+      } else if (decisao === 'conflict') {
+        // Local mais recente → mostrar modal para o usuário decidir
+        criarBackup('cloud', cloudData, false);
+        // Preencher textos do modal com contexto claro
+        const cl = _descVerao(cloudData);
+        const lo = _descVerao(localParsed);
+        _pendingCloudData = cloudData;
+        _conflictPending = true;
+        _syncReady = false;
+        _cloudLoading = false;
+        el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${lo.total} item(s) em ${lo.listas} lista(s)<br>Salvo em: ${lo.ts}`;
+        el('conflict-cloud-box').innerHTML = `<strong>☁️ Nuvem</strong>${cl.total} item(s) em ${cl.listas} lista(s)<br>Salvo em: ${cl.ts}`;
+        el('conflict-modal').style.display = 'flex';
+        updateCloudStatus('success');
+      }
+    }
     const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
     const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
 
@@ -3433,85 +3502,38 @@ Exemplo de saída:
         if (!_currentUser.email) { logout(); return; }
         renderUser(_currentUser);
         _cloudLoading = true;
-        _conflictPending = true; // Bloquear qualquer upload durante a verificação
+        _conflictPending = true;
         _syncReady = false;
         updateCloudStatus('loading');
         try {
           const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
           if (!resp.ok) throw new Error('Servidor não respondeu (' + resp.status + ')');
-          let data = await resp.json();
+          let cloudData = await resp.json();
 
           // Compatibilidade com formato legado
-          if (data && data.appData && data.lista) {
-            const oldLists = data.appData.listas || [];
-            const currentLista = data.lista;
+          if (cloudData && cloudData.appData && cloudData.lista) {
+            const oldLists = cloudData.appData.listas || [];
+            const currentLista = cloudData.lista;
             if (oldLists.length === 0 && currentLista.length > 0) {
               const nova = createListObj('Lista Recuperada'); nova.lista = currentLista;
-              data = { listas: [nova], currentId: nova.id, templates: data.appData.templates };
+              cloudData = { listas: [nova], currentId: nova.id, templates: cloudData.appData.templates };
             } else {
-              data = data.appData;
-              if (currentLista.length > 0 && data.listas && data.listas[0]) data.listas[0].lista = currentLista;
+              cloudData = cloudData.appData;
+              if (currentLista.length > 0 && cloudData.listas && cloudData.listas[0]) cloudData.listas[0].lista = currentLista;
             }
           }
 
-          const totalNuvem = (data && data.listas ? data.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-          // Ler do localStorage diretamente — fonte da verdade mais confiável
           const localRaw = localStorage.getItem(STORAGE_KEY);
           const localParsed = localRaw ? JSON.parse(localRaw) : null;
-          const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
-          const temDadosLocal = totalLocal > 0;
-          const temDadosNuvem = totalNuvem > 0;
-
-          // Timestamps para comparar versões
-          const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
-          const tsNuvem = (data && data.savedAt) ? data.savedAt : 0;
-          // Considerar sincronizado se diferença < 30s (margem para latência de rede)
-          const estaSincronizado = Math.abs(tsLocal - tsNuvem) < 30000;
-
-          if (!temDadosNuvem && !temDadosLocal) {
-            // Caso 1: ambos vazios
-            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
-
-          } else if (!temDadosNuvem && temDadosLocal) {
-            // Caso 2: nuvem vazia, local tem dados — perguntar
-            mostrarConflito(data, appData);
-            el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
-            el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(localParsed.listas||[]).length} lista(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
-            el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
-            updateCloudStatus('success');
-
-          } else if (!temDadosLocal && temDadosNuvem) {
-            // Caso 3: local vazio, nuvem tem dados — baixar sem risco
-            criarBackup('cloud', data, true);
-            appData = data; updateSchema();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            switchTab(appData.currentId || appData.listas[0].id);
-            renderQuickCopy();
-            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
-            toast('☁️ Dados carregados da nuvem');
-
-          } else if (estaSincronizado || tsNuvem >= tsLocal) {
-            // Caso 4: ambos têm dados e nuvem é igual ou mais recente — usar nuvem silenciosamente
-            appData = data; updateSchema();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            switchTab(appData.currentId || appData.listas[0].id);
-            renderQuickCopy();
-            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
-
-          } else {
-            // Caso 5: local é MAIS RECENTE que a nuvem (mais de 30s) — aí sim há conflito real
-            criarBackup('cloud', data, true);
-            mostrarConflito(data, localParsed);
-            updateCloudStatus('success');
-          }
+          const decisao = _decidirSync(cloudData, localParsed);
+          await _aplicarDecisaoSync(decisao, cloudData, localParsed, 'init');
 
         } catch (e) {
           console.error('Cloud load fail:', e);
           updateCloudStatus('err', 'Falha ao conectar: ' + e.message);
           toast('⚠️ Não foi possível acessar a nuvem. Usando dados locais. Tente sincronizar manualmente.');
-          _conflictPending = false; _syncReady = true;
+          _conflictPending = false; _syncReady = true; _cloudLoading = false;
         }
-        _cloudLoading = false;
       } else { _syncReady = false; }
 
       setTimeout(() => {
@@ -3524,68 +3546,22 @@ Exemplo de saída:
               localStorage.setItem(CLOUD_KEY, JSON.stringify(_currentUser));
               renderUser(_currentUser);
               fecharAuth();
-              _cloudLoading = true; updateCloudStatus('loading');
-              // Trava imediata antes de qualquer comparação
-              _conflictPending = true;
-              _syncReady = false;
+              _cloudLoading = true; _conflictPending = true; _syncReady = false;
+              updateCloudStatus('loading');
               try {
                 const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
                 if (!r.ok) throw new Error('Servidor não respondeu (' + r.status + ')');
-                const d = await r.json();
-                const totalNuvem = (d && d.listas ? d.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-                // Ler do localStorage diretamente — mais seguro que appData em memória
+                const cloudData = await r.json();
                 const localRaw = localStorage.getItem(STORAGE_KEY);
                 const localParsed = localRaw ? JSON.parse(localRaw) : null;
-                const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
-                const temDadosLocal = totalLocal > 0;
-                const temDadosNuvem = totalNuvem > 0;
-
-                const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
-                const tsNuvem = (d && d.savedAt) ? d.savedAt : 0;
-                const estaSincronizado = Math.abs(tsLocal - tsNuvem) < 30000;
-
-                if (!temDadosNuvem && !temDadosLocal) {
-                  _conflictPending = false;
-                  _syncReady = true; updateCloudStatus('success');
-                } else if (!temDadosNuvem && temDadosLocal) {
-                  // Nuvem vazia, local tem dados — perguntar
-                  mostrarConflito(d || {listas:[]}, localParsed);
-                  el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
-                  el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
-                  el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
-                  updateCloudStatus('success');
-                } else if (!temDadosLocal && temDadosNuvem) {
-                  // Local vazio, nuvem tem dados — baixar sem risco
-                  criarBackup('cloud', d, true);
-                  appData = d; updateSchema();
-                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                  switchTab(appData.currentId || appData.listas[0].id);
-                  renderQuickCopy();
-                  _conflictPending = false;
-                  _syncReady = true; updateCloudStatus('success');
-                  toast('☁️ Dados da nuvem carregados');
-                } else if (estaSincronizado || tsNuvem >= tsLocal) {
-                  // Nuvem igual ou mais recente — usar nuvem silenciosamente
-                  appData = d; updateSchema();
-                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                  switchTab(appData.currentId || appData.listas[0].id);
-                  renderQuickCopy();
-                  _conflictPending = false;
-                  _syncReady = true; updateCloudStatus('success');
-                } else {
-                  // Local é mais recente que a nuvem — conflito real
-                  criarBackup('cloud', d, true);
-                  mostrarConflito(d, localParsed);
-                  updateCloudStatus('success');
-                }
+                const decisao = _decidirSync(cloudData, localParsed);
+                await _aplicarDecisaoSync(decisao, cloudData, localParsed, 'login');
               } catch (e) {
                 console.error('Login cloud load fail:', e);
                 toast('⚠️ Falha ao conectar com nuvem. Usando dados locais.');
                 updateCloudStatus('err', 'Falha ao conectar');
-                _conflictPending = false;
-                _syncReady = true;
+                _conflictPending = false; _cloudLoading = false; _syncReady = true;
               }
-              _cloudLoading = false;
             }
           });
         }
