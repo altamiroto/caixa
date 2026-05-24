@@ -3436,13 +3436,7 @@ Exemplo de saída:
       } catch (e) { setSync('err', 'Erro ao salvar'); }
     }
 
-    // GET sem cache — sempre busca dado fresco do Apps Script
-    async function _cloudGet(extraParams = '') {
-      const url = SHEETS_URL + '?email=' + encodeURIComponent(_currentUser.email) + '&_t=' + Date.now() + extraParams;
-      const resp = await fetch(url, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache, no-store' } });
-      if (!resp.ok) throw new Error('Servidor não respondeu (' + resp.status + ')');
-      return resp.json();
-    }
+    async function forceSyncNow() {
       if (!_currentUser) { toast('⚠️ Faça login primeiro para sincronizar.'); return; }
       if (_conflictPending) { toast('⚠️ Resolva o conflito de versões antes de sincronizar.'); return; }
       _cloudLoading = false;
@@ -3713,7 +3707,9 @@ Exemplo de saída:
         _syncReady = false;
         updateCloudStatus('loading');
         try {
-          let cloudData = await _cloudGet();
+          const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+          if (!resp.ok) throw new Error('Servidor não respondeu (' + resp.status + ')');
+          let cloudData = await resp.json();
 
           // Compatibilidade com formato legado
           if (cloudData && cloudData.appData && cloudData.lista) {
@@ -3730,12 +3726,7 @@ Exemplo de saída:
 
           const localRaw = localStorage.getItem(STORAGE_KEY);
           const localParsed = localRaw ? JSON.parse(localRaw) : null;
-          const nuvemItens = (cloudData?.listas||[]).reduce((s,l)=>s+(l.lista||[]).length,0);
-          const localItens = (localParsed?.listas||[]).reduce((s,l)=>s+(l.lista||[]).length,0);
-          console.log('[INIT] Nuvem:', nuvemItens, 'itens | Local:', localItens, 'itens');
-          console.log('[INIT] tsCloud:', cloudData?.savedAt ? new Date(cloudData.savedAt).toLocaleString() : 'n/a', '| tsLocal:', localParsed?.savedAt ? new Date(localParsed.savedAt).toLocaleString() : 'n/a');
           const decisao = _decidirSync(cloudData, localParsed);
-          console.log('[INIT] Decisão:', decisao);
           await _aplicarDecisaoSync(decisao, cloudData, localParsed, 'init');
 
         } catch (e) {
@@ -3759,7 +3750,9 @@ Exemplo de saída:
               _cloudLoading = true; _conflictPending = true; _syncReady = false;
               updateCloudStatus('loading');
               try {
-                const cloudData = await _cloudGet();
+                const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
+                if (!r.ok) throw new Error('Servidor não respondeu (' + r.status + ')');
+                const cloudData = await r.json();
                 const localRaw = localStorage.getItem(STORAGE_KEY);
                 const localParsed = localRaw ? JSON.parse(localRaw) : null;
                 const decisao = _decidirSync(cloudData, localParsed);
