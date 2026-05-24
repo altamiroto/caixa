@@ -3324,45 +3324,40 @@ Exemplo de saída:
       }
 
       if (choice === 'push') {
-        // Fazer o POST DIRETAMENTE — sem depender de flags nem de syncToCloud
+        el('conflict-modal').style.display = 'none';
+        _conflictPending = false;
+        _cloudLoading = false;
+        _syncReady = true;
+        _isSyncInProgress = false;
+        _pendingCloudData = null;
+
+        // Ler do disco
         const localRaw = localStorage.getItem(STORAGE_KEY);
         const dadosParaEnviar = localRaw ? JSON.parse(localRaw) : appData;
         dadosParaEnviar.savedAt = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosParaEnviar));
         appData = dadosParaEnviar;
 
-        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true);
-        _pendingCloudData = null;
-        _conflictPending = false;
-        _cloudLoading = false;
-        _syncReady = true;
-        _isSyncInProgress = false;
-
+        const totalItens = (dadosParaEnviar.listas||[]).reduce((s,l)=>s+(l.lista||[]).length,0);
         updateCloudStatus('syncing');
-        const totalEnviando = (dadosParaEnviar.listas||[]).reduce((s,l)=>s+(l.lista||[]).length,0);
-        toast('📤 Enviando ' + totalEnviando + ' itens para nuvem…');
+        toast('📤 Enviando ' + totalItens + ' itens...');
 
-        // POST direto, sem passar por syncToCloud
-        fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ email: _currentUser.email, payload: dadosParaEnviar, _t: Date.now() })
-        })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === 'success') {
-            criarBackup('cloud-sent', dadosParaEnviar);
-            updateCloudStatus('success');
-            toast('✅ ' + totalEnviando + ' itens salvos na nuvem!');
-          } else {
-            updateCloudStatus('err', 'Erro: ' + (data.message || 'Resposta inválida'));
-            toast('❌ Erro ao salvar: ' + (data.message || 'Resposta inválida'));
-          }
-        })
-        .catch(e => {
-          updateCloudStatus('err', e.message);
-          toast('❌ Falha de rede: ' + e.message);
-        });
+        // POST direto para aba DADOS — sem action, sem histórico, sem interferência
+        const bodyStr = JSON.stringify({ email: _currentUser.email, payload: dadosParaEnviar, _t: Date.now() });
+        fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: bodyStr })
+          .then(r => r.text())
+          .then(txt => {
+            console.log('[PUSH] Resposta raw:', txt);
+            const data = JSON.parse(txt);
+            if (data.status === 'success') {
+              updateCloudStatus('success');
+              toast('✅ ' + totalItens + ' itens salvos na planilha!');
+            } else {
+              updateCloudStatus('err', data.message || 'erro');
+              toast('❌ Erro: ' + (data.message || txt));
+            }
+          })
+          .catch(e => { updateCloudStatus('err', e.message); toast('❌ ' + e.message); });
         return;
       }
 
