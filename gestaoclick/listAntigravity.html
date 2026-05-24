@@ -3256,18 +3256,25 @@ Exemplo de saída:
       if (isManual) el('sync-overlay').classList.add('active');
       const countAtStart = _pendingSaveCount;
       try {
-        const resp = await fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ email: _currentUser.email, payload: appData, _t: Date.now() }) });
+        // SEMPRE ler do localStorage na hora de enviar — fonte de verdade absoluta
+        const localRaw = localStorage.getItem(STORAGE_KEY);
+        const payloadParaEnviar = localRaw ? JSON.parse(localRaw) : appData;
+        const totalItens = (payloadParaEnviar.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+        console.log('[SYNC] Enviando', totalItens, 'itens para nuvem. Email:', _currentUser?.email);
+        const resp = await fetch(SHEETS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ email: _currentUser.email, payload: payloadParaEnviar, _t: Date.now() })
+        });
         if (!resp.ok) throw new Error('Erro de rede: ' + resp.status);
         const data = await resp.json();
         if (data.status === 'success') {
-          // Backup local a cada envio bem-sucedido (deduplicado por conteúdo)
-          criarBackup('cloud-sent', appData);
-          // Só mostra salvo se nenhuma edição nova veio durante o envio
+          console.log('[SYNC] ✅ Salvo na nuvem com sucesso! Itens:', totalItens);
+          criarBackup('cloud-sent', payloadParaEnviar);
           if (_pendingSaveCount === countAtStart) {
             _pendingSaveCount = 0;
             updateCloudStatus('success');
           } else {
-            // Ainda há edições pendentes — reagendar
             updateCloudStatus('syncing');
             setTimeout(() => syncToCloud(false), 1500);
           }
@@ -3275,10 +3282,8 @@ Exemplo de saída:
           throw new Error(data.message || 'Erro no servidor');
         }
       } catch (e) {
-        console.error('Cloud save fail:', e);
-        // NUNCA mostrar "salvo" em caso de falha — mostrar erro real
+        console.error('[SYNC] ❌ Falha:', e.message);
         updateCloudStatus('err', 'Falha ao salvar na nuvem: ' + e.message);
-        // Tentar novamente em 30s automaticamente
         setTimeout(() => {
           if (_pendingSaveCount > 0 && _currentUser && _syncReady) syncToCloud(false);
         }, 30000);
