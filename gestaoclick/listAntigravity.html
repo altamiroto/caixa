@@ -3324,24 +3324,45 @@ Exemplo de saída:
       }
 
       if (choice === 'push') {
-        // Recarregar do disco para garantir que temos os dados locais reais
+        // Fazer o POST DIRETAMENTE — sem depender de flags nem de syncToCloud
         const localRaw = localStorage.getItem(STORAGE_KEY);
-        const localParsed = localRaw ? JSON.parse(localRaw) : null;
-        if (localParsed) appData = localParsed;
+        const dadosParaEnviar = localRaw ? JSON.parse(localRaw) : appData;
+        dadosParaEnviar.savedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosParaEnviar));
+        appData = dadosParaEnviar;
 
         if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true);
         _pendingCloudData = null;
         _conflictPending = false;
         _cloudLoading = false;
         _syncReady = true;
-        appData.savedAt = Date.now();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-        updateSchema();
-        switchTab(appData.currentId || appData.listas[0].id);
-        renderQuickCopy();
+        _isSyncInProgress = false;
+
         updateCloudStatus('syncing');
-        toast('📤 Enviando dados locais para nuvem…');
-        setTimeout(() => syncToCloud(false), 50);
+        const totalEnviando = (dadosParaEnviar.listas||[]).reduce((s,l)=>s+(l.lista||[]).length,0);
+        toast('📤 Enviando ' + totalEnviando + ' itens para nuvem…');
+
+        // POST direto, sem passar por syncToCloud
+        fetch(SHEETS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ email: _currentUser.email, payload: dadosParaEnviar, _t: Date.now() })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            criarBackup('cloud-sent', dadosParaEnviar);
+            updateCloudStatus('success');
+            toast('✅ ' + totalEnviando + ' itens salvos na nuvem!');
+          } else {
+            updateCloudStatus('err', 'Erro: ' + (data.message || 'Resposta inválida'));
+            toast('❌ Erro ao salvar: ' + (data.message || 'Resposta inválida'));
+          }
+        })
+        .catch(e => {
+          updateCloudStatus('err', e.message);
+          toast('❌ Falha de rede: ' + e.message);
+        });
         return;
       }
 
