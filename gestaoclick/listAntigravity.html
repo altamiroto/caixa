@@ -2172,75 +2172,7 @@
       pointer-events: none;
     }
 
-    /* ── Campo manual expansível + coluna personalizado ── */
-    td textarea.manual-ta {
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 5px;
-      padding: 2px 5px;
-      font-family: 'Sora', sans-serif;
-      font-size: 12px;
-      color: var(--text);
-      width: 100%;
-      min-width: 0;
-      resize: vertical;
-      min-height: 26px;
-      max-height: 120px;
-      line-height: 1.35;
-    }
-    td textarea.manual-ta:focus {
-      background: var(--bg);
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-dim);
-      outline: none;
-    }
-    .col-custom { width: 140px; }
-    td textarea.custom-ta {
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 5px;
-      padding: 2px 5px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: var(--text);
-      width: 100%;
-      resize: vertical;
-      min-height: 26px;
-      max-height: 120px;
-      line-height: 1.35;
-    }
-    td textarea.custom-ta:focus {
-      outline: none;
-      border-color: #a78bfa;
-      box-shadow: 0 0 0 2px rgba(167,139,250,.2);
-      background: var(--bg);
-    }
-    tr.row-custom-active {
-      border-left: 4px solid #a78bfa !important;
-      background: rgba(167,139,250,.06) !important;
-    }
-    tr.row-custom-active td textarea.custom-ta {
-      background: rgba(167,139,250,.08);
-      border-color: #a78bfa;
-      color: #a78bfa;
-      font-weight: 600;
-    }
-    .mcard.mcard-custom-active {
-      border-left: 4px solid #a78bfa !important;
-      background: rgba(167,139,250,.06) !important;
-    }
-    .mcard-custom-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 2px 7px;
-      border-radius: 20px;
-      font-size: .65rem;
-      font-weight: 700;
-      background: rgba(167,139,250,.15);
-      color: #a78bfa;
-      border: 1px solid rgba(167,139,250,.4);
-    }
+    /* ══ MODO COMPACTO ══════════════════════════════════════════════ */
     #btn-compact-toggle {
       background: var(--surface2);
       border: 1px solid var(--border2);
@@ -2845,7 +2777,6 @@
         { id: 'col-label', label: 'Nome na Lista', width: '220px', visible: true },
         { id: 'col-price', label: 'Preço Base', width: '100px', visible: true },
         { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
-        { id: 'col-custom', label: '✏️ Personalizado', width: '160px', visible: true },
         { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
         { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
       ]
@@ -3837,44 +3768,29 @@ Exemplo de saída:
           tr.className = (semEstoque ? 'row-sem-estoque ' : '') + (_prodZebra % 2 === 0 ? 'row-even' : '');
 
           let html = '';
-          const temCustom = !!(item.customText && item.customText.trim());
-          if (temCustom) tr.className += ' row-custom-active';
           appData.tableCols.forEach(col => {
             if (!col.visible) return;
             if (col.id === 'col-drag') html += `<td class="col-drag">⠿</td>`;
             else if (col.id === 'col-order') html += `<td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}"></td>`;
             else if (col.id === 'col-label') html += `<td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td>`;
             else if (col.id === 'col-price') html += `<td class="col-price"><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:100%;"/></td>`;
-            else if (col.id === 'col-custom') {
-              const hasCustom = !!(item.customText && item.customText.trim());
-              html += `<td class="col-custom" style="vertical-align:top;">
-                <textarea class="custom-ta" data-field="customText" placeholder="Texto personalizado…" rows="1" title="${hasCustom ? '⚠️ PERSONALIZADO ATIVO — substitui o template geral para este produto' : 'Deixe vazio para usar o template geral'}" style="min-height:26px;">${esc(item.customText || '')}</textarea>
-                ${hasCustom ? `<div style="font-size:9px;color:#a78bfa;font-weight:700;text-align:center;padding-top:1px;">⚠️ ATIVO</div>` : ''}
-              </td>`;
-            }
             else if (col.id === 'col-dprices') {
               appData.priceConfigs.forEach(conf => {
                 const val = getDynamicPriceValue(item, conf);
-                const isReadonly = conf.type === 'formula';
+                const isReadonly = conf.type === 'formula'; // Apenas fórmulas são estritamente bloqueadas
                 const cssClass = conf.type === 'formula' ? 'calc-readonly' : (conf.type === 'atributo' ? 'attr-editable' : '');
                 const isOverridden = conf.type === 'atributo' && item.prices && item.prices[conf.id] !== undefined && item.prices[conf.id] !== '';
-                if (conf.type === 'manual') {
-                  // Manual: textarea expansível
-                  html += `<td class="col-dprice" style="vertical-align:top;">
-                    <textarea class="manual-ta" data-idx="${idx}" data-confid="${conf.id}" placeholder="-" rows="1">${esc(val)}</textarea>
-                  </td>`;
-                } else {
-                  html += `<td class="col-dprice">
-                    <input type="text"
-                      class="mono-inp ${cssClass} ${isOverridden ? 'overridden' : ''}"
-                      data-idx="${idx}"
-                      data-confid="${conf.id}"
-                      value="${esc(val)}"
-                      ${isReadonly ? 'readonly' : ''}
-                      style="width:100%; ${isOverridden ? 'border-color:var(--accent);' : ''}"
-                      placeholder="-">
-                  </td>`;
-                }
+                
+                html += `<td class="col-dprice">
+                  <input type="text" 
+                    class="mono-inp ${cssClass} ${isOverridden ? 'overridden' : ''}" 
+                    data-idx="${idx}" 
+                    data-confid="${conf.id}" 
+                    value="${esc(val)}" 
+                    ${isReadonly ? 'readonly' : ''} 
+                    style="width:100%; ${isOverridden ? 'border-color:var(--accent);' : ''}" 
+                    placeholder="-">
+                </td>`;
               });
             }
             else if (col.id === 'col-api') {
@@ -3899,15 +3815,7 @@ Exemplo de saída:
         tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx, 1)[0]; lista.splice(idx, 0, moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
         const orderInp = tr.querySelector('.order-inp');
         if (orderInp) { orderInp.addEventListener('change', () => { const novaPosicao = parseInt(orderInp.value, 10) - 1; if (isNaN(novaPosicao) || novaPosicao < 0 || novaPosicao >= lista.length || novaPosicao === idx) { orderInp.value = idx + 1; return; } const moved = lista.splice(idx, 1)[0]; lista.splice(novaPosicao, 0, moved); renderTabela(); renderMobile(); atualizarPreview(); salvar(); }); orderInp.addEventListener('mousedown', e => e.stopPropagation()); }
-        tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); if (inp.dataset.field === 'customText') { tr.classList.toggle('row-custom-active', !!(inp.value.trim())); const badge = tr.querySelector('.custom-active-badge'); if (badge) badge.style.display = inp.value.trim() ? 'block' : 'none'; } }); });
-        tr.querySelectorAll('textarea.manual-ta').forEach(ta => {
-          ta.addEventListener('input', () => {
-            if (!lista[idx].prices) lista[idx].prices = {};
-            lista[idx].prices[ta.dataset.confid] = ta.value;
-            autoGrow(ta); atualizarPreview(); salvar();
-          });
-          setTimeout(() => autoGrow(ta), 0);
-        });
+        tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
         tr.querySelectorAll('[data-confid]').forEach(inp => {
           inp.addEventListener('input', () => {
             if (!lista[idx].prices) lista[idx].prices = {};
@@ -3972,8 +3880,7 @@ Exemplo de saída:
         } else {
           const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
           const estoqueTotal = vinculos ? vinculos.reduce((s, v) => s + v.estoque, 0) : (item.estoque ?? null);
-          const temCustom = !!(item.customText && item.customText.trim());
-          card.className = 'mcard' + (estoqueTotal !== null && estoqueTotal <= 0 ? ' mcard-sem-estoque' : '') + (temCustom ? ' mcard-custom-active' : '');
+          card.className = 'mcard' + (estoqueTotal !== null && estoqueTotal <= 0 ? ' mcard-sem-estoque' : '');
           const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
           let badgeHtml;
           if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`;
@@ -4006,13 +3913,6 @@ Exemplo de saída:
           </div>
           <div class="mcard-vincul">
             <div class="mcard-vincul-btn vincul-cell ${temVinculo ? 'vinculado' : ''}" data-vincul-field="sys"><div style="flex:1;min-width:0;">${vinculosInfoHtml || `<span class="mcard-vincul-name empty">Vincular produto API…</span>`}</div></div>
-          </div>
-          <div style="border-top:1px dashed var(--border);padding-top:6px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-              <span style="font-size:10px;font-weight:700;color:${temCustom ? '#a78bfa' : 'var(--text3)'};text-transform:uppercase;letter-spacing:.04em;">✏️ Texto Personalizado</span>
-              ${temCustom ? `<span class="mcard-custom-badge">⚠️ ATIVO — substitui template</span>` : `<span style="font-size:10px;color:var(--text3);font-style:italic;">vazio = usa template geral</span>`}
-            </div>
-            <textarea data-field="customText" placeholder="Ex: Produto Especial\\nR$ 999 (apenas hoje!)" rows="2" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:11px;background:${temCustom ? 'rgba(167,139,250,.08)' : 'transparent'};border:1px solid ${temCustom ? '#a78bfa' : 'var(--border)'};border-radius:6px;padding:4px 7px;color:${temCustom ? '#a78bfa' : 'var(--text)'};resize:vertical;">${esc(item.customText || '')}</textarea>
           </div>
         </div>`;
         }
@@ -4175,19 +4075,6 @@ Exemplo de saída:
     // PREVIEW WPP
     // ════════════════════════════════════
     function formatarComTemplate(item, templateText) {
-      // Se o item tem texto personalizado, usa ele diretamente (substitui o template)
-      if (item.customText && item.customText.trim()) {
-        let texto = item.customText;
-        texto = texto.replace(/\{\{nome\}\}/gi, item.label || '');
-        texto = texto.replace(/\{\{preco\}\}/gi, item.price || '');
-        appData.priceConfigs.forEach(conf => {
-          const val = getDynamicPriceValue(item, conf);
-          const tag = conf.label.toLowerCase().replace(/\s+/g, '');
-          texto = texto.replace(new RegExp(`\\{\\{${tag}\\}\\}`, 'gi'), val || '');
-        });
-        return texto.trim();
-      }
-      // Caso padrão: usa o template geral
       let texto = templateText || '{{nome}} - R$ {{preco}}';
       texto = texto.replace(/\{\{nome\}\}/gi, item.label || '');
       texto = texto.replace(/\{\{preco\}\}/gi, item.price || '');
@@ -4684,18 +4571,11 @@ Exemplo de saída:
           { id: 'col-label', label: 'Nome na Lista', width: '220px', visible: true },
           { id: 'col-price', label: 'Preço Base', width: '100px', visible: true },
           { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
-          { id: 'col-custom', label: '✏️ Personalizado', width: '160px', visible: true },
           { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
           { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
         ];
       }
-      // Migração: adicionar col-custom se não existir
-      if (appData.tableCols && !appData.tableCols.find(c => c.id === 'col-custom')) {
-        const apiIdx = appData.tableCols.findIndex(c => c.id === 'col-api');
-        const newCol = { id: 'col-custom', label: '✏️ Personalizado', width: '160px', visible: true };
-        if (apiIdx >= 0) appData.tableCols.splice(apiIdx, 0, newCol);
-        else appData.tableCols.push(newCol);
-      }
+      if (appData.sidebarCollapsed) {
         document.querySelector('.app').classList.add('sidebar-collapsed');
       } else {
         document.querySelector('.app').classList.remove('sidebar-collapsed');
