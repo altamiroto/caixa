@@ -2171,6 +2171,74 @@
       opacity: .4;
       pointer-events: none;
     }
+
+    /* ══ MODO COMPACTO ══════════════════════════════════════════════ */
+    #btn-compact-toggle {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: .68rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: all .15s;
+      white-space: nowrap;
+      letter-spacing: .03em;
+    }
+    #btn-compact-toggle.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Desktop compact ── */
+    #card-tabela.compact-mode table { font-size: 11px; }
+    #card-tabela.compact-mode thead th { padding: 2px 4px; font-size: 9px; }
+    #card-tabela.compact-mode td { padding: 0 3px; height: 22px; max-height: 22px; overflow: hidden; }
+    #card-tabela.compact-mode td input,
+    #card-tabela.compact-mode td textarea,
+    #card-tabela.compact-mode .label-ta {
+      font-size: 11px !important; padding: 0 3px !important;
+      min-height: 18px !important; height: 20px !important;
+      line-height: 1.1; overflow: hidden; resize: none;
+    }
+    #card-tabela.compact-mode .badge { font-size: 8px; padding: 1px 3px; }
+    #card-tabela.compact-mode .vincul-add-btn { display: none !important; }
+    #card-tabela.compact-mode .btn-icon { width: 18px; height: 18px; font-size: 10px; }
+    #card-tabela.compact-mode .order-inp { width: 26px !important; font-size: 9px !important; }
+    #card-tabela.compact-mode .col-api > div { gap: 0; padding: 0; }
+    #card-tabela.compact-mode .col-api > div > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+
+    /* ── Mobile compact ── */
+    #lista-mobile.compact-mode .mcard {
+      padding: 3px 10px;
+      flex-direction: row;
+      align-items: center;
+      min-height: 32px;
+      gap: 0;
+      cursor: pointer;
+    }
+    #lista-mobile.compact-mode .mcard.mcard-header { padding: 3px 10px; }
+    #lista-mobile.compact-mode .mcard-body { display: none !important; }
+    #lista-mobile.compact-mode .mcard-top { flex: 1; gap: 6px; align-items: center; }
+    #lista-mobile.compact-mode .mcard-drag { font-size: 15px; padding-top: 0; }
+    #lista-mobile.compact-mode .mcard-name-wrap textarea {
+      font-size: 11px; min-height: 20px; padding: 1px 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+    }
+    #lista-mobile.compact-mode .mcard-toggle { display: none; }
+    #lista-mobile.compact-mode .mcard-del { font-size: 13px; padding: 1px 4px; }
+    #lista-mobile.compact-mode .mcard-compact-info {
+      display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+      font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3);
+    }
+    .mcard-compact-info { display: none; }
+
+    /* expand overlay no compacto */
+    #lista-mobile.compact-mode .mcard.compact-expanded .mcard-body {
+      display: flex !important;
+    }
   </style>
 </head>
 
@@ -2280,6 +2348,7 @@
         <div class="card-header">
           <span class="card-title"><span class="dot"></span>Itens da Lista</span>
           <div style="display:flex; gap:6px; align-items:center;">
+            <button id="btn-compact-toggle" onclick="toggleCompactMode()" title="Modo compacto — uma linha por produto">☰</button>
             <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirConfigColunas()"
               title="Configurar Colunas da Tabela">⚙️</button>
             <span id="count-badge" style="font-size:.7rem; color:var(--text3);"></span>
@@ -3822,6 +3891,7 @@ Exemplo de saída:
         <div class="mcard-top">
           <span class="mcard-drag">⠿</span>
           <div class="mcard-name-wrap"><textarea data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></div>
+          <span class="mcard-compact-info">${item.price ? 'R$'+esc(item.price) : ''} ${badgeHtml}</span>
           <button class="mcard-toggle" data-idx="${idx}">▼</button>
           <button class="mcard-del" data-idx="${idx}">✕</button>
         </div>
@@ -3888,6 +3958,44 @@ Exemplo de saída:
         if (ta) setTimeout(() => autoGrow(ta), 0);
       });
     }
+
+    let _compactMode = false;
+    function toggleCompactMode() {
+      _compactMode = !_compactMode;
+      const btn = el('btn-compact-toggle');
+      const tableCard = el('card-tabela');
+      const mobileList = el('lista-mobile');
+      btn.classList.toggle('active', _compactMode);
+      btn.textContent = _compactMode ? '⊟' : '☰';
+      btn.title = _compactMode ? 'Expandir tudo' : 'Modo compacto';
+      if (tableCard) tableCard.classList.toggle('compact-mode', _compactMode);
+      if (mobileList) {
+        mobileList.classList.toggle('compact-mode', _compactMode);
+        if (_compactMode) {
+          // fechar todos, adicionar click para expand individual
+          mobileList.querySelectorAll('.mcard[data-midx]').forEach(card => {
+            card.classList.remove('compact-expanded');
+            card.querySelector('.mcard-body')?.style.removeProperty('display');
+          });
+          mobileList.querySelectorAll('.mcard-compact-info').forEach(el => el.style.display = 'flex');
+        } else {
+          mobileList.querySelectorAll('.mcard-compact-info').forEach(el => el.style.display = '');
+        }
+      }
+    }
+
+    // Click no card no modo compacto expande/colapsa individualmente
+    document.addEventListener('click', e => {
+      if (!_compactMode) return;
+      const card = e.target.closest('#lista-mobile .mcard[data-midx]');
+      if (!card) return;
+      if (e.target.closest('.mcard-del, .mcard-drag')) return;
+      const body = card.querySelector('.mcard-body');
+      if (!body) return;
+      e.stopPropagation();
+      const isOpen = card.classList.toggle('compact-expanded');
+      body.style.display = isOpen ? 'flex' : '';
+    }, true);
 
     let _popoverAtivo = null;
     function fecharPopover() { if (_popoverAtivo) { _popoverAtivo.remove(); _popoverAtivo = null; } }
@@ -4350,7 +4458,44 @@ Exemplo de saída:
         const borderColor = conf.type === 'atributo' ? 'var(--accent)' : 'var(--border)';
         div.style.cssText = `background:var(--bg); border:1px solid ${borderColor}; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;`;
         const isManual = conf.type === 'manual', isFormula = conf.type === 'formula', isAtributo = conf.type === 'atributo';
-        div.innerHTML = `<div style="display:flex; gap:6px; align-items:center;"><input type="text" value="${esc(conf.label)}" onchange="updatePriceConf(${idx}, 'label', this.value)" placeholder="Nome" style="flex:1; font-weight:700; font-size:12px; padding:4px 6px;"/><select onchange="updatePriceConf(${idx}, 'type', this.value)" style="width:80px; font-size:11px; padding:3px 5px;"><option value="manual" ${isManual ? 'selected' : ''}>Manual</option><option value="formula" ${isFormula ? 'selected' : ''}>Fórmula</option><option value="atributo" ${isAtributo ? 'selected' : ''}>Atributo</option></select><button class="btn btn-danger btn-sm" onclick="removePriceConf(${idx})" style="padding:2px 5px; font-size:10px;">✕</button></div>${isFormula ? `<div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap; font-size:11px; color:var(--text2);"><span>Base:</span><select onchange="updatePriceConf(${idx}, 'base', this.value)" style="font-size:10px; max-width:70px;"><option value="price" ${conf.base === 'price' ? 'selected' : ''}>Base</option>${appData.priceConfigs.filter((c, i) => i < idx && c.type !== 'atributo').map(c => `<option value="${c.id}" ${conf.base === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}</select><select onchange="updatePriceConf(${idx}, 'op', this.value)" style="width:38px; font-size:10px;"><option value="+" ${conf.op === '+' ? 'selected' : ''}>+</option><option value="-" ${conf.op === '-' ? 'selected' : ''}>-</option><option value="*" ${conf.op === '*' ? 'selected' : ''}>×</option><option value="/" ${conf.op === '/' ? 'selected' : ''}>÷</option></select><input type="number" value="${conf.val || 0}" onchange="updatePriceConf(${idx}, 'val', this.value)" style="width:45px; font-size:10px; padding:2px 4px;"/><label style="display:flex; align-items:center; gap:2px; font-size:10px;"><input type="checkbox" ${conf.isPct ? 'checked' : ''} onchange="updatePriceConf(${idx}, 'isPct', this.checked)"/> %</label><span style="font-size:10px;">÷</span><input type="number" value="${conf.divisor || 1}" onchange="updatePriceConf(${idx}, 'divisor', this.value)" style="width:35px; font-size:10px; padding:2px 4px;" placeholder="1"/></div>` : ''}${isAtributo ? `<div style="display:flex; gap:6px; align-items:center; font-size:11px; color:var(--text2);"><span style="white-space:nowrap;">📡 Campo API:</span><div style="flex:1; display:flex; flex-direction:column; gap:4px;"><input type="text" list="dl-apifields-${idx}" value="${esc(conf.apiField || 'nome_grupo')}" onchange="updatePriceConf(${idx}, 'apiField', this.value)" style="flex:1; font-size:11px; padding:3px 5px;" placeholder="Ex: video, Marca, COMISSAO"><datalist id="dl-apifields-${idx}">${datalistOptions}</datalist></div></div><div style="font-size:9px; color:var(--text3); font-style:italic; padding:0 2px;">Escolha da lista ou digite o nome exato do campo extra (ex: video, Marca)</div>` : ''}`;
+        div.innerHTML = `<div style="display:flex; gap:4px; align-items:center;">
+          <div style="display:flex;flex-direction:column;gap:1px;margin-right:2px;">
+            <button class="btn btn-ghost" onclick="window.movePriceConf(${idx},-1)" style="padding:0 4px;font-size:10px;height:16px;line-height:1;" ${idx===0?'disabled':''}>▲</button>
+            <button class="btn btn-ghost" onclick="window.movePriceConf(${idx},1)" style="padding:0 4px;font-size:10px;height:16px;line-height:1;" ${idx===appData.priceConfigs.length-1?'disabled':''}>▼</button>
+          </div>
+          <input type="text" value="${esc(conf.label)}" onchange="updatePriceConf(${idx}, 'label', this.value)" placeholder="Nome" style="flex:1; font-weight:700; font-size:12px; padding:4px 6px;"/>
+          <select onchange="updatePriceConf(${idx}, 'type', this.value)" style="width:80px; font-size:11px; padding:3px 5px;">
+            <option value="manual" ${isManual ? 'selected' : ''}>Manual</option>
+            <option value="formula" ${isFormula ? 'selected' : ''}>Fórmula</option>
+            <option value="atributo" ${isAtributo ? 'selected' : ''}>Atributo</option>
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="removePriceConf(${idx})" style="padding:2px 5px; font-size:10px;">✕</button>
+        </div>
+        ${isFormula ? `<div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap; font-size:11px; color:var(--text2);">
+          <span>Base:</span>
+          <select onchange="updatePriceConf(${idx}, 'base', this.value)" style="font-size:10px; max-width:90px;">
+            <option value="price" ${conf.base === 'price' ? 'selected' : ''}>Preço Base</option>
+            ${appData.priceConfigs.filter((c, i) => i !== idx && c.type !== 'formula').map(c => `<option value="${c.id}" ${conf.base === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}
+          </select>
+          <select onchange="updatePriceConf(${idx}, 'op', this.value)" style="width:38px; font-size:10px;">
+            <option value="+" ${conf.op === '+' ? 'selected' : ''}>+</option>
+            <option value="-" ${conf.op === '-' ? 'selected' : ''}>-</option>
+            <option value="*" ${conf.op === '*' ? 'selected' : ''}>×</option>
+            <option value="/" ${conf.op === '/' ? 'selected' : ''}>÷</option>
+          </select>
+          <input type="number" value="${conf.val || 0}" onchange="updatePriceConf(${idx}, 'val', this.value)" style="width:45px; font-size:10px; padding:2px 4px;"/>
+          <label style="display:flex; align-items:center; gap:2px; font-size:10px;"><input type="checkbox" ${conf.isPct ? 'checked' : ''} onchange="updatePriceConf(${idx}, 'isPct', this.checked)"/> %</label>
+          <span style="font-size:10px;">÷</span>
+          <input type="number" value="${conf.divisor || 1}" onchange="updatePriceConf(${idx}, 'divisor', this.value)" style="width:35px; font-size:10px; padding:2px 4px;" placeholder="1"/>
+        </div>` : ''}
+        ${isAtributo ? `<div style="display:flex; gap:6px; align-items:center; font-size:11px; color:var(--text2);">
+          <span style="white-space:nowrap;">📡 Campo API:</span>
+          <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+            <input type="text" list="dl-apifields-${idx}" value="${esc(conf.apiField || 'nome_grupo')}" onchange="updatePriceConf(${idx}, 'apiField', this.value)" style="flex:1; font-size:11px; padding:3px 5px;" placeholder="Ex: video, Marca, COMISSAO">
+            <datalist id="dl-apifields-${idx}">${datalistOptions}</datalist>
+          </div>
+        </div>
+        <div style="font-size:9px; color:var(--text3); font-style:italic; padding:0 2px;">Escolha da lista ou digite o nome exato do campo extra</div>` : ''}`;
         container.appendChild(div);
       });
     }
@@ -4370,6 +4515,14 @@ Exemplo de saída:
       appData.priceConfigs[idx][field] = val;
       salvar(); renderPriceConfigs(); renderTabela(); renderMobile(); atualizarPreview();
     }
+
+    window.movePriceConf = function(idx, dir) {
+      const to = idx + dir;
+      if (to < 0 || to >= appData.priceConfigs.length) return;
+      const moved = appData.priceConfigs.splice(idx, 1)[0];
+      appData.priceConfigs.splice(to, 0, moved);
+      salvar(); renderPriceConfigs(); renderTabela(); renderMobile(); atualizarPreview();
+    };
 
     async function removePriceConf(idx) {
       if (!await showConfirm('Remover Coluna', 'Deseja excluir esta configuração de preço?', true)) return;
