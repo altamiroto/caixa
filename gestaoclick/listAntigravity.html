@@ -2184,61 +2184,68 @@
       padding: 4px 8px;
       transition: all .15s;
       white-space: nowrap;
-      letter-spacing: .03em;
     }
-    #btn-compact-toggle.active {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* ── Desktop compact ── */
+    #btn-compact-toggle.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
     #card-tabela.compact-mode table { font-size: 11px; }
     #card-tabela.compact-mode thead th { padding: 2px 4px; font-size: 9px; }
     #card-tabela.compact-mode td { padding: 0 3px; height: 22px; max-height: 22px; overflow: hidden; }
     #card-tabela.compact-mode td input,
     #card-tabela.compact-mode td textarea,
-    #card-tabela.compact-mode .label-ta {
-      font-size: 11px !important; padding: 0 3px !important;
-      min-height: 18px !important; height: 20px !important;
-      line-height: 1.1; overflow: hidden; resize: none;
-    }
+    #card-tabela.compact-mode .label-ta { font-size: 11px !important; padding: 0 3px !important; min-height: 18px !important; height: 20px !important; line-height: 1.1; overflow: hidden; resize: none; }
     #card-tabela.compact-mode .badge { font-size: 8px; padding: 1px 3px; }
     #card-tabela.compact-mode .vincul-add-btn { display: none !important; }
     #card-tabela.compact-mode .btn-icon { width: 18px; height: 18px; font-size: 10px; }
     #card-tabela.compact-mode .order-inp { width: 26px !important; font-size: 9px !important; }
-    #card-tabela.compact-mode .col-api > div { gap: 0; padding: 0; }
-    #card-tabela.compact-mode .col-api > div > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-
-    /* ── Mobile compact ── */
-    #lista-mobile.compact-mode .mcard {
-      padding: 3px 10px;
-      flex-direction: row;
-      align-items: center;
-      min-height: 32px;
-      gap: 0;
-      cursor: pointer;
-    }
+    #lista-mobile.compact-mode .mcard { padding: 3px 10px; flex-direction: row; align-items: center; min-height: 32px; gap: 0; cursor: pointer; }
     #lista-mobile.compact-mode .mcard.mcard-header { padding: 3px 10px; }
     #lista-mobile.compact-mode .mcard-body { display: none !important; }
     #lista-mobile.compact-mode .mcard-top { flex: 1; gap: 6px; align-items: center; }
     #lista-mobile.compact-mode .mcard-drag { font-size: 15px; padding-top: 0; }
-    #lista-mobile.compact-mode .mcard-name-wrap textarea {
-      font-size: 11px; min-height: 20px; padding: 1px 4px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
-    }
+    #lista-mobile.compact-mode .mcard-name-wrap textarea { font-size: 11px; min-height: 20px; padding: 1px 4px; pointer-events: none; }
     #lista-mobile.compact-mode .mcard-toggle { display: none; }
     #lista-mobile.compact-mode .mcard-del { font-size: 13px; padding: 1px 4px; }
-    #lista-mobile.compact-mode .mcard-compact-info {
-      display: flex; align-items: center; gap: 5px; flex-shrink: 0;
-      font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3);
-    }
+    #lista-mobile.compact-mode .mcard-compact-info { display: flex; align-items: center; gap: 5px; flex-shrink: 0; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text3); }
     .mcard-compact-info { display: none; }
+    #lista-mobile.compact-mode .mcard.compact-expanded .mcard-body { display: flex !important; }
 
-    /* expand overlay no compacto */
-    #lista-mobile.compact-mode .mcard.compact-expanded .mcard-body {
-      display: flex !important;
+    /* ══ CAMPO MANUAL EXPANSÍVEL ══════════════════════════════════ */
+    td textarea.manual-ta {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 2px 5px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      color: var(--text);
+      width: 100%;
+      resize: vertical;
+      min-height: 26px;
+      max-height: 120px;
+      line-height: 1.35;
     }
+    td textarea.manual-ta:focus { background: var(--bg); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); outline: none; }
+
+    /* ══ COLUNA PERSONALIZADO ══════════════════════════════════════ */
+    .col-custom { width: 140px; }
+    td textarea.custom-ta {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 2px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--text);
+      width: 100%;
+      resize: vertical;
+      min-height: 26px;
+      max-height: 120px;
+      line-height: 1.35;
+    }
+    td textarea.custom-ta:focus { outline: none; border-color: #a78bfa; box-shadow: 0 0 0 2px rgba(167,139,250,.2); background: var(--bg); }
+    tr.row-custom-active { border-left: 4px solid #a78bfa !important; background: rgba(167,139,250,.06) !important; }
+    tr.row-custom-active td textarea.custom-ta { background: rgba(167,139,250,.08); border-color: #a78bfa; color: #a78bfa; font-weight: 600; }
+    .mcard.mcard-custom-active { border-left: 4px solid #a78bfa !important; background: rgba(167,139,250,.06) !important; }
+    .mcard-custom-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 20px; font-size: .65rem; font-weight: 700; background: rgba(167,139,250,.15); color: #a78bfa; border: 1px solid rgba(167,139,250,.4); }
   </style>
 </head>
 
@@ -2287,7 +2294,7 @@
       <div id="save-status-pill">
         <div class="sync-dot"></div>
         <span id="save-status-text">SALVO</span>
-        <button class="sync-btn-cloud" onclick="forceSyncNow()" title="Forçar envio para nuvem agora">🔄</button>
+        <button class="sync-btn-cloud" onclick="initAuth()" title="Forçar atualização da nuvem">🔄</button>
         <button class="sync-btn-cloud" onclick="abrirHistorico()" title="Ver histórico de versões" style="font-size:14px">🕓</button>
       </div>
       <div id="user-area">
@@ -2348,7 +2355,7 @@
         <div class="card-header">
           <span class="card-title"><span class="dot"></span>Itens da Lista</span>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button id="btn-compact-toggle" onclick="toggleCompactMode()" title="Modo compacto — uma linha por produto">☰</button>
+            <button id="btn-compact-toggle" onclick="toggleCompactMode()" title="Modo compacto">☰</button>
             <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirConfigColunas()"
               title="Configurar Colunas da Tabela">⚙️</button>
             <span id="count-badge" style="font-size:.7rem; color:var(--text3);"></span>
@@ -2777,6 +2784,7 @@
         { id: 'col-label', label: 'Nome na Lista', width: '220px', visible: true },
         { id: 'col-price', label: 'Preço Base', width: '100px', visible: true },
         { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
+        { id: 'col-custom', label: '✏️ Personalizado', width: '160px', visible: true },
         { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
         { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
       ]
@@ -3298,24 +3306,9 @@ Exemplo de saída:
       } catch (e) { setSync('err', 'Erro ao salvar'); }
     }
 
-    async function forceSyncNow() {
-      if (!_currentUser) { toast('⚠️ Faça login primeiro para sincronizar.'); return; }
-      if (_conflictPending) { toast('⚠️ Resolva o conflito de versões antes de sincronizar.'); return; }
-      // Recarregar dados do disco para garantir dados reais
-      const localRaw = localStorage.getItem(STORAGE_KEY);
-      if (localRaw) { try { const p = JSON.parse(localRaw); if (p && p.listas) appData = p; } catch(e) {} }
-      _cloudLoading = false; _syncReady = true; _isSyncInProgress = false;
-      appData.savedAt = Date.now();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-      toast('📤 Forçando envio para nuvem…');
-      await syncToCloud(true);
-    }
-
-    let _pendingCloudData = null;
     let _cloudLoading = false;
     let _syncReady = false;
-    let _conflictPending = false;
-    let _isSyncInProgress = false;
+    let _conflictPending = false; // true enquanto modal de conflito estiver aberto — NUNCA subir nada
 
     async function syncToCloud(isManual = false) {
       if (_cloudLoading || !_syncReady || _conflictPending) return;
@@ -3325,25 +3318,18 @@ Exemplo de saída:
       if (isManual) el('sync-overlay').classList.add('active');
       const countAtStart = _pendingSaveCount;
       try {
-        // SEMPRE ler do localStorage na hora de enviar — fonte de verdade absoluta
-        const localRaw = localStorage.getItem(STORAGE_KEY);
-        const payloadParaEnviar = localRaw ? JSON.parse(localRaw) : appData;
-        const totalItens = (payloadParaEnviar.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-        console.log('[SYNC] Enviando', totalItens, 'itens para nuvem. Email:', _currentUser?.email);
-        const resp = await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ email: _currentUser.email, payload: payloadParaEnviar, _t: Date.now() })
-        });
+        const resp = await fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ email: _currentUser.email, payload: appData, _t: Date.now() }) });
         if (!resp.ok) throw new Error('Erro de rede: ' + resp.status);
         const data = await resp.json();
         if (data.status === 'success') {
-          console.log('[SYNC] ✅ Salvo na nuvem com sucesso! Itens:', totalItens);
-          criarBackup('cloud-sent', payloadParaEnviar);
+          // Backup local a cada envio bem-sucedido (deduplicado por conteúdo)
+          criarBackup('cloud-sent', appData);
+          // Só mostra salvo se nenhuma edição nova veio durante o envio
           if (_pendingSaveCount === countAtStart) {
             _pendingSaveCount = 0;
             updateCloudStatus('success');
           } else {
+            // Ainda há edições pendentes — reagendar
             updateCloudStatus('syncing');
             setTimeout(() => syncToCloud(false), 1500);
           }
@@ -3351,8 +3337,10 @@ Exemplo de saída:
           throw new Error(data.message || 'Erro no servidor');
         }
       } catch (e) {
-        console.error('[SYNC] ❌ Falha:', e.message);
+        console.error('Cloud save fail:', e);
+        // NUNCA mostrar "salvo" em caso de falha — mostrar erro real
         updateCloudStatus('err', 'Falha ao salvar na nuvem: ' + e.message);
+        // Tentar novamente em 30s automaticamente
         setTimeout(() => {
           if (_pendingSaveCount > 0 && _currentUser && _syncReady) syncToCloud(false);
         }, 30000);
@@ -3360,79 +3348,58 @@ Exemplo de saída:
       _cloudLoading = false; _isSyncInProgress = false; el('sync-overlay').classList.remove('active');
     }
 
+    let _isSyncInProgress = false;
     window.onbeforeunload = (e) => { if (_isSyncInProgress) { e.preventDefault(); return (e.returnValue = 'O salvamento na nuvem ainda não terminou. Deseja realmente sair?'); } };
 
+    let _pendingCloudData = null;
     function resolveConflict(choice) {
       el('conflict-modal').style.display = 'none';
       _conflictPending = false;
 
       if (choice === 'pull' && _pendingCloudData) {
         const totalItensNuvem = (_pendingCloudData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
-        if (totalItensNuvem === 0) {
-          // Nuvem vazia — o usuário escolheu "usar nuvem" mas ela está vazia, então subir o local
+        const totalItensLocal = (appData.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+        if (totalItensNuvem === 0 && totalItensLocal > 0) {
+          // Nuvem vazia — manter local e subir imediatamente
           _pendingCloudData = null;
-          _syncReady = true; _cloudLoading = false;
+          _syncReady = true;
+          _cloudLoading = false;
           appData.savedAt = Date.now();
           localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
           updateCloudStatus('syncing');
           toast('📤 Nuvem vazia — enviando dados locais para nuvem…');
-          setTimeout(() => syncToCloud(false), 50);
+          syncToCloud(false);
           return;
         }
-        criarBackup('local', appData, true);
+        criarBackup('local', appData, true); // salva local como backup antes de sobrescrever
         appData = _pendingCloudData;
         updateSchema();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         switchTab(appData.currentId || appData.listas[0].id);
         renderQuickCopy();
         _pendingCloudData = null;
-        _syncReady = true; _cloudLoading = false;
+        _syncReady = true;
         updateCloudStatus('success');
         toast('📥 Dados da nuvem carregados — versão local salva no histórico');
         return;
       }
 
       if (choice === 'push') {
-        el('conflict-modal').style.display = 'none';
-        _conflictPending = false;
-        _cloudLoading = false;
-        _syncReady = true;
-        _isSyncInProgress = false;
+        if (_pendingCloudData) criarBackup('cloud', _pendingCloudData, true);
         _pendingCloudData = null;
-
-        // Ler do disco
-        const localRaw = localStorage.getItem(STORAGE_KEY);
-        const dadosParaEnviar = localRaw ? JSON.parse(localRaw) : appData;
-        dadosParaEnviar.savedAt = Date.now();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosParaEnviar));
-        appData = dadosParaEnviar;
-
-        const totalItens = (dadosParaEnviar.listas||[]).reduce((s,l)=>s+(l.lista||[]).length,0);
+        _syncReady = true;
+        _cloudLoading = false; // garantir que não está travado da carga inicial
+        appData.savedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         updateCloudStatus('syncing');
-        toast('📤 Enviando ' + totalItens + ' itens...');
-
-        // POST direto para aba DADOS — sem action, sem histórico, sem interferência
-        const bodyStr = JSON.stringify({ email: _currentUser.email, payload: dadosParaEnviar, _t: Date.now() });
-        fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: bodyStr })
-          .then(r => r.text())
-          .then(txt => {
-            console.log('[PUSH] Resposta raw:', txt);
-            const data = JSON.parse(txt);
-            if (data.status === 'success') {
-              updateCloudStatus('success');
-              toast('✅ ' + totalItens + ' itens salvos na planilha!');
-            } else {
-              updateCloudStatus('err', data.message || 'erro');
-              toast('❌ Erro: ' + (data.message || txt));
-            }
-          })
-          .catch(e => { updateCloudStatus('err', e.message); toast('❌ ' + e.message); });
+        toast('📤 Enviando dados locais para nuvem…');
+        syncToCloud(false);
         return;
       }
 
       // Cancelar
       _pendingCloudData = null;
-      _syncReady = true; _cloudLoading = false;
+      _syncReady = true;
       updateCloudStatus('success');
     }
 
@@ -3462,11 +3429,11 @@ Exemplo de saída:
         if (!_currentUser.email) { logout(); return; }
         renderUser(_currentUser);
         _cloudLoading = true;
-        _conflictPending = true;
+        _conflictPending = true; // Bloquear qualquer upload durante a verificação
         _syncReady = false;
         updateCloudStatus('loading');
         try {
-          const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email + '&_nc=' + Date.now(), { cache: 'no-store' });
+          const resp = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
           if (!resp.ok) throw new Error('Servidor não respondeu (' + resp.status + ')');
           let data = await resp.json();
 
@@ -3483,89 +3450,64 @@ Exemplo de saída:
             }
           }
 
-          // Sempre ler do localStorage — fonte de verdade do dispositivo
+          const totalNuvem = (data && data.listas ? data.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+          // Ler do localStorage diretamente — fonte da verdade mais confiável
           const localRaw = localStorage.getItem(STORAGE_KEY);
           const localParsed = localRaw ? JSON.parse(localRaw) : null;
-          const totalNuvem = (data && data.listas ? data.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
           const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
-          const temDadosNuvem = totalNuvem > 0;
           const temDadosLocal = totalLocal > 0;
+          const temDadosNuvem = totalNuvem > 0;
+
+          // Timestamps para comparar versões
           const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
           const tsNuvem = (data && data.savedAt) ? data.savedAt : 0;
-
-          console.log('[AUTH] Nuvem:', totalNuvem, 'itens | Local:', totalLocal, 'itens | tsNuvem:', new Date(tsNuvem).toLocaleString() , '| tsLocal:', new Date(tsLocal).toLocaleString());
+          // Considerar sincronizado se diferença < 30s (margem para latência de rede)
+          const estaSincronizado = Math.abs(tsLocal - tsNuvem) < 30000;
 
           if (!temDadosNuvem && !temDadosLocal) {
-            // Caso 1: ambos vazios — nada a fazer
-            _conflictPending = false; _cloudLoading = false; _syncReady = true;
-            updateCloudStatus('success');
+            // Caso 1: ambos vazios
+            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
 
           } else if (!temDadosNuvem && temDadosLocal) {
-            // Caso 2: nuvem vazia/zerada, local tem dados → SEMPRE mostrar conflito
-            // Usar localParsed (disco) como referência — não appData em memória
-            _pendingCloudData = data;
-            _conflictPending = true; _syncReady = false; _cloudLoading = false;
-            const lo = localParsed;
-            el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(lo.listas||[]).length} lista(s)<br>Salvo em: ${lo.savedAt ? new Date(lo.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
+            // Caso 2: nuvem vazia, local tem dados — perguntar
+            mostrarConflito(data, appData);
             el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
+            el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(localParsed.listas||[]).length} lista(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
             el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
-            el('conflict-modal').style.display = 'flex';
             updateCloudStatus('success');
 
           } else if (!temDadosLocal && temDadosNuvem) {
-            // Caso 3: local vazio, nuvem tem dados → baixar
+            // Caso 3: local vazio, nuvem tem dados — baixar sem risco
             criarBackup('cloud', data, true);
             appData = data; updateSchema();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
             switchTab(appData.currentId || appData.listas[0].id);
             renderQuickCopy();
-            _conflictPending = false; _cloudLoading = false; _syncReady = true;
-            updateCloudStatus('success');
+            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
             toast('☁️ Dados carregados da nuvem');
 
+          } else if (estaSincronizado || tsNuvem >= tsLocal) {
+            // Caso 4: ambos têm dados e nuvem é igual ou mais recente — usar nuvem silenciosamente
+            appData = data; updateSchema();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            switchTab(appData.currentId || appData.listas[0].id);
+            renderQuickCopy();
+            _conflictPending = false; _syncReady = true; updateCloudStatus('success');
+
           } else {
-            // Caso 4: AMBOS têm dados reais → comparar conteúdo e timestamp
-            // NUNCA sobrescrever silenciosamente se o local tem mais itens que a nuvem
-            const localTemMais = totalLocal > totalNuvem;
-            const localMaisRecente = tsLocal > tsNuvem;
-            const diferenca = Math.abs(tsLocal - tsNuvem);
-            const praticamenteSincronizados = diferenca < 10000 && totalLocal === totalNuvem;
-
-            if (praticamenteSincronizados) {
-              // Conteúdo e timestamp praticamente iguais — não mexer
-              _conflictPending = false; _cloudLoading = false; _syncReady = true;
-              updateCloudStatus('success');
-
-            } else if (localTemMais || localMaisRecente) {
-              // Local tem mais dados ou é mais recente → mostrar conflito para o usuário decidir
-              criarBackup('cloud', data, true);
-              _pendingCloudData = data;
-              _conflictPending = true; _syncReady = false; _cloudLoading = false;
-              const lo = localParsed;
-              const cl = data;
-              el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(lo.listas||[]).length} lista(s)<br>Salvo em: ${lo.savedAt ? new Date(lo.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
-              el('conflict-cloud-box').innerHTML = `<strong>☁️ Nuvem</strong>${totalNuvem} item(s) em ${(cl.listas||[]).length} lista(s)<br>Salvo em: ${cl.savedAt ? new Date(cl.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
-              el('conflict-modal').style.display = 'flex';
-              updateCloudStatus('success');
-
-            } else {
-              // Nuvem tem mais dados ou é mais recente → usar nuvem
-              criarBackup('cloud', data, false);
-              appData = data; updateSchema();
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-              switchTab(appData.currentId || appData.listas[0].id);
-              renderQuickCopy();
-              _conflictPending = false; _cloudLoading = false; _syncReady = true;
-              updateCloudStatus('success');
-            }
+            // Caso 5: local é MAIS RECENTE que a nuvem (mais de 30s) — aí sim há conflito real
+            criarBackup('cloud', data, true);
+            mostrarConflito(data, localParsed);
+            updateCloudStatus('success');
           }
 
         } catch (e) {
           console.error('Cloud load fail:', e);
           updateCloudStatus('err', 'Falha ao conectar: ' + e.message);
-          toast('⚠️ Não foi possível acessar a nuvem. Usando dados locais.');
-          _conflictPending = false; _cloudLoading = false; _syncReady = true;
+          toast('⚠️ Não foi possível acessar a nuvem. Usando dados locais. Tente sincronizar manualmente.');
+          _conflictPending = false; _syncReady = true;
         }
+        _cloudLoading = false;
       } else { _syncReady = false; }
 
       setTimeout(() => {
@@ -3578,68 +3520,68 @@ Exemplo de saída:
               localStorage.setItem(CLOUD_KEY, JSON.stringify(_currentUser));
               renderUser(_currentUser);
               fecharAuth();
-              _cloudLoading = true; _conflictPending = true; _syncReady = false;
-              updateCloudStatus('loading');
+              _cloudLoading = true; updateCloudStatus('loading');
+              // Trava imediata antes de qualquer comparação
+              _conflictPending = true;
+              _syncReady = false;
               try {
-                const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email + '&_nc=' + Date.now(), { cache: 'no-store' });
+                const r = await fetch(SHEETS_URL + '?email=' + _currentUser.email);
                 if (!r.ok) throw new Error('Servidor não respondeu (' + r.status + ')');
                 const d = await r.json();
+                const totalNuvem = (d && d.listas ? d.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
+                // Ler do localStorage diretamente — mais seguro que appData em memória
                 const localRaw = localStorage.getItem(STORAGE_KEY);
                 const localParsed = localRaw ? JSON.parse(localRaw) : null;
-                const totalNuvem = (d && d.listas ? d.listas : []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0);
                 const totalLocal = localParsed ? (localParsed.listas || []).reduce((s, l) => s + (l.lista ? l.lista.length : 0), 0) : 0;
-                const temDadosNuvem = totalNuvem > 0;
                 const temDadosLocal = totalLocal > 0;
+                const temDadosNuvem = totalNuvem > 0;
+
                 const tsLocal = (localParsed && localParsed.savedAt) ? localParsed.savedAt : 0;
                 const tsNuvem = (d && d.savedAt) ? d.savedAt : 0;
+                const estaSincronizado = Math.abs(tsLocal - tsNuvem) < 30000;
 
                 if (!temDadosNuvem && !temDadosLocal) {
-                  _conflictPending = false; _cloudLoading = false; _syncReady = true; updateCloudStatus('success');
+                  _conflictPending = false;
+                  _syncReady = true; updateCloudStatus('success');
                 } else if (!temDadosNuvem && temDadosLocal) {
-                  _pendingCloudData = d;
-                  _conflictPending = true; _syncReady = false; _cloudLoading = false;
-                  el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(localParsed.listas||[]).length} lista(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
-                  el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado na nuvem para esta conta.';
+                  // Nuvem vazia, local tem dados — perguntar
+                  mostrarConflito(d || {listas:[]}, localParsed);
+                  el('conflict-cloud-box').innerHTML = '<strong>☁️ Nuvem</strong>Nenhum dado encontrado na nuvem para esta conta.';
+                  el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s)<br>Salvo em: ${localParsed.savedAt ? new Date(localParsed.savedAt).toLocaleString('pt-BR') : 'data desconhecida'}`;
                   el('conflict-msg').textContent = 'Sua conta não tem dados na nuvem. O que deseja fazer?';
-                  el('conflict-modal').style.display = 'flex';
                   updateCloudStatus('success');
                 } else if (!temDadosLocal && temDadosNuvem) {
+                  // Local vazio, nuvem tem dados — baixar sem risco
                   criarBackup('cloud', d, true);
                   appData = d; updateSchema();
                   localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                   switchTab(appData.currentId || appData.listas[0].id);
                   renderQuickCopy();
-                  _conflictPending = false; _cloudLoading = false; _syncReady = true; updateCloudStatus('success');
+                  _conflictPending = false;
+                  _syncReady = true; updateCloudStatus('success');
                   toast('☁️ Dados da nuvem carregados');
+                } else if (estaSincronizado || tsNuvem >= tsLocal) {
+                  // Nuvem igual ou mais recente — usar nuvem silenciosamente
+                  appData = d; updateSchema();
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                  switchTab(appData.currentId || appData.listas[0].id);
+                  renderQuickCopy();
+                  _conflictPending = false;
+                  _syncReady = true; updateCloudStatus('success');
                 } else {
-                  const localTemMais = totalLocal > totalNuvem;
-                  const localMaisRecente = tsLocal > tsNuvem;
-                  const praticamenteSincronizados = Math.abs(tsLocal - tsNuvem) < 10000 && totalLocal === totalNuvem;
-                  if (praticamenteSincronizados) {
-                    _conflictPending = false; _cloudLoading = false; _syncReady = true; updateCloudStatus('success');
-                  } else if (localTemMais || localMaisRecente) {
-                    criarBackup('cloud', d, true);
-                    _pendingCloudData = d;
-                    _conflictPending = true; _syncReady = false; _cloudLoading = false;
-                    el('conflict-local-box').innerHTML = `<strong>💾 Este dispositivo</strong>${totalLocal} item(s) em ${(localParsed.listas||[]).length} lista(s)<br>Salvo em: ${new Date(tsLocal).toLocaleString('pt-BR')}`;
-                    el('conflict-cloud-box').innerHTML = `<strong>☁️ Nuvem</strong>${totalNuvem} item(s) em ${(d.listas||[]).length} lista(s)<br>Salvo em: ${new Date(tsNuvem).toLocaleString('pt-BR')}`;
-                    el('conflict-modal').style.display = 'flex';
-                    updateCloudStatus('success');
-                  } else {
-                    criarBackup('cloud', d, false);
-                    appData = d; updateSchema();
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-                    switchTab(appData.currentId || appData.listas[0].id);
-                    renderQuickCopy();
-                    _conflictPending = false; _cloudLoading = false; _syncReady = true; updateCloudStatus('success');
-                  }
+                  // Local é mais recente que a nuvem — conflito real
+                  criarBackup('cloud', d, true);
+                  mostrarConflito(d, localParsed);
+                  updateCloudStatus('success');
                 }
               } catch (e) {
                 console.error('Login cloud load fail:', e);
                 toast('⚠️ Falha ao conectar com nuvem. Usando dados locais.');
                 updateCloudStatus('err', 'Falha ao conectar');
-                _conflictPending = false; _cloudLoading = false; _syncReady = true;
+                _conflictPending = false;
+                _syncReady = true;
               }
+              _cloudLoading = false;
             }
           });
         }
@@ -3768,29 +3710,32 @@ Exemplo de saída:
           tr.className = (semEstoque ? 'row-sem-estoque ' : '') + (_prodZebra % 2 === 0 ? 'row-even' : '');
 
           let html = '';
+          const temCustom = !!(item.customText && item.customText.trim());
+          if (temCustom) tr.className += ' row-custom-active';
           appData.tableCols.forEach(col => {
             if (!col.visible) return;
             if (col.id === 'col-drag') html += `<td class="col-drag">⠿</td>`;
             else if (col.id === 'col-order') html += `<td class="col-order"><input type="number" class="order-inp" value="${idx + 1}" min="1" max="${lista.length}"></td>`;
             else if (col.id === 'col-label') html += `<td class="col-label"><textarea class="label-ta" data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></td>`;
             else if (col.id === 'col-price') html += `<td class="col-price"><input type="text" data-field="price" value="${esc(item.price)}" placeholder="0" class="mono-inp" style="width:100%;"/></td>`;
+            else if (col.id === 'col-custom') {
+              const hasCustom = !!(item.customText && item.customText.trim());
+              html += `<td class="col-custom" style="vertical-align:top;">
+                <textarea class="custom-ta" data-field="customText" placeholder="Texto personalizado…" rows="1" title="${hasCustom ? '⚠️ PERSONALIZADO ATIVO — substitui o template geral' : 'Deixe vazio para usar o template geral'}">${esc(item.customText || '')}</textarea>
+                ${hasCustom ? `<div style="font-size:9px;color:#a78bfa;font-weight:700;text-align:center;line-height:1.2;">⚠️ ATIVO</div>` : ''}
+              </td>`;
+            }
             else if (col.id === 'col-dprices') {
               appData.priceConfigs.forEach(conf => {
                 const val = getDynamicPriceValue(item, conf);
-                const isReadonly = conf.type === 'formula'; // Apenas fórmulas são estritamente bloqueadas
+                const isReadonly = conf.type === 'formula';
                 const cssClass = conf.type === 'formula' ? 'calc-readonly' : (conf.type === 'atributo' ? 'attr-editable' : '');
                 const isOverridden = conf.type === 'atributo' && item.prices && item.prices[conf.id] !== undefined && item.prices[conf.id] !== '';
-                
-                html += `<td class="col-dprice">
-                  <input type="text" 
-                    class="mono-inp ${cssClass} ${isOverridden ? 'overridden' : ''}" 
-                    data-idx="${idx}" 
-                    data-confid="${conf.id}" 
-                    value="${esc(val)}" 
-                    ${isReadonly ? 'readonly' : ''} 
-                    style="width:100%; ${isOverridden ? 'border-color:var(--accent);' : ''}" 
-                    placeholder="-">
-                </td>`;
+                if (conf.type === 'manual') {
+                  html += `<td class="col-dprice" style="vertical-align:top;"><textarea class="manual-ta" data-idx="${idx}" data-confid="${conf.id}" placeholder="-" rows="1">${esc(val)}</textarea></td>`;
+                } else {
+                  html += `<td class="col-dprice"><input type="text" class="mono-inp ${cssClass} ${isOverridden ? 'overridden' : ''}" data-idx="${idx}" data-confid="${conf.id}" value="${esc(val)}" ${isReadonly ? 'readonly' : ''} style="width:100%; ${isOverridden ? 'border-color:var(--accent);' : ''}" placeholder="-"></td>`;
+                }
               });
             }
             else if (col.id === 'col-api') {
@@ -3815,7 +3760,27 @@ Exemplo de saída:
         tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (dragSrcIdx === null || dragSrcIdx === idx) return; const moved = lista.splice(dragSrcIdx, 1)[0]; lista.splice(idx, 0, moved); dragSrcIdx = null; renderTabela(); renderMobile(); atualizarPreview(); salvar(); });
         const orderInp = tr.querySelector('.order-inp');
         if (orderInp) { orderInp.addEventListener('change', () => { const novaPosicao = parseInt(orderInp.value, 10) - 1; if (isNaN(novaPosicao) || novaPosicao < 0 || novaPosicao >= lista.length || novaPosicao === idx) { orderInp.value = idx + 1; return; } const moved = lista.splice(idx, 1)[0]; lista.splice(novaPosicao, 0, moved); renderTabela(); renderMobile(); atualizarPreview(); salvar(); }); orderInp.addEventListener('mousedown', e => e.stopPropagation()); }
-        tr.querySelectorAll('[data-field]').forEach(inp => { inp.addEventListener('input', () => { lista[idx][inp.dataset.field] = inp.value; if (inp.tagName === 'TEXTAREA') autoGrow(inp); atualizarPreview(); salvar(); }); });
+        tr.querySelectorAll('[data-field]').forEach(inp => {
+          inp.addEventListener('input', () => {
+            lista[idx][inp.dataset.field] = inp.value;
+            if (inp.tagName === 'TEXTAREA') autoGrow(inp);
+            atualizarPreview(); salvar();
+            // Atualizar destaque de personalizado ao vivo
+            if (inp.dataset.field === 'customText') {
+              tr.classList.toggle('row-custom-active', !!(inp.value.trim()));
+              const badge = tr.querySelector('.custom-active-lbl');
+              if (badge) badge.style.display = inp.value.trim() ? 'block' : 'none';
+            }
+          });
+        });
+        tr.querySelectorAll('textarea.manual-ta').forEach(ta => {
+          ta.addEventListener('input', () => {
+            if (!lista[idx].prices) lista[idx].prices = {};
+            lista[idx].prices[ta.dataset.confid] = ta.value;
+            autoGrow(ta); atualizarPreview(); salvar();
+          });
+          setTimeout(() => autoGrow(ta), 0);
+        });
         tr.querySelectorAll('[data-confid]').forEach(inp => {
           inp.addEventListener('input', () => {
             if (!lista[idx].prices) lista[idx].prices = {};
@@ -3880,7 +3845,8 @@ Exemplo de saída:
         } else {
           const vinculos = item.vinculos && item.vinculos.length ? item.vinculos : null;
           const estoqueTotal = vinculos ? vinculos.reduce((s, v) => s + v.estoque, 0) : (item.estoque ?? null);
-          card.className = 'mcard' + (estoqueTotal !== null && estoqueTotal <= 0 ? ' mcard-sem-estoque' : '');
+          const temCustom = !!(item.customText && item.customText.trim());
+          card.className = 'mcard' + (estoqueTotal !== null && estoqueTotal <= 0 ? ' mcard-sem-estoque' : '') + (temCustom ? ' mcard-custom-active' : '');
           const temVinculo = !!(vinculos || item.prodId || item.sysname?.trim() || item.sku?.trim());
           let badgeHtml;
           if (!temVinculo) badgeHtml = `<span class="badge badge-unlinked">🔗 —</span>`;
@@ -3891,7 +3857,7 @@ Exemplo de saída:
         <div class="mcard-top">
           <span class="mcard-drag">⠿</span>
           <div class="mcard-name-wrap"><textarea data-field="label" placeholder="Nome na mensagem" rows="1">${esc(item.label)}</textarea></div>
-          <span class="mcard-compact-info">${item.price ? 'R$'+esc(item.price) : ''} ${badgeHtml}</span>
+          <span class="mcard-compact-info">${item.price ? 'R$'+esc(item.price)+' ' : ''}${badgeHtml}${temCustom ? ' ✏️' : ''}</span>
           <button class="mcard-toggle" data-idx="${idx}">▼</button>
           <button class="mcard-del" data-idx="${idx}">✕</button>
         </div>
@@ -3907,12 +3873,22 @@ Exemplo de saída:
             const isReadonly = conf.type === 'formula' || conf.type === 'atributo';
             const borderStyle = conf.type === 'atributo' ? 'border:1px solid var(--accent);' : 'border:1px solid var(--border);';
             const labelIcon = conf.type === 'atributo' ? '📡 ' : '';
+            if (conf.type === 'manual') {
+              return `<div style="flex:1; min-width:45%; background:var(--surface); padding:4px 7px; border-radius:6px; border:1px solid var(--border);"><div style="font-size:9px; color:var(--text3); text-transform:uppercase; margin-bottom:2px;">${conf.label}</div><textarea data-confid="${conf.id}" style="width:100%;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--text);resize:vertical;min-height:28px;max-height:80px;padding:0;font-family:inherit;" placeholder="-">${esc(val)}</textarea></div>`;
+            }
             const valStyle = conf.type === 'atributo' ? 'width:100%; border:none; background:transparent; font-size:11px; font-style:italic; color:var(--accent); padding:0;' : 'width:100%; border:none; background:transparent; font-size:12px; font-weight:600; color:var(--text); padding:0;';
             return `<div style="flex:1; min-width:45%; background:var(--surface); padding:4px 7px; border-radius:6px; ${borderStyle}"><div style="font-size:9px; color:var(--text3); text-transform:uppercase; margin-bottom:2px;">${labelIcon}${conf.label}</div><input type="text" data-confid="${conf.id}" value="${esc(val)}" ${isReadonly ? 'readonly' : ''} style="${valStyle}" placeholder="-"></div>`;
           }).join('')}
           </div>
           <div class="mcard-vincul">
             <div class="mcard-vincul-btn vincul-cell ${temVinculo ? 'vinculado' : ''}" data-vincul-field="sys"><div style="flex:1;min-width:0;">${vinculosInfoHtml || `<span class="mcard-vincul-name empty">Vincular produto API…</span>`}</div></div>
+          </div>
+          <div style="border-top:1px dashed var(--border);padding-top:8px;margin-top:2px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <span style="font-size:10px;font-weight:700;color:${temCustom ? '#a78bfa' : 'var(--text3)'};text-transform:uppercase;letter-spacing:.04em;">✏️ Texto Personalizado</span>
+              ${temCustom ? `<span class="mcard-custom-badge">⚠️ ATIVO</span>` : `<span style="font-size:10px;color:var(--text3);font-style:italic;">vazio = usa template geral</span>`}
+            </div>
+            <textarea data-field="customText" placeholder="Digite aqui para personalizar este produto…" rows="2" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:11px;background:${temCustom ? 'rgba(167,139,250,.08)' : 'transparent'};border:1px solid ${temCustom ? '#a78bfa' : 'var(--border)'};border-radius:6px;padding:4px 7px;color:${temCustom ? '#a78bfa' : 'var(--text)'};resize:vertical;">${esc(item.customText || '')}</textarea>
           </div>
         </div>`;
         }
@@ -3963,28 +3939,26 @@ Exemplo de saída:
     function toggleCompactMode() {
       _compactMode = !_compactMode;
       const btn = el('btn-compact-toggle');
-      const tableCard = el('card-tabela');
-      const mobileList = el('lista-mobile');
       btn.classList.toggle('active', _compactMode);
       btn.textContent = _compactMode ? '⊟' : '☰';
       btn.title = _compactMode ? 'Expandir tudo' : 'Modo compacto';
+      const tableCard = el('card-tabela');
+      const mobileList = el('lista-mobile');
       if (tableCard) tableCard.classList.toggle('compact-mode', _compactMode);
       if (mobileList) {
         mobileList.classList.toggle('compact-mode', _compactMode);
         if (_compactMode) {
-          // fechar todos, adicionar click para expand individual
-          mobileList.querySelectorAll('.mcard[data-midx]').forEach(card => {
-            card.classList.remove('compact-expanded');
-            card.querySelector('.mcard-body')?.style.removeProperty('display');
+          mobileList.querySelectorAll('.mcard[data-midx]').forEach(c => {
+            c.classList.remove('compact-expanded');
+            c.querySelector('.mcard-body')?.style.removeProperty('display');
           });
-          mobileList.querySelectorAll('.mcard-compact-info').forEach(el => el.style.display = 'flex');
+          mobileList.querySelectorAll('.mcard-compact-info').forEach(e => e.style.display = 'flex');
         } else {
-          mobileList.querySelectorAll('.mcard-compact-info').forEach(el => el.style.display = '');
+          mobileList.querySelectorAll('.mcard-compact-info').forEach(e => e.style.display = '');
         }
       }
     }
 
-    // Click no card no modo compacto expande/colapsa individualmente
     document.addEventListener('click', e => {
       if (!_compactMode) return;
       const card = e.target.closest('#lista-mobile .mcard[data-midx]');
@@ -4075,6 +4049,19 @@ Exemplo de saída:
     // PREVIEW WPP
     // ════════════════════════════════════
     function formatarComTemplate(item, templateText) {
+      // Se o produto tem texto personalizado, usa-o diretamente
+      if (item.customText && item.customText.trim()) {
+        let texto = item.customText;
+        texto = texto.replace(/\{\{nome\}\}/gi, item.label || '');
+        texto = texto.replace(/\{\{preco\}\}/gi, item.price || '');
+        appData.priceConfigs.forEach(conf => {
+          const val = getDynamicPriceValue(item, conf);
+          const tag = conf.label.toLowerCase().replace(/\s+/g, '');
+          texto = texto.replace(new RegExp(`\\{\\{${tag}\\}\\}`, 'gi'), val || '');
+        });
+        return texto.trim();
+      }
+      // Caso padrão: template geral
       let texto = templateText || '{{nome}} - R$ {{preco}}';
       texto = texto.replace(/\{\{nome\}\}/gi, item.label || '');
       texto = texto.replace(/\{\{preco\}\}/gi, item.price || '');
@@ -4458,7 +4445,7 @@ Exemplo de saída:
         const borderColor = conf.type === 'atributo' ? 'var(--accent)' : 'var(--border)';
         div.style.cssText = `background:var(--bg); border:1px solid ${borderColor}; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;`;
         const isManual = conf.type === 'manual', isFormula = conf.type === 'formula', isAtributo = conf.type === 'atributo';
-        div.innerHTML = `<div style="display:flex; gap:4px; align-items:center;">
+        div.innerHTML = `<div style="display:flex;gap:4px;align-items:center;">
           <div style="display:flex;flex-direction:column;gap:1px;margin-right:2px;">
             <button class="btn btn-ghost" onclick="window.movePriceConf(${idx},-1)" style="padding:0 4px;font-size:10px;height:16px;line-height:1;" ${idx===0?'disabled':''}>▲</button>
             <button class="btn btn-ghost" onclick="window.movePriceConf(${idx},1)" style="padding:0 4px;font-size:10px;height:16px;line-height:1;" ${idx===appData.priceConfigs.length-1?'disabled':''}>▼</button>
@@ -4495,7 +4482,7 @@ Exemplo de saída:
             <datalist id="dl-apifields-${idx}">${datalistOptions}</datalist>
           </div>
         </div>
-        <div style="font-size:9px; color:var(--text3); font-style:italic; padding:0 2px;">Escolha da lista ou digite o nome exato do campo extra</div>` : ''}`;
+        <div style="font-size:9px; color:var(--text3); font-style:italic; padding:0 2px;">Escolha da lista ou digite o nome exato do campo extra (ex: video, Marca)</div>` : ''}`;
         container.appendChild(div);
       });
     }
@@ -4571,9 +4558,17 @@ Exemplo de saída:
           { id: 'col-label', label: 'Nome na Lista', width: '220px', visible: true },
           { id: 'col-price', label: 'Preço Base', width: '100px', visible: true },
           { id: 'col-dprices', label: 'Preços Dinâmicos', width: 'auto', visible: true, fixed: true },
+          { id: 'col-custom', label: '✏️ Personalizado', width: '160px', visible: true },
           { id: 'col-api', label: 'Vínculo API', width: '180px', visible: true },
           { id: 'col-actions', label: 'Ações', width: '90px', visible: true, fixed: true }
         ];
+      }
+      // Migração: adicionar col-custom se ainda não existe
+      if (!appData.tableCols.find(c => c.id === 'col-custom')) {
+        const apiIdx = appData.tableCols.findIndex(c => c.id === 'col-api');
+        const newCol = { id: 'col-custom', label: '✏️ Personalizado', width: '160px', visible: true };
+        if (apiIdx >= 0) appData.tableCols.splice(apiIdx, 0, newCol);
+        else appData.tableCols.push(newCol);
       }
       if (appData.sidebarCollapsed) {
         document.querySelector('.app').classList.add('sidebar-collapsed');
