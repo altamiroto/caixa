@@ -1440,6 +1440,16 @@ Capa silicone R$ 50,00
                 if (o.especificaMostrarPix !== undefined) { especificaMostrarPixCb.checked = o.especificaMostrarPix; syncChipPix(o.especificaMostrarPix); }
                 if (o.especificaMostrarTotal !== undefined) { especificaMostrarTotalCb.checked = o.especificaMostrarTotal; syncChipTotal(o.especificaMostrarTotal); }
             }
+            if (p.textos) {
+                const t = p.textos;
+                if (t.produtoPrefix !== undefined) document.getElementById('produtoPrefix').value = t.produtoPrefix;
+                if (t.textoAdicionalLinha !== undefined) document.getElementById('textoAdicionalLinha').value = t.textoAdicionalLinha;
+                if (t.textoCabecalho !== undefined) document.getElementById('textoCabecalhoMensagem').value = t.textoCabecalho;
+                if (t.textoFinal !== undefined) document.getElementById('textoFinalMensagem').value = t.textoFinal;
+                if (t.aiPrompt !== undefined) document.getElementById('aiPrompt').value = t.aiPrompt;
+                if (t.emoticonDinheiro !== undefined) document.getElementById('emoticonDinheiro').value = t.emoticonDinheiro;
+                if (t.emoticonCartao !== undefined) document.getElementById('emoticonCartao').value = t.emoticonCartao;
+            }
             if (typeof _fpRenderTaxas === 'function') _fpRenderTaxas();
             calcularParcelas();
             let btnEx = document.getElementById('btnPtExcluir');
@@ -1464,9 +1474,30 @@ Capa silicone R$ 50,00
                     p[i] = parseFloat(taxasRapidas[i]) / 100;
                 }
             }
-            if (typeof _coletarEstado === 'function') {
-                p.opcoes = _coletarEstado().opcoes;
-            }
+            p.opcoes = {
+                useEmoticons: document.getElementById('useEmoticons') ? document.getElementById('useEmoticons').checked : false,
+                hideDinheiroPix: document.getElementById('hideDinheiroPix') ? document.getElementById('hideDinheiroPix').checked : false,
+                showDebito: document.getElementById('showDebito') ? document.getElementById('showDebito').checked : false,
+                boldProductName: document.getElementById('boldProductName') ? document.getElementById('boldProductName').checked : false,
+                fatorArredondamento: document.getElementById('fatorArredondamento') ? document.getElementById('fatorArredondamento').value : '1',
+                acrescimoPercentual: document.getElementById('acrescimoPercentual') ? document.getElementById('acrescimoPercentual').value : '',
+                descontoPercentual: document.getElementById('descontoPercentual') ? document.getElementById('descontoPercentual').value : '',
+                descontoFixo: document.getElementById('descontoFixo') ? document.getElementById('descontoFixo').value : '',
+                lucroAdicional: document.getElementById('lucroAdicional') ? document.getElementById('lucroAdicional').value : '',
+                acrescimoComissao: document.getElementById('acrescimoComissao') ? document.getElementById('acrescimoComissao').value : '',
+                valorEntrada: document.getElementById('valorEntrada') ? document.getElementById('valorEntrada').value : '',
+                especificaMostrarPix: document.getElementById('especificaMostrarPix') ? document.getElementById('especificaMostrarPix').checked : false,
+                especificaMostrarTotal: document.getElementById('especificaMostrarTotal') ? document.getElementById('especificaMostrarTotal').checked : false
+            };
+            p.textos = {
+                produtoPrefix: document.getElementById('produtoPrefix') ? document.getElementById('produtoPrefix').value : '',
+                textoAdicionalLinha: document.getElementById('textoAdicionalLinha') ? document.getElementById('textoAdicionalLinha').value : '',
+                textoCabecalho: document.getElementById('textoCabecalhoMensagem') ? document.getElementById('textoCabecalhoMensagem').value : '',
+                textoFinal: document.getElementById('textoFinalMensagem') ? document.getElementById('textoFinalMensagem').value : '',
+                aiPrompt: document.getElementById('aiPrompt') ? document.getElementById('aiPrompt').value : '',
+                emoticonDinheiro: document.getElementById('emoticonDinheiro') ? document.getElementById('emoticonDinheiro').value : '',
+                emoticonCartao: document.getElementById('emoticonCartao') ? document.getElementById('emoticonCartao').value : ''
+            };
             _ptSalvarLocal();
         }
 
