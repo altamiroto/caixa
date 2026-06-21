@@ -1269,8 +1269,10 @@ Capa silicone R$ 50,00
         }
 
         function enviarLog(acao) {
-            if (acao && acao.startsWith('alterou_taxa')) {
-                _ptGravarMudancaAuto();
+            if (acao && (acao.startsWith('alterou_') || acao.startsWith('ativou_') || acao.startsWith('desativou_'))) {
+                if (_ptAtivo !== 'Padrão' && typeof _ptGravarMudancaAuto === 'function') {
+                    _ptGravarMudancaAuto();
+                }
             }
             _registrarAcao(acao);
             clearTimeout(_logTimer);
@@ -1286,6 +1288,8 @@ Capa silicone R$ 50,00
             _ptPerfis['Padrão'] = Object.assign({}, taxasDeJurosPadrao, { pix: 0, debito: 0.025 });
         }
 
+        let _ptTsLocal = Date.now();
+
         function _ptCarregarLocal() {
             _ptInitDefault();
             try {
@@ -1293,6 +1297,7 @@ Capa silicone R$ 50,00
                 if (salvo && salvo.perfis && salvo.perfis['Padrão']) {
                     _ptAtivo = salvo.ativo || 'Padrão';
                     _ptPerfis = salvo.perfis;
+                    if (salvo.ts) _ptTsLocal = salvo.ts;
                 }
             } catch(e) {}
             _ptRenderSelect();
@@ -1300,7 +1305,8 @@ Capa silicone R$ 50,00
         }
 
         function _ptSalvarLocal() {
-            localStorage.setItem('perfisTaxasBackup', JSON.stringify({ ativo: _ptAtivo, perfis: _ptPerfis }));
+            _ptTsLocal = Date.now();
+            localStorage.setItem('perfisTaxasBackup', JSON.stringify({ ativo: _ptAtivo, perfis: _ptPerfis, ts: _ptTsLocal }));
             _ptAgendarNuvem();
         }
 
@@ -1317,7 +1323,7 @@ Capa silicone R$ 50,00
                 await fetch(SHEETS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'save_profile', user_email: _currentUser.email, payload: { ativo: _ptAtivo, perfis: _ptPerfis } })
+                    body: JSON.stringify({ action: 'save_profile', user_email: _currentUser.email, payload: { ativo: _ptAtivo, perfis: _ptPerfis, ts: _ptTsLocal } })
                 });
                 setSaveStatus('✅ Perfis salvos', 'var(--primary-color)');
             } catch(e) {
@@ -1337,6 +1343,9 @@ Capa silicone R$ 50,00
                 if (json.payload) {
                     let p = typeof json.payload === 'string' ? JSON.parse(json.payload) : json.payload;
                     if (p && p.perfis) {
+                        let pts = p.ts || 0;
+                        if (pts < _ptTsLocal) return; // Nao sobrescreve se o local for mais novo
+                        _ptTsLocal = pts;
                         _ptAtivo = p.ativo || 'Padrão';
                         _ptPerfis = p.perfis;
                         _ptRenderSelect();
@@ -1415,6 +1424,22 @@ Capa silicone R$ 50,00
                     if (ch) ch.value = taxasRapidas[i];
                 }
             }
+            if (p.opcoes) {
+                const o = p.opcoes;
+                if (o.useEmoticons !== undefined) document.getElementById('useEmoticons').checked = o.useEmoticons;
+                if (o.hideDinheiroPix !== undefined) document.getElementById('hideDinheiroPix').checked = o.hideDinheiroPix;
+                if (o.showDebito !== undefined) document.getElementById('showDebito').checked = o.showDebito;
+                if (o.boldProductName !== undefined) document.getElementById('boldProductName').checked = o.boldProductName;
+                if (o.fatorArredondamento !== undefined) document.getElementById('fatorArredondamento').value = o.fatorArredondamento;
+                if (o.acrescimoPercentual !== undefined) document.getElementById('acrescimoPercentual').value = o.acrescimoPercentual;
+                if (o.descontoPercentual !== undefined) document.getElementById('descontoPercentual').value = o.descontoPercentual;
+                if (o.descontoFixo !== undefined) document.getElementById('descontoFixo').value = o.descontoFixo;
+                if (o.lucroAdicional !== undefined) document.getElementById('lucroAdicional').value = o.lucroAdicional;
+                if (o.acrescimoComissao !== undefined) document.getElementById('acrescimoComissao').value = o.acrescimoComissao;
+                if (o.valorEntrada !== undefined) document.getElementById('valorEntrada').value = o.valorEntrada;
+                if (o.especificaMostrarPix !== undefined) { especificaMostrarPixCb.checked = o.especificaMostrarPix; syncChipPix(o.especificaMostrarPix); }
+                if (o.especificaMostrarTotal !== undefined) { especificaMostrarTotalCb.checked = o.especificaMostrarTotal; syncChipTotal(o.especificaMostrarTotal); }
+            }
             if (typeof _fpRenderTaxas === 'function') _fpRenderTaxas();
             calcularParcelas();
             let btnEx = document.getElementById('btnPtExcluir');
@@ -1431,12 +1456,16 @@ Capa silicone R$ 50,00
             if (pDeb && pDeb.value !== '') p.debito = parseFloat(pDeb.value) / 100 || 0;
             
             for (let i = 1; i <= 18; i++) {
-                if (taxasRapidas[i] !== undefined) {
+                var av = document.getElementById('porcentagem' + i + 'x');
+                if (av && av.value !== '') {
+                    p[i] = parseFloat(av.value) / 100;
+                    taxasRapidas[i] = av.value; // Sync inverso para não perder valor
+                } else if (taxasRapidas[i] !== undefined) {
                     p[i] = parseFloat(taxasRapidas[i]) / 100;
-                } else {
-                    var av = document.getElementById('porcentagem' + i + 'x');
-                    if (av && av.value !== '') p[i] = parseFloat(av.value) / 100;
                 }
+            }
+            if (typeof _coletarEstado === 'function') {
+                p.opcoes = _coletarEstado().opcoes;
             }
             _ptSalvarLocal();
         }
@@ -2135,7 +2164,9 @@ Capa silicone R$ 50,00
                 const pc = document.createElement('div'); pc.className = 'percent-input-container'; pc.id = `porcentagem${i}xContainer`;
                 if (input.checked) pc.classList.add('show');
                 const pi = document.createElement('input'); pi.type = 'number'; pi.id = `porcentagem${i}x`;
-                pi.value = (taxasDeJurosPadrao[i] * 100).toFixed(2);
+                let pAtivoObj = typeof _ptPerfis !== 'undefined' ? _ptPerfis[_ptAtivo] : null;
+                let valIni = (pAtivoObj && pAtivoObj[i] !== undefined) ? pAtivoObj[i] : taxasDeJurosPadrao[i];
+                pi.value = (valIni * 100).toFixed(2);
                 pi.addEventListener('input', () => {
                     calcularParcelas();
                     enviarLog('alterou_taxa_avancada');
@@ -2609,18 +2640,20 @@ Capa silicone R$ 50,00
         function displayErrorList(msg) { productListResult.innerHTML = `<div class="error-message">${msg}</div>`; }
 
         function getTaxa(parcelas) {
+            let pAtivoObj = typeof _ptPerfis !== 'undefined' ? _ptPerfis[_ptAtivo] : null;
+            let fallback = (pAtivoObj && pAtivoObj[parcelas] !== undefined) ? pAtivoObj[parcelas] : (taxasDeJurosPadrao[parcelas] || 0);
             const parcelasRapidas = getParcelas();
             if (parcelasRapidas.length > 0 && parcelas !== 'pix' && parcelas !== 'debito') {
                 if (taxasRapidas[parcelas] !== undefined) return parseFloat(taxasRapidas[parcelas]) / 100;
-                return taxasDeJurosPadrao[parcelas] || 0;
+                return fallback;
             }
             if (toggleAdvancedOptions.checked) {
                 if (parcelas === 'pix') return (parseFloat(porcentagemPixInput.value) || 0) / 100;
                 if (parcelas === 'debito') return (parseFloat(porcentagemDebitoInput.value) || 0) / 100;
                 const input = document.getElementById('porcentagem' + parcelas + 'x');
-                return input ? (parseFloat(input.value) || 0) / 100 : (taxasDeJurosPadrao[parcelas] || 0);
+                return input ? (parseFloat(input.value) || 0) / 100 : fallback;
             }
-            return taxasDeJurosPadrao[parcelas] || 0;
+            return fallback;
         }
         function getParcelasSelecionadas() {
             const parcelas = getParcelas();
