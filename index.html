@@ -36,6 +36,7 @@
             color: var(--text-primary);
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; padding: 20px; transition: all 0.3s ease;
+            overflow-x: hidden;
         }
         .container {
             width: 100%; max-width: 700px;
@@ -526,11 +527,11 @@
         /* Painel genérico */
         .float-panel {
             position: fixed; bottom: 130px; right: 20px;
-            width: 370px; max-width: calc(100vw - 24px);
+            width: 370px; max-width: calc(100vw - 40px);
             background: var(--bg-secondary); border: 2px solid var(--border-color);
             border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.22);
             z-index: 1099; display: flex; flex-direction: column;
-            max-height: 680px;
+            max-height: calc(100vh - 150px);
             opacity: 0; transform: translateY(14px) scale(0.97);
             pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
         }
@@ -628,7 +629,7 @@
         .fhist-ver-todos { text-align: center; margin-top: 8px; font-size: 0.78rem; }
         .fhist-ver-todos a { color: var(--secondary-color); cursor: pointer; text-decoration: underline; }
         @media (max-width: 420px) {
-            .float-panel { width: calc(100vw - 24px); right: 12px; }
+            .float-panel { width: calc(100vw - 24px); right: 12px; bottom: 85px; max-height: calc(100vh - 100px); }
             .fab-group { right: 12px; bottom: 12px; }
         }
     </style>
