@@ -834,10 +834,10 @@
                     📂 Perfil de Taxas <small style="color: var(--text-secondary); font-weight: normal; font-size: 0.75rem;">(Auto-salvo na Nuvem)</small>
                 </label>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <select id="selectPerfilTaxas" onchange="_ptOnSelect(this.value)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.95rem; outline: none;"></select>
-                <button class="btn-outline" onclick="_ptNovoPerfil()" style="padding: 0 14px; border-radius: 8px; font-weight: 600;">➕ Novo</button>
-                <button class="btn-outline" onclick="_ptExcluirPerfil()" id="btnPtExcluir" style="padding: 0 12px; border-radius: 8px; color: var(--danger-color); border-color: var(--danger-color);" title="Excluir Perfil">🗑️</button>
+            <div style="display: flex; gap: 8px; align-items: stretch;">
+                <select id="selectPerfilTaxas" onchange="_ptOnSelect(this.value)" style="flex: 1; min-width: 0; text-overflow: ellipsis; padding: 10px; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.95rem; outline: none;"></select>
+                <button class="btn-outline" onclick="_ptNovoPerfil()" style="padding: 0 14px; border-radius: 8px; font-weight: 600; flex-shrink: 0;">➕ Novo</button>
+                <button class="btn-outline" onclick="_ptExcluirPerfil()" id="btnPtExcluir" style="padding: 0 12px; border-radius: 8px; color: var(--danger-color); border-color: var(--danger-color); flex-shrink: 0;" title="Excluir Perfil">🗑️</button>
             </div>
         </div>
 
