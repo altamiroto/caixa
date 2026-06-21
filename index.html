@@ -1023,7 +1023,7 @@ Capa silicone R$ 50,00
         <div id="sheetsToggleArea" style="display:none;"></div>
         <div id="sheetsToggleWrap" style="display:none;"></div>
         <span id="historicoFonte" style="display:none;"></span>
-        <div style="text-align: center; margin-top: 20px; font-size: 0.75rem; color: var(--text-secondary);">
+        <div class="footer" id="versaoFooter" style="text-align: center; margin-top: 20px; font-size: 0.75rem; color: var(--text-secondary);">
             Versão Atual: d4f6895
         </div>
     </div>
@@ -2239,7 +2239,11 @@ Capa silicone R$ 50,00
                 const pg = document.createElement('div'); pg.className = 'parcela-input-group';
                 const input = document.createElement('input');
                 input.type = 'checkbox'; input.id = `parcela${i}x`; input.value = i;
-                input.checked = parcelasPadrao.includes(i);
+                
+                let pAtivoObj = typeof _ptPerfis !== 'undefined' ? _ptPerfis[_ptAtivo] : null;
+                let o = pAtivoObj ? (pAtivoObj.opcoes || _getPadraoBase().opcoes) : _getPadraoBase().opcoes;
+                let arr = o.parcelasSelecionadas !== undefined ? o.parcelasSelecionadas : parcelasPadrao;
+                input.checked = arr.includes(i);
                 input.addEventListener('change', () => {
                     togglePorcentagemInput(i, input.checked);
                     calcularParcelas();
@@ -3499,6 +3503,17 @@ Capa silicone R$ 50,00
         }
         _ptCarregarLocal();
         calcularParcelas();
+        
+        // Busca a última versão do repositório
+        fetch('https://api.github.com/repos/altamiroto/caixa/commits/main')
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.sha) {
+                    const hash = data.sha.substring(0, 7);
+                    const vDiv = document.getElementById('versaoFooter');
+                    if (vDiv) vDiv.innerHTML = 'Versão Atual: ' + hash;
+                }
+            }).catch(()=>{});
     </script>
 </body>
 </html>
