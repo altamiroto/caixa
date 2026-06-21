@@ -1281,7 +1281,7 @@ Capa silicone R$ 50,00
         }
 
         function enviarLog(acao) {
-            if (acao && (acao.startsWith('alterou_') || acao.startsWith('ativou_') || acao.startsWith('desativou_') || acao.startsWith('editou_'))) {
+            if (acao && (acao.startsWith('alterou_') || acao.startsWith('ativou_') || acao.startsWith('desativou_') || acao.startsWith('editou_') || acao.startsWith('marcou_') || acao.startsWith('desmarcou_'))) {
                 if (_ptAtivo !== 'Padrão' && typeof _ptGravarMudancaAuto === 'function') {
                     _ptGravarMudancaAuto();
                 }
@@ -1304,7 +1304,8 @@ Capa silicone R$ 50,00
                     useEmoticons: false, hideDinheiroPix: false, showDebito: false, boldProductName: true,
                     fatorArredondamento: '1', acrescimoPercentual: '', descontoPercentual: '',
                     descontoFixo: '', lucroAdicional: '', acrescimoComissao: '', valorEntrada: '',
-                    especificaMostrarPix: true, especificaMostrarTotal: false
+                    especificaMostrarPix: true, especificaMostrarTotal: false,
+                    parcelasSelecionadas: [1, 2, 3, 4, 5, 6, 10, 12]
                 },
                 textos: {
                     produtoPrefix: '✅ ', textoAdicionalLinha: '', textoCabecalho: '', textoFinal: '',
@@ -1473,6 +1474,14 @@ Capa silicone R$ 50,00
                 if (o.valorEntrada !== undefined) document.getElementById('valorEntrada').value = o.valorEntrada;
                 if (o.especificaMostrarPix !== undefined) { especificaMostrarPixCb.checked = o.especificaMostrarPix; syncChipPix(o.especificaMostrarPix); }
                 if (o.especificaMostrarTotal !== undefined) { especificaMostrarTotalCb.checked = o.especificaMostrarTotal; syncChipTotal(o.especificaMostrarTotal); }
+                if (o.parcelasSelecionadas !== undefined) {
+                    document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
+                        const val = parseInt(cb.value);
+                        const isChecked = o.parcelasSelecionadas.includes(val);
+                        cb.checked = isChecked;
+                        if (typeof togglePorcentagemInput === 'function') togglePorcentagemInput(val, isChecked);
+                    });
+                }
             }
             if (p.textos) {
                 const t = p.textos;
@@ -1521,7 +1530,8 @@ Capa silicone R$ 50,00
                 acrescimoComissao: document.getElementById('acrescimoComissao') ? document.getElementById('acrescimoComissao').value : '',
                 valorEntrada: document.getElementById('valorEntrada') ? document.getElementById('valorEntrada').value : '',
                 especificaMostrarPix: document.getElementById('especificaMostrarPix') ? document.getElementById('especificaMostrarPix').checked : false,
-                especificaMostrarTotal: document.getElementById('especificaMostrarTotal') ? document.getElementById('especificaMostrarTotal').checked : false
+                especificaMostrarTotal: document.getElementById('especificaMostrarTotal') ? document.getElementById('especificaMostrarTotal').checked : false,
+                parcelasSelecionadas: Array.from(document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked')).map(cb => parseInt(cb.value))
             };
             p.textos = {
                 produtoPrefix: document.getElementById('produtoPrefix') ? document.getElementById('produtoPrefix').value : '',
