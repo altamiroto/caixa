@@ -1037,6 +1037,18 @@ Capa silicone R$ 50,00
         </div>
     </div>
 
+    <div class="feedback-overlay" id="customConfirmOverlay">
+        <div class="feedback-modal" id="customConfirmModal" style="padding: 24px;">
+            <div id="customConfirmTitle" class="feedback-title" style="margin-bottom: 8px;"></div>
+            <div id="customConfirmSubtitle" class="feedback-subtitle" style="margin-bottom: 24px; white-space: pre-wrap; font-size: 0.95rem;"></div>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-direction: column;">
+                <button id="btnConfirmAdicionar" class="btn btn-primary" style="width: 100%;">➕ ADICIONAR (Mesclar)</button>
+                <button id="btnConfirmSubstituir" class="btn btn-accent" style="width: 100%; background: var(--danger-color); border-color: var(--danger-color); color: white;">⚠️ SOBRESCREVER (Substituir tudo)</button>
+                <button id="btnConfirmCancelar" class="btn btn-secondary" style="width: 100%;">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- FABs flutuantes -->
     <div class="fab-group">
         <button class="fab-pill fab-pill-resultado" onclick="fpToggle('resultado')" title="Resultado rápido">
@@ -2471,7 +2483,35 @@ Capa silicone R$ 50,00
             }, 100);
         }
 
-        function processList() {
+        function mostrarConfirmacaoLista(qtdAntiga, qtdNova) {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('customConfirmOverlay');
+                const title = document.getElementById('customConfirmTitle');
+                const sub = document.getElementById('customConfirmSubtitle');
+                
+                title.textContent = "Conflito de Lista";
+                sub.innerHTML = `Você já tem <strong>${qtdAntiga} produto(s)</strong> processado(s).\nO que deseja fazer com os <strong>${qtdNova} novo(s)</strong> produto(s)?`;
+                
+                const btnAdd = document.getElementById('btnConfirmAdicionar');
+                const btnSub = document.getElementById('btnConfirmSubstituir');
+                const btnCan = document.getElementById('btnConfirmCancelar');
+                
+                function cleanup() {
+                    overlay.classList.remove('show');
+                    btnAdd.onclick = null;
+                    btnSub.onclick = null;
+                    btnCan.onclick = null;
+                }
+                
+                btnAdd.onclick = () => { cleanup(); resolve('add'); };
+                btnSub.onclick = () => { cleanup(); resolve('replace'); };
+                btnCan.onclick = () => { cleanup(); resolve('cancel'); };
+                
+                overlay.classList.add('show');
+            });
+        }
+
+        async function processList() {
             const list = productListTextarea.value;
             if (!list) { displayErrorList('Por favor, cole a lista de produtos.'); return; }
             productListLoading.classList.add('active'); productListResult.innerHTML = '';
@@ -2479,12 +2519,13 @@ Capa silicone R$ 50,00
                 const novosProdutos = parseProducts(list);
                 // Se já existem produtos processados, pergunta se deseja mesclar ou substituir
                 if (products && products.length > 0) {
-                    const opcao = confirm(
-                        `⚠️ Você já tem ${products.length} produto(s) processado(s).\n\n` +
-                        `Clique em OK para ADICIONAR os ${novosProdutos.length} novo(s) produto(s) à lista existente.\n\n` +
-                        `Clique em Cancelar para SUBSTITUIR tudo pelos novos produtos.`
-                    );
-                    if (opcao) {
+                    productListLoading.classList.remove('active');
+                    const opcao = await mostrarConfirmacaoLista(products.length, novosProdutos.length);
+                    productListLoading.classList.add('active');
+                    
+                    if (opcao === 'cancel') return;
+                    
+                    if (opcao === 'add') {
                         // Mescla: adiciona novos ao final, mantendo ajustes e seleções existentes
                         const offsetIdx = products.length;
                         novosProdutos.forEach(p => products.push(p));
@@ -2497,7 +2538,7 @@ Capa silicone R$ 50,00
                         handleProductSelection();
                         showToast(`✅ ${novosProdutos.length} produto(s) adicionado(s) à lista!`);
                         enviarLog('mesclou_lista');
-                    } else {
+                    } else if (opcao === 'replace') {
                         // Substitui tudo
                         products = novosProdutos;
                         productAdjustments = {};
