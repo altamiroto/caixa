@@ -1284,8 +1284,26 @@ Capa silicone R$ 50,00
         let _ptPerfis = {};
         let _ptDebounce = null;
 
+        function _getPadraoBase() {
+            return Object.assign({}, taxasDeJurosPadrao, { 
+                pix: 0, 
+                debito: 0.025,
+                opcoes: {
+                    useEmoticons: false, hideDinheiroPix: false, showDebito: false, boldProductName: true,
+                    fatorArredondamento: '1', acrescimoPercentual: '', descontoPercentual: '',
+                    descontoFixo: '', lucroAdicional: '', acrescimoComissao: '', valorEntrada: '',
+                    especificaMostrarPix: true, especificaMostrarTotal: false
+                },
+                textos: {
+                    produtoPrefix: '✅ ', textoAdicionalLinha: '', textoCabecalho: '', textoFinal: '',
+                    aiPrompt: 'Você é um assistente que extrai produtos e preços de textos bagunçados. \nSua saída deve ser APENAS uma lista no formato: Nome do Produto R$ Valor.\nExemplo: \niPhone 13 R$ 3.500,00\nCapa silicone R$ 50,00\n\n- Caso tenha informações adicionais do produto colocar entre parênteses, após o nome do produto, no formato (informação 1/informação 2, etc)\n- A saida deve ter a virgula como casa de separação de centavos\n- Alguns textos utilizam a virgula como separação dos milhares e o ponto como separação dos centavos, corrigir e deixar no modelo de virgula separando os centavos. \n- Nenhum fornecedor coloca as unidades dos centavos com mais de 2 casas, assim, tome cuidado em identificar o devido valor do produto\n- Não escreva introduções nem conclusões.',
+                    emoticonDinheiro: '💰 ', emoticonCartao: '💳 '
+                }
+            });
+        }
+
         function _ptInitDefault() {
-            _ptPerfis['Padrão'] = Object.assign({}, taxasDeJurosPadrao, { pix: 0, debito: 0.025 });
+            _ptPerfis['Padrão'] = _getPadraoBase();
         }
 
         let _ptTsLocal = 0;
@@ -1297,6 +1315,8 @@ Capa silicone R$ 50,00
                 if (salvo && salvo.perfis && salvo.perfis['Padrão']) {
                     _ptAtivo = salvo.ativo || 'Padrão';
                     _ptPerfis = salvo.perfis;
+                    if (!_ptPerfis['Padrão'].opcoes) _ptPerfis['Padrão'].opcoes = _getPadraoBase().opcoes;
+                    if (!_ptPerfis['Padrão'].textos) _ptPerfis['Padrão'].textos = _getPadraoBase().textos;
                     if (salvo.ts) _ptTsLocal = salvo.ts;
                 }
             } catch(e) {}
@@ -1348,6 +1368,8 @@ Capa silicone R$ 50,00
                         _ptTsLocal = pts;
                         _ptAtivo = p.ativo || 'Padrão';
                         _ptPerfis = p.perfis;
+                        if (!_ptPerfis['Padrão'].opcoes) _ptPerfis['Padrão'].opcoes = _getPadraoBase().opcoes;
+                        if (!_ptPerfis['Padrão'].textos) _ptPerfis['Padrão'].textos = _getPadraoBase().textos;
                         _ptRenderSelect();
                         _ptAplicarAtivo();
                         localStorage.setItem('perfisTaxasBackup', JSON.stringify(p));
