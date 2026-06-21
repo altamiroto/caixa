@@ -1406,9 +1406,13 @@ Capa silicone R$ 50,00
         }
 
         function _ptOnSelect(val) {
+            if (_ptAtivo !== 'Padrão' && typeof _ptGravarMudancaAuto === 'function') {
+                _ptGravarMudancaAuto();
+            }
             _ptAtivo = val;
-            _ptAplicarAtivo();
             _ptSalvarLocal();
+            document.getElementById('btnPtExcluir').style.display = (_ptAtivo === 'Padrão') ? 'none' : 'inline-block';
+            _ptAplicarAtivo();
         }
 
         function _ptNovoPerfil() {
@@ -1439,60 +1443,69 @@ Capa silicone R$ 50,00
         function _ptAplicarAtivo() {
             let p = _ptPerfis[_ptAtivo];
             if (!p) return;
+            const def = _getPadraoBase();
             
             var pPix = document.getElementById('porcentagemPix');
-            if (pPix && p.pix !== undefined) {
-                pPix.value = (p.pix * 100).toFixed(2);
+            if (pPix) {
+                let v = p.pix !== undefined ? p.pix : def.pix;
+                pPix.value = (v * 100).toFixed(2);
             }
             var pDeb = document.getElementById('porcentagemDebito');
-            if (pDeb && p.debito !== undefined) {
-                pDeb.value = (p.debito * 100).toFixed(2);
+            if (pDeb) {
+                let v = p.debito !== undefined ? p.debito : def.debito;
+                pDeb.value = (v * 100).toFixed(2);
             }
 
             taxasRapidas = {};
             for (let i = 1; i <= 18; i++) {
-                if (p[i] !== undefined) {
-                    taxasRapidas[i] = (p[i] * 100).toFixed(2);
-                    var av = document.getElementById('porcentagem' + i + 'x');
-                    if (av) av.value = taxasRapidas[i];
-                    var ch = document.querySelector('#parcelaTaxasRow input[data-parcela="' + i + '"]');
-                    if (ch) ch.value = taxasRapidas[i];
-                }
+                let v = p[i] !== undefined ? p[i] : def[i];
+                taxasRapidas[i] = (v * 100).toFixed(2);
+                var av = document.getElementById('porcentagem' + i + 'x');
+                if (av) av.value = taxasRapidas[i];
+                var ch = document.querySelector('#parcelaTaxasRow input[data-parcela="' + i + '"]');
+                if (ch) ch.value = taxasRapidas[i];
             }
-            if (p.opcoes) {
-                const o = p.opcoes;
-                if (o.useEmoticons !== undefined) document.getElementById('useEmoticons').checked = o.useEmoticons;
-                if (o.hideDinheiroPix !== undefined) document.getElementById('hideDinheiroPix').checked = o.hideDinheiroPix;
-                if (o.showDebito !== undefined) document.getElementById('showDebito').checked = o.showDebito;
-                if (o.boldProductName !== undefined) document.getElementById('boldProductName').checked = o.boldProductName;
-                if (o.fatorArredondamento !== undefined) document.getElementById('fatorArredondamento').value = o.fatorArredondamento;
-                if (o.acrescimoPercentual !== undefined) document.getElementById('acrescimoPercentual').value = o.acrescimoPercentual;
-                if (o.descontoPercentual !== undefined) document.getElementById('descontoPercentual').value = o.descontoPercentual;
-                if (o.descontoFixo !== undefined) document.getElementById('descontoFixo').value = o.descontoFixo;
-                if (o.lucroAdicional !== undefined) document.getElementById('lucroAdicional').value = o.lucroAdicional;
-                if (o.acrescimoComissao !== undefined) document.getElementById('acrescimoComissao').value = o.acrescimoComissao;
-                if (o.valorEntrada !== undefined) document.getElementById('valorEntrada').value = o.valorEntrada;
-                if (o.especificaMostrarPix !== undefined) { especificaMostrarPixCb.checked = o.especificaMostrarPix; syncChipPix(o.especificaMostrarPix); }
-                if (o.especificaMostrarTotal !== undefined) { especificaMostrarTotalCb.checked = o.especificaMostrarTotal; syncChipTotal(o.especificaMostrarTotal); }
-                if (o.parcelasSelecionadas !== undefined) {
-                    document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
-                        const val = parseInt(cb.value);
-                        const isChecked = o.parcelasSelecionadas.includes(val);
-                        cb.checked = isChecked;
-                        if (typeof togglePorcentagemInput === 'function') togglePorcentagemInput(val, isChecked);
-                    });
-                }
-            }
-            if (p.textos) {
-                const t = p.textos;
-                if (t.produtoPrefix !== undefined) document.getElementById('produtoPrefix').value = t.produtoPrefix;
-                if (t.textoAdicionalLinha !== undefined) document.getElementById('textoAdicionalLinha').value = t.textoAdicionalLinha;
-                if (t.textoCabecalho !== undefined) document.getElementById('textoCabecalhoMensagem').value = t.textoCabecalho;
-                if (t.textoFinal !== undefined) document.getElementById('textoFinalMensagem').value = t.textoFinal;
-                if (t.aiPrompt !== undefined) document.getElementById('aiPrompt').value = t.aiPrompt;
-                if (t.emoticonDinheiro !== undefined) document.getElementById('emoticonDinheiro').value = t.emoticonDinheiro;
-                if (t.emoticonCartao !== undefined) document.getElementById('emoticonCartao').value = t.emoticonCartao;
-            }
+            
+            const o = p.opcoes || def.opcoes;
+            const defO = def.opcoes;
+            document.getElementById('useEmoticons').checked = o.useEmoticons !== undefined ? o.useEmoticons : defO.useEmoticons;
+            document.getElementById('hideDinheiroPix').checked = o.hideDinheiroPix !== undefined ? o.hideDinheiroPix : defO.hideDinheiroPix;
+            document.getElementById('showDebito').checked = o.showDebito !== undefined ? o.showDebito : defO.showDebito;
+            document.getElementById('boldProductName').checked = o.boldProductName !== undefined ? o.boldProductName : defO.boldProductName;
+            document.getElementById('fatorArredondamento').value = o.fatorArredondamento !== undefined ? o.fatorArredondamento : defO.fatorArredondamento;
+            document.getElementById('acrescimoPercentual').value = o.acrescimoPercentual !== undefined ? o.acrescimoPercentual : defO.acrescimoPercentual;
+            document.getElementById('descontoPercentual').value = o.descontoPercentual !== undefined ? o.descontoPercentual : defO.descontoPercentual;
+            document.getElementById('descontoFixo').value = o.descontoFixo !== undefined ? o.descontoFixo : defO.descontoFixo;
+            document.getElementById('lucroAdicional').value = o.lucroAdicional !== undefined ? o.lucroAdicional : defO.lucroAdicional;
+            document.getElementById('acrescimoComissao').value = o.acrescimoComissao !== undefined ? o.acrescimoComissao : defO.acrescimoComissao;
+            document.getElementById('valorEntrada').value = o.valorEntrada !== undefined ? o.valorEntrada : defO.valorEntrada;
+            
+            const showPix = o.especificaMostrarPix !== undefined ? o.especificaMostrarPix : defO.especificaMostrarPix;
+            if (typeof especificaMostrarPixCb !== 'undefined' && especificaMostrarPixCb) especificaMostrarPixCb.checked = showPix;
+            if (typeof syncChipPix === 'function') syncChipPix(showPix);
+            
+            const showTot = o.especificaMostrarTotal !== undefined ? o.especificaMostrarTotal : defO.especificaMostrarTotal;
+            if (typeof especificaMostrarTotalCb !== 'undefined' && especificaMostrarTotalCb) especificaMostrarTotalCb.checked = showTot;
+            if (typeof syncChipTotal === 'function') syncChipTotal(showTot);
+            
+            const selParcs = o.parcelasSelecionadas !== undefined ? o.parcelasSelecionadas : defO.parcelasSelecionadas;
+            document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]').forEach(cb => {
+                const val = parseInt(cb.value);
+                const isChecked = selParcs.includes(val);
+                cb.checked = isChecked;
+                if (typeof togglePorcentagemInput === 'function') togglePorcentagemInput(val, isChecked);
+            });
+
+            const t = p.textos || def.textos;
+            const defT = def.textos;
+            document.getElementById('produtoPrefix').value = t.produtoPrefix !== undefined ? t.produtoPrefix : defT.produtoPrefix;
+            document.getElementById('textoAdicionalLinha').value = t.textoAdicionalLinha !== undefined ? t.textoAdicionalLinha : defT.textoAdicionalLinha;
+            document.getElementById('textoCabecalhoMensagem').value = t.textoCabecalho !== undefined ? t.textoCabecalho : defT.textoCabecalho;
+            document.getElementById('textoFinalMensagem').value = t.textoFinal !== undefined ? t.textoFinal : defT.textoFinal;
+            document.getElementById('aiPrompt').value = t.aiPrompt !== undefined ? t.aiPrompt : defT.aiPrompt;
+            document.getElementById('emoticonDinheiro').value = t.emoticonDinheiro !== undefined ? t.emoticonDinheiro : defT.emoticonDinheiro;
+            document.getElementById('emoticonCartao').value = t.emoticonCartao !== undefined ? t.emoticonCartao : defT.emoticonCartao;
+
             if (typeof _fpRenderTaxas === 'function') _fpRenderTaxas();
             calcularParcelas();
             let btnEx = document.getElementById('btnPtExcluir');
