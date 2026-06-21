@@ -1422,6 +1422,7 @@ Capa silicone R$ 50,00
         }
 
         function _ptGravarMudancaAuto() {
+            if (_ptAtivo === 'Padrão') return; // O perfil Padrão é imutável
             let p = _ptPerfis[_ptAtivo];
             if (!p) return;
             var pPix = document.getElementById('porcentagemPix');
