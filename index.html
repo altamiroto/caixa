@@ -1302,8 +1302,7 @@ Capa silicone R$ 50,00
                 debito: 0.025,
                 opcoes: {
                     useEmoticons: false, hideDinheiroPix: false, showDebito: false, boldProductName: true,
-                    fatorArredondamento: '1', acrescimoPercentual: '', descontoPercentual: '',
-                    descontoFixo: '', lucroAdicional: '', acrescimoComissao: '', valorEntrada: '',
+                    fatorArredondamento: '1',
                     especificaMostrarPix: true, especificaMostrarTotal: false,
                     parcelasSelecionadas: [3, 6, 10, 12]
                 },
@@ -1471,12 +1470,6 @@ Capa silicone R$ 50,00
             document.getElementById('showDebito').checked = o.showDebito !== undefined ? o.showDebito : defO.showDebito;
             document.getElementById('boldProductName').checked = o.boldProductName !== undefined ? o.boldProductName : defO.boldProductName;
             document.getElementById('fatorArredondamento').value = o.fatorArredondamento !== undefined ? o.fatorArredondamento : defO.fatorArredondamento;
-            document.getElementById('acrescimoPercentual').value = o.acrescimoPercentual !== undefined ? o.acrescimoPercentual : defO.acrescimoPercentual;
-            document.getElementById('descontoPercentual').value = o.descontoPercentual !== undefined ? o.descontoPercentual : defO.descontoPercentual;
-            document.getElementById('descontoFixo').value = o.descontoFixo !== undefined ? o.descontoFixo : defO.descontoFixo;
-            document.getElementById('lucroAdicional').value = o.lucroAdicional !== undefined ? o.lucroAdicional : defO.lucroAdicional;
-            document.getElementById('acrescimoComissao').value = o.acrescimoComissao !== undefined ? o.acrescimoComissao : defO.acrescimoComissao;
-            document.getElementById('valorEntrada').value = o.valorEntrada !== undefined ? o.valorEntrada : defO.valorEntrada;
             
             const showPix = o.especificaMostrarPix !== undefined ? o.especificaMostrarPix : defO.especificaMostrarPix;
             if (typeof especificaMostrarPixCb !== 'undefined' && especificaMostrarPixCb) especificaMostrarPixCb.checked = showPix;
@@ -1534,12 +1527,6 @@ Capa silicone R$ 50,00
                 showDebito: document.getElementById('showDebito') ? document.getElementById('showDebito').checked : false,
                 boldProductName: document.getElementById('boldProductName') ? document.getElementById('boldProductName').checked : false,
                 fatorArredondamento: document.getElementById('fatorArredondamento') ? document.getElementById('fatorArredondamento').value : '1',
-                acrescimoPercentual: document.getElementById('acrescimoPercentual') ? document.getElementById('acrescimoPercentual').value : '',
-                descontoPercentual: document.getElementById('descontoPercentual') ? document.getElementById('descontoPercentual').value : '',
-                descontoFixo: document.getElementById('descontoFixo') ? document.getElementById('descontoFixo').value : '',
-                lucroAdicional: document.getElementById('lucroAdicional') ? document.getElementById('lucroAdicional').value : '',
-                acrescimoComissao: document.getElementById('acrescimoComissao') ? document.getElementById('acrescimoComissao').value : '',
-                valorEntrada: document.getElementById('valorEntrada') ? document.getElementById('valorEntrada').value : '',
                 especificaMostrarPix: document.getElementById('especificaMostrarPix') ? document.getElementById('especificaMostrarPix').checked : false,
                 especificaMostrarTotal: document.getElementById('especificaMostrarTotal') ? document.getElementById('especificaMostrarTotal').checked : false,
                 parcelasSelecionadas: Array.from(document.querySelectorAll('#parcelasAvancadas input[type="checkbox"]:checked')).map(cb => parseInt(cb.value))
