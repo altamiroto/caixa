@@ -822,8 +822,22 @@
             </div>
 
             <div id="discountSummary" class="discount-summary">
-                <h4>📊 Resumo de Cálculos</h4>
+                <h4>💰 Resumo de Cálculos</h4>
                 <p id="discountDetails"></p>
+            </div>
+        </div>
+
+        <!-- Seletor de Perfis de Taxas -->
+        <div class="section-card" id="perfisTaxasContainer" style="margin-bottom: 15px; padding: 12px; border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="font-weight: 600; color: var(--primary-color); display: flex; align-items: center; gap: 6px;">
+                    📂 Perfil de Taxas <small style="color: var(--text-secondary); font-weight: normal; font-size: 0.75rem;">(Auto-salvo na Nuvem)</small>
+                </label>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <select id="selectPerfilTaxas" onchange="_ptOnSelect(this.value)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.95rem; outline: none;"></select>
+                <button class="btn-outline" onclick="_ptNovoPerfil()" style="padding: 0 14px; border-radius: 8px; font-weight: 600;">➕ Novo</button>
+                <button class="btn-outline" onclick="_ptExcluirPerfil()" id="btnPtExcluir" style="padding: 0 12px; border-radius: 8px; color: var(--danger-color); border-color: var(--danger-color);" title="Excluir Perfil">🗑️</button>
             </div>
         </div>
 
@@ -1151,6 +1165,7 @@ Capa silicone R$ 50,00
             document.getElementById('sheetsLoginPrompt').style.display = 'none';
             document.getElementById('sheetsToggleArea').style.display  = 'block';
             atualizarBadgeHistorico();
+            _ptBaixarNuvem();
         }
         function _showGuestMode() {
             document.getElementById('authWall').style.display       = 'none';
@@ -1254,9 +1269,175 @@ Capa silicone R$ 50,00
         }
 
         function enviarLog(acao) {
+            if (acao && acao.startsWith('alterou_taxa')) {
+                _ptGravarMudancaAuto();
+            }
             _registrarAcao(acao);
             clearTimeout(_logTimer);
             _logTimer = setTimeout(flushLog, 2000);
+        }
+
+        /* --- LÓGICA DE PERFIS DE TAXAS --- */
+        let _ptAtivo = 'Padrão';
+        let _ptPerfis = {};
+        let _ptDebounce = null;
+
+        function _ptInitDefault() {
+            _ptPerfis['Padrão'] = Object.assign({}, taxasDeJurosPadrao, { pix: 0, debito: 0.025 });
+        }
+
+        function _ptCarregarLocal() {
+            _ptInitDefault();
+            try {
+                let salvo = JSON.parse(localStorage.getItem('perfisTaxasBackup'));
+                if (salvo && salvo.perfis && salvo.perfis['Padrão']) {
+                    _ptAtivo = salvo.ativo || 'Padrão';
+                    _ptPerfis = salvo.perfis;
+                }
+            } catch(e) {}
+            _ptRenderSelect();
+            _ptAplicarAtivo();
+        }
+
+        function _ptSalvarLocal() {
+            localStorage.setItem('perfisTaxasBackup', JSON.stringify({ ativo: _ptAtivo, perfis: _ptPerfis }));
+            _ptAgendarNuvem();
+        }
+
+        function _ptAgendarNuvem() {
+            if (!_currentUser) return;
+            clearTimeout(_ptDebounce);
+            _ptDebounce = setTimeout(_ptSyncNuvem, 3000);
+        }
+
+        async function _ptSyncNuvem() {
+            if (!_currentUser) return;
+            try {
+                setSaveStatus('☁️ Salvando perfis...', 'var(--text-secondary)');
+                await fetch(SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'save_profile', user_email: _currentUser.email, payload: { ativo: _ptAtivo, perfis: _ptPerfis } })
+                });
+                setSaveStatus('✅ Perfis salvos', 'var(--primary-color)');
+            } catch(e) {
+                console.error('Erro salvar perfis', e);
+            }
+        }
+
+        async function _ptBaixarNuvem() {
+            if (!_currentUser) return;
+            try {
+                let resp = await fetch(SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'get_profiles', user_email: _currentUser.email })
+                });
+                let json = await resp.json();
+                if (json.payload) {
+                    let p = typeof json.payload === 'string' ? JSON.parse(json.payload) : json.payload;
+                    if (p && p.perfis) {
+                        _ptAtivo = p.ativo || 'Padrão';
+                        _ptPerfis = p.perfis;
+                        _ptRenderSelect();
+                        _ptAplicarAtivo();
+                        localStorage.setItem('perfisTaxasBackup', JSON.stringify(p));
+                    }
+                }
+            } catch(e) {}
+        }
+
+        function _ptRenderSelect() {
+            let sel = document.getElementById('selectPerfilTaxas');
+            if (!sel) return;
+            sel.innerHTML = '';
+            for (let k in _ptPerfis) {
+                let opt = document.createElement('option');
+                opt.value = k;
+                opt.textContent = k;
+                if (k === _ptAtivo) opt.selected = true;
+                sel.appendChild(opt);
+            }
+            document.getElementById('btnPtExcluir').style.display = (_ptAtivo === 'Padrão') ? 'none' : 'inline-block';
+        }
+
+        function _ptOnSelect(val) {
+            _ptAtivo = val;
+            _ptAplicarAtivo();
+            _ptSalvarLocal();
+        }
+
+        function _ptNovoPerfil() {
+            let nome = prompt('Nome do novo Perfil de Taxas (ex: Atacado, VIP):');
+            if (!nome || !nome.trim()) return;
+            nome = nome.trim();
+            if (_ptPerfis[nome]) {
+                alert('Já existe um perfil com esse nome!');
+                return;
+            }
+            _ptPerfis[nome] = Object.assign({}, _ptPerfis[_ptAtivo]);
+            _ptAtivo = nome;
+            _ptRenderSelect();
+            _ptSalvarLocal();
+            _ptAplicarAtivo();
+        }
+
+        function _ptExcluirPerfil() {
+            if (_ptAtivo === 'Padrão') return;
+            if (!confirm('Excluir o perfil de taxas "' + _ptAtivo + '"?')) return;
+            delete _ptPerfis[_ptAtivo];
+            _ptAtivo = 'Padrão';
+            _ptRenderSelect();
+            _ptAplicarAtivo();
+            _ptSalvarLocal();
+        }
+
+        function _ptAplicarAtivo() {
+            let p = _ptPerfis[_ptAtivo];
+            if (!p) return;
+            
+            var pPix = document.getElementById('porcentagemPix');
+            if (pPix && p.pix !== undefined) {
+                pPix.value = (p.pix * 100).toFixed(2);
+            }
+            var pDeb = document.getElementById('porcentagemDebito');
+            if (pDeb && p.debito !== undefined) {
+                pDeb.value = (p.debito * 100).toFixed(2);
+            }
+
+            taxasRapidas = {};
+            for (let i = 1; i <= 18; i++) {
+                if (p[i] !== undefined) {
+                    taxasRapidas[i] = (p[i] * 100).toFixed(2);
+                    var av = document.getElementById('porcentagem' + i + 'x');
+                    if (av) av.value = taxasRapidas[i];
+                    var ch = document.querySelector('#parcelaTaxasRow input[data-parcela="' + i + '"]');
+                    if (ch) ch.value = taxasRapidas[i];
+                }
+            }
+            if (typeof _fpRenderTaxas === 'function') _fpRenderTaxas();
+            calcularParcelas();
+            let btnEx = document.getElementById('btnPtExcluir');
+            if (btnEx) btnEx.style.display = (_ptAtivo === 'Padrão') ? 'none' : 'inline-block';
+        }
+
+        function _ptGravarMudancaAuto() {
+            let p = _ptPerfis[_ptAtivo];
+            if (!p) return;
+            var pPix = document.getElementById('porcentagemPix');
+            if (pPix && pPix.value !== '') p.pix = parseFloat(pPix.value) / 100 || 0;
+            var pDeb = document.getElementById('porcentagemDebito');
+            if (pDeb && pDeb.value !== '') p.debito = parseFloat(pDeb.value) / 100 || 0;
+            
+            for (let i = 1; i <= 18; i++) {
+                if (taxasRapidas[i] !== undefined) {
+                    p[i] = parseFloat(taxasRapidas[i]) / 100;
+                } else {
+                    var av = document.getElementById('porcentagem' + i + 'x');
+                    if (av && av.value !== '') p[i] = parseFloat(av.value) / 100;
+                }
+            }
+            _ptSalvarLocal();
         }
 
         function setSaveStatus(msg, color) {
@@ -2538,7 +2719,7 @@ Capa silicone R$ 50,00
             discountSummary.classList.remove('active');
             valorBaseInput.classList.remove('has-value');
             parcelaEspecificaInput.classList.remove('invalid');
-            taxasRapidas = {};
+            _ptAplicarAtivo();
             especificaMostrarPixCb.checked = true; especificaMostrarTotalCb.checked = false;
             syncChipPix(true); syncChipTotal(false);
             atualizarVisibilidadeMiniOpcoes();
@@ -3167,6 +3348,7 @@ Capa silicone R$ 50,00
                 alert('Erro ao excluir: ' + e.message);
             }
         }
+        _ptCarregarLocal();
         calcularParcelas();
     </script>
 </body>
