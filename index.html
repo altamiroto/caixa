@@ -1022,9 +1022,9 @@ Capa silicone R$ 50,00
         <input type="hidden" id="toggleSheets">
         <div id="sheetsToggleArea" style="display:none;"></div>
         <div id="sheetsToggleWrap" style="display:none;"></div>
-        <span id="historicoFonte" style="display:none;"></span>
+        <!-- ANTIGRAVITY_NOTE: Update version hash here manually on every change -->
         <div class="footer" id="versaoFooter" style="text-align: center; margin-top: 20px; font-size: 0.75rem; color: var(--text-secondary);">
-            Versão Atual: d4f6895
+            Versão Atual: b3c6941
         </div>
     </div>
 
@@ -3503,17 +3503,6 @@ Capa silicone R$ 50,00
         }
         _ptCarregarLocal();
         calcularParcelas();
-        
-        // Busca a última versão do repositório
-        fetch('https://api.github.com/repos/altamiroto/caixa/commits/main')
-            .then(r => r.json())
-            .then(data => {
-                if (data && data.sha) {
-                    const hash = data.sha.substring(0, 7);
-                    const vDiv = document.getElementById('versaoFooter');
-                    if (vDiv) vDiv.innerHTML = 'Versão Atual: ' + hash;
-                }
-            }).catch(()=>{});
     </script>
 </body>
 </html>
