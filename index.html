@@ -2747,6 +2747,17 @@ Capa silicone R$ 50,00
             document.getElementById('fpArrow_' + qual).classList.remove('aberto');
         }
 
+        /* Fecha o painel flutuante ao clicar fora */
+        document.addEventListener('click', function(e) {
+            if (!_fpAberto) return;
+            var panel = document.getElementById('fpPanel_' + _fpAberto);
+            var btn = document.querySelector('.fab-pill-' + _fpAberto);
+            if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+                fpFechar(_fpAberto);
+            }
+        });
+
+
         /* ── Sincronização resultado ─────────────────────────── */
         function _fpSincResultado() {
             var src = document.getElementById('resultado');
