@@ -1325,11 +1325,10 @@ Capa silicone R$ 50,00
             _ptInitDefault();
             try {
                 let salvo = JSON.parse(localStorage.getItem('perfisTaxasBackup'));
-                if (salvo && salvo.perfis && salvo.perfis['Padrão']) {
+                if (salvo && salvo.perfis) {
                     _ptAtivo = salvo.ativo || 'Padrão';
                     _ptPerfis = salvo.perfis;
-                    if (!_ptPerfis['Padrão'].opcoes) _ptPerfis['Padrão'].opcoes = _getPadraoBase().opcoes;
-                    if (!_ptPerfis['Padrão'].textos) _ptPerfis['Padrão'].textos = _getPadraoBase().textos;
+                    _ptPerfis['Padrão'] = _getPadraoBase(); // Garante pureza absoluta do Padrão
                     if (salvo.ts) _ptTsLocal = salvo.ts;
                 }
             } catch(e) {}
@@ -1381,8 +1380,7 @@ Capa silicone R$ 50,00
                         _ptTsLocal = pts;
                         _ptAtivo = p.ativo || 'Padrão';
                         _ptPerfis = p.perfis;
-                        if (!_ptPerfis['Padrão'].opcoes) _ptPerfis['Padrão'].opcoes = _getPadraoBase().opcoes;
-                        if (!_ptPerfis['Padrão'].textos) _ptPerfis['Padrão'].textos = _getPadraoBase().textos;
+                        _ptPerfis['Padrão'] = _getPadraoBase(); // Garante pureza absoluta do Padrão
                         _ptRenderSelect();
                         _ptAplicarAtivo();
                         localStorage.setItem('perfisTaxasBackup', JSON.stringify(p));
