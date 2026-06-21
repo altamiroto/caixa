@@ -2254,7 +2254,6 @@ Capa silicone R$ 50,00
                 const pc = document.createElement('div'); pc.className = 'percent-input-container'; pc.id = `porcentagem${i}xContainer`;
                 if (input.checked) pc.classList.add('show');
                 const pi = document.createElement('input'); pi.type = 'number'; pi.id = `porcentagem${i}x`;
-                let pAtivoObj = typeof _ptPerfis !== 'undefined' ? _ptPerfis[_ptAtivo] : null;
                 let valIni = (pAtivoObj && pAtivoObj[i] !== undefined) ? pAtivoObj[i] : taxasDeJurosPadrao[i];
                 pi.value = (valIni * 100).toFixed(2);
                 pi.addEventListener('input', () => {
