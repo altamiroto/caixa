@@ -283,6 +283,63 @@
     @media (min-width: 640px) {
       .note { padding-top: 22px; }
     }
+
+    /* ── timeline do item / versão ── */
+    .tl { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); }
+    .tl.now { border-color: var(--ok); background: var(--ok-bg); }
+    .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+    .tl-when { font-size: 12px; font-weight: 700; color: var(--ink); }
+    .tl.now .tl-when { color: var(--ok); }
+    .tl-ago { font-size: 10.5px; color: var(--ink-soft); font-weight: 500; }
+    .tl-text {
+      font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.5; color: var(--ink);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .tl-text.gone { color: var(--ink-faint); font-style: italic; font-family: inherit; }
+    .tl-data { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px;
+      border: 1px solid var(--line); color: var(--ink-soft);
+    }
+    .tag.e-ok { color: var(--ok); border-color: var(--ok); }
+    .tag.e-zero { color: var(--zero); border-color: var(--zero); }
+    .tl-use {
+      margin-top: 9px; height: 28px; padding: 0 11px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line);
+    }
+    .tl-use:hover { color: var(--ink); border-color: var(--ink-soft); }
+    .diff-rm { color: var(--zero); }
+    .diff-add { color: var(--ok); }
+
+    .ro-block { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); display: flex; gap: 8px; align-items: flex-start; }
+    .ro-block.zero { opacity: .55; }
+    .ro-text { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
+    /* ── ficha de preços ── */
+    .sec-h { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); margin: 14px 0 7px; display: flex; align-items: center; justify-content: space-between; }
+    .mini { width: 100%; height: 36px; padding: 0 9px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px; outline: none; }
+    .mini:focus { border-color: var(--ink-soft); }
+    select.mini { -webkit-appearance: none; appearance: none; padding-right: 22px; background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%); background-position: calc(100% - 12px) 15px, calc(100% - 8px) 15px; background-size: 4px 4px; background-repeat: no-repeat; }
+    .calc-card { border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; background: var(--bg); margin-bottom: 7px; }
+    .calc-top { display: flex; align-items: center; gap: 8px; }
+    .calc-top .nm { flex: 1; font-weight: 600; height: 32px; border: none; background: transparent; outline: none; color: var(--ink); font-size: 13.5px; }
+    .calc-top .rs { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+    .calc-grid { display: grid; grid-template-columns: 1fr 64px 1fr 32px; gap: 6px; margin-top: 7px; align-items: center; }
+    .calc-grid.extra { grid-template-columns: 64px 60px 1fr 1fr 32px; }
+    .calc-x { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-soft); border: 1px solid var(--line); font-size: 14px; }
+    .calc-x:hover { color: var(--zero); border-color: var(--zero); }
+    .calc-add { width: 100%; height: 38px; border-radius: 10px; border: 1px dashed var(--line); color: var(--ink-soft); font-size: 13px; font-weight: 600; }
+    .calc-add:hover { border-color: var(--ink-soft); color: var(--ink); }
+    .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+    .chip-ins {
+      height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+      display: inline-flex; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1.1;
+    }
+    .chip-ins:hover { border-color: var(--ink-soft); }
+    .chip-ins .cl { font-size: 10px; color: var(--ink-soft); font-weight: 600; }
+    .chip-ins .cv { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--ink); }
+    .chip-ins.custo { background: var(--bg); }
+    .calc-hint { font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; margin-top: 10px; }
   </style>
 </head>
 
@@ -342,13 +399,65 @@ R$ 885 (Dinheiro)
     </div>
   </div>
 
-  <!-- Sheet: histórico -->
+  <!-- Sheet: histórico (versões) -->
   <div class="sheet" id="sh-hist">
     <div class="grip"></div>
     <h3>Histórico de versões</h3>
-    <p class="sub">Cópias salvas neste aparelho. Toque em Restaurar para voltar a uma delas.</p>
+    <p class="sub">Cópias salvas neste aparelho. Toque em <b>Ver</b> para só olhar, sem mexer em nada.</p>
     <div class="results" id="hist-list"></div>
     <div class="sheet-actions"><button class="btn ghost" onclick="closeSheets()">Fechar</button></div>
+  </div>
+
+  <!-- Sheet: visualizar versão (somente leitura) -->
+  <div class="sheet" id="sh-view">
+    <div class="grip"></div>
+    <h3 id="view-title">Versão</h3>
+    <p class="sub" id="view-sub"></p>
+    <div class="tabs" id="view-tabs" style="border:none;background:transparent;padding:0 0 8px"></div>
+    <div class="results" id="view-body"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="view-copy">Copiar segmento</button>
+      <button class="btn ghost" id="view-restore">Restaurar versão</button>
+      <button class="btn" onclick="closeSheets()">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Sheet: histórico de um item -->
+  <div class="sheet" id="sh-item">
+    <div class="grip"></div>
+    <h3>Histórico do item</h3>
+    <p class="sub" id="item-sub"></p>
+    <div class="results" id="item-list"></div>
+    <div class="sheet-actions"><button class="btn ghost" onclick="closeSheets()">Fechar</button></div>
+  </div>
+
+  <!-- Sheet: ficha de preços do item -->
+  <div class="sheet" id="sh-calc">
+    <div class="grip"></div>
+    <h3>Preços do item</h3>
+    <p class="sub" id="calc-name"></p>
+    <div class="results" id="calc-body">
+      <div style="display:flex; gap:8px; align-items:flex-end;">
+        <div style="flex:1">
+          <label class="sec-h" style="margin-top:0">Custo (R$)</label>
+          <input class="mini" id="calc-custo" type="number" inputmode="decimal" step="0.01" placeholder="0" />
+        </div>
+        <button class="btn ghost sm" id="calc-pull" style="height:36px;display:none">⬇ do caixa</button>
+      </div>
+
+      <div class="sec-h">Modalidades <span id="calc-savedef" style="font-size:10px;color:var(--ink-soft);font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0">salvar como padrão</span></div>
+      <div id="calc-mods"></div>
+      <button class="calc-add" id="calc-add-mod">＋ modalidade</button>
+
+      <div class="sec-h">Componentes extras <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-faint)">só deste item</span></div>
+      <div id="calc-extras"></div>
+      <button class="calc-add" id="calc-add-extra">＋ componente (ex.: comissão)</button>
+
+      <div class="sec-h">Inserir no texto</div>
+      <div class="chips" id="calc-chips"></div>
+      <p class="calc-hint">Toque num valor pra inserir no texto do item, onde o cursor estiver. Os números são calculados na hora; o texto continua livre pra você formatar como quiser.</p>
+    </div>
+    <div class="sheet-actions"><button class="btn" onclick="closeSheets()">Fechar</button></div>
   </div>
 
   <!-- Sheet: menu -->
@@ -485,6 +594,7 @@ R$ 885 (Dinheiro)
     }
 
     function render() {
+      if (!data.priceRules) data.priceRules = defaultRules();
       renderTabs();
       const n = current();
       const wrap = $('note'); wrap.innerHTML = '';
@@ -548,6 +658,8 @@ R$ 885 (Dinheiro)
       } else {
         tools.appendChild(mk('🔗 vincular', '', () => openSearch(block.id)));
       }
+      tools.appendChild(mk('💲 preços', '', () => openCalc(block.id)));
+      tools.appendChild(mk('🕓 histórico', '', () => abrirHistItem(block.id)));
       tools.appendChild(mk('🗑️', 'danger', () => { current().blocks = current().blocks.filter(b => b.id !== block.id); salvar(); render(); }));
     }
 
@@ -700,20 +812,122 @@ R$ 885 (Dinheiro)
     }
 
     // ════════════════ HISTÓRICO ════════════════
+    function relAgo(ts) {
+      const s = (Date.now() - ts) / 1000;
+      if (s < 90) return 'agora há pouco';
+      if (s < 3600) return 'há ' + Math.floor(s / 60) + ' min';
+      if (s < 86400) return 'há ' + Math.floor(s / 3600) + ' h';
+      const d = Math.floor(s / 86400);
+      return d === 1 ? 'ontem' : 'há ' + d + ' dias';
+    }
+    function quando(ts) { const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+    function getHist() { try { return JSON.parse(localStorage.getItem(HIST) || '[]'); } catch (e) { return []; } }
+    function findBlock(snapData, id) {
+      for (const n of (snapData.notes || [])) { const b = (n.blocks || []).find(x => x.id === id); if (b) return { block: b, noteName: n.nome }; }
+      return null;
+    }
+    const estTag = link => { if (!link) return ''; const e = link.estoque; const cls = e == null ? '' : (e <= 0 ? 'e-zero' : 'e-ok'); return `<span class="tag ${cls}">estoque ${e == null ? '?' : e}</span>` + (link.venda ? `<span class="tag">venda ${fmt(link.venda)}</span>` : '') + (link.custo ? `<span class="tag">custo ${fmt(link.custo)}</span>` : ''); };
+    const sigOf = (text, link) => `${text}|${link ? (link.estoque ?? '') : ''}|${link ? link.venda : ''}|${link ? link.custo : ''}`;
+
     function abrirHistorico() {
-      const list = JSON.parse(localStorage.getItem(HIST) || '[]');
+      const list = getHist();
       const box = $('hist-list');
-      if (!list.length) { box.innerHTML = '<p class="sub">Ainda sem versões salvas.</p>'; }
-      else box.innerHTML = '';
+      if (!list.length) { box.innerHTML = '<p class="sub">Ainda sem versões salvas. Elas vão aparecer conforme você edita.</p>'; openSheet('sh-hist'); return; }
+      box.innerHTML = '';
       list.forEach(snap => {
         const total = (snap.data.notes || []).reduce((s, x) => s + x.blocks.length, 0);
         const el = document.createElement('div'); el.className = 'hist-item';
-        el.innerHTML = `<div><div class="hist-when">${new Date(snap.ts).toLocaleString('pt-BR')}</div><div class="hist-desc">${(snap.data.notes || []).length} segmento(s) · ${total} item(s)</div></div>`;
-        const b = document.createElement('button'); b.className = 'btn sm ghost'; b.textContent = 'Restaurar';
-        b.onclick = () => { if (confirm('Restaurar esta versão? A atual vira uma nova entrada no histórico.')) { snapshot(); data = JSON.parse(JSON.stringify(snap.data)); if (!current()) data.currentId = data.notes[0].id; salvar(); render(); closeSheets(); toast('Versão restaurada'); } };
-        el.appendChild(b); box.appendChild(el);
+        el.innerHTML = `<div><div class="hist-when">${quando(snap.ts)} · <span class="tl-ago">${relAgo(snap.ts)}</span></div><div class="hist-desc">${(snap.data.notes || []).length} segmento(s) · ${total} item(s)</div></div>`;
+        const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:6px;flex:0 0 auto';
+        const ver = document.createElement('button'); ver.className = 'btn sm ghost'; ver.textContent = 'Ver';
+        ver.onclick = () => verVersao(snap);
+        wrap.appendChild(ver); el.appendChild(wrap); box.appendChild(el);
       });
       openSheet('sh-hist');
+    }
+
+    // ── Visualizar versão (somente leitura) ──
+    let _viewSnap = null, _viewNoteId = null;
+    function verVersao(snap) {
+      _viewSnap = snap;
+      const notes = snap.data.notes || [];
+      _viewNoteId = notes.find(n => n.id === data.currentId)?.id || notes[0]?.id;
+      $('view-title').textContent = 'Versão de ' + quando(snap.ts);
+      $('view-sub').textContent = relAgo(snap.ts) + ' · somente leitura, nada é alterado';
+      renderVersao();
+      openSheet('sh-view');
+    }
+    function renderVersao() {
+      const notes = _viewSnap.data.notes || [];
+      const tabs = $('view-tabs'); tabs.innerHTML = '';
+      notes.forEach(n => {
+        const b = document.createElement('button'); b.className = 'tab' + (n.id === _viewNoteId ? ' active' : '');
+        b.innerHTML = `${esc(n.nome)}<span class="ct">${n.blocks.length || ''}</span>`;
+        b.onclick = () => { _viewNoteId = n.id; renderVersao(); };
+        tabs.appendChild(b);
+      });
+      const note = notes.find(n => n.id === _viewNoteId) || notes[0];
+      const body = $('view-body'); body.innerHTML = '';
+      if (!note || !note.blocks.length) { body.innerHTML = '<p class="sub">Segmento vazio nesta versão.</p>'; return; }
+      note.blocks.forEach(bl => {
+        const z = bl.link && bl.link.estoque != null && bl.link.estoque <= 0;
+        const el = document.createElement('div'); el.className = 'ro-block' + (z ? ' zero' : '');
+        el.innerHTML = `<div class="ro-text">${esc(bl.text) || '<span style="color:var(--ink-faint)">(vazio)</span>'}</div>` +
+          (bl.link ? `<span class="stk ${stkClass(bl.link)}" style="pointer-events:none"><span class="d"></span>${stkLabel(bl.link)}</span>` : '');
+        body.appendChild(el);
+      });
+    }
+    $('view-copy').onclick = () => {
+      const note = (_viewSnap.data.notes || []).find(n => n.id === _viewNoteId);
+      if (!note) return;
+      const txt = montarTexto(note);
+      navigator.clipboard.writeText(txt).then(() => toast('Segmento copiado ✓')).catch(() => toast('Não consegui copiar'));
+    };
+    $('view-restore').onclick = () => {
+      if (!confirm('Restaurar esta versão inteira? A atual vira uma nova entrada no histórico.')) return;
+      snapshot(); data = JSON.parse(JSON.stringify(_viewSnap.data)); if (!current()) data.currentId = data.notes[0].id;
+      salvar(); render(); closeSheets(); toast('Versão restaurada');
+    };
+
+    // ── Histórico de UM item ──
+    function abrirHistItem(blockId) {
+      const atual = current().blocks.find(b => b.id === blockId);
+      if (!atual) return;
+      // monta linha do tempo: estado atual + cada snapshot, do mais novo ao mais antigo
+      const brutos = [{ ts: Date.now(), block: atual, live: true }];
+      getHist().forEach(snap => { const f = findBlock(snap.data, blockId); if (f) brutos.push({ ts: snap.ts, block: f.block, live: false }); });
+      // dedupe de valores iguais consecutivos — guarda o ts MAIS ANTIGO de cada valor (quando passou a ser assim)
+      const linhas = [];
+      brutos.forEach(e => {
+        const sig = sigOf(e.block.text, e.block.link);
+        const ult = linhas[linhas.length - 1];
+        if (ult && ult.sig === sig) { ult.desde = e.ts; }
+        else linhas.push({ sig, desde: e.ts, text: e.block.text, link: e.block.link, live: e.live });
+      });
+
+      $('item-sub').textContent = (atual.text.split('\n')[0] || 'item') + ' · ' + (linhas.length > 1 ? linhas.length + ' versões' : 'sem mudanças registradas ainda');
+      const box = $('item-list'); box.innerHTML = '';
+      linhas.forEach((ln, i) => {
+        const el = document.createElement('div'); el.className = 'tl' + (i === 0 ? ' now' : '');
+        const cab = i === 0 ? 'valor atual' : quando(ln.desde);
+        const ago = i === 0 ? ('desde ' + quando(ln.desde)) : relAgo(ln.desde);
+        el.innerHTML =
+          `<div class="tl-head"><span class="tl-when">${cab}</span><span class="tl-ago">${ago}</span></div>` +
+          `<div class="tl-text">${esc(ln.text) || '<span class="gone">(linha vazia)</span>'}</div>` +
+          (ln.link ? `<div class="tl-data">${estTag(ln.link)}</div>` : '');
+        if (i > 0) {
+          const u = document.createElement('button'); u.className = 'tl-use'; u.textContent = '↩ usar este texto';
+          u.onclick = () => { snapshot(); const b = current().blocks.find(x => x.id === blockId); if (b) { b.text = ln.text; salvar(); render(); closeSheets(); toast('Texto do item restaurado'); } };
+          el.appendChild(u);
+        }
+        box.appendChild(el);
+      });
+      if (linhas.length === 1) {
+        const p = document.createElement('p'); p.className = 'sub'; p.style.marginTop = '10px';
+        p.textContent = 'Conforme você editar este item ou atualizar o estoque, as versões anteriores vão aparecer aqui.';
+        box.appendChild(p);
+      }
+      openSheet('sh-item');
     }
 
     // ════════════════ SHEETS helpers ════════════════
@@ -801,6 +1015,149 @@ R$ 885 (Dinheiro)
       // fallback: clicar no botão renderizado
       setTimeout(() => { const b = $('google-btn').querySelector('div[role=button]'); if (b) b.click(); }, 300);
     }
+
+    // ════════════════ FICHA DE PREÇOS (por item) ════════════════
+    function defaultRules() {
+      return [
+        { id: uid(), nome: 'Varejo', base: 'custo', op: 'mul', val: 1.35 },
+        { id: uid(), nome: 'Atacado', base: 'custo', op: 'mul', val: 1.18 },
+        { id: uid(), nome: 'Revenda', base: 'custo', op: 'mul', val: 1.10 },
+        { id: uid(), nome: 'Pix', base: 'Varejo', op: 'mul', val: 0.93 },
+        { id: uid(), nome: 'Cartão 10x', base: 'Varejo', op: 'div', val: 0.88 }
+      ];
+    }
+    if (!data.priceRules) data.priceRules = defaultRules();
+
+    const num = v => { const n = Number(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+    function aplicarOp(b, op, val) {
+      if (op === 'mul') return b * val;
+      if (op === 'div') return val ? b / val : 0;
+      if (op === 'sub') return b - val;
+      return b + val; // add
+    }
+    function aplicarExtra(b, e) {
+      const v = num(e.val);
+      if (e.op === 'mul') return b * v;
+      if (e.op === 'div') return v ? b / v : b;
+      const amt = e.tipo === 'pct' ? b * v / 100 : v;
+      return e.op === 'sub' ? b - amt : b + amt;
+    }
+    function seedCalc(block) {
+      if (block.calc) return block.calc;
+      block.calc = {
+        custo: (block.link && block.link.custo) ? String(fmt(block.link.custo)) : '',
+        mods: JSON.parse(JSON.stringify(data.priceRules)),
+        extras: []
+      };
+      // garante ids próprios das modalidades copiadas
+      block.calc.mods.forEach(m => m.id = uid());
+      return block.calc;
+    }
+    function computeCalc(block) {
+      const c = block.calc; if (!c) return { custo: 0, mods: [] };
+      let custo = num(c.custo);
+      (c.extras || []).filter(e => e.alvo === 'custo').forEach(e => { custo = aplicarExtra(custo, e); });
+      // valores "crus" (markup puro) — usados como base das derivadas, sem extras de modalidade
+      const raw = {}, order = [];
+      (c.mods || []).forEach(m => {
+        const base = m.base === 'custo' ? custo : (raw[m.base] != null ? raw[m.base] : custo);
+        raw[m.nome] = aplicarOp(base, m.op, num(m.val)); order.push(m.nome);
+      });
+      // final: aplica extras 'todas'/específicas uma única vez sobre cada modalidade
+      const fin = {};
+      order.forEach(n => {
+        let v = raw[n];
+        (c.extras || []).filter(e => e.alvo === 'todas' || e.alvo === n).forEach(e => { v = aplicarExtra(v, e); });
+        fin[n] = Math.round(v);
+      });
+      return { custo: Math.round(custo), mods: order.map(n => ({ nome: n, val: fin[n] })) };
+    }
+
+    let _calcId = null;
+    function openCalc(blockId) {
+      const block = current().blocks.find(b => b.id === blockId); if (!block) return;
+      _calcId = blockId; seedCalc(block);
+      $('calc-name').textContent = (block.text.split('\n')[0] || 'item');
+      $('calc-custo').value = block.calc.custo;
+      const pull = $('calc-pull');
+      if (block.link && block.link.custo) { pull.style.display = ''; pull.onclick = () => { block.calc.custo = String(fmt(block.link.custo)); $('calc-custo').value = block.calc.custo; salvar(); renderCalc(); }; }
+      else pull.style.display = 'none';
+      renderCalc();
+      openSheet('sh-calc');
+    }
+    const opOptions = sel => ['mul:×', 'div:÷', 'add:+', 'sub:−'].map(o => { const [v, l] = o.split(':'); return `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`; }).join('');
+
+    function renderCalc() {
+      const block = current().blocks.find(b => b.id === _calcId); if (!block) return;
+      const c = block.calc;
+      const res = computeCalc(block);
+      const resMap = {}; res.mods.forEach(m => resMap[m.nome] = m.val);
+
+      // modalidades
+      const mc = $('calc-mods'); mc.innerHTML = '';
+      const baseOpts = m => ['custo', ...c.mods.filter(x => x.id !== m.id).map(x => x.nome)]
+        .map(b => `<option value="${esc(b)}" ${b === m.base ? 'selected' : ''}>${esc(b)}</option>`).join('');
+      c.mods.forEach(m => {
+        const card = document.createElement('div'); card.className = 'calc-card';
+        card.innerHTML =
+          `<div class="calc-top"><input class="nm" value="${esc(m.nome)}" data-k="nome" /><span class="rs" id="rs-${m.id}">R$ ${resMap[m.nome] ?? 0}</span></div>` +
+          `<div class="calc-grid">` +
+          `<select class="mini" data-k="base">${baseOpts(m)}</select>` +
+          `<select class="mini" data-k="op">${opOptions(m.op)}</select>` +
+          `<input class="mini" data-k="val" type="number" inputmode="decimal" step="0.01" value="${m.val}" />` +
+          `<button class="calc-x" data-x="1">✕</button></div>`;
+        card.querySelector('[data-k="nome"]').addEventListener('input', e => {
+          const old = m.nome; m.nome = e.target.value;
+          c.mods.forEach(x => { if (x.base === old) x.base = m.nome; });
+          (c.extras || []).forEach(x => { if (x.alvo === old) x.alvo = m.nome; });
+          salvar(); recompute();
+        });
+        card.querySelectorAll('[data-k="base"],[data-k="op"],[data-k="val"]').forEach(inp => inp.addEventListener('input', () => { m[inp.dataset.k] = inp.value; salvar(); recompute(); }));
+        card.querySelector('[data-x]').onclick = () => { c.mods = c.mods.filter(x => x.id !== m.id); salvar(); renderCalc(); };
+        mc.appendChild(card);
+      });
+
+      // extras
+      const ec = $('calc-extras'); ec.innerHTML = '';
+      const alvoOpts = e => ['custo:no custo', 'todas:em todas'].concat(c.mods.map(m => m.nome + ':' + m.nome))
+        .map(o => { const i = o.indexOf(':'); const v = o.slice(0, i), l = o.slice(i + 1); return `<option value="${esc(v)}" ${v === e.alvo ? 'selected' : ''}>${esc(l)}</option>`; }).join('');
+      (c.extras || []).forEach(e => {
+        const card = document.createElement('div'); card.className = 'calc-card';
+        card.innerHTML =
+          `<div class="calc-top"><input class="nm" value="${esc(e.nome)}" data-k="nome" placeholder="ex.: Comissão" /></div>` +
+          `<div class="calc-grid extra">` +
+          `<select class="mini" data-k="op">${opOptions(e.op)}</select>` +
+          `<select class="mini" data-k="tipo"><option value="rs" ${e.tipo === 'rs' ? 'selected' : ''}>R$</option><option value="pct" ${e.tipo === 'pct' ? 'selected' : ''}>%</option></select>` +
+          `<input class="mini" data-k="val" type="number" inputmode="decimal" step="0.01" value="${e.val}" />` +
+          `<select class="mini" data-k="alvo">${alvoOpts(e)}</select>` +
+          `<button class="calc-x" data-x="1">✕</button></div>`;
+        card.querySelector('[data-k="nome"]').addEventListener('input', ev => { e.nome = ev.target.value; salvar(); });
+        card.querySelectorAll('[data-k="op"],[data-k="tipo"],[data-k="val"],[data-k="alvo"]').forEach(inp => inp.addEventListener('input', () => { e[inp.dataset.k] = inp.value; salvar(); recompute(); }));
+        card.querySelector('[data-x]').onclick = () => { c.extras = c.extras.filter(x => x.id !== e.id); salvar(); renderCalc(); };
+        ec.appendChild(card);
+      });
+
+      renderChips(res);
+    }
+
+    function recompute() {
+      const block = current().blocks.find(b => b.id === _calcId); if (!block) return;
+      const res = computeCalc(block);
+      const map = {}; res.mods.forEach(m => map[m.nome] = m.val);
+      block.calc.mods.forEach(m => { const el = document.getElementById('rs-' + m.id); if (el) el.textContent = 'R$ ' + (map[m.nome] ?? 0); });
+      renderChips(res);
+    }
+    function renderChips(res) {
+      const ch = $('calc-chips'); ch.innerHTML = '';
+      const mkchip = (label, val, cls) => { const b = document.createElement('button'); b.className = 'chip-ins ' + (cls || ''); b.innerHTML = `<span class="cl">${esc(label)}</span><span class="cv">${val}</span>`; b.onclick = () => { insertAtCursor(_calcId, String(val)); toast(label + ' inserido'); }; return b; };
+      ch.appendChild(mkchip('custo', res.custo, 'custo'));
+      res.mods.forEach(m => ch.appendChild(mkchip(m.nome, m.val)));
+    }
+
+    $('calc-custo').addEventListener('input', () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { b.calc.custo = $('calc-custo').value; salvar(); recompute(); } });
+    $('calc-add-mod').onclick = () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { b.calc.mods.push({ id: uid(), nome: 'Nova', base: 'custo', op: 'mul', val: 1.2 }); salvar(); renderCalc(); } };
+    $('calc-add-extra').onclick = () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { (b.calc.extras = b.calc.extras || []).push({ id: uid(), nome: 'Comissão', op: 'add', tipo: 'rs', val: 50, alvo: 'todas' }); salvar(); renderCalc(); } };
+    $('calc-savedef').onclick = () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { data.priceRules = JSON.parse(JSON.stringify(b.calc.mods)); salvar(); toast('Padrão atualizado — novos itens já usam estas modalidades'); } };
 
     // ════════════════ EVENTOS ════════════════
     $('b-copy').onclick = copiar;
