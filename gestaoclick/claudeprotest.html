@@ -4,499 +4,300 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Listas — estoque ao vivo</title>
+  <title>Listas — preços e estoque</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    /* ───────── TEMA ───────── */
     :root {
-      --bg: #f4f5f3;
-      --surface: #ffffff;
-      --paper: #fcfcfb;
-      --ink: #14171a;
-      --ink-soft: #5b6470;
-      --ink-faint: #9aa3af;
-      --line: #e6e8e6;
-      --line-soft: #eef0ee;
-      --primary: #1f2937;
-      --primary-h: #111827;
-      --on-primary: #ffffff;
-      --ok: #16a34a;
-      --low: #c97a11;
-      --zero: #dc2626;
-      --none: #aab2bd;
-      --ok-bg: #16a34a14;
-      --zero-bg: #dc262610;
-      --ring: #1f293733;
-      --shadow: 0 6px 24px rgba(20, 23, 26, .08);
-      --sheet-shadow: 0 -8px 40px rgba(20, 23, 26, .16);
+      --bg: #f4f5f3; --surface: #ffffff; --paper: #fcfcfb; --ink: #14171a; --ink-soft: #5b6470; --ink-faint: #9aa3af;
+      --line: #e6e8e6; --line-soft: #eef0ee; --primary: #1f2937; --primary-h: #111827; --on-primary: #ffffff;
+      --ok: #16a34a; --low: #c97a11; --zero: #dc2626; --none: #aab2bd; --ok-bg: #16a34a14; --zero-bg: #dc262610;
+      --ovr: #2563eb; --ovr-bg: #2563eb14;
+      --ring: #1f293733; --shadow: 0 6px 24px rgba(20,23,26,.08); --sheet-shadow: 0 -8px 40px rgba(20,23,26,.16);
     }
-
     [data-theme="dark"] {
-      --bg: #0e1013;
-      --surface: #15181d;
-      --paper: #13161b;
-      --ink: #e8eaed;
-      --ink-soft: #98a2b0;
-      --ink-faint: #5c6573;
-      --line: #262b33;
-      --line-soft: #1d222a;
-      --primary: #e8eaed;
-      --primary-h: #ffffff;
-      --on-primary: #14171a;
-      --ok: #25d366;
-      --low: #efad4b;
-      --zero: #f0564a;
-      --none: #4d5663;
-      --ok-bg: #25d3661c;
-      --zero-bg: #f0564a18;
-      --ring: #e8eaed33;
-      --shadow: 0 6px 24px rgba(0, 0, 0, .4);
-      --sheet-shadow: 0 -8px 40px rgba(0, 0, 0, .55);
+      --bg: #0e1013; --surface: #15181d; --paper: #13161b; --ink: #e8eaed; --ink-soft: #98a2b0; --ink-faint: #5c6573;
+      --line: #262b33; --line-soft: #1d222a; --primary: #e8eaed; --primary-h: #ffffff; --on-primary: #14171a;
+      --ok: #25d366; --low: #efad4b; --zero: #f0564a; --none: #4d5663; --ok-bg: #25d3661c; --zero-bg: #f0564a18;
+      --ovr: #5b9bf0; --ovr-bg: #5b9bf01e;
+      --ring: #e8eaed33; --shadow: 0 6px 24px rgba(0,0,0,.4); --sheet-shadow: 0 -8px 40px rgba(0,0,0,.55);
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
     html, body { height: 100%; overflow: hidden; }
-
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      display: flex;
-      flex-direction: column;
-      overscroll-behavior: none;
-      -webkit-font-smoothing: antialiased;
-    }
-
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
     button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-    input, textarea { font-family: inherit; }
+    input, textarea, select { font-family: inherit; }
     ::selection { background: var(--ring); }
 
-    /* ───────── TOPO ───────── */
-    .topbar {
-      flex: 0 0 auto;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 14px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--line);
-    }
+    .topbar { flex: 0 0 auto; height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
     .brand { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; flex: 1; }
     .brand b { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
-    .brand small {
-      font-size: 10.5px; color: var(--ink-soft); font-weight: 500;
-      display: flex; align-items: center; gap: 5px;
-    }
+    .brand small { font-size: 10.5px; color: var(--ink-soft); font-weight: 500; display: flex; align-items: center; gap: 5px; }
     .savedot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex: 0 0 auto; transition: background .2s; }
-    .savedot.saving { background: var(--low); animation: pulse 1s infinite; }
-    .savedot.off { background: var(--none); }
+    .savedot.saving { background: var(--low); animation: pulse 1s infinite; } .savedot.off { background: var(--none); }
     @keyframes pulse { 50% { opacity: .35; } }
-
-    .ic-btn {
-      width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
-      font-size: 17px; color: var(--ink-soft); transition: background .12s, color .12s;
-    }
+    .ic-btn { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; color: var(--ink-soft); transition: background .12s, color .12s; }
     .ic-btn:hover { background: var(--line-soft); color: var(--ink); }
+    .btn { display: inline-flex; align-items: center; gap: 6px; justify-content: center; height: 36px; padding: 0 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; background: var(--primary); color: var(--on-primary); transition: filter .12s, transform .05s; white-space: nowrap; }
+    .btn:active { transform: scale(.97); } .btn:hover { background: var(--primary-h); }
+    .btn.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); } .btn.ghost:hover { background: var(--line-soft); color: var(--ink); }
+    .btn.sm { height: 32px; padding: 0 11px; font-size: 12.5px; border-radius: 9px; } .btn[disabled] { opacity: .55; pointer-events: none; }
 
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px; justify-content: center;
-      height: 36px; padding: 0 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600;
-      background: var(--primary); color: var(--on-primary); transition: filter .12s, transform .05s;
-      white-space: nowrap;
-    }
-    .btn:active { transform: scale(.97); }
-    .btn:hover { background: var(--primary-h); }
-    .btn.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
-    .btn.ghost:hover { background: var(--line-soft); color: var(--ink); }
-    .btn.sm { height: 32px; padding: 0 11px; font-size: 12.5px; border-radius: 9px; }
-    .btn[disabled] { opacity: .55; pointer-events: none; }
-
-    /* ───────── ABAS (segmentos) ───────── */
-    .tabs {
-      flex: 0 0 auto; display: flex; gap: 6px; padding: 9px 12px; overflow-x: auto;
-      background: var(--surface); border-bottom: 1px solid var(--line); scrollbar-width: none;
-    }
+    .tabs { flex: 0 0 auto; display: flex; gap: 6px; padding: 9px 12px; overflow-x: auto; background: var(--surface); border-bottom: 1px solid var(--line); scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab {
-      flex: 0 0 auto; height: 32px; padding: 0 13px; border-radius: 20px; font-size: 13px; font-weight: 600;
-      color: var(--ink-soft); background: var(--bg); border: 1px solid transparent; display: flex; align-items: center; gap: 6px;
-      transition: all .12s;
-    }
+    .tab { flex: 0 0 auto; height: 32px; padding: 0 13px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: var(--bg); display: flex; align-items: center; gap: 6px; transition: all .12s; }
     .tab.active { background: var(--primary); color: var(--on-primary); }
     .tab .ct { font-size: 11px; font-weight: 600; opacity: .7; }
     .tab-add { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: var(--ink-soft); background: var(--bg); display: grid; place-items: center; }
     .tab-add:hover { background: var(--line-soft); color: var(--ink); }
 
-    /* ───────── ÁREA DA NOTA ───────── */
     .scroll { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-    .note { max-width: 720px; margin: 0 auto; padding: 14px 12px 120px; }
-
-    .empty {
-      text-align: center; color: var(--ink-soft); padding: 60px 24px; font-size: 14px; line-height: 1.6;
-    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px 12px 130px; }
+    .empty { text-align: center; color: var(--ink-soft); padding: 56px 24px; font-size: 14px; line-height: 1.6; }
     .empty b { display: block; color: var(--ink); font-size: 16px; margin-bottom: 6px; }
 
-    .block {
-      position: relative; display: flex; gap: 8px; align-items: flex-start;
-      padding: 4px 4px 4px 6px; border-radius: 10px; transition: background .12s;
-    }
-    .block.focus { background: var(--surface); box-shadow: var(--shadow); }
-    .block-ta {
-      flex: 1 1 auto; border: none; outline: none; resize: none; background: transparent; color: var(--ink);
-      font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13.5px; line-height: 1.55;
-      padding: 6px 2px; min-height: 30px; width: 100%; overflow: hidden; letter-spacing: -.01em;
-    }
-    .block-ta::placeholder { color: var(--ink-faint); }
-    .block.zero .block-ta { opacity: .5; }
-
-    /* gutter de estoque */
-    .stk {
-      flex: 0 0 auto; margin-top: 6px; min-width: 30px; height: 24px; border-radius: 7px;
-      display: inline-flex; align-items: center; justify-content: center; gap: 3px; padding: 0 6px;
-      font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600;
-      border: 1px solid var(--line); color: var(--none); background: transparent; transition: all .12s;
-    }
+    /* estoque dot */
+    .stk { flex: 0 0 auto; min-width: 32px; height: 26px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 7px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; border: 1px solid var(--line); color: var(--none); background: transparent; transition: all .12s; }
     .stk:hover { border-color: var(--ink-soft); }
     .stk .d { width: 7px; height: 7px; border-radius: 50%; background: var(--none); }
     .stk.add { color: var(--ink-faint); border-style: dashed; font-size: 15px; }
-    .stk.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
-    .stk.ok .d { background: var(--ok); }
-    .stk.low { color: var(--low); border-color: var(--low); }
-    .stk.low .d { background: var(--low); }
-    .stk.zero { color: var(--zero); border-color: var(--zero); background: var(--zero-bg); }
-    .stk.zero .d { background: var(--zero); }
-    .stk.stale { color: var(--none); }
+    .stk.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); } .stk.ok .d { background: var(--ok); }
+    .stk.low { color: var(--low); border-color: var(--low); } .stk.low .d { background: var(--low); }
+    .stk.zero { color: var(--zero); border-color: var(--zero); background: var(--zero-bg); } .stk.zero .d { background: var(--zero); }
     .stk.stale .d { background: var(--none); }
 
-    /* toolbar do bloco focado */
-    .block-tools {
-      display: none; gap: 6px; padding: 2px 4px 8px 40px; flex-wrap: wrap; align-items: center;
-    }
-    .block.focus + .block-tools, .block-tools.show { display: flex; }
-    .tool {
-      height: 28px; padding: 0 9px; border-radius: 8px; font-size: 12px; font-weight: 500;
-      color: var(--ink-soft); background: var(--bg); border: 1px solid var(--line); display: inline-flex; align-items: center; gap: 5px;
-    }
-    .tool:hover { background: var(--line-soft); color: var(--ink); }
-    .tool.chip { font-family: 'JetBrains Mono', monospace; color: var(--ink); }
-    .tool.danger:hover { color: var(--zero); border-color: var(--zero); }
+    /* ───── CARTÕES (celular) ───── */
+    .cards { display: flex; flex-direction: column; gap: 8px; }
+    .card-i { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; padding: 10px 11px; }
+    .card-i.zero { opacity: .6; }
+    .ci-top { display: flex; align-items: center; gap: 9px; }
+    .ci-label { flex: 1; min-width: 0; border: none; background: transparent; outline: none; color: var(--ink); font-size: 14px; font-weight: 600; height: 30px; }
+    .ci-prices { margin-top: 7px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 4px 10px; cursor: pointer; }
+    .ci-prices b { color: var(--ink); font-weight: 600; }
+    .ci-prices .ov { color: var(--ovr); }
+    .card-h { background: transparent; border: none; padding: 14px 4px 4px; }
+    .card-h input { width: 100%; border: none; background: transparent; outline: none; color: var(--ink); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .card-f textarea { width: 100%; border: 1px dashed var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); padding: 9px 11px; font-size: 13px; resize: none; outline: none; font-family: 'JetBrains Mono', monospace; line-height: 1.5; }
+    .mini-ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-soft); font-size: 15px; flex: 0 0 auto; }
+    .mini-ic:hover { background: var(--line-soft); color: var(--ink); }
 
-    .add-row { display: flex; gap: 8px; margin-top: 12px; padding: 0 2px; }
-    .add-row .btn { flex: 1; }
+    /* ───── PLANILHA (desktop) ───── */
+    .sheet-tbl { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+    .sheet-tbl th { font-size: 11px; font-weight: 600; color: var(--ink-soft); text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); background: var(--paper); white-space: nowrap; text-transform: uppercase; letter-spacing: .03em; position: sticky; top: 0; z-index: 2; }
+    .sheet-tbl th.num, .sheet-tbl td.num { text-align: right; }
+    .sheet-tbl td { padding: 3px 6px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+    .sheet-tbl tr:last-child td { border-bottom: none; }
+    .sheet-tbl tr.prod:hover td { background: var(--line-soft); }
+    .cell { width: 100%; border: 1px solid transparent; background: transparent; color: var(--ink); font-size: 13px; height: 32px; padding: 0 8px; border-radius: 7px; outline: none; }
+    .cell:hover { border-color: var(--line); } .cell:focus { border-color: var(--ink-soft); background: var(--bg); }
+    .cell.lbl { font-weight: 600; min-width: 200px; }
+    .cell.mono { font-family: 'JetBrains Mono', monospace; text-align: right; }
+    .cell.ovr { color: var(--ovr); background: var(--ovr-bg); border-color: var(--ovr); }
+    .cell.mono::placeholder { color: var(--ink-faint); }
+    .row-idx { font-size: 11px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; text-align: center; width: 30px; }
+    .full-row td { padding: 4px 8px; }
+    .full-h input { width: 100%; border: none; background: transparent; outline: none; color: var(--ink); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 6px 4px; }
+    .full-f textarea { width: 100%; border: 1px dashed var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); padding: 7px 9px; font-size: 12.5px; resize: none; outline: none; font-family: 'JetBrains Mono', monospace; }
 
-    /* ───────── BARRA INFERIOR ───────── */
-    .bottombar {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      background: linear-gradient(to top, var(--bg) 60%, transparent);
-      display: flex; gap: 8px; align-items: center; max-width: 744px; margin: 0 auto;
-    }
+    .addbar { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+    .addbar .btn { flex: 1 1 auto; min-width: 120px; }
+
+    /* barra inferior */
+    .bottombar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; gap: 8px; align-items: center; max-width: 1100px; margin: 0 auto; }
     .bottombar .btn { flex: 1; height: 44px; font-size: 14.5px; box-shadow: var(--shadow); }
-    .toggle-hide {
-      flex: 0 0 auto; height: 44px; padding: 0 12px; border-radius: 11px; background: var(--surface);
-      border: 1px solid var(--line); color: var(--ink-soft); font-size: 11.5px; font-weight: 600;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; box-shadow: var(--shadow);
-    }
+    .toggle-hide { flex: 0 0 auto; height: 44px; padding: 0 12px; border-radius: 11px; background: var(--surface); border: 1px solid var(--line); color: var(--ink-soft); font-size: 11.5px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; box-shadow: var(--shadow); }
     .toggle-hide.on { color: var(--ink); border-color: var(--ink-soft); }
-    .toggle-hide .sw { width: 28px; height: 4px; border-radius: 3px; background: var(--line); margin-top: 3px; position: relative; }
-    .toggle-hide.on .sw { background: var(--ok); }
+    .toggle-hide .sw { width: 28px; height: 4px; border-radius: 3px; background: var(--line); margin-top: 3px; } .toggle-hide.on .sw { background: var(--ok); }
 
-    /* ───────── SHEETS / MODAIS ───────── */
-    .scrim {
-      position: fixed; inset: 0; background: rgba(10,12,15,.5); z-index: 50; opacity: 0; pointer-events: none;
-      transition: opacity .2s; backdrop-filter: blur(2px);
-    }
+    /* sheets */
+    .scrim { position: fixed; inset: 0; background: rgba(10,12,15,.5); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; backdrop-filter: blur(2px); }
     .scrim.show { opacity: 1; pointer-events: auto; }
-    .sheet {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; background: var(--surface);
-      border-radius: 20px 20px 0 0; box-shadow: var(--sheet-shadow); padding: 8px 16px calc(20px + env(safe-area-inset-bottom));
-      max-width: 560px; margin: 0 auto; transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.9,.3,1);
-      max-height: 86vh; display: flex; flex-direction: column;
-    }
+    .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: var(--sheet-shadow); padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.9,.3,1); max-height: 88vh; display: flex; flex-direction: column; }
     .sheet.show { transform: translateY(0); }
     .grip { width: 38px; height: 4px; border-radius: 3px; background: var(--line); margin: 6px auto 12px; flex: 0 0 auto; }
     .sheet h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.02em; }
-    .sheet p.sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.5; }
-
-    .field {
-      width: 100%; height: 44px; padding: 0 13px; border-radius: 11px; border: 1px solid var(--line);
-      background: var(--bg); color: var(--ink); font-size: 14px; outline: none; transition: border .12s;
-    }
+    .sheet p.sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 12px; line-height: 1.5; }
+    .field { width: 100%; height: 44px; padding: 0 13px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 14px; outline: none; transition: border .12s; }
     .field:focus { border-color: var(--ink-soft); }
-    textarea.field { height: auto; min-height: 120px; padding: 11px 13px; resize: vertical; line-height: 1.5;
-      font-family: 'JetBrains Mono', monospace; font-size: 13px; }
-
-    .results { margin-top: 10px; overflow-y: auto; flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
-    .res {
-      display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 11px; border: 1px solid var(--line);
-      background: var(--bg); text-align: left; transition: border .12s;
-    }
+    textarea.field { height: auto; min-height: 110px; padding: 11px 13px; resize: vertical; line-height: 1.5; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+    .results { margin-top: 6px; overflow-y: auto; flex: 1 1 auto; display: flex; flex-direction: column; gap: 7px; }
+    .res { display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); text-align: left; }
     .res:hover { border-color: var(--ink-soft); }
-    .res-main { min-width: 0; flex: 1; }
-    .res-name { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .res-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-    .res .badge {
-      flex: 0 0 auto; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .badge.b-ok { color: var(--ok); background: var(--ok-bg); }
-    .badge.b-zero { color: var(--zero); background: var(--zero-bg); }
-
-    .sheet-actions { display: flex; gap: 8px; margin-top: 14px; flex: 0 0 auto; }
-    .sheet-actions .btn { flex: 1; }
-
-    .hist-item {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px;
-      border-radius: 11px; border: 1px solid var(--line); background: var(--bg); margin-bottom: 7px;
-    }
-    .hist-when { font-size: 13px; font-weight: 600; }
-    .hist-desc { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
-
-    .menu-item {
-      display: flex; align-items: center; gap: 11px; width: 100%; padding: 13px 6px; border-radius: 10px;
-      font-size: 14.5px; font-weight: 500; color: var(--ink); text-align: left;
-    }
-    .menu-item:hover { background: var(--line-soft); }
-    .menu-item .mi-ic { font-size: 18px; width: 24px; text-align: center; }
-    .menu-item .mi-sub { font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
-    .menu-item.line { border-top: 1px solid var(--line); border-radius: 0; margin-top: 4px; padding-top: 16px; }
-
-    /* toast */
-    .toast {
-      position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(20px); z-index: 80;
-      background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 600;
-      opacity: 0; pointer-events: none; transition: all .25s; box-shadow: 0 8px 30px rgba(0,0,0,.3); max-width: 88vw; text-align: center;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .prog { flex: 0 0 auto; height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 8px 0 4px; display: none; }
-    .prog.show { display: block; }
-    .prog > i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .25s; }
-
-    @media (min-width: 640px) {
-      .note { padding-top: 22px; }
-    }
-
-    /* ── timeline do item / versão ── */
-    .tl { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); }
-    .tl.now { border-color: var(--ok); background: var(--ok-bg); }
-    .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
-    .tl-when { font-size: 12px; font-weight: 700; color: var(--ink); }
-    .tl.now .tl-when { color: var(--ok); }
-    .tl-ago { font-size: 10.5px; color: var(--ink-soft); font-weight: 500; }
-    .tl-text {
-      font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.5; color: var(--ink);
-      white-space: pre-wrap; word-break: break-word;
-    }
-    .tl-text.gone { color: var(--ink-faint); font-style: italic; font-family: inherit; }
-    .tl-data { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .tag {
-      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px;
-      border: 1px solid var(--line); color: var(--ink-soft);
-    }
-    .tag.e-ok { color: var(--ok); border-color: var(--ok); }
-    .tag.e-zero { color: var(--zero); border-color: var(--zero); }
-    .tl-use {
-      margin-top: 9px; height: 28px; padding: 0 11px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line);
-    }
-    .tl-use:hover { color: var(--ink); border-color: var(--ink-soft); }
-    .diff-rm { color: var(--zero); }
-    .diff-add { color: var(--ok); }
-
-    .ro-block { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); display: flex; gap: 8px; align-items: flex-start; }
-    .ro-block.zero { opacity: .55; }
-    .ro-text { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-
-    /* ── ficha de preços ── */
-    .sec-h { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); margin: 14px 0 7px; display: flex; align-items: center; justify-content: space-between; }
+    .res-main { min-width: 0; flex: 1; } .res-name { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .res-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .res .badge { flex: 0 0 auto; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; } .badge.b-ok { color: var(--ok); background: var(--ok-bg); } .badge.b-zero { color: var(--zero); background: var(--zero-bg); }
+    .sheet-actions { display: flex; gap: 8px; margin-top: 12px; flex: 0 0 auto; } .sheet-actions .btn { flex: 1; }
+    .sec-h { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); margin: 15px 0 8px; display: flex; align-items: center; justify-content: space-between; }
     .mini { width: 100%; height: 36px; padding: 0 9px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px; outline: none; }
     .mini:focus { border-color: var(--ink-soft); }
     select.mini { -webkit-appearance: none; appearance: none; padding-right: 22px; background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%); background-position: calc(100% - 12px) 15px, calc(100% - 8px) 15px; background-size: 4px 4px; background-repeat: no-repeat; }
     .calc-card { border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; background: var(--bg); margin-bottom: 7px; }
-    .calc-top { display: flex; align-items: center; gap: 8px; }
-    .calc-top .nm { flex: 1; font-weight: 600; height: 32px; border: none; background: transparent; outline: none; color: var(--ink); font-size: 13.5px; }
-    .calc-top .rs { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-    .calc-grid { display: grid; grid-template-columns: 1fr 64px 1fr 32px; gap: 6px; margin-top: 7px; align-items: center; }
-    .calc-grid.extra { grid-template-columns: 64px 60px 1fr 1fr 32px; }
-    .calc-x { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-soft); border: 1px solid var(--line); font-size: 14px; }
-    .calc-x:hover { color: var(--zero); border-color: var(--zero); }
-    .calc-add { width: 100%; height: 38px; border-radius: 10px; border: 1px dashed var(--line); color: var(--ink-soft); font-size: 13px; font-weight: 600; }
-    .calc-add:hover { border-color: var(--ink-soft); color: var(--ink); }
-    .chips { display: flex; gap: 7px; flex-wrap: wrap; }
-    .chip-ins {
-      height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
-      display: inline-flex; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1.1;
-    }
-    .chip-ins:hover { border-color: var(--ink-soft); }
-    .chip-ins .cl { font-size: 10px; color: var(--ink-soft); font-weight: 600; }
-    .chip-ins .cv { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--ink); }
-    .chip-ins.custo { background: var(--bg); }
-    .calc-hint { font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; margin-top: 10px; }
-    .resolved { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; color: var(--ok); white-space: pre-wrap; word-break: break-word; padding: 2px 2px 4px; display: none; }
-    .resolved.show { display: block; }
-    .resolved::before { content: '→ '; color: var(--ink-faint); }
-    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
-    .seg button { padding: 6px 11px; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: var(--bg); }
-    .seg button.on { background: var(--primary); color: var(--on-primary); }
-    .lk-row { display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); }
-    .lk-row .lk-main { flex: 1; min-width: 0; }
-    .lk-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lk-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+    .calc-top { display: flex; align-items: center; gap: 8px; } .calc-top .nm { flex: 1; font-weight: 600; height: 32px; border: none; background: transparent; outline: none; color: var(--ink); font-size: 13.5px; } .calc-top .rs { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; white-space: nowrap; }
+    .calc-grid { display: grid; grid-template-columns: 1fr 60px 1fr 30px; gap: 6px; margin-top: 7px; align-items: center; }
+    .calc-grid.extra { grid-template-columns: 60px 56px 1fr 1fr 30px; }
+    .calc-x { width: 30px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-soft); border: 1px solid var(--line); font-size: 13px; } .calc-x:hover { color: var(--zero); border-color: var(--zero); }
+    .calc-add { width: 100%; height: 38px; border-radius: 10px; border: 1px dashed var(--line); color: var(--ink-soft); font-size: 13px; font-weight: 600; } .calc-add:hover { border-color: var(--ink-soft); color: var(--ink); }
+    .mod-line { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 6px; }
+    .mod-line .ml-nm { flex: 1; font-size: 13px; font-weight: 600; } .mod-line .ml-rule { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+    .ovr-inp { width: 84px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-size: 13px; text-align: right; padding: 0 8px; font-family: 'JetBrains Mono', monospace; outline: none; }
+    .ovr-inp::placeholder { color: var(--ink-faint); } .ovr-inp.on { color: var(--ovr); border-color: var(--ovr); background: var(--ovr-bg); }
+    .lk-row { display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); margin-bottom: 6px; } .lk-row .lk-main { flex: 1; min-width: 0; } .lk-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .lk-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+    .menu-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 13px 6px; border-radius: 10px; font-size: 14.5px; font-weight: 500; color: var(--ink); text-align: left; } .menu-item:hover { background: var(--line-soft); } .menu-item .mi-ic { font-size: 18px; width: 24px; text-align: center; } .menu-item .mi-sub { font-size: 11.5px; color: var(--ink-soft); font-weight: 400; } .menu-item.line { border-top: 1px solid var(--line); border-radius: 0; margin-top: 4px; padding-top: 14px; } .menu-item.danger:hover { color: var(--zero); }
+    .hist-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); margin-bottom: 7px; }
+    .hist-when { font-size: 13px; font-weight: 600; } .hist-desc { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+    .tl { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); margin-bottom: 7px; } .tl.now { border-color: var(--ok); background: var(--ok-bg); }
+    .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; } .tl-when { font-size: 12px; font-weight: 700; } .tl.now .tl-when { color: var(--ok); } .tl-ago { font-size: 10.5px; color: var(--ink-soft); }
+    .tl-text { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; } .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px; border: 1px solid var(--line); color: var(--ink-soft); margin-right: 5px; } .tl-data { margin-top: 8px; }
+    .toast { position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(20px); z-index: 80; background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: all .25s; box-shadow: 0 8px 30px rgba(0,0,0,.3); max-width: 88vw; text-align: center; } .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 
 <body>
   <div class="topbar">
-    <div class="brand">
-      <b>Listas</b>
-      <small><span class="savedot" id="savedot"></span><span id="savetxt">salvo</span></small>
-    </div>
+    <div class="brand"><b>Listas</b><small><span class="savedot" id="savedot"></span><span id="savetxt">salvo</span></small></div>
     <button class="ic-btn" id="b-refresh" title="Atualizar estoque do caixa">⟳</button>
-    <button class="ic-btn" id="b-hist" title="Histórico de versões">🕓</button>
+    <button class="ic-btn" id="b-hist" title="Histórico">🕓</button>
     <button class="ic-btn" id="b-theme" title="Tema">🌙</button>
     <button class="ic-btn" id="b-menu" title="Mais">⋯</button>
   </div>
-
   <div class="tabs" id="tabs"></div>
-
-  <div class="scroll">
-    <div class="note" id="note"></div>
-  </div>
+  <div class="scroll"><div class="wrap" id="wrap"></div></div>
 
   <div class="bottombar">
-    <button class="toggle-hide" id="b-hide" title="Ocultar itens sem estoque ao copiar">
-      <span>oculta&nbsp;0</span><span class="sw"></span>
-    </button>
+    <button class="toggle-hide" id="b-hide" title="Ocultar sem estoque ao copiar"><span>oculta&nbsp;0</span><span class="sw"></span></button>
+    <button class="btn ghost" id="b-tpl" style="flex:0 0 auto" title="Formato do texto">📝 formato</button>
     <button class="btn" id="b-copy">Copiar lista</button>
   </div>
 
-  <!-- SCRIM + SHEETS -->
   <div class="scrim" id="scrim"></div>
 
-  <!-- Sheet: buscar/vincular caixa -->
+  <!-- buscar caixa -->
   <div class="sheet" id="sh-search">
     <div class="grip"></div>
     <h3 id="search-title">Buscar no caixa</h3>
-    <p class="sub" id="search-sub">Pesquise um produto pelo nome para ver o estoque ao vivo.</p>
+    <p class="sub" id="search-sub">Pesquise pelo nome para ver o estoque ao vivo.</p>
     <input class="field" id="search-input" placeholder="Ex.: Realme Note 60x, Smart TV 32…" autocomplete="off" />
-    <div class="prog" id="search-prog"><i></i></div>
     <div class="results" id="search-results"></div>
   </div>
 
-  <!-- Sheet: vínculos do item -->
+  <!-- vínculos -->
   <div class="sheet" id="sh-links">
     <div class="grip"></div>
     <h3>Vínculos do caixa</h3>
     <p class="sub" id="links-name"></p>
     <div style="font-size:13px;font-weight:600;margin-bottom:10px" id="links-total"></div>
     <div class="results" id="links-list"></div>
-    <div class="sheet-actions">
-      <button class="btn ghost" id="links-add">＋ adicionar vínculo</button>
-      <button class="btn" onclick="closeSheets()">Pronto</button>
-    </div>
+    <div class="sheet-actions"><button class="btn ghost" id="links-add">＋ adicionar vínculo</button><button class="btn" onclick="closeSheets()">Pronto</button></div>
   </div>
 
-  <!-- Sheet: importar do Keep -->
+  <!-- ficha do produto -->
+  <div class="sheet" id="sh-ficha">
+    <div class="grip"></div>
+    <h3 id="ficha-name">Produto</h3>
+    <p class="sub">Custo, modalidades e extras deste produto.</p>
+    <div class="results" id="ficha-body">
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <div style="flex:1"><label class="sec-h" style="margin-top:0">Custo (R$)</label><input class="mini" id="ficha-custo" type="number" inputmode="decimal" step="0.01" placeholder="0" /></div>
+        <button class="btn ghost sm" id="ficha-pull" style="height:36px;display:none">⬇ do caixa</button>
+        <button class="btn ghost sm" id="ficha-links" style="height:36px">🔗 vínculos</button>
+      </div>
+      <div class="sec-h">Modalidades <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-faint)">toque no valor pra travar um preço</span></div>
+      <div id="ficha-mods"></div>
+      <div class="sec-h">Extras deste produto <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-faint)">ex.: comissão</span></div>
+      <div id="ficha-extras"></div>
+      <button class="calc-add" id="ficha-add-extra">＋ componente</button>
+      <div class="sec-h">Texto próprio (opcional)</div>
+      <textarea class="field" id="ficha-custom" placeholder="Deixe vazio pra usar o formato do segmento. Tokens: {{nome}} {{custo}} {{Varejo}} {{Atacado}}…" style="min-height:64px"></textarea>
+    </div>
+    <div class="sheet-actions"><button class="btn ghost danger" id="ficha-del">Excluir</button><button class="btn" onclick="closeSheets()">Pronto</button></div>
+  </div>
+
+  <!-- ações de item -->
+  <div class="sheet" id="sh-actions">
+    <div class="grip"></div>
+    <h3 id="act-name">Item</h3>
+    <div id="act-body"></div>
+  </div>
+
+  <!-- modalidades globais -->
+  <div class="sheet" id="sh-mods">
+    <div class="grip"></div>
+    <h3>Modalidades (colunas)</h3>
+    <p class="sub">Valem pra todos os produtos. Cada uma vira uma coluna na planilha e um token no texto.</p>
+    <div class="results" id="mods-list"></div>
+    <div class="sheet-actions"><button class="btn ghost" id="mods-add">＋ modalidade</button><button class="btn" onclick="closeSheets()">Pronto</button></div>
+  </div>
+
+  <!-- template/formato -->
+  <div class="sheet" id="sh-tpl">
+    <div class="grip"></div>
+    <h3>Formato do texto — <span id="tpl-note"></span></h3>
+    <p class="sub">Como cada produto vira linha no WhatsApp. Tokens: {{nome}} {{custo}} {{estoque}} {{data}} e cada modalidade, ex.: {{Varejo}}.</p>
+    <div class="results">
+      <label class="sec-h" style="margin-top:0">Cabeçalho (1x no topo)</label>
+      <textarea class="field" id="tpl-header" placeholder="📣 *LISTA ({{data}}):*" style="min-height:48px"></textarea>
+      <label class="sec-h">Linha de cada produto</label>
+      <textarea class="field" id="tpl-linha" placeholder="{{nome}} - R$ {{Varejo}}" style="min-height:64px"></textarea>
+      <label class="sec-h">Rodapé (1x no fim)</label>
+      <textarea class="field" id="tpl-footer" placeholder="" style="min-height:48px"></textarea>
+      <label class="sec-h">Espaço entre produtos</label>
+      <div style="display:flex;gap:8px"><button class="btn ghost sm" id="tpl-sep-blank">linha em branco</button><button class="btn ghost sm" id="tpl-sep-single">compacto</button></div>
+    </div>
+    <div class="sheet-actions"><button class="btn" onclick="closeSheets()">Pronto</button></div>
+  </div>
+
+  <!-- menu -->
+  <div class="sheet" id="sh-menu">
+    <div class="grip"></div>
+    <h3>Mais</h3>
+    <div style="overflow-y:auto">
+      <button class="menu-item" id="m-mods"><span class="mi-ic">📊</span><span>Modalidades / colunas<br><span class="mi-sub">margens de varejo, atacado, pix…</span></span></button>
+      <button class="menu-item" id="m-import"><span class="mi-ic">📋</span><span>Colar do Keep<br><span class="mi-sub">trazer texto como linhas livres</span></span></button>
+      <button class="menu-item" id="m-export"><span class="mi-ic">⬇️</span><span>Baixar backup (.json)</span></button>
+      <button class="menu-item" id="m-importfile"><span class="mi-ic">⬆️</span><span>Restaurar backup (.json)</span></button>
+      <button class="menu-item" id="m-rename"><span class="mi-ic">✏️</span><span>Renomear segmento atual</span></button>
+      <button class="menu-item danger" id="m-del"><span class="mi-ic">🗑️</span><span>Excluir segmento atual</span></button>
+      <button class="menu-item line" id="m-sync"><span class="mi-ic">☁️</span><span id="sync-label">Sincronizar entre aparelhos<br><span class="mi-sub">opcional — conta Google</span></span></button>
+    </div>
+    <input type="file" id="file-input" accept="application/json" style="display:none" />
+  </div>
+
+  <!-- importar -->
   <div class="sheet" id="sh-import">
     <div class="grip"></div>
     <h3>Colar do Keep</h3>
-    <p class="sub">Cole sua nota inteira. Cada produto separado por linha em branco vira um item editável.</p>
-    <textarea class="field" id="import-text" placeholder="*SMART TVS (19/06):*
-
-Smart TV 32&quot; Philco Roku
-10x R$ 99,99 (R$ 999,99)
-R$ 885 (Dinheiro)
-
-..."></textarea>
-    <div class="sheet-actions">
-      <button class="btn ghost" onclick="closeSheets()">Cancelar</button>
-      <button class="btn" id="import-go">Importar</button>
-    </div>
+    <p class="sub">Cada linha vira um item livre. Depois você converte em produto quando quiser.</p>
+    <textarea class="field" id="import-text" placeholder="Cole aqui…"></textarea>
+    <div class="sheet-actions"><button class="btn ghost" onclick="closeSheets()">Cancelar</button><button class="btn" id="import-go">Importar</button></div>
   </div>
 
-  <!-- Sheet: histórico (versões) -->
+  <!-- histórico versões -->
   <div class="sheet" id="sh-hist">
     <div class="grip"></div>
     <h3>Histórico de versões</h3>
-    <p class="sub">Cópias salvas neste aparelho. Toque em <b>Ver</b> para só olhar, sem mexer em nada.</p>
+    <p class="sub">Toque em <b>Ver</b> para só olhar, sem mexer em nada.</p>
     <div class="results" id="hist-list"></div>
     <div class="sheet-actions"><button class="btn ghost" onclick="closeSheets()">Fechar</button></div>
   </div>
 
-  <!-- Sheet: visualizar versão (somente leitura) -->
+  <!-- ver versão -->
   <div class="sheet" id="sh-view">
     <div class="grip"></div>
     <h3 id="view-title">Versão</h3>
     <p class="sub" id="view-sub"></p>
     <div class="tabs" id="view-tabs" style="border:none;background:transparent;padding:0 0 8px"></div>
     <div class="results" id="view-body"></div>
-    <div class="sheet-actions">
-      <button class="btn ghost" id="view-copy">Copiar segmento</button>
-      <button class="btn ghost" id="view-restore">Restaurar versão</button>
-      <button class="btn" onclick="closeSheets()">Fechar</button>
-    </div>
+    <div class="sheet-actions"><button class="btn ghost" id="view-copy">Copiar segmento</button><button class="btn ghost" id="view-restore">Restaurar</button><button class="btn" onclick="closeSheets()">Fechar</button></div>
   </div>
 
-  <!-- Sheet: histórico de um item -->
+  <!-- histórico do item -->
   <div class="sheet" id="sh-item">
     <div class="grip"></div>
-    <h3>Histórico do item</h3>
+    <h3>Histórico do produto</h3>
     <p class="sub" id="item-sub"></p>
     <div class="results" id="item-list"></div>
     <div class="sheet-actions"><button class="btn ghost" onclick="closeSheets()">Fechar</button></div>
-  </div>
-
-  <!-- Sheet: ficha de preços do item -->
-  <div class="sheet" id="sh-calc">
-    <div class="grip"></div>
-    <h3>Preços do item</h3>
-    <p class="sub" id="calc-name"></p>
-    <div class="results" id="calc-body">
-      <div style="display:flex; gap:8px; align-items:flex-end;">
-        <div style="flex:1">
-          <label class="sec-h" style="margin-top:0">Custo (R$)</label>
-          <input class="mini" id="calc-custo" type="number" inputmode="decimal" step="0.01" placeholder="0" />
-        </div>
-        <button class="btn ghost sm" id="calc-pull" style="height:36px;display:none">⬇ do caixa</button>
-      </div>
-
-      <div class="sec-h">Modalidades <span id="calc-savedef" style="font-size:10px;color:var(--ink-soft);font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0">salvar como padrão</span></div>
-      <div id="calc-mods"></div>
-      <button class="calc-add" id="calc-add-mod">＋ modalidade</button>
-
-      <div class="sec-h">Componentes extras <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-faint)">só deste item</span></div>
-      <div id="calc-extras"></div>
-      <button class="calc-add" id="calc-add-extra">＋ componente (ex.: comissão)</button>
-
-      <div class="sec-h">Inserir no texto</div>
-      <div class="chips" id="calc-chips"></div>
-      <p class="calc-hint">Toque num valor pra inserir no texto do item, onde o cursor estiver. Os números são calculados na hora; o texto continua livre pra você formatar como quiser.</p>
-    </div>
-    <div class="sheet-actions"><button class="btn" onclick="closeSheets()">Fechar</button></div>
-  </div>
-
-  <!-- Sheet: menu -->
-  <div class="sheet" id="sh-menu">
-    <div class="grip"></div>
-    <h3>Mais</h3>
-    <div style="overflow-y:auto">
-      <button class="menu-item" id="m-import"><span class="mi-ic">📋</span><span>Colar do Keep<br><span class="mi-sub">trazer uma lista existente</span></span></button>
-      <button class="menu-item" id="m-export"><span class="mi-ic">⬇️</span><span>Baixar backup (.json)<br><span class="mi-sub">guardar ou levar pra outro aparelho</span></span></button>
-      <button class="menu-item" id="m-importfile"><span class="mi-ic">⬆️</span><span>Restaurar backup (.json)</span></button>
-      <button class="menu-item" id="m-rename"><span class="mi-ic">✏️</span><span>Renomear segmento atual</span></button>
-      <button class="menu-item" id="m-del" ><span class="mi-ic">🗑️</span><span>Excluir segmento atual</span></button>
-      <button class="menu-item line" id="m-sep"><span class="mi-ic">↕</span><span>Espaço entre itens ao copiar<br><span class="mi-sub" id="sep-state">linha em branco entre produtos</span></span></button>
-      <button class="menu-item" id="m-sync"><span class="mi-ic">☁️</span><span id="sync-label">Sincronizar entre aparelhos<br><span class="mi-sub">opcional — usa sua conta Google</span></span></button>
-    </div>
-    <input type="file" id="file-input" accept="application/json" style="display:none" />
   </div>
 
   <div class="toast" id="toast"></div>
@@ -504,808 +305,431 @@ R$ 885 (Dinheiro)
 
   <script>
     'use strict';
-    // ════════════════ CONFIG (do seu caixa) ════════════════
     const CAIXA_BASE = 'https://caixa-three.vercel.app/api/produtos';
     const LOJA_ID = '361408';
     const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
     const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
     const LOW_STOCK = 3;
-
-    const STORE = 'listas_lite_v1';
-    const HIST = 'listas_lite_hist_v1';
-    const USER = 'listas_lite_user_v1';
-    const THEME = 'listas_lite_theme';
+    const STORE = 'listas_v2', HIST = 'listas_v2_hist', USER = 'listas_v2_user', THEME = 'listas_v2_theme';
 
     const $ = id => document.getElementById(id);
     const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const hoje = () => { const d = new Date(); const p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`; };
+    const hoje = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`; };
+    const num = v => { const n = Number(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+    const fmt = v => { const n = num(v); return String(Math.round(n)); };
+    const normKey = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    const isDesktop = () => matchMedia('(min-width: 760px)').matches;
 
-    // ════════════════ ESTADO ════════════════
-    function novoSegmento(nome) { return { id: uid(), nome, sep: 'blank', hideZero: false, blocks: [] }; }
-    function novoBloco(text = '', link = null) { return { id: uid(), text, link }; }
+    // ───── ESTADO ─────
+    function defMods() { return [
+      { id: uid(), nome: 'Varejo', base: 'custo', op: 'mul', val: 1.35 },
+      { id: uid(), nome: 'Atacado', base: 'custo', op: 'mul', val: 1.18 },
+      { id: uid(), nome: 'Revenda', base: 'custo', op: 'mul', val: 1.10 }
+    ]; }
+    function defTemplates() { return [
+      { id: 't1', nome: 'Nome - preço', header: '', linha: '{{nome}} - R$ {{Varejo}}', footer: '' },
+      { id: 't2', nome: 'Varejo e Atacado', header: '', linha: '{{nome}}\nVarejo R$ {{Varejo}}  ·  Atacado R$ {{Atacado}}', footer: '' }
+    ]; }
+    function novoSeg(nome, tpl) { return { id: uid(), nome, templateId: tpl || 't1', sep: 'blank', hideZero: false, items: [] }; }
+    function novoProd(label, custo, links) { return { id: uid(), type: 'p', label: label || '', custo: custo != null ? String(custo) : '', extras: [], overrides: {}, links: links || [], customText: '' }; }
+    function novoHeader(label) { return { id: uid(), type: 'h', label: label || 'SEÇÃO' }; }
+    function novoFree(text) { return { id: uid(), type: 'f', text: text || '' }; }
 
-    let data = load();
-    let user = JSON.parse(localStorage.getItem(USER) || 'null');
-    let syncReady = false, _saveT = null, _pushT = null;
-    let focusedBlockId = null;
+    let data = load(), user = JSON.parse(localStorage.getItem(USER) || 'null'), syncReady = false, _saveT = null, _pushT = null;
 
     function load() {
-      try {
-        const raw = localStorage.getItem(STORE);
-        if (raw) { const d = JSON.parse(raw); if (d && d.notes && d.notes.length) return d; }
-      } catch (e) {}
-      const d = {
-        v: 1, savedAt: Date.now(), currentId: null,
-        notes: [
-          novoSegmento('Varejo'),
-          novoSegmento('Atacado'),
-        ]
-      };
-      d.notes[1].sep = 'single';
-      d.currentId = d.notes[0].id;
+      try { const r = localStorage.getItem(STORE); if (r) { const d = JSON.parse(r); if (d && d.notes) return ensure(d); } } catch (e) {}
+      try { const old = localStorage.getItem('listas_lite_v1'); if (old) { const conv = migrarLite(JSON.parse(old)); if (conv) return conv; } } catch (e) {}
+      const d = { v: 2, savedAt: Date.now(), currentId: null, mods: defMods(), templates: defTemplates(),
+        notes: [novoSeg('Varejo', 't1'), novoSeg('Atacado', 't2')] };
+      d.currentId = d.notes[0].id; return d;
+    }
+    function ensure(d) {
+      if (!d.mods || !d.mods.length) d.mods = defMods();
+      if (!d.templates || !d.templates.length) d.templates = defTemplates();
+      d.notes.forEach(n => { if (!n.templateId) n.templateId = d.templates[0].id; if (!n.sep) n.sep = 'blank'; (n.items || (n.items = [])).forEach(it => { if (it.type === 'p') { it.extras = it.extras || []; it.overrides = it.overrides || {}; it.links = it.links || (it.link ? [it.link] : []); delete it.link; } }); });
+      if (!d.currentId || !d.notes.find(n => n.id === d.currentId)) d.currentId = d.notes[0] && d.notes[0].id;
       return d;
     }
+    function migrarLite(d) {
+      if (!d || !d.notes) return null;
+      const out = { v: 2, savedAt: d.savedAt || Date.now(), currentId: null, mods: defMods(), templates: defTemplates(), notes: [] };
+      d.notes.forEach(n => {
+        const seg = novoSeg(n.nome || 'Lista', 't1'); seg.sep = n.sep === 'single' ? 'single' : 'blank';
+        (n.blocks || []).forEach(b => {
+          const links = b.links || (b.link ? [b.link] : []);
+          if (links.length || b.calc) { const p = novoProd(b.text || '', b.calc ? b.calc.custo : (links[0] ? links[0].custo : ''), links); seg.items.push(p); }
+          else seg.items.push(novoFree(b.text || ''));
+        });
+        out.notes.push(seg);
+      });
+      out.currentId = out.notes[0] && out.notes[0].id; return out;
+    }
+    const cur = () => data.notes.find(n => n.id === data.currentId) || data.notes[0];
+    const tplOf = n => data.templates.find(t => t.id === n.templateId) || data.templates[0];
 
-    const current = () => data.notes.find(n => n.id === data.currentId) || data.notes[0];
-
-    // ════════════════ PERSISTÊNCIA (silenciosa) ════════════════
+    // ───── PERSISTÊNCIA ─────
     function salvar(push = true) {
       data.savedAt = Date.now();
       try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (e) {}
-      setSaved('saving');
-      clearTimeout(_saveT);
+      setSaved('saving'); clearTimeout(_saveT);
       _saveT = setTimeout(() => { setSaved(user && syncReady ? 'cloud' : 'local'); snapshot(); }, 500);
       if (push && user && syncReady) { clearTimeout(_pushT); _pushT = setTimeout(pushCloud, 1200); }
     }
-    function setSaved(state) {
-      const dot = $('savedot'), txt = $('savetxt');
-      dot.className = 'savedot' + (state === 'saving' ? ' saving' : state === 'off' ? ' off' : '');
-      txt.textContent = state === 'saving' ? 'salvando…' : state === 'cloud' ? 'salvo na nuvem' : state === 'off' ? 'offline' : 'salvo';
-    }
-
-    // histórico local (anel de ~25, dedupe por hash, intervalo mínimo)
+    function setSaved(s) { const d = $('savedot'), t = $('savetxt'); d.className = 'savedot' + (s === 'saving' ? ' saving' : s === 'off' ? ' off' : ''); t.textContent = s === 'saving' ? 'salvando…' : s === 'cloud' ? 'salvo na nuvem' : s === 'off' ? 'offline' : 'salvo'; }
     let _lastHash = '';
     function snapshot() {
-      try {
-        const h = JSON.stringify(data.notes).length + ':' + JSON.stringify(data.notes).slice(0, 200);
-        if (h === _lastHash) return;
-        _lastHash = h;
-        const list = JSON.parse(localStorage.getItem(HIST) || '[]');
-        const last = list[0];
-        if (last && Date.now() - last.ts < 90 * 1000) { list[0] = { ts: Date.now(), data: JSON.parse(JSON.stringify(data)) }; }
+      try { const j = JSON.stringify(data.notes); const h = j.length + ':' + j.slice(0, 160); if (h === _lastHash) return; _lastHash = h;
+        const list = JSON.parse(localStorage.getItem(HIST) || '[]'); const last = list[0];
+        if (last && Date.now() - last.ts < 90000) list[0] = { ts: Date.now(), data: JSON.parse(JSON.stringify(data)) };
         else list.unshift({ ts: Date.now(), data: JSON.parse(JSON.stringify(data)) });
-        localStorage.setItem(HIST, JSON.stringify(list.slice(0, 25)));
-      } catch (e) {}
+        localStorage.setItem(HIST, JSON.stringify(list.slice(0, 25))); } catch (e) {}
     }
 
-    // ════════════════ RENDER ABAS ════════════════
+    // ───── MOTOR DE PREÇOS ─────
+    function aplicarOp(b, op, val) { if (op === 'mul') return b * val; if (op === 'div') return val ? b / val : 0; if (op === 'sub') return b - val; return b + val; }
+    function aplicarExtra(b, e) { const v = num(e.val); if (e.op === 'mul') return b * v; if (e.op === 'div') return v ? b / v : b; const amt = e.tipo === 'pct' ? b * v / 100 : v; return e.op === 'sub' ? b - amt : b + amt; }
+    function computeProduto(item) {
+      let custo = num(item.custo);
+      (item.extras || []).filter(e => e.alvo === 'custo').forEach(e => { custo = aplicarExtra(custo, e); });
+      const raw = {}, order = [];
+      data.mods.forEach(m => { const base = m.base === 'custo' ? custo : (raw[m.base] != null ? raw[m.base] : custo); raw[m.id] = aplicarOp(base, m.op, num(m.val)); order.push(m.id); });
+      const valr = {};
+      order.forEach(id => {
+        let v = raw[id];
+        (item.extras || []).filter(e => e.alvo === 'todas' || e.alvo === id).forEach(e => { v = aplicarExtra(v, e); });
+        if (item.overrides && item.overrides[id] != null && item.overrides[id] !== '') v = num(item.overrides[id]);
+        valr[id] = Math.round(v);
+      });
+      return { custo: Math.round(custo), val: valr };
+    }
+
+    // ───── VÍNCULOS / ESTOQUE ─────
+    function getLinks(it) { return (it.links = it.links || (it.link ? [it.link] : [])); }
+    function firstLink(it) { return getLinks(it)[0] || null; }
+    function estoqueInfo(it) { const ls = getLinks(it); if (!ls.length) return { linked: false, total: null, count: 0 }; let t = 0, known = false, stale = false; ls.forEach(l => { if (l.estoque == null) stale = true; else { t += Number(l.estoque) || 0; known = true; } }); return { linked: true, total: known ? t : null, stale, count: ls.length }; }
+    function stkClass(it) { const i = estoqueInfo(it); if (!i.linked) return 'add'; if (i.total == null) return 'stale'; if (i.total <= 0) return 'zero'; if (i.total <= LOW_STOCK) return 'low'; return 'ok'; }
+    function stkLabel(it) { const i = estoqueInfo(it); if (!i.linked) return '+'; if (i.total == null) return '—'; return String(i.total) + (i.count > 1 ? '·' + i.count : ''); }
+    const linkFrom = p => ({ prodId: p.id, sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0), custo: p.valor_custo || '', venda: p.valor_venda || '' });
+
+    // ───── SAÍDA (texto WhatsApp) ─────
+    function modByName(name) { const k = normKey(name); return data.mods.find(m => normKey(m.nome) === k); }
+    function tokensProduto(item) { const c = computeProduto(item); const map = { nome: item.label || '', custo: c.custo, estoque: estoqueInfo(item).total ?? '', data: hoje() }; data.mods.forEach(m => map[normKey(m.nome)] = c.val[m.id]); return map; }
+    function aplicarTpl(tpl, map) { return tpl.replace(/\{\{([^}]+)\}\}/g, (full, name) => { const v = map[normKey(name)]; return v != null && v !== '' ? String(v) : (map[normKey(name)] === '' ? '' : full); }); }
+    function linhaProduto(item, note) {
+      const tpl = tplOf(note);
+      const base = (item.customText && item.customText.trim()) ? item.customText : (tpl.linha || '{{nome}} - R$ {{custo}}');
+      return aplicarTpl(base, tokensProduto(item));
+    }
+    function montarTexto(note) {
+      const tpl = tplOf(note), sep = note.sep === 'single' ? '\n' : '\n\n';
+      const linhas = [];
+      note.items.forEach(it => {
+        if (it.type === 'h') linhas.push('*`' + String(it.label || '').toUpperCase().replace(/\{\{data\}\}/gi, hoje()) + '`*');
+        else if (it.type === 'f') { const t = (it.text || '').replace(/\{\{data\}\}/gi, hoje()); if (t.trim()) linhas.push(t); }
+        else { if (note.hideZero) { const i = estoqueInfo(it); if (i.total != null && i.total <= 0) return; } const l = linhaProduto(it, note).trim(); if (l) linhas.push(l); }
+      });
+      let body = linhas.join(sep);
+      if (tpl.header && tpl.header.trim()) body = tpl.header.replace(/\{\{data\}\}/gi, hoje()).trim() + '\n\n' + body;
+      if (tpl.footer && tpl.footer.trim()) body = body + '\n\n' + tpl.footer.replace(/\{\{data\}\}/gi, hoje()).trim();
+      return body.trim();
+    }
+
+    // ───── ABAS ─────
     function renderTabs() {
       const c = $('tabs'); c.innerHTML = '';
-      data.notes.forEach(n => {
-        const linked = n.blocks.filter(b => getLinks(b).length).length;
-        const b = document.createElement('button');
-        b.className = 'tab' + (n.id === data.currentId ? ' active' : '');
-        b.innerHTML = `${esc(n.nome)}<span class="ct">${n.blocks.length || ''}</span>`;
-        b.onclick = () => { data.currentId = n.id; render(); };
-        c.appendChild(b);
-      });
-      const add = document.createElement('button');
-      add.className = 'tab-add'; add.textContent = '+';
-      add.onclick = () => {
-        const nome = prompt('Nome do novo segmento:', 'Novo');
-        if (nome === null) return;
-        const n = novoSegmento(nome.trim() || 'Novo'); data.notes.push(n); data.currentId = n.id; salvar(); render();
-      };
+      data.notes.forEach(n => { const b = document.createElement('button'); b.className = 'tab' + (n.id === data.currentId ? ' active' : ''); b.innerHTML = `${esc(n.nome)}<span class="ct">${n.items.length || ''}</span>`; b.onclick = () => { data.currentId = n.id; render(); }; c.appendChild(b); });
+      const add = document.createElement('button'); add.className = 'tab-add'; add.textContent = '+';
+      add.onclick = () => { const nome = prompt('Nome do segmento:', 'Novo'); if (nome === null) return; const n = novoSeg(nome.trim() || 'Novo', data.templates[0].id); data.notes.push(n); data.currentId = n.id; salvar(); render(); };
       c.appendChild(add);
     }
 
-    // ════════════════ RENDER NOTA ════════════════
-    function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }
-
-    // ── vínculos (um item pode ter vários produtos do caixa; estoque soma) ──
-    function getLinks(b) { if (b.links) return b.links; if (b.link) { b.links = [b.link]; delete b.link; return b.links; } return []; }
-    function firstLink(b) { const l = getLinks(b); return l[0] || null; }
-    function estoqueInfo(b) {
-      const ls = getLinks(b);
-      if (!ls.length) return { linked: false, total: null, stale: false };
-      let total = 0, known = false, stale = false;
-      ls.forEach(l => { if (l.estoque == null) stale = true; else { total += Number(l.estoque) || 0; known = true; } });
-      return { linked: true, total: known ? total : null, stale, count: ls.length };
-    }
-    function stkClass(b) {
-      const i = estoqueInfo(b);
-      if (!i.linked) return 'add';
-      if (i.total == null) return 'stale';
-      if (i.total <= 0) return 'zero';
-      if (i.total <= LOW_STOCK) return 'low';
-      return 'ok';
-    }
-    function stkLabel(b) {
-      const i = estoqueInfo(b);
-      if (!i.linked) return '+';
-      if (i.total == null) return '—';
-      return String(i.total) + (i.count > 1 ? '·' + i.count : '');
-    }
-
+    // ───── RENDER ─────
     function render() {
-      if (!data.priceRules) data.priceRules = defaultRules();
-      renderTabs();
-      const n = current();
-      const wrap = $('note'); wrap.innerHTML = '';
-
-      if (!n.blocks.length) {
-        wrap.innerHTML = `<div class="empty"><b>Nota vazia</b>Escreva à vontade — como no Keep.<br>Cada bloco é um produto ou um título.<br><br>Use <b style="display:inline">＋ do caixa</b> pra puxar um item com estoque ao vivo,<br>ou o menu <b style="display:inline">⋯ → Colar do Keep</b> pra trazer uma lista pronta.</div>`;
-      }
-
-      n.blocks.forEach(block => {
-        const info = estoqueInfo(block);
-        const row = document.createElement('div');
-        row.className = 'block' + (block.id === focusedBlockId ? ' focus' : '') + (info.total != null && info.total <= 0 ? ' zero' : '');
-        row.dataset.id = block.id;
-
-        const col = document.createElement('div'); col.style.cssText = 'flex:1;min-width:0';
-        const ta = document.createElement('textarea');
-        ta.className = 'block-ta'; ta.value = block.text; ta.rows = 1; ta.placeholder = 'Escreva aqui…';
-        ta.addEventListener('input', () => { block.text = ta.value; autoGrow(ta); updateResolved(block, col); salvar(); });
-        ta.addEventListener('focus', () => { focusedBlockId = block.id; updateFocus(block.id); });
-        ta.addEventListener('keydown', e => {
-          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); addBlockAfter(block.id); }
-        });
-        col.appendChild(ta);
-        const resolved = document.createElement('div'); resolved.className = 'resolved'; resolved.dataset.res = block.id;
-        col.appendChild(resolved);
-
-        const stk = document.createElement('button');
-        stk.className = 'stk ' + stkClass(block);
-        stk.innerHTML = info.linked ? `<span class="d"></span>${stkLabel(block)}` : '+';
-        stk.title = info.linked ? `Estoque somado: ${info.total ?? '?'} · ${info.count} vínculo(s)` : 'Vincular ao caixa';
-        stk.onclick = () => info.linked ? openLinks(block.id) : openSearch(block.id);
-
-        row.appendChild(col); row.appendChild(stk);
-        wrap.appendChild(row);
-
-        const tools = document.createElement('div');
-        tools.className = 'block-tools' + (block.id === focusedBlockId ? ' show' : '');
-        tools.dataset.for = block.id;
-        renderTools(tools, block);
-        wrap.appendChild(tools);
-
-        requestAnimationFrame(() => { autoGrow(ta); updateResolved(block, col); });
-      });
-
-      const addRow = document.createElement('div');
-      addRow.className = 'add-row';
-      addRow.innerHTML = `<button class="btn ghost" id="add-free">＋ linha</button><button class="btn" id="add-caixa">＋ do caixa</button>`;
-      wrap.appendChild(addRow);
-      $('add-free').onclick = () => addBlockAfter(null);
-      $('add-caixa').onclick = () => openSearch(null, true);
-
+      data = ensure(data); renderTabs();
+      const n = cur(), wrap = $('wrap'); wrap.innerHTML = '';
+      if (!n.items.length) wrap.innerHTML = `<div class="empty"><b>Segmento vazio</b>Adicione um produto e defina o custo — as modalidades saem sozinhas.<br>No celular cada item é um cartão; no computador, uma planilha.</div>`;
+      else if (isDesktop()) renderTable(wrap, n); else renderCards(wrap, n);
+      const bar = document.createElement('div'); bar.className = 'addbar';
+      bar.innerHTML = `<button class="btn" id="add-caixa">＋ do caixa</button><button class="btn ghost" id="add-prod">＋ produto</button><button class="btn ghost" id="add-head">＋ cabeçalho</button><button class="btn ghost" id="add-free">＋ linha livre</button>`;
+      wrap.appendChild(bar);
+      $('add-caixa').onclick = () => openSearch(null, 'create');
+      $('add-prod').onclick = () => { n.items.push(novoProd('Novo produto', '')); salvar(); render(); };
+      $('add-head').onclick = () => { n.items.push(novoHeader('SEÇÃO')); salvar(); render(); };
+      $('add-free').onclick = () => { n.items.push(novoFree('')); salvar(); render(); };
       $('b-hide').classList.toggle('on', !!n.hideZero);
     }
 
-    function renderTools(tools, block) {
-      tools.innerHTML = '';
-      const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.className = 'tool ' + (cls || ''); b.innerHTML = txt; b.onclick = e => { e.preventDefault(); fn(); }; return b; };
-      tools.appendChild(mk('↑', '', () => moveBlock(block.id, -1)));
-      tools.appendChild(mk('↓', '', () => moveBlock(block.id, 1)));
-      const ls = getLinks(block); const fl = ls[0];
-      if (ls.length) {
-        if (fl.venda) tools.appendChild(mk('venda ' + fmt(fl.venda), 'chip', () => insertAtCursor(block.id, fmt(fl.venda))));
-        if (fl.custo) tools.appendChild(mk('custo ' + fmt(fl.custo), 'chip', () => insertAtCursor(block.id, fmt(fl.custo))));
-        tools.appendChild(mk('🔗 vínculos' + (ls.length > 1 ? ' (' + ls.length + ')' : ''), '', () => openLinks(block.id)));
-      } else {
-        tools.appendChild(mk('🔗 vincular', '', () => openSearch(block.id)));
-      }
-      tools.appendChild(mk('💲 preços', '', () => openCalc(block.id)));
-      tools.appendChild(mk('🕓 histórico', '', () => abrirHistItem(block.id)));
-      tools.appendChild(mk('🗑️', 'danger', () => { current().blocks = current().blocks.filter(b => b.id !== block.id); salvar(); render(); }));
+    function priceStr(item) { const c = computeProduto(item); return data.mods.map(m => { const ov = item.overrides && item.overrides[m.id] != null && item.overrides[m.id] !== ''; return `<span class="${ov ? 'ov' : ''}">${esc(m.nome)} <b>${c.val[m.id]}</b></span>`; }).join(''); }
+
+    function renderCards(wrap, n) {
+      const box = document.createElement('div'); box.className = 'cards';
+      n.items.forEach(it => {
+        if (it.type === 'h') { const el = document.createElement('div'); el.className = 'card-h'; const inp = document.createElement('input'); inp.value = it.label; inp.addEventListener('input', () => { it.label = inp.value; salvar(); }); el.appendChild(inp); el.appendChild(actBtn(it)); el.style.display = 'flex'; el.style.alignItems = 'center'; box.appendChild(el); return; }
+        if (it.type === 'f') { const el = document.createElement('div'); el.className = 'card-f'; el.style.display = 'flex'; el.style.gap = '6px'; el.style.alignItems = 'flex-start'; const ta = document.createElement('textarea'); ta.value = it.text; ta.rows = 1; ta.placeholder = 'linha livre…'; ta.addEventListener('input', () => { it.text = ta.value; grow(ta); salvar(); }); el.appendChild(ta); el.appendChild(actBtn(it)); box.appendChild(el); requestAnimationFrame(() => grow(ta)); return; }
+        const i = estoqueInfo(it);
+        const card = document.createElement('div'); card.className = 'card-i' + (i.total != null && i.total <= 0 ? ' zero' : '');
+        const top = document.createElement('div'); top.className = 'ci-top';
+        const stk = document.createElement('button'); stk.className = 'stk ' + stkClass(it); stk.innerHTML = i.linked ? `<span class="d"></span>${stkLabel(it)}` : '+'; stk.onclick = () => i.linked ? openLinks(it.id) : openSearch(it.id, 'link');
+        const lbl = document.createElement('input'); lbl.className = 'ci-label'; lbl.value = it.label; lbl.addEventListener('input', () => { it.label = lbl.value; salvar(); });
+        const ed = document.createElement('button'); ed.className = 'mini-ic'; ed.textContent = '💲'; ed.title = 'Preços'; ed.onclick = () => openFicha(it.id);
+        top.appendChild(stk); top.appendChild(lbl); top.appendChild(ed); top.appendChild(actBtn(it));
+        const pr = document.createElement('div'); pr.className = 'ci-prices'; pr.innerHTML = priceStr(it); pr.onclick = () => openFicha(it.id);
+        card.appendChild(top); card.appendChild(pr); box.appendChild(card);
+      });
+      wrap.appendChild(box);
     }
 
-    function fmt(v) { const n = Number(String(v).replace(',', '.')); return isNaN(n) ? String(v) : String(Math.round(n)); }
+    function actBtn(it) { const b = document.createElement('button'); b.className = 'mini-ic'; b.textContent = '⋯'; b.onclick = () => openActions(it.id); return b; }
 
-    function updateFocus(id) {
-      document.querySelectorAll('.block').forEach(el => el.classList.toggle('focus', el.dataset.id === id));
-      document.querySelectorAll('.block-tools').forEach(el => el.classList.toggle('show', el.dataset.for === id));
+    function renderTable(wrap, n) {
+      const tbl = document.createElement('table'); tbl.className = 'sheet-tbl';
+      let head = '<thead><tr><th class="row-idx">#</th><th>Nome</th><th class="num">Custo</th>';
+      data.mods.forEach(m => head += `<th class="num">${esc(m.nome)}</th>`);
+      head += '<th class="num">Est.</th><th></th></tr></thead>';
+      const tb = document.createElement('tbody');
+      tbl.innerHTML = head;
+      n.items.forEach((it, idx) => {
+        const tr = document.createElement('tr');
+        const span = 4 + data.mods.length;
+        if (it.type === 'h') { tr.className = 'full-row full-h'; tr.innerHTML = `<td class="row-idx">${idx + 1}</td><td colspan="${span - 1}"></td>`; const td = tr.children[1]; const inp = document.createElement('input'); inp.value = it.label; inp.placeholder = 'TÍTULO DA SEÇÃO'; inp.addEventListener('input', () => { it.label = inp.value; salvar(); }); td.appendChild(inp); appendAct(td, it); tb.appendChild(tr); return; }
+        if (it.type === 'f') { tr.className = 'full-row full-f'; tr.innerHTML = `<td class="row-idx">${idx + 1}</td><td colspan="${span - 1}"></td>`; const td = tr.children[1]; const ta = document.createElement('textarea'); ta.value = it.text; ta.rows = 1; ta.placeholder = 'linha livre…'; ta.addEventListener('input', () => { it.text = ta.value; grow(ta); salvar(); }); td.appendChild(ta); appendAct(td, it); tb.appendChild(tr); requestAnimationFrame(() => grow(ta)); return; }
+        tr.className = 'prod';
+        const c = computeProduto(it);
+        tr.innerHTML = `<td class="row-idx">${idx + 1}</td>`;
+        const tdN = document.createElement('td'); const inN = document.createElement('input'); inN.className = 'cell lbl'; inN.value = it.label; inN.addEventListener('input', () => { it.label = inN.value; salvar(); }); tdN.appendChild(inN); tr.appendChild(tdN);
+        const tdC = document.createElement('td'); tdC.className = 'num'; const inC = document.createElement('input'); inC.className = 'cell mono'; inC.type = 'number'; inC.step = '0.01'; inC.inputMode = 'decimal'; inC.value = it.custo; inC.placeholder = '0'; inC.addEventListener('input', () => { it.custo = inC.value; salvar(); recomputeRow(it, tr); }); tdC.appendChild(inC); tr.appendChild(tdC);
+        data.mods.forEach(m => { const td = document.createElement('td'); td.className = 'num'; const ov = it.overrides && it.overrides[m.id] != null && it.overrides[m.id] !== ''; const inp = document.createElement('input'); inp.className = 'cell mono' + (ov ? ' ovr' : ''); inp.dataset.mod = m.id; inp.type = 'number'; inp.step = '0.01'; inp.value = ov ? it.overrides[m.id] : ''; inp.placeholder = String(c.val[m.id]); inp.title = ov ? 'preço travado · apague pra voltar à fórmula' : 'fórmula: ' + ruleStr(m); inp.addEventListener('input', () => { if (inp.value === '') delete it.overrides[m.id]; else it.overrides[m.id] = inp.value; inp.classList.toggle('ovr', inp.value !== ''); salvar(); recomputeRow(it, tr); }); td.appendChild(inp); tr.appendChild(td); });
+        const tdE = document.createElement('td'); tdE.className = 'num'; const i = estoqueInfo(it); const stk = document.createElement('button'); stk.className = 'stk ' + stkClass(it); stk.innerHTML = i.linked ? `<span class="d"></span>${stkLabel(it)}` : '+'; stk.onclick = () => i.linked ? openLinks(it.id) : openSearch(it.id, 'link'); tdE.appendChild(stk); tr.appendChild(tdE);
+        const tdA = document.createElement('td'); appendAct(tdA, it, true); tr.appendChild(tdA);
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); wrap.appendChild(tbl);
+    }
+    function appendAct(td, it, ficha) { const wrapd = document.createElement('div'); wrapd.style.cssText = 'display:flex;gap:2px;justify-content:flex-end'; if (ficha) { const f = document.createElement('button'); f.className = 'mini-ic'; f.textContent = '💲'; f.title = 'Extras/texto'; f.onclick = () => openFicha(it.id); wrapd.appendChild(f); } wrapd.appendChild(actBtn(it)); td.appendChild(wrapd); }
+    function ruleStr(m) { const base = m.base === 'custo' ? 'custo' : (data.mods.find(x => x.id === m.base)?.nome || 'custo'); const sym = { mul: '×', div: '÷', add: '+', sub: '−' }[m.op]; return `${base} ${sym} ${m.val}`; }
+    function recomputeRow(it, tr) { const c = computeProduto(it); tr.querySelectorAll('input[data-mod]').forEach(inp => { const id = inp.dataset.mod; inp.placeholder = String(c.val[id]); }); }
+
+    function grow(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+    let _rt = null; addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(render, 150); });
+
+    // ───── AÇÕES DE ITEM ─────
+    function openActions(id) {
+      const n = cur(), it = n.items.find(x => x.id === id); if (!it) return;
+      $('act-name').textContent = it.type === 'p' ? (it.label || 'produto') : it.type === 'h' ? 'cabeçalho' : 'linha livre';
+      const body = $('act-body'); body.innerHTML = '';
+      const mk = (ic, txt, fn, danger) => { const b = document.createElement('button'); b.className = 'menu-item' + (danger ? ' danger' : ''); b.innerHTML = `<span class="mi-ic">${ic}</span><span>${txt}</span>`; b.onclick = () => { fn(); }; return b; };
+      const i = n.items.indexOf(it);
+      if (it.type === 'p') body.appendChild(mk('💲', 'Preços e extras', () => { closeSheets(); openFicha(id); }));
+      body.appendChild(mk('🕓', 'Histórico deste item', () => { closeSheets(); abrirHistItem(id); }));
+      body.appendChild(mk('⬆️', 'Mover para cima', () => { if (i > 0) { n.items.splice(i, 1); n.items.splice(i - 1, 0, it); salvar(); render(); openActions(id); } }));
+      body.appendChild(mk('⬇️', 'Mover para baixo', () => { if (i < n.items.length - 1) { n.items.splice(i, 1); n.items.splice(i + 1, 0, it); salvar(); render(); openActions(id); } }));
+      body.appendChild(mk('📑', 'Duplicar', () => { const cp = JSON.parse(JSON.stringify(it)); cp.id = uid(); n.items.splice(i + 1, 0, cp); salvar(); render(); closeSheets(); }));
+      body.appendChild(mk('🗑️', 'Excluir', () => { n.items = n.items.filter(x => x.id !== id); salvar(); render(); closeSheets(); }, true));
+      openSheet('sh-actions');
     }
 
-    function addBlockAfter(id) {
-      const n = current();
-      const nb = novoBloco('');
-      if (id == null) n.blocks.push(nb);
-      else { const i = n.blocks.findIndex(b => b.id === id); n.blocks.splice(i + 1, 0, nb); }
-      focusedBlockId = nb.id; salvar(); render();
-      requestAnimationFrame(() => { const el = document.querySelector(`.block[data-id="${nb.id}"] textarea`); if (el) el.focus(); });
+    // ───── FICHA DO PRODUTO ─────
+    let _fichaId = null;
+    function openFicha(id) {
+      const it = cur().items.find(x => x.id === id); if (!it || it.type !== 'p') return;
+      _fichaId = id; $('ficha-name').textContent = it.label || 'produto'; $('ficha-custo').value = it.custo; $('ficha-custom').value = it.customText || '';
+      const fl = firstLink(it); const pull = $('ficha-pull');
+      if (fl && fl.custo) { pull.style.display = ''; pull.onclick = () => { it.custo = String(fmt(fl.custo)); $('ficha-custo').value = it.custo; salvar(); renderFicha(); }; } else pull.style.display = 'none';
+      $('ficha-links').onclick = () => { closeSheets(); openLinks(id); };
+      renderFicha(); openSheet('sh-ficha');
     }
-    function moveBlock(id, dir) {
-      const n = current(); const i = n.blocks.findIndex(b => b.id === id); const j = i + dir;
-      if (j < 0 || j >= n.blocks.length) return;
-      const [m] = n.blocks.splice(i, 1); n.blocks.splice(j, 0, m); salvar(); render();
+    const opOpts = sel => ['mul:×', 'div:÷', 'add:+', 'sub:−'].map(o => { const [v, l] = o.split(':'); return `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`; }).join('');
+    function renderFicha() {
+      const it = cur().items.find(x => x.id === _fichaId); if (!it) return;
+      const c = computeProduto(it);
+      const mc = $('ficha-mods'); mc.innerHTML = '';
+      data.mods.forEach(m => {
+        const ov = it.overrides && it.overrides[m.id] != null && it.overrides[m.id] !== '';
+        const row = document.createElement('div'); row.className = 'mod-line';
+        row.innerHTML = `<div style="flex:1;min-width:0"><div class="ml-nm">${esc(m.nome)}</div><div class="ml-rule">${esc(ruleStr(m))}${ov ? ' · travado' : ''}</div></div>`;
+        const inp = document.createElement('input'); inp.className = 'ovr-inp' + (ov ? ' on' : ''); inp.type = 'number'; inp.step = '0.01'; inp.value = ov ? it.overrides[m.id] : ''; inp.placeholder = String(c.val[m.id]);
+        inp.addEventListener('input', () => { if (inp.value === '') delete it.overrides[m.id]; else it.overrides[m.id] = inp.value; inp.classList.toggle('on', inp.value !== ''); salvar(); markDirty(); refreshFichaRules(it); });
+        row.appendChild(inp); mc.appendChild(row);
+      });
+      const ec = $('ficha-extras'); ec.innerHTML = '';
+      const alvoOpts = e => [['custo', 'no custo'], ['todas', 'em todas']].concat(data.mods.map(m => [m.id, m.nome])).map(o => `<option value="${o[0]}" ${o[0] === e.alvo ? 'selected' : ''}>${esc(o[1])}</option>`).join('');
+      (it.extras || []).forEach(e => {
+        const card = document.createElement('div'); card.className = 'calc-card';
+        card.innerHTML = `<div class="calc-top"><input class="nm" value="${esc(e.nome)}" data-k="nome" placeholder="ex.: Comissão" /></div><div class="calc-grid extra"><select class="mini" data-k="op">${opOpts(e.op)}</select><select class="mini" data-k="tipo"><option value="rs" ${e.tipo === 'rs' ? 'selected' : ''}>R$</option><option value="pct" ${e.tipo === 'pct' ? 'selected' : ''}>%</option></select><input class="mini" data-k="val" type="number" step="0.01" value="${e.val}" /><select class="mini" data-k="alvo">${alvoOpts(e)}</select><button class="calc-x" data-x="1">✕</button></div>`;
+        card.querySelector('[data-k="nome"]').addEventListener('input', ev => { e.nome = ev.target.value; salvar(); });
+        card.querySelectorAll('[data-k="op"],[data-k="tipo"],[data-k="val"],[data-k="alvo"]').forEach(inp => inp.addEventListener('input', () => { e[inp.dataset.k] = inp.value; salvar(); markDirty(); refreshFichaRules(it); }));
+        card.querySelector('[data-x]').onclick = () => { it.extras = it.extras.filter(x => x.id !== e.id); salvar(); renderFicha(); };
+        ec.appendChild(card);
+      });
     }
-    function insertAtCursor(id, txt) {
-      const ta = document.querySelector(`.block[data-id="${id}"] textarea`); if (!ta) return;
-      const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? ta.value.length;
-      ta.value = ta.value.slice(0, s) + txt + ta.value.slice(e);
-      const b = current().blocks.find(b => b.id === id); if (b) b.text = ta.value;
-      ta.focus(); ta.selectionStart = ta.selectionEnd = s + txt.length; autoGrow(ta);
-      const col = ta.closest('.block')?.querySelector('.resolved') ? ta.parentElement : null;
-      if (b && ta.parentElement) updateResolved(b, ta.parentElement);
-      salvar();
-    }
+    function refreshFichaRules(it) { const c = computeProduto(it); $('ficha-mods').querySelectorAll('.ovr-inp').forEach((inp, i) => { const m = data.mods[i]; if (m) inp.placeholder = String(c.val[m.id]); }); }
+    $('ficha-custo').addEventListener('input', () => { const it = cur().items.find(x => x.id === _fichaId); if (it) { it.custo = $('ficha-custo').value; salvar(); markDirty(); refreshFichaRules(it); } });
+    $('ficha-custom').addEventListener('input', () => { const it = cur().items.find(x => x.id === _fichaId); if (it) { it.customText = $('ficha-custom').value; salvar(); } });
+    $('ficha-add-extra').onclick = () => { const it = cur().items.find(x => x.id === _fichaId); if (it) { (it.extras = it.extras || []).push({ id: uid(), nome: 'Comissão', op: 'add', tipo: 'rs', val: 50, alvo: 'todas' }); salvar(); renderFicha(); } };
+    $('ficha-del').onclick = () => { const n = cur(); n.items = n.items.filter(x => x.id !== _fichaId); salvar(); render(); closeSheets(); };
 
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.block') && !e.target.closest('.block-tools') && !e.target.closest('.add-row')) {
-        if (focusedBlockId) { focusedBlockId = null; updateFocus(null); }
-      }
-    });
-
-    // ════════════════ CAIXA API ════════════════
-    async function apiBusca(nome) {
-      const url = new URL(CAIXA_BASE);
-      url.searchParams.set('loja_id', LOJA_ID); url.searchParams.set('limite', '20'); url.searchParams.set('nome', nome);
-      const r = await fetch(url.toString());
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
+    // ───── MODALIDADES GLOBAIS ─────
+    function openMods() { renderModsSheet(); openSheet('sh-mods'); }
+    function renderModsSheet() {
+      const box = $('mods-list'); box.innerHTML = '';
+      const baseOpts = m => [['custo', 'custo']].concat(data.mods.filter(x => x.id !== m.id).map(x => [x.id, x.nome])).map(o => `<option value="${o[0]}" ${o[0] === m.base ? 'selected' : ''}>${esc(o[1])}</option>`).join('');
+      data.mods.forEach(m => {
+        const card = document.createElement('div'); card.className = 'calc-card';
+        card.innerHTML = `<div class="calc-top"><input class="nm" value="${esc(m.nome)}" data-k="nome" /></div><div class="calc-grid"><select class="mini" data-k="base">${baseOpts(m)}</select><select class="mini" data-k="op">${opOpts(m.op)}</select><input class="mini" data-k="val" type="number" step="0.01" value="${m.val}" /><button class="calc-x" data-x="1">✕</button></div>`;
+        card.querySelector('[data-k="nome"]').addEventListener('input', e => { m.nome = e.target.value; salvar(); markDirty(); });
+        card.querySelectorAll('[data-k="base"],[data-k="op"],[data-k="val"]').forEach(inp => inp.addEventListener('input', () => { m[inp.dataset.k] = inp.value; salvar(); markDirty(); }));
+        card.querySelector('[data-x]').onclick = () => { if (data.mods.length <= 1) { toast('Tenha ao menos uma modalidade'); return; } data.mods = data.mods.filter(x => x.id !== m.id); data.notes.forEach(n => n.items.forEach(it => { if (it.overrides) delete it.overrides[m.id]; })); salvar(); markDirty(); renderModsSheet(); };
+        box.appendChild(card);
+      });
     }
-    let _cat = [], _catTs = 0; const CAT_TTL = 5 * 60 * 1000;
-    async function carregarCatalogo(onProg) {
-      if (_cat.length && Date.now() - _catTs < CAT_TTL) return _cat;
-      const get = (pag) => { const u = new URL(CAIXA_BASE); u.searchParams.set('loja_id', LOJA_ID); u.searchParams.set('limite', '100'); u.searchParams.set('pagina', pag); return fetch(u.toString()).then(r => r.ok ? r.json() : null); };
-      const d1 = await get(1); if (!d1 || d1.code !== 200) throw new Error('API indisponível');
-      const total = d1.meta?.total_paginas || 1; let todos = [...(d1.data || [])];
-      onProg && onProg(1, total);
-      for (let p = 2; p <= total; p++) {
-        try { const d = await get(p); if (d && d.code === 200 && d.data) todos = todos.concat(d.data); } catch (e) {}
-        onProg && onProg(p, total);
-        if ((p - 1) % 3 === 0) await new Promise(r => setTimeout(r, 900));
-      }
-      _cat = todos; _catTs = Date.now(); return _cat;
-    }
-    const linkFrom = p => ({ prodId: p.id, sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0), custo: p.valor_custo || '', venda: p.valor_venda || '' });
+    $('mods-add').onclick = () => { data.mods.push({ id: uid(), nome: 'Nova', base: 'custo', op: 'mul', val: 1.2 }); salvar(); markDirty(); renderModsSheet(); };
 
-    // Atualizar estoque de todos os blocos vinculados (soma cada vínculo)
+    // ───── TEMPLATE / FORMATO ─────
+    function openTpl() { const n = cur(), t = tplOf(n); $('tpl-note').textContent = n.nome; $('tpl-header').value = t.header || ''; $('tpl-linha').value = t.linha || ''; $('tpl-footer').value = t.footer || ''; updateSepBtns(); openSheet('sh-tpl'); }
+    function updateSepBtns() { const s = cur().sep; $('tpl-sep-blank').classList.toggle('on', s !== 'single'); $('tpl-sep-single').classList.toggle('on', s === 'single'); $('tpl-sep-blank').style.borderColor = s !== 'single' ? 'var(--ink-soft)' : ''; $('tpl-sep-single').style.borderColor = s === 'single' ? 'var(--ink-soft)' : ''; }
+    ['header', 'linha', 'footer'].forEach(k => $('tpl-' + k).addEventListener('input', () => { const t = tplOf(cur()); t[k] = $('tpl-' + k).value; salvar(); }));
+    $('tpl-sep-blank').onclick = () => { cur().sep = 'blank'; salvar(); updateSepBtns(); };
+    $('tpl-sep-single').onclick = () => { cur().sep = 'single'; salvar(); updateSepBtns(); };
+
+    // ───── CAIXA ─────
+    async function apiBusca(nome) { const u = new URL(CAIXA_BASE); u.searchParams.set('loja_id', LOJA_ID); u.searchParams.set('limite', '20'); u.searchParams.set('nome', nome); const r = await fetch(u.toString()); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+    let _cat = [], _catTs = 0;
+    async function carregarCatalogo() { if (_cat.length && Date.now() - _catTs < 300000) return _cat; const get = p => { const u = new URL(CAIXA_BASE); u.searchParams.set('loja_id', LOJA_ID); u.searchParams.set('limite', '100'); u.searchParams.set('pagina', p); return fetch(u.toString()).then(r => r.ok ? r.json() : null); }; const d1 = await get(1); if (!d1 || d1.code !== 200) throw new Error('API indisponível'); const total = d1.meta?.total_paginas || 1; let todos = [...(d1.data || [])]; for (let p = 2; p <= total; p++) { try { const d = await get(p); if (d && d.code === 200 && d.data) todos = todos.concat(d.data); } catch (e) {} if ((p - 1) % 3 === 0) await new Promise(r => setTimeout(r, 900)); } _cat = todos; _catTs = Date.now(); return _cat; }
+
     async function atualizarEstoque() {
-      const alvos = data.notes.flatMap(note => note.blocks.filter(b => getLinks(b).length));
-      if (!alvos.length) { toast('Nenhum item vinculado ainda'); return; }
+      const alvos = data.notes.flatMap(n => n.items.filter(it => it.type === 'p' && getLinks(it).length));
+      if (!alvos.length) { toast('Nenhum produto vinculado'); return; }
       const btn = $('b-refresh'); btn.style.pointerEvents = 'none'; btn.textContent = '…';
-      try {
-        const cat = await carregarCatalogo();
-        const byId = new Map(cat.map(p => [String(p.id), p]));
-        let ok = 0;
-        alvos.forEach(b => { getLinks(b).forEach((l, i) => { const p = byId.get(String(l.prodId)); if (p) { b.links[i] = linkFrom(p); ok++; } else { l.estoque = null; } }); });
+      try { const cat = await carregarCatalogo(); const byId = new Map(cat.map(p => [String(p.id), p])); let ok = 0;
+        alvos.forEach(it => getLinks(it).forEach((l, i) => { const p = byId.get(String(l.prodId)); if (p) { it.links[i] = linkFrom(p); ok++; } else l.estoque = null; }));
         salvar(); render(); toast(`Estoque atualizado · ${ok} vínculo(s)`);
       } catch (e) { toast('Não consegui falar com o caixa'); }
       btn.style.pointerEvents = ''; btn.textContent = '⟳';
     }
 
-    // ════════════════ BUSCA / VÍNCULO (sheet) ════════════════
     let searchTarget = null, searchMode = 'link', _bt = null;
-    function openSearch(blockId, create = false) {
-      searchTarget = blockId; searchMode = create ? 'create' : 'link';
-      const b = blockId ? current().blocks.find(x => x.id === blockId) : null;
-      $('search-title').textContent = create ? 'Adicionar do caixa' : 'Vincular ao caixa';
-      $('search-sub').textContent = create ? 'Escolha um produto — ele entra na lista com o estoque ao vivo.' : 'Pesquise pelo nome para ligar este item ao estoque.';
-      $('search-input').value = (b && !getLinks(b).length) ? (b.text.split('\n')[0] || '') : '';
-      $('search-results').innerHTML = '';
-      openSheet('sh-search');
-      setTimeout(() => { $('search-input').focus(); if ($('search-input').value.trim().length >= 2) doSearch(); }, 250);
-    }
-    function addLinkSearch(blockId) {
-      searchTarget = blockId; searchMode = 'add';
-      $('search-title').textContent = 'Adicionar vínculo';
-      $('search-sub').textContent = 'Outro produto do caixa cujo estoque soma neste item.';
-      $('search-input').value = ''; $('search-results').innerHTML = '';
-      openSheet('sh-search');
-      setTimeout(() => $('search-input').focus(), 250);
-    }
-
-    // Gerenciador de vínculos (vários produtos por item)
-    function openLinks(blockId) {
-      const b = current().blocks.find(x => x.id === blockId); if (!b) return;
-      const ls = getLinks(b);
-      $('links-name').textContent = (b.text.split('\n')[0] || 'item');
-      const info = estoqueInfo(b);
-      $('links-total').textContent = 'Estoque somado: ' + (info.total ?? '?') + ' · ' + ls.length + ' vínculo(s)';
-      const box = $('links-list'); box.innerHTML = '';
-      ls.forEach((l, i) => {
-        const el = document.createElement('div'); el.className = 'lk-row';
-        el.innerHTML = `<div class="lk-main"><div class="lk-name">${esc(l.sysname || '(sem nome)')}</div><div class="lk-meta">${esc(l.sku || '—')} · estoque ${l.estoque ?? '?'}</div></div>`;
-        const rm = document.createElement('button'); rm.className = 'calc-x'; rm.textContent = '✕';
-        rm.onclick = () => { b.links.splice(i, 1); if (!b.links.length) delete b.links; salvar(); render(); openLinks(blockId); };
-        el.appendChild(rm); box.appendChild(el);
-      });
-      if (!ls.length) box.innerHTML = '<p class="sub">Nenhum vínculo ainda.</p>';
-      $('links-add').onclick = () => addLinkSearch(blockId);
-      openSheet('sh-links');
-    }
+    function openSearch(id, mode) { searchTarget = id; searchMode = mode; const it = id ? cur().items.find(x => x.id === id) : null; $('search-title').textContent = mode === 'create' ? 'Adicionar do caixa' : mode === 'add' ? 'Adicionar vínculo' : 'Vincular ao caixa'; $('search-sub').textContent = mode === 'add' ? 'Outro produto cujo estoque soma neste item.' : 'Pesquise pelo nome para ver o estoque ao vivo.'; $('search-input').value = (it && mode === 'link' && !getLinks(it).length) ? (it.label || '') : ''; $('search-results').innerHTML = ''; openSheet('sh-search'); setTimeout(() => { $('search-input').focus(); if ($('search-input').value.trim().length >= 2) doSearch(); }, 250); }
     $('search-input').addEventListener('input', () => { clearTimeout(_bt); const q = $('search-input').value.trim(); if (q.length < 2) { $('search-results').innerHTML = ''; return; } _bt = setTimeout(doSearch, 400); });
     $('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
-
     async function doSearch() {
-      const q = $('search-input').value.trim(); if (q.length < 2) return;
-      const box = $('search-results'); box.innerHTML = '<div class="res" style="justify-content:center;color:var(--ink-soft)">buscando…</div>';
-      try {
-        const d = await apiBusca(q);
-        if (!d || d.code !== 200 || !d.data || !d.data.length) { box.innerHTML = '<div class="res" style="justify-content:center;color:var(--ink-soft)">nenhum resultado</div>'; return; }
-        box.innerHTML = '';
-        d.data.slice(0, 20).forEach(p => {
-          const est = Number(p.estoque ?? 0);
-          const el = document.createElement('button'); el.className = 'res';
-          el.innerHTML = `<div class="res-main"><div class="res-name">${esc(p.nome)}</div><div class="res-meta">${esc(p.codigo_interno || p.codigo_barra || '—')} · R$ ${esc(fmt(p.valor_venda || 0))}</div></div><span class="badge ${est > 0 ? 'b-ok' : 'b-zero'}">${est}</span>`;
-          el.onclick = () => pick(p);
-          box.appendChild(el);
-        });
+      const q = $('search-input').value.trim(); if (q.length < 2) return; const box = $('search-results'); box.innerHTML = '<div class="res" style="justify-content:center;color:var(--ink-soft)">buscando…</div>';
+      try { const d = await apiBusca(q); if (!d || d.code !== 200 || !d.data || !d.data.length) { box.innerHTML = '<div class="res" style="justify-content:center;color:var(--ink-soft)">nenhum resultado</div>'; return; }
+        box.innerHTML = ''; d.data.slice(0, 20).forEach(p => { const est = Number(p.estoque ?? 0); const el = document.createElement('button'); el.className = 'res'; el.innerHTML = `<div class="res-main"><div class="res-name">${esc(p.nome)}</div><div class="res-meta">${esc(p.codigo_interno || p.codigo_barra || '—')} · custo ${fmt(p.valor_custo || 0)} · venda ${fmt(p.valor_venda || 0)}</div></div><span class="badge ${est > 0 ? 'b-ok' : 'b-zero'}">${est}</span>`; el.onclick = () => pick(p); box.appendChild(el); });
       } catch (e) { box.innerHTML = `<div class="res" style="justify-content:center;color:var(--zero)">erro: ${esc(e.message)}</div>`; }
     }
     function pick(p) {
-      const n = current();
-      if (searchMode === 'create') {
-        n.blocks.push(novoBloco(`${p.nome} - R$ ${fmt(p.valor_venda || 0)}`, linkFrom(p)));
-      } else if (searchMode === 'add') {
-        const b = n.blocks.find(x => x.id === searchTarget);
-        if (b) { const ls = getLinks(b); if (!ls.find(l => String(l.prodId) === String(p.id))) ls.push(linkFrom(p)); }
-        closeSheets(); salvar(); render(); openLinks(searchTarget); return;
-      } else {
-        const b = n.blocks.find(x => x.id === searchTarget);
-        if (b) { b.links = [linkFrom(p)]; if (!b.text.trim()) b.text = `${p.nome} - R$ ${fmt(p.valor_venda || 0)}`; }
-      }
+      const n = cur();
+      if (searchMode === 'create') { const it = novoProd(p.nome, fmt(p.valor_custo || 0), [linkFrom(p)]); n.items.push(it); closeSheets(); salvar(); render(); return; }
+      const it = n.items.find(x => x.id === searchTarget); if (!it) { closeSheets(); return; }
+      const ls = getLinks(it);
+      if (searchMode === 'add') { if (!ls.find(l => String(l.prodId) === String(p.id))) ls.push(linkFrom(p)); closeSheets(); salvar(); render(); openLinks(it.id); return; }
+      it.links = [linkFrom(p)]; if (!it.label.trim()) it.label = p.nome; if (!it.custo) it.custo = fmt(p.valor_custo || 0);
       closeSheets(); salvar(); render();
     }
-
-    // ════════════════ FÓRMULAS VIVAS (preço que recalcula sozinho) ════════════════
-    function normKey(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
-    function tokenMap(block) {
-      const map = {};
-      if (block.calc) { const r = computeCalc(block); map[normKey('custo')] = r.custo; r.mods.forEach(m => map[normKey(m.nome)] = m.val); }
-      const fl = firstLink(block);
-      if (fl) { if (map[normKey('venda')] == null && fl.venda) map[normKey('venda')] = fmt(fl.venda); if (map[normKey('custo')] == null && fl.custo) map[normKey('custo')] = fmt(fl.custo); }
-      return map;
-    }
-    function temToken(block) {
-      if (!/\{[^{}]+\}/.test(block.text)) return false;
-      const map = tokenMap(block);
-      return block.text.match(/\{([^{}]+)\}/g).some(t => map[normKey(t.slice(1, -1))] != null);
-    }
-    function resolveText(block) {
-      let t = block.text.replace(/\{\{data\}\}/gi, hoje());
-      const map = tokenMap(block);
-      return t.replace(/\{([^{}]+)\}/g, (full, name) => { const v = map[normKey(name)]; return v != null ? String(v) : full; });
-    }
-    function updateResolved(block, col) {
-      const el = col.querySelector('.resolved'); if (!el) return;
-      if (temToken(block)) { el.textContent = resolveText(block); el.classList.add('show'); }
-      else { el.classList.remove('show'); el.textContent = ''; }
+    function openLinks(id) {
+      const it = cur().items.find(x => x.id === id); if (!it) return; const ls = getLinks(it); const info = estoqueInfo(it);
+      $('links-name').textContent = it.label || 'produto'; $('links-total').textContent = 'Estoque somado: ' + (info.total ?? '?') + ' · ' + ls.length + ' vínculo(s)';
+      const box = $('links-list'); box.innerHTML = '';
+      ls.forEach((l, i) => { const el = document.createElement('div'); el.className = 'lk-row'; el.innerHTML = `<div class="lk-main"><div class="lk-name">${esc(l.sysname || '(sem nome)')}</div><div class="lk-meta">${esc(l.sku || '—')} · estoque ${l.estoque ?? '?'}</div></div>`; const rm = document.createElement('button'); rm.className = 'calc-x'; rm.textContent = '✕'; rm.onclick = () => { ls.splice(i, 1); salvar(); render(); openLinks(id); }; el.appendChild(rm); box.appendChild(el); });
+      if (!ls.length) box.innerHTML = '<p class="sub">Nenhum vínculo ainda.</p>';
+      $('links-add').onclick = () => openSearch(id, 'add');
+      openSheet('sh-links');
     }
 
-    // ════════════════ COPIAR / IMPORTAR ════════════════
-    function montarTexto(n) {
-      const sep = n.sep === 'single' ? '\n' : '\n\n';
-      return n.blocks
-        .filter(b => { if (!n.hideZero) return true; const i = estoqueInfo(b); return !(i.total != null && i.total <= 0); })
-        .map(b => resolveText(b))
-        .filter(t => t.trim() !== '')
-        .join(sep)
-        .trim();
-    }
-    async function copiar() {
-      const txt = montarTexto(current());
-      if (!txt) { toast('Lista vazia'); return; }
-      try { await navigator.clipboard.writeText(txt); toast('Lista copiada ✓'); }
-      catch (e) {
-        const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); toast('Lista copiada ✓'); } catch (_) { toast('Copie manualmente'); }
-        ta.remove();
-      }
-    }
-    function importarTexto(raw) {
-      raw = raw.replace(/\r/g, '').trim(); if (!raw) return;
-      const n = current();
-      // separa por linha em branco; se não houver, separa por linha
-      let partes = raw.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
-      if (partes.length <= 1) { partes = raw.split('\n').map(s => s.trim()).filter(Boolean); n.sep = 'single'; }
-      else n.sep = 'blank';
-      partes.forEach(p => n.blocks.push(novoBloco(p)));
-      closeSheets(); salvar(); render(); toast(`${partes.length} item(s) importados`);
-    }
+    // ───── COPIAR / IMPORTAR ─────
+    async function copiar() { const txt = montarTexto(cur()); if (!txt) { toast('Lista vazia'); return; } try { await navigator.clipboard.writeText(txt); toast('Lista copiada ✓'); } catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Lista copiada ✓'); } catch (_) { toast('Copie manualmente'); } ta.remove(); } }
+    function importarTexto(raw) { raw = raw.replace(/\r/g, '').trim(); if (!raw) return; const n = cur(); raw.split('\n').map(s => s.trim()).filter(Boolean).forEach(l => n.items.push(novoFree(l))); closeSheets(); salvar(); render(); toast('Importado como linhas livres'); }
 
-    // ════════════════ HISTÓRICO ════════════════
-    function relAgo(ts) {
-      const s = (Date.now() - ts) / 1000;
-      if (s < 90) return 'agora há pouco';
-      if (s < 3600) return 'há ' + Math.floor(s / 60) + ' min';
-      if (s < 86400) return 'há ' + Math.floor(s / 3600) + ' h';
-      const d = Math.floor(s / 86400);
-      return d === 1 ? 'ontem' : 'há ' + d + ' dias';
-    }
-    function quando(ts) { const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; }
-    function getHist() { try { return JSON.parse(localStorage.getItem(HIST) || '[]'); } catch (e) { return []; } }
-    function findBlock(snapData, id) {
-      for (const n of (snapData.notes || [])) { const b = (n.blocks || []).find(x => x.id === id); if (b) return { block: b, noteName: n.nome }; }
-      return null;
-    }
-    const estTag = b => { const i = estoqueInfo(b); const fl = firstLink(b); if (!i.linked) return ''; const cls = i.total == null ? '' : (i.total <= 0 ? 'e-zero' : 'e-ok'); return `<span class="tag ${cls}">estoque ${i.total == null ? '?' : i.total}${i.count > 1 ? ' (' + i.count + ')' : ''}</span>` + (fl && fl.venda ? `<span class="tag">venda ${fmt(fl.venda)}</span>` : '') + (fl && fl.custo ? `<span class="tag">custo ${fmt(fl.custo)}</span>` : ''); };
-    const sigOf = b => { const i = estoqueInfo(b); const fl = firstLink(b) || {}; return `${b.text}|${i.total ?? ''}|${fl.venda || ''}|${fl.custo || ''}`; };
-
-    function abrirHistorico() {
-      const list = getHist();
-      const box = $('hist-list');
-      if (!list.length) { box.innerHTML = '<p class="sub">Ainda sem versões salvas. Elas vão aparecer conforme você edita.</p>'; openSheet('sh-hist'); return; }
-      box.innerHTML = '';
-      list.forEach(snap => {
-        const total = (snap.data.notes || []).reduce((s, x) => s + x.blocks.length, 0);
-        const el = document.createElement('div'); el.className = 'hist-item';
-        el.innerHTML = `<div><div class="hist-when">${quando(snap.ts)} · <span class="tl-ago">${relAgo(snap.ts)}</span></div><div class="hist-desc">${(snap.data.notes || []).length} segmento(s) · ${total} item(s)</div></div>`;
-        const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:6px;flex:0 0 auto';
-        const ver = document.createElement('button'); ver.className = 'btn sm ghost'; ver.textContent = 'Ver';
-        ver.onclick = () => verVersao(snap);
-        wrap.appendChild(ver); el.appendChild(wrap); box.appendChild(el);
-      });
-      openSheet('sh-hist');
-    }
-
-    // ── Visualizar versão (somente leitura) ──
+    // ───── HISTÓRICO ─────
+    function relAgo(ts) { const s = (Date.now() - ts) / 1000; if (s < 90) return 'agora há pouco'; if (s < 3600) return 'há ' + Math.floor(s / 60) + ' min'; if (s < 86400) return 'há ' + Math.floor(s / 3600) + ' h'; const d = Math.floor(s / 86400); return d === 1 ? 'ontem' : 'há ' + d + ' dias'; }
+    function quando(ts) { const d = new Date(ts), p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+    const getHist = () => { try { return JSON.parse(localStorage.getItem(HIST) || '[]'); } catch (e) { return []; } };
+    function abrirHistorico() { const list = getHist(); const box = $('hist-list'); if (!list.length) { box.innerHTML = '<p class="sub">Ainda sem versões salvas.</p>'; openSheet('sh-hist'); return; } box.innerHTML = ''; list.forEach(snap => { const total = (snap.data.notes || []).reduce((s, x) => s + (x.items ? x.items.length : 0), 0); const el = document.createElement('div'); el.className = 'hist-item'; el.innerHTML = `<div><div class="hist-when">${quando(snap.ts)} · <span class="tl-ago">${relAgo(snap.ts)}</span></div><div class="hist-desc">${(snap.data.notes || []).length} segmento(s) · ${total} item(s)</div></div>`; const ver = document.createElement('button'); ver.className = 'btn sm ghost'; ver.textContent = 'Ver'; ver.onclick = () => verVersao(snap); el.appendChild(ver); box.appendChild(el); }); openSheet('sh-hist'); }
     let _viewSnap = null, _viewNoteId = null;
-    function verVersao(snap) {
-      _viewSnap = snap;
-      const notes = snap.data.notes || [];
-      _viewNoteId = notes.find(n => n.id === data.currentId)?.id || notes[0]?.id;
-      $('view-title').textContent = 'Versão de ' + quando(snap.ts);
-      $('view-sub').textContent = relAgo(snap.ts) + ' · somente leitura, nada é alterado';
-      renderVersao();
-      openSheet('sh-view');
-    }
+    function verVersao(snap) { _viewSnap = snap; const notes = snap.data.notes || []; _viewNoteId = notes.find(n => n.id === data.currentId)?.id || notes[0]?.id; $('view-title').textContent = 'Versão de ' + quando(snap.ts); $('view-sub').textContent = relAgo(snap.ts) + ' · somente leitura'; renderVersao(); openSheet('sh-view'); }
+    function snapData() { return _viewSnap.data; }
     function renderVersao() {
-      const notes = _viewSnap.data.notes || [];
-      const tabs = $('view-tabs'); tabs.innerHTML = '';
-      notes.forEach(n => {
-        const b = document.createElement('button'); b.className = 'tab' + (n.id === _viewNoteId ? ' active' : '');
-        b.innerHTML = `${esc(n.nome)}<span class="ct">${n.blocks.length || ''}</span>`;
-        b.onclick = () => { _viewNoteId = n.id; renderVersao(); };
-        tabs.appendChild(b);
-      });
-      const note = notes.find(n => n.id === _viewNoteId) || notes[0];
-      const body = $('view-body'); body.innerHTML = '';
-      if (!note || !note.blocks.length) { body.innerHTML = '<p class="sub">Segmento vazio nesta versão.</p>'; return; }
-      note.blocks.forEach(bl => {
-        const i = estoqueInfo(bl);
-        const z = i.total != null && i.total <= 0;
-        const el = document.createElement('div'); el.className = 'ro-block' + (z ? ' zero' : '');
-        el.innerHTML = `<div class="ro-text">${esc(bl.text) || '<span style="color:var(--ink-faint)">(vazio)</span>'}</div>` +
-          (i.linked ? `<span class="stk ${stkClass(bl)}" style="pointer-events:none"><span class="d"></span>${stkLabel(bl)}</span>` : '');
-        body.appendChild(el);
-      });
+      const notes = snapData().notes || []; const tabs = $('view-tabs'); tabs.innerHTML = '';
+      notes.forEach(n => { const b = document.createElement('button'); b.className = 'tab' + (n.id === _viewNoteId ? ' active' : ''); b.innerHTML = `${esc(n.nome)}<span class="ct">${(n.items || []).length || ''}</span>`; b.onclick = () => { _viewNoteId = n.id; renderVersao(); }; tabs.appendChild(b); });
+      const note = notes.find(n => n.id === _viewNoteId) || notes[0]; const body = $('view-body'); body.innerHTML = '';
+      const txt = note ? montarTextoSnap(snapData(), note) : '';
+      const pre = document.createElement('div'); pre.className = 'tl-text'; pre.style.cssText = 'border:1px solid var(--line);border-radius:11px;padding:11px;background:var(--bg)'; pre.textContent = txt || '(vazio)'; body.appendChild(pre);
     }
-    $('view-copy').onclick = () => {
-      const note = (_viewSnap.data.notes || []).find(n => n.id === _viewNoteId);
-      if (!note) return;
-      const txt = montarTexto(note);
-      navigator.clipboard.writeText(txt).then(() => toast('Segmento copiado ✓')).catch(() => toast('Não consegui copiar'));
-    };
-    $('view-restore').onclick = () => {
-      if (!confirm('Restaurar esta versão inteira? A atual vira uma nova entrada no histórico.')) return;
-      snapshot(); data = JSON.parse(JSON.stringify(_viewSnap.data)); if (!current()) data.currentId = data.notes[0].id;
-      salvar(); render(); closeSheets(); toast('Versão restaurada');
-    };
-
-    // ── Histórico de UM item ──
-    function abrirHistItem(blockId) {
-      const atual = current().blocks.find(b => b.id === blockId);
-      if (!atual) return;
-      // monta linha do tempo: estado atual + cada snapshot, do mais novo ao mais antigo
-      const brutos = [{ ts: Date.now(), block: atual, live: true }];
-      getHist().forEach(snap => { const f = findBlock(snap.data, blockId); if (f) brutos.push({ ts: snap.ts, block: f.block, live: false }); });
-      // dedupe de valores iguais consecutivos — guarda o ts MAIS ANTIGO de cada valor (quando passou a ser assim)
-      const linhas = [];
-      brutos.forEach(e => {
-        const sig = sigOf(e.block);
-        const ult = linhas[linhas.length - 1];
-        if (ult && ult.sig === sig) { ult.desde = e.ts; }
-        else linhas.push({ sig, desde: e.ts, text: e.block.text, block: e.block, live: e.live });
+    function montarTextoSnap(snap, note) {
+      const mods = snap.mods || data.mods, templates = snap.templates || data.templates, tpl = templates.find(t => t.id === note.templateId) || templates[0] || { linha: '{{nome}} - R$ {{custo}}' };
+      const sep = note.sep === 'single' ? '\n' : '\n\n'; const lines = [];
+      (note.items || []).forEach(it => {
+        if (it.type === 'h') lines.push('*`' + String(it.label || '').toUpperCase() + '`*');
+        else if (it.type === 'f') { if ((it.text || '').trim()) lines.push(it.text); }
+        else { const map = snapTokens(it, mods); const base = (it.customText && it.customText.trim()) ? it.customText : (tpl.linha || '{{nome}} - R$ {{custo}}'); const l = base.replace(/\{\{([^}]+)\}\}/g, (f, nm) => { const v = map[normKey(nm)]; return v != null ? String(v) : f; }).trim(); if (l) lines.push(l); }
       });
+      let b = lines.join(sep); if (tpl.header) b = tpl.header.replace(/\{\{data\}\}/gi, hoje()) + '\n\n' + b; if (tpl.footer) b += '\n\n' + tpl.footer.replace(/\{\{data\}\}/gi, hoje()); return b.trim();
+    }
+    function snapTokens(it, mods) { const save = data.mods; data.mods = mods; const c = computeProduto(it); data.mods = save; const map = { nome: it.label || '', custo: c.custo, data: hoje() }; mods.forEach(m => map[normKey(m.nome)] = c.val[m.id]); return map; }
+    $('view-copy').onclick = () => { const note = (snapData().notes || []).find(n => n.id === _viewNoteId); if (!note) return; navigator.clipboard.writeText(montarTextoSnap(snapData(), note)).then(() => toast('Copiado ✓')).catch(() => toast('Erro ao copiar')); };
+    $('view-restore').onclick = () => { if (!confirm('Restaurar esta versão inteira?')) return; snapshot(); data = ensure(JSON.parse(JSON.stringify(snapData()))); salvar(); render(); closeSheets(); toast('Versão restaurada'); };
 
-      $('item-sub').textContent = (atual.text.split('\n')[0] || 'item') + ' · ' + (linhas.length > 1 ? linhas.length + ' versões' : 'sem mudanças registradas ainda');
+    function findItem(snap, id) { for (const n of (snap.notes || [])) { const it = (n.items || []).find(x => x.id === id); if (it) return it; } return null; }
+    function sigItem(it) { if (it.type !== 'p') return (it.text || it.label || ''); const c = computeProduto(it); const i = estoqueInfo(it); return `${it.label}|${it.custo}|${JSON.stringify(it.overrides || {})}|${i.total ?? ''}|` + data.mods.map(m => c.val[m.id]).join(','); }
+    function abrirHistItem(id) {
+      const atual = cur().items.find(x => x.id === id); if (!atual) return;
+      const brutos = [{ ts: Date.now(), it: atual }];
+      getHist().forEach(snap => { const f = findItem(snap.data, id); if (f) brutos.push({ ts: snap.ts, it: f, snap: snap.data }); });
+      const linhas = [];
+      brutos.forEach(e => { const sig = sigItem(e.it); const last = linhas[linhas.length - 1]; if (last && last.sig === sig) last.desde = e.ts; else linhas.push({ sig, desde: e.ts, it: e.it, snap: e.snap }); });
+      $('item-sub').textContent = (atual.label || atual.text || 'item') + ' · ' + (linhas.length > 1 ? linhas.length + ' versões' : 'sem mudanças registradas ainda');
       const box = $('item-list'); box.innerHTML = '';
       linhas.forEach((ln, i) => {
         const el = document.createElement('div'); el.className = 'tl' + (i === 0 ? ' now' : '');
-        const cab = i === 0 ? 'valor atual' : quando(ln.desde);
-        const ago = i === 0 ? ('desde ' + quando(ln.desde)) : relAgo(ln.desde);
-        const tags = estTag(ln.block);
-        el.innerHTML =
-          `<div class="tl-head"><span class="tl-when">${cab}</span><span class="tl-ago">${ago}</span></div>` +
-          `<div class="tl-text">${esc(ln.text) || '<span class="gone">(linha vazia)</span>'}</div>` +
-          (tags ? `<div class="tl-data">${tags}</div>` : '');
-        if (i > 0) {
-          const u = document.createElement('button'); u.className = 'tl-use'; u.textContent = '↩ usar este texto';
-          u.onclick = () => { snapshot(); const b = current().blocks.find(x => x.id === blockId); if (b) { b.text = ln.text; salvar(); render(); closeSheets(); toast('Texto do item restaurado'); } };
-          el.appendChild(u);
-        }
+        const it = ln.it; let tags = '';
+        if (it.type === 'p') { const mods = (ln.snap && ln.snap.mods) || data.mods; const c = (function () { const s = data.mods; data.mods = mods; const r = computeProduto(it); data.mods = s; return r; })(); const inf = estoqueInfo(it); tags = `<span class="tag">custo ${c.custo}</span>` + mods.map(m => `<span class="tag">${esc(m.nome)} ${c.val[m.id]}</span>`).join('') + (inf.total != null ? `<span class="tag">estoque ${inf.total}</span>` : ''); }
+        el.innerHTML = `<div class="tl-head"><span class="tl-when">${i === 0 ? 'valor atual' : quando(ln.desde)}</span><span class="tl-ago">${i === 0 ? 'desde ' + quando(ln.desde) : relAgo(ln.desde)}</span></div><div class="tl-text">${esc(it.label || it.text || '(vazio)')}</div>${tags ? `<div class="tl-data">${tags}</div>` : ''}`;
         box.appendChild(el);
       });
-      if (linhas.length === 1) {
-        const p = document.createElement('p'); p.className = 'sub'; p.style.marginTop = '10px';
-        p.textContent = 'Conforme você editar este item ou atualizar o estoque, as versões anteriores vão aparecer aqui.';
-        box.appendChild(p);
-      }
+      if (linhas.length === 1) { const p = document.createElement('p'); p.className = 'sub'; p.style.marginTop = '10px'; p.textContent = 'Conforme você editar este produto ou atualizar o estoque, as versões anteriores aparecem aqui.'; box.appendChild(p); }
       openSheet('sh-item');
     }
 
-    // ════════════════ SHEETS helpers ════════════════
+    // ───── SHEETS / TEMA / TOAST ─────
     function openSheet(id) { $('scrim').classList.add('show'); $(id).classList.add('show'); }
-    function closeSheets() { $('scrim').classList.remove('show'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show')); }
-    $('scrim').onclick = closeSheets;
-
-    // ════════════════ TEMA ════════════════
+    function closeSheets() { $('scrim').classList.remove('show'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show')); if (_dirtyView) { _dirtyView = false; render(); } }
+    let _dirtyView = false; function markDirty() { _dirtyView = true; }
+    $('scrim').onclick = closeSheets; window.closeSheets = closeSheets;
     function setTheme(t) { document.documentElement.dataset.theme = t; localStorage.setItem(THEME, t); $('b-theme').textContent = t === 'dark' ? '☀️' : '🌙'; }
     setTheme(localStorage.getItem(THEME) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    let _tt; function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2200); }
 
-    // ════════════════ NUVEM (opcional, silenciosa, última escrita vence) ════════════════
-    function migrarLegado(d) {
-      // converte formato do app antigo (listas/lista/prices) para o novo (notes/blocks)
-      if (!d) return null;
-      if (d.notes) return d; // já é novo formato
-      if (d.listas) {
-        const notes = d.listas.map(l => {
-          const blocks = (l.lista || []).map(it => {
-            let text = '';
-            if (it.type === 'header') text = (it.icon ? it.icon + ' ' : '') + (it.label || '').toUpperCase();
-            else if (it.type === 'free') text = it.text || '';
-            else text = (it.customText && it.customText.trim()) ? it.customText : `${it.label || ''}${it.price ? ' - R$ ' + it.price : ''}`;
-            const link = (it.prodId != null) ? { prodId: it.prodId, sysname: it.sysname || '', sku: it.sku || '', estoque: (it.estoque != null ? Number(it.estoque) : null), custo: it.apiData?.valor_custo || '', venda: it.apiData?.valor_venda || it.price || '' } : null;
-            return novoBloco(text, link);
-          });
-          return { id: l.id || uid(), nome: l.nome || 'Lista', sep: 'blank', hideZero: false, blocks };
-        });
-        return { v: 1, savedAt: d.savedAt || Date.now(), currentId: notes[0]?.id, notes };
-      }
-      return null;
-    }
-    async function pullCloud() {
-      if (!user) return;
-      try {
-        const r = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(user.email));
-        if (!r.ok) throw 0;
-        const raw = await r.json();
-        const cloud = migrarLegado(raw);
-        const cloudTotal = cloud ? (cloud.notes || []).reduce((s, n) => s + n.blocks.length, 0) : 0;
-        const localTotal = (data.notes || []).reduce((s, n) => s + n.blocks.length, 0);
-        const tC = cloud?.savedAt || 0, tL = data.savedAt || 0;
-        // última escrita vence: nuvem mais nova (ou local vazio) → usa nuvem
-        if (cloud && cloudTotal > 0 && (tC > tL || localTotal === 0)) {
-          snapshot(); data = cloud; if (!current()) data.currentId = data.notes[0]?.id;
-          localStorage.setItem(STORE, JSON.stringify(data)); render(); toast('Sincronizado da nuvem ☁️');
-        }
-        syncReady = true; setSaved('cloud');
-        if (localTotal > 0 && (!cloud || cloudTotal === 0 || tL >= tC)) pushCloud();
-      } catch (e) { syncReady = true; setSaved('local'); }
-    }
-    async function pushCloud() {
-      if (!user || !syncReady) return;
-      try {
-        await fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ email: user.email, payload: data, _t: Date.now() }) });
-        setSaved('cloud');
-      } catch (e) { setSaved('off'); }
-    }
-    function initSync() {
-      if (!user) { setSaved('local'); return; }
-      $('sync-label').innerHTML = `Conta: ${esc(user.email)}<br><span class="mi-sub">tocar para sair</span>`;
-      pullCloud();
-    }
-    function gsiInit() {
-      if (!window.google || !google.accounts) return;
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: (resp) => {
-          try {
-            const p = JSON.parse(atob(resp.credential.split('.')[1]));
-            user = { email: p.email, name: p.name, picture: p.picture };
-            localStorage.setItem(USER, JSON.stringify(user));
-            $('sync-label').innerHTML = `Conta: ${esc(user.email)}<br><span class="mi-sub">tocar para sair</span>`;
-            toast('Conectado ☁️'); pullCloud();
-          } catch (e) { toast('Falha no login'); }
-        }
-      });
-    }
-    function loginGoogle() {
-      if (user) { if (confirm('Sair da conta ' + user.email + '? (os dados continuam neste aparelho)')) { user = null; localStorage.removeItem(USER); syncReady = false; setSaved('local'); $('sync-label').innerHTML = 'Sincronizar entre aparelhos<br><span class="mi-sub">opcional — usa sua conta Google</span>'; toast('Desconectado'); } return; }
-      if (!window.google) { toast('Carregando login…'); return; }
-      gsiInit();
-      google.accounts.id.renderButton($('google-btn'), { theme: document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline', size: 'large' });
-      google.accounts.id.prompt();
-      // fallback: clicar no botão renderizado
-      setTimeout(() => { const b = $('google-btn').querySelector('div[role=button]'); if (b) b.click(); }, 300);
-    }
+    // ───── NUVEM ─────
+    async function pullCloud() { if (!user) return; try { const r = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(user.email)); if (!r.ok) throw 0; const raw = await r.json(); let cloud = null; if (raw && raw.notes) cloud = raw.mods ? ensure(raw) : ensure(migrarLite(raw) || raw); const ct = cloud ? (cloud.notes || []).reduce((s, n) => s + (n.items ? n.items.length : 0), 0) : 0; const lt = (data.notes || []).reduce((s, n) => s + n.items.length, 0); const tC = cloud?.savedAt || 0, tL = data.savedAt || 0; if (cloud && ct > 0 && (tC > tL || lt === 0)) { snapshot(); data = cloud; localStorage.setItem(STORE, JSON.stringify(data)); render(); toast('Sincronizado da nuvem ☁️'); } syncReady = true; setSaved('cloud'); if (lt > 0 && (!cloud || ct === 0 || tL >= tC)) pushCloud(); } catch (e) { syncReady = true; setSaved('local'); } }
+    async function pushCloud() { if (!user || !syncReady) return; try { await fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ email: user.email, payload: data, _t: Date.now() }) }); setSaved('cloud'); } catch (e) { setSaved('off'); } }
+    function initSync() { if (!user) { setSaved('local'); return; } $('sync-label').innerHTML = `Conta: ${esc(user.email)}<br><span class="mi-sub">tocar para sair</span>`; pullCloud(); }
+    function gsiInit() { if (!window.google || !google.accounts) return; google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: r => { try { const p = JSON.parse(atob(r.credential.split('.')[1])); user = { email: p.email, name: p.name, picture: p.picture }; localStorage.setItem(USER, JSON.stringify(user)); $('sync-label').innerHTML = `Conta: ${esc(user.email)}<br><span class="mi-sub">tocar para sair</span>`; toast('Conectado ☁️'); pullCloud(); } catch (e) { toast('Falha no login'); } } }); }
+    function loginGoogle() { if (user) { if (confirm('Sair de ' + user.email + '? (os dados ficam neste aparelho)')) { user = null; localStorage.removeItem(USER); syncReady = false; setSaved('local'); $('sync-label').innerHTML = 'Sincronizar entre aparelhos<br><span class="mi-sub">opcional — conta Google</span>'; } return; } if (!window.google) { toast('Carregando login…'); return; } gsiInit(); google.accounts.id.renderButton($('google-btn'), { theme: document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline', size: 'large' }); google.accounts.id.prompt(); setTimeout(() => { const b = $('google-btn').querySelector('div[role=button]'); if (b) b.click(); }, 300); }
 
-    // ════════════════ FICHA DE PREÇOS (por item) ════════════════
-    function defaultRules() {
-      return [
-        { id: uid(), nome: 'Varejo', base: 'custo', op: 'mul', val: 1.35 },
-        { id: uid(), nome: 'Atacado', base: 'custo', op: 'mul', val: 1.18 },
-        { id: uid(), nome: 'Revenda', base: 'custo', op: 'mul', val: 1.10 },
-        { id: uid(), nome: 'Pix', base: 'Varejo', op: 'mul', val: 0.93 },
-        { id: uid(), nome: 'Cartão 10x', base: 'Varejo', op: 'div', val: 0.88 }
-      ];
-    }
-    if (!data.priceRules) data.priceRules = defaultRules();
-
-    const num = v => { const n = Number(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : n; };
-    function aplicarOp(b, op, val) {
-      if (op === 'mul') return b * val;
-      if (op === 'div') return val ? b / val : 0;
-      if (op === 'sub') return b - val;
-      return b + val; // add
-    }
-    function aplicarExtra(b, e) {
-      const v = num(e.val);
-      if (e.op === 'mul') return b * v;
-      if (e.op === 'div') return v ? b / v : b;
-      const amt = e.tipo === 'pct' ? b * v / 100 : v;
-      return e.op === 'sub' ? b - amt : b + amt;
-    }
-    function seedCalc(block) {
-      if (block.calc) return block.calc;
-      const fl = firstLink(block);
-      block.calc = {
-        custo: (fl && fl.custo) ? String(fmt(fl.custo)) : '',
-        mods: JSON.parse(JSON.stringify(data.priceRules)),
-        extras: []
-      };
-      block.calc.mods.forEach(m => m.id = uid());
-      return block.calc;
-    }
-    function computeCalc(block) {
-      const c = block.calc; if (!c) return { custo: 0, mods: [] };
-      let custo = num(c.custo);
-      (c.extras || []).filter(e => e.alvo === 'custo').forEach(e => { custo = aplicarExtra(custo, e); });
-      // valores "crus" (markup puro) — usados como base das derivadas, sem extras de modalidade
-      const raw = {}, order = [];
-      (c.mods || []).forEach(m => {
-        const base = m.base === 'custo' ? custo : (raw[m.base] != null ? raw[m.base] : custo);
-        raw[m.nome] = aplicarOp(base, m.op, num(m.val)); order.push(m.nome);
-      });
-      // final: aplica extras 'todas'/específicas uma única vez sobre cada modalidade
-      const fin = {};
-      order.forEach(n => {
-        let v = raw[n];
-        (c.extras || []).filter(e => e.alvo === 'todas' || e.alvo === n).forEach(e => { v = aplicarExtra(v, e); });
-        fin[n] = Math.round(v);
-      });
-      return { custo: Math.round(custo), mods: order.map(n => ({ nome: n, val: fin[n] })) };
-    }
-
-    let _calcId = null;
-    function openCalc(blockId) {
-      const block = current().blocks.find(b => b.id === blockId); if (!block) return;
-      _calcId = blockId; seedCalc(block);
-      $('calc-name').textContent = (block.text.split('\n')[0] || 'item');
-      $('calc-custo').value = block.calc.custo;
-      const pull = $('calc-pull'); const fl = firstLink(block);
-      if (fl && fl.custo) { pull.style.display = ''; pull.onclick = () => { block.calc.custo = String(fmt(fl.custo)); $('calc-custo').value = block.calc.custo; salvar(); renderCalc(); }; }
-      else pull.style.display = 'none';
-      renderCalc();
-      openSheet('sh-calc');
-    }
-    const opOptions = sel => ['mul:×', 'div:÷', 'add:+', 'sub:−'].map(o => { const [v, l] = o.split(':'); return `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`; }).join('');
-
-    function renderCalc() {
-      const block = current().blocks.find(b => b.id === _calcId); if (!block) return;
-      const c = block.calc;
-      const res = computeCalc(block);
-      const resMap = {}; res.mods.forEach(m => resMap[m.nome] = m.val);
-
-      // modalidades
-      const mc = $('calc-mods'); mc.innerHTML = '';
-      const baseOpts = m => ['custo', ...c.mods.filter(x => x.id !== m.id).map(x => x.nome)]
-        .map(b => `<option value="${esc(b)}" ${b === m.base ? 'selected' : ''}>${esc(b)}</option>`).join('');
-      c.mods.forEach(m => {
-        const card = document.createElement('div'); card.className = 'calc-card';
-        card.innerHTML =
-          `<div class="calc-top"><input class="nm" value="${esc(m.nome)}" data-k="nome" /><span class="rs" id="rs-${m.id}">R$ ${resMap[m.nome] ?? 0}</span></div>` +
-          `<div class="calc-grid">` +
-          `<select class="mini" data-k="base">${baseOpts(m)}</select>` +
-          `<select class="mini" data-k="op">${opOptions(m.op)}</select>` +
-          `<input class="mini" data-k="val" type="number" inputmode="decimal" step="0.01" value="${m.val}" />` +
-          `<button class="calc-x" data-x="1">✕</button></div>`;
-        card.querySelector('[data-k="nome"]').addEventListener('input', e => {
-          const old = m.nome; m.nome = e.target.value;
-          c.mods.forEach(x => { if (x.base === old) x.base = m.nome; });
-          (c.extras || []).forEach(x => { if (x.alvo === old) x.alvo = m.nome; });
-          salvar(); recompute();
-        });
-        card.querySelectorAll('[data-k="base"],[data-k="op"],[data-k="val"]').forEach(inp => inp.addEventListener('input', () => { m[inp.dataset.k] = inp.value; salvar(); recompute(); }));
-        card.querySelector('[data-x]').onclick = () => { c.mods = c.mods.filter(x => x.id !== m.id); salvar(); renderCalc(); };
-        mc.appendChild(card);
-      });
-
-      // extras
-      const ec = $('calc-extras'); ec.innerHTML = '';
-      const alvoOpts = e => ['custo:no custo', 'todas:em todas'].concat(c.mods.map(m => m.nome + ':' + m.nome))
-        .map(o => { const i = o.indexOf(':'); const v = o.slice(0, i), l = o.slice(i + 1); return `<option value="${esc(v)}" ${v === e.alvo ? 'selected' : ''}>${esc(l)}</option>`; }).join('');
-      (c.extras || []).forEach(e => {
-        const card = document.createElement('div'); card.className = 'calc-card';
-        card.innerHTML =
-          `<div class="calc-top"><input class="nm" value="${esc(e.nome)}" data-k="nome" placeholder="ex.: Comissão" /></div>` +
-          `<div class="calc-grid extra">` +
-          `<select class="mini" data-k="op">${opOptions(e.op)}</select>` +
-          `<select class="mini" data-k="tipo"><option value="rs" ${e.tipo === 'rs' ? 'selected' : ''}>R$</option><option value="pct" ${e.tipo === 'pct' ? 'selected' : ''}>%</option></select>` +
-          `<input class="mini" data-k="val" type="number" inputmode="decimal" step="0.01" value="${e.val}" />` +
-          `<select class="mini" data-k="alvo">${alvoOpts(e)}</select>` +
-          `<button class="calc-x" data-x="1">✕</button></div>`;
-        card.querySelector('[data-k="nome"]').addEventListener('input', ev => { e.nome = ev.target.value; salvar(); });
-        card.querySelectorAll('[data-k="op"],[data-k="tipo"],[data-k="val"],[data-k="alvo"]').forEach(inp => inp.addEventListener('input', () => { e[inp.dataset.k] = inp.value; salvar(); recompute(); }));
-        card.querySelector('[data-x]').onclick = () => { c.extras = c.extras.filter(x => x.id !== e.id); salvar(); renderCalc(); };
-        ec.appendChild(card);
-      });
-
-      renderChips(res);
-    }
-
-    function recompute() {
-      const block = current().blocks.find(b => b.id === _calcId); if (!block) return;
-      const res = computeCalc(block);
-      const map = {}; res.mods.forEach(m => map[m.nome] = m.val);
-      block.calc.mods.forEach(m => { const el = document.getElementById('rs-' + m.id); if (el) el.textContent = 'R$ ' + (map[m.nome] ?? 0); });
-      const ta = document.querySelector(`.block[data-id="${_calcId}"] textarea`);
-      if (ta && ta.parentElement) updateResolved(block, ta.parentElement);
-      renderChips(res);
-    }
-    let _chipMode = 'token';
-    function renderChips(res) {
-      const block = current().blocks.find(b => b.id === _calcId);
-      const ch = $('calc-chips'); ch.innerHTML = '';
-      const seg = document.createElement('div'); seg.className = 'seg'; seg.style.marginBottom = '4px';
-      seg.innerHTML = `<button class="${_chipMode === 'token' ? 'on' : ''}" data-m="token">fórmula viva</button><button class="${_chipMode === 'fixed' ? 'on' : ''}" data-m="fixed">valor fixo</button>`;
-      seg.querySelectorAll('button').forEach(b => b.onclick = () => { _chipMode = b.dataset.m; renderChips(computeCalc(block)); });
-      const segWrap = document.createElement('div'); segWrap.style.cssText = 'flex-basis:100%;display:flex;align-items:center;gap:8px;margin-bottom:4px';
-      segWrap.appendChild(seg);
-      const hint = document.createElement('span'); hint.style.cssText = 'font-size:11px;color:var(--ink-soft)';
-      hint.textContent = _chipMode === 'token' ? 'recalcula sozinho se o custo mudar' : 'número travado no texto';
-      segWrap.appendChild(hint);
-      ch.appendChild(segWrap);
-
-      const mkchip = (label, val, cls) => {
-        const b = document.createElement('button'); b.className = 'chip-ins ' + (cls || '');
-        b.innerHTML = `<span class="cl">${esc(label)}</span><span class="cv">${val}</span>`;
-        b.onclick = () => { insertAtCursor(_calcId, _chipMode === 'token' ? '{' + label + '}' : String(val)); toast(label + (_chipMode === 'token' ? ' (fórmula) inserido' : ' inserido')); };
-        return b;
-      };
-      ch.appendChild(mkchip('custo', res.custo, 'custo'));
-      res.mods.forEach(m => ch.appendChild(mkchip(m.nome, m.val)));
-    }
-
-    $('calc-custo').addEventListener('input', () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { b.calc.custo = $('calc-custo').value; salvar(); recompute(); } });
-    $('calc-add-mod').onclick = () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { b.calc.mods.push({ id: uid(), nome: 'Nova', base: 'custo', op: 'mul', val: 1.2 }); salvar(); renderCalc(); } };
-    $('calc-add-extra').onclick = () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { (b.calc.extras = b.calc.extras || []).push({ id: uid(), nome: 'Comissão', op: 'add', tipo: 'rs', val: 50, alvo: 'todas' }); salvar(); renderCalc(); } };
-    $('calc-savedef').onclick = () => { const b = current().blocks.find(x => x.id === _calcId); if (b) { data.priceRules = JSON.parse(JSON.stringify(b.calc.mods)); salvar(); toast('Padrão atualizado — novos itens já usam estas modalidades'); } };
-
-    // ════════════════ EVENTOS ════════════════
+    // ───── EVENTOS ─────
     $('b-copy').onclick = copiar;
     $('b-refresh').onclick = atualizarEstoque;
     $('b-hist').onclick = abrirHistorico;
     $('b-theme').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-    $('b-menu').onclick = () => { updateSepLabel(); openSheet('sh-menu'); };
-    $('b-hide').onclick = () => { current().hideZero = !current().hideZero; salvar(); $('b-hide').classList.toggle('on', current().hideZero); toast(current().hideZero ? 'Itens sem estoque ocultados ao copiar' : 'Mostrando todos os itens'); };
-
+    $('b-menu').onclick = () => openSheet('sh-menu');
+    $('b-tpl').onclick = openTpl;
+    $('b-hide').onclick = () => { const n = cur(); n.hideZero = !n.hideZero; salvar(); $('b-hide').classList.toggle('on', n.hideZero); toast(n.hideZero ? 'Sem estoque ocultos ao copiar' : 'Mostrando todos'); };
+    $('m-mods').onclick = () => { closeSheets(); openMods(); };
     $('m-import').onclick = () => { closeSheets(); $('import-text').value = ''; openSheet('sh-import'); setTimeout(() => $('import-text').focus(), 250); };
     $('import-go').onclick = () => importarTexto($('import-text').value);
     $('m-export').onclick = () => { closeSheets(); const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `listas-backup-${hoje().replace(/\//g, '-')}.json`; a.click(); toast('Backup baixado'); };
     $('m-importfile').onclick = () => $('file-input').click();
-    $('file-input').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { const d = JSON.parse(rd.result); const conv = migrarLegado(d) || d; if (conv && conv.notes) { snapshot(); data = conv; if (!current()) data.currentId = data.notes[0].id; salvar(); render(); closeSheets(); toast('Backup restaurado'); } else toast('Arquivo inválido'); } catch (_) { toast('Arquivo inválido'); } }; rd.readAsText(f); e.target.value = ''; };
-    $('m-rename').onclick = () => { closeSheets(); const novo = prompt('Renomear segmento:', current().nome); if (novo !== null) { current().nome = novo.trim() || current().nome; salvar(); render(); } };
-    $('m-del').onclick = () => { closeSheets(); if (data.notes.length <= 1) { toast('Mantenha ao menos um segmento'); return; } if (confirm(`Excluir o segmento "${current().nome}" e seus itens?`)) { data.notes = data.notes.filter(n => n.id !== data.currentId); data.currentId = data.notes[0].id; salvar(); render(); } };
-    function updateSepLabel() { $('sep-state').textContent = current().sep === 'single' ? 'sem linha em branco (lista compacta)' : 'linha em branco entre produtos'; }
-    $('m-sep').onclick = () => { current().sep = current().sep === 'single' ? 'blank' : 'single'; updateSepLabel(); salvar(); toast('Espaçamento ao copiar alterado'); };
+    $('file-input').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { const d = JSON.parse(rd.result); const conv = d.notes ? (d.mods ? d : (migrarLite(d) || d)) : null; if (conv && conv.notes) { snapshot(); data = ensure(conv); salvar(); render(); closeSheets(); toast('Backup restaurado'); } else toast('Arquivo inválido'); } catch (_) { toast('Arquivo inválido'); } }; rd.readAsText(f); e.target.value = ''; };
+    $('m-rename').onclick = () => { closeSheets(); const v = prompt('Renomear segmento:', cur().nome); if (v !== null) { cur().nome = v.trim() || cur().nome; salvar(); render(); } };
+    $('m-del').onclick = () => { closeSheets(); if (data.notes.length <= 1) { toast('Mantenha ao menos um segmento'); return; } if (confirm(`Excluir "${cur().nome}"?`)) { data.notes = data.notes.filter(n => n.id !== data.currentId); data.currentId = data.notes[0].id; salvar(); render(); } };
     $('m-sync').onclick = () => { closeSheets(); loginGoogle(); };
-
-    let _tt;
-    function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2200); }
-
     window.addEventListener('online', () => { if (user) pushCloud(); });
     window.addEventListener('offline', () => setSaved('off'));
 
-    // ════════════════ BOOT ════════════════
-    render();
-    initSync();
-    window.closeSheets = closeSheets;
+    // ───── BOOT ─────
+    render(); initSync();
   </script>
 </body>
 
