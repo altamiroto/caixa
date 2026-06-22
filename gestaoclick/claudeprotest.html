@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Listas — estoque ao vivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    /* ───────── TEMA ───────── */
+    :root {
+      --bg: #f4f5f3;
+      --surface: #ffffff;
+      --paper: #fcfcfb;
+      --ink: #14171a;
+      --ink-soft: #5b6470;
+      --ink-faint: #9aa3af;
+      --line: #e6e8e6;
+      --line-soft: #eef0ee;
+      --primary: #1f2937;
+      --primary-h: #111827;
+      --on-primary: #ffffff;
+      --ok: #16a34a;
+      --low: #c97a11;
+      --zero: #dc2626;
+      --none: #aab2bd;
+      --ok-bg: #16a34a14;
+      --zero-bg: #dc262610;
+      --ring: #1f293733;
+      --shadow: 0 6px 24px rgba(20, 23, 26, .08);
+      --sheet-shadow: 0 -8px 40px rgba(20, 23, 26, .16);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0e1013;
+      --surface: #15181d;
+      --paper: #13161b;
+      --ink: #e8eaed;
+      --ink-soft: #98a2b0;
+      --ink-faint: #5c6573;
+      --line: #262b33;
+      --line-soft: #1d222a;
+      --primary: #e8eaed;
+      --primary-h: #ffffff;
+      --on-primary: #14171a;
+      --ok: #25d366;
+      --low: #efad4b;
+      --zero: #f0564a;
+      --none: #4d5663;
+      --ok-bg: #25d3661c;
+      --zero-bg: #f0564a18;
+      --ring: #e8eaed33;
+      --shadow: 0 6px 24px rgba(0, 0, 0, .4);
+      --sheet-shadow: 0 -8px 40px rgba(0, 0, 0, .55);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    input, textarea { font-family: inherit; }
+    ::selection { background: var(--ring); }
+
+    /* ───────── TOPO ───────── */
+    .topbar {
+      flex: 0 0 auto;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; flex: 1; }
+    .brand b { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
+    .brand small {
+      font-size: 10.5px; color: var(--ink-soft); font-weight: 500;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .savedot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex: 0 0 auto; transition: background .2s; }
+    .savedot.saving { background: var(--low); animation: pulse 1s infinite; }
+    .savedot.off { background: var(--none); }
+    @keyframes pulse { 50% { opacity: .35; } }
+
+    .ic-btn {
+      width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+      font-size: 17px; color: var(--ink-soft); transition: background .12s, color .12s;
+    }
+    .ic-btn:hover { background: var(--line-soft); color: var(--ink); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+      height: 36px; padding: 0 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600;
+      background: var(--primary); color: var(--on-primary); transition: filter .12s, transform .05s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:hover { background: var(--primary-h); }
+    .btn.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+    .btn.ghost:hover { background: var(--line-soft); color: var(--ink); }
+    .btn.sm { height: 32px; padding: 0 11px; font-size: 12.5px; border-radius: 9px; }
+    .btn[disabled] { opacity: .55; pointer-events: none; }
+
+    /* ───────── ABAS (segmentos) ───────── */
+    .tabs {
+      flex: 0 0 auto; display: flex; gap: 6px; padding: 9px 12px; overflow-x: auto;
+      background: var(--surface); border-bottom: 1px solid var(--line); scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 0 0 auto; height: 32px; padding: 0 13px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      color: var(--ink-soft); background: var(--bg); border: 1px solid transparent; display: flex; align-items: center; gap: 6px;
+      transition: all .12s;
+    }
+    .tab.active { background: var(--primary); color: var(--on-primary); }
+    .tab .ct { font-size: 11px; font-weight: 600; opacity: .7; }
+    .tab-add { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: var(--ink-soft); background: var(--bg); display: grid; place-items: center; }
+    .tab-add:hover { background: var(--line-soft); color: var(--ink); }
+
+    /* ───────── ÁREA DA NOTA ───────── */
+    .scroll { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .note { max-width: 720px; margin: 0 auto; padding: 14px 12px 120px; }
+
+    .empty {
+      text-align: center; color: var(--ink-soft); padding: 60px 24px; font-size: 14px; line-height: 1.6;
+    }
+    .empty b { display: block; color: var(--ink); font-size: 16px; margin-bottom: 6px; }
+
+    .block {
+      position: relative; display: flex; gap: 8px; align-items: flex-start;
+      padding: 4px 4px 4px 6px; border-radius: 10px; transition: background .12s;
+    }
+    .block.focus { background: var(--surface); box-shadow: var(--shadow); }
+    .block-ta {
+      flex: 1 1 auto; border: none; outline: none; resize: none; background: transparent; color: var(--ink);
+      font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13.5px; line-height: 1.55;
+      padding: 6px 2px; min-height: 30px; width: 100%; overflow: hidden; letter-spacing: -.01em;
+    }
+    .block-ta::placeholder { color: var(--ink-faint); }
+    .block.zero .block-ta { opacity: .5; }
+
+    /* gutter de estoque */
+    .stk {
+      flex: 0 0 auto; margin-top: 6px; min-width: 30px; height: 24px; border-radius: 7px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 3px; padding: 0 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600;
+      border: 1px solid var(--line); color: var(--none); background: transparent; transition: all .12s;
+    }
+    .stk:hover { border-color: var(--ink-soft); }
+    .stk .d { width: 7px; height: 7px; border-radius: 50%; background: var(--none); }
+    .stk.add { color: var(--ink-faint); border-style: dashed; font-size: 15px; }
+    .stk.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
+    .stk.ok .d { background: var(--ok); }
+    .stk.low { color: var(--low); border-color: var(--low); }
+    .stk.low .d { background: var(--low); }
+    .stk.zero { color: var(--zero); border-color: var(--zero); background: var(--zero-bg); }
+    .stk.zero .d { background: var(--zero); }
+    .stk.stale { color: var(--none); }
+    .stk.stale .d { background: var(--none); }
+
+    /* toolbar do bloco focado */
+    .block-tools {
+      display: none; gap: 6px; padding: 2px 4px 8px 40px; flex-wrap: wrap; align-items: center;
+    }
+    .block.focus + .block-tools, .block-tools.show { display: flex; }
+    .tool {
+      height: 28px; padding: 0 9px; border-radius: 8px; font-size: 12px; font-weight: 500;
+      color: var(--ink-soft); background: var(--bg); border: 1px solid var(--line); display: inline-flex; align-items: center; gap: 5px;
+    }
+    .tool:hover { background: var(--line-soft); color: var(--ink); }
+    .tool.chip { font-family: 'JetBrains Mono', monospace; color: var(--ink); }
+    .tool.danger:hover { color: var(--zero); border-color: var(--zero); }
+
+    .add-row { display: flex; gap: 8px; margin-top: 12px; padding: 0 2px; }
+    .add-row .btn { flex: 1; }
+
+    /* ───────── BARRA INFERIOR ───────── */
+    .bottombar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, var(--bg) 60%, transparent);
+      display: flex; gap: 8px; align-items: center; max-width: 744px; margin: 0 auto;
+    }
+    .bottombar .btn { flex: 1; height: 44px; font-size: 14.5px; box-shadow: var(--shadow); }
+    .toggle-hide {
+      flex: 0 0 auto; height: 44px; padding: 0 12px; border-radius: 11px; background: var(--surface);
+      border: 1px solid var(--line); color: var(--ink-soft); font-size: 11.5px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; box-shadow: var(--shadow);
+    }
+    .toggle-hide.on { color: var(--ink); border-color: var(--ink-soft); }
+    .toggle-hide .sw { width: 28px; height: 4px; border-radius: 3px; background: var(--line); margin-top: 3px; position: relative; }
+    .toggle-hide.on .sw { background: var(--ok); }
+
+    /* ───────── SHEETS / MODAIS ───────── */
+    .scrim {
+      position: fixed; inset: 0; background: rgba(10,12,15,.5); z-index: 50; opacity: 0; pointer-events: none;
+      transition: opacity .2s; backdrop-filter: blur(2px);
+    }
+    .scrim.show { opacity: 1; pointer-events: auto; }
+    .sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; background: var(--surface);
+      border-radius: 20px 20px 0 0; box-shadow: var(--sheet-shadow); padding: 8px 16px calc(20px + env(safe-area-inset-bottom));
+      max-width: 560px; margin: 0 auto; transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.9,.3,1);
+      max-height: 86vh; display: flex; flex-direction: column;
+    }
+    .sheet.show { transform: translateY(0); }
+    .grip { width: 38px; height: 4px; border-radius: 3px; background: var(--line); margin: 6px auto 12px; flex: 0 0 auto; }
+    .sheet h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.02em; }
+    .sheet p.sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.5; }
+
+    .field {
+      width: 100%; height: 44px; padding: 0 13px; border-radius: 11px; border: 1px solid var(--line);
+      background: var(--bg); color: var(--ink); font-size: 14px; outline: none; transition: border .12s;
+    }
+    .field:focus { border-color: var(--ink-soft); }
+    textarea.field { height: auto; min-height: 120px; padding: 11px 13px; resize: vertical; line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+    .results { margin-top: 10px; overflow-y: auto; flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
+    .res {
+      display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 11px; border: 1px solid var(--line);
+      background: var(--bg); text-align: left; transition: border .12s;
+    }
+    .res:hover { border-color: var(--ink-soft); }
+    .res-main { min-width: 0; flex: 1; }
+    .res-name { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .res .badge {
+      flex: 0 0 auto; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge.b-ok { color: var(--ok); background: var(--ok-bg); }
+    .badge.b-zero { color: var(--zero); background: var(--zero-bg); }
+
+    .sheet-actions { display: flex; gap: 8px; margin-top: 14px; flex: 0 0 auto; }
+    .sheet-actions .btn { flex: 1; }
+
+    .hist-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px;
+      border-radius: 11px; border: 1px solid var(--line); background: var(--bg); margin-bottom: 7px;
+    }
+    .hist-when { font-size: 13px; font-weight: 600; }
+    .hist-desc { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+
+    .menu-item {
+      display: flex; align-items: center; gap: 11px; width: 100%; padding: 13px 6px; border-radius: 10px;
+      font-size: 14.5px; font-weight: 500; color: var(--ink); text-align: left;
+    }
+    .menu-item:hover { background: var(--line-soft); }
+    .menu-item .mi-ic { font-size: 18px; width: 24px; text-align: center; }
+    .menu-item .mi-sub { font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
+    .menu-item.line { border-top: 1px solid var(--line); border-radius: 0; margin-top: 4px; padding-top: 16px; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(20px); z-index: 80;
+      background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 600;
+      opacity: 0; pointer-events: none; transition: all .25s; box-shadow: 0 8px 30px rgba(0,0,0,.3); max-width: 88vw; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .prog { flex: 0 0 auto; height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 8px 0 4px; display: none; }
+    .prog.show { display: block; }
+    .prog > i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .25s; }
+
+    @media (min-width: 640px) {
+      .note { padding-top: 22px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <b>Listas</b>
+      <small><span class="savedot" id="savedot"></span><span id="savetxt">salvo</span></small>
+    </div>
+    <button class="ic-btn" id="b-refresh" title="Atualizar estoque do caixa">⟳</button>
+    <button class="ic-btn" id="b-hist" title="Histórico de versões">🕓</button>
+    <button class="ic-btn" id="b-theme" title="Tema">🌙</button>
+    <button class="ic-btn" id="b-menu" title="Mais">⋯</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="scroll">
+    <div class="note" id="note"></div>
+  </div>
+
+  <div class="bottombar">
+    <button class="toggle-hide" id="b-hide" title="Ocultar itens sem estoque ao copiar">
+      <span>oculta&nbsp;0</span><span class="sw"></span>
+    </button>
+    <button class="btn" id="b-copy">Copiar lista</button>
+  </div>
+
+  <!-- SCRIM + SHEETS -->
+  <div class="scrim" id="scrim"></div>
+
+  <!-- Sheet: buscar/vincular caixa -->
+  <div class="sheet" id="sh-search">
+    <div class="grip"></div>
+    <h3 id="search-title">Buscar no caixa</h3>
+    <p class="sub" id="search-sub">Pesquise um produto pelo nome para ver o estoque ao vivo.</p>
+    <input class="field" id="search-input" placeholder="Ex.: Realme Note 60x, Smart TV 32…" autocomplete="off" />
+    <div class="prog" id="search-prog"><i></i></div>
+    <div class="results" id="search-results"></div>
+  </div>
+
+  <!-- Sheet: importar do Keep -->
+  <div class="sheet" id="sh-import">
+    <div class="grip"></div>
+    <h3>Colar do Keep</h3>
+    <p class="sub">Cole sua nota inteira. Cada produto separado por linha em branco vira um item editável.</p>
+    <textarea class="field" id="import-text" placeholder="*SMART TVS (19/06):*
+
+Smart TV 32&quot; Philco Roku
+10x R$ 99,99 (R$ 999,99)
+R$ 885 (Dinheiro)
+
+..."></textarea>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="closeSheets()">Cancelar</button>
+      <button class="btn" id="import-go">Importar</button>
+    </div>
+  </div>
+
+  <!-- Sheet: histórico -->
+  <div class="sheet" id="sh-hist">
+    <div class="grip"></div>
+    <h3>Histórico de versões</h3>
+    <p class="sub">Cópias salvas neste aparelho. Toque em Restaurar para voltar a uma delas.</p>
+    <div class="results" id="hist-list"></div>
+    <div class="sheet-actions"><button class="btn ghost" onclick="closeSheets()">Fechar</button></div>
+  </div>
+
+  <!-- Sheet: menu -->
+  <div class="sheet" id="sh-menu">
+    <div class="grip"></div>
+    <h3>Mais</h3>
+    <div style="overflow-y:auto">
+      <button class="menu-item" id="m-import"><span class="mi-ic">📋</span><span>Colar do Keep<br><span class="mi-sub">trazer uma lista existente</span></span></button>
+      <button class="menu-item" id="m-export"><span class="mi-ic">⬇️</span><span>Baixar backup (.json)<br><span class="mi-sub">guardar ou levar pra outro aparelho</span></span></button>
+      <button class="menu-item" id="m-importfile"><span class="mi-ic">⬆️</span><span>Restaurar backup (.json)</span></button>
+      <button class="menu-item" id="m-rename"><span class="mi-ic">✏️</span><span>Renomear segmento atual</span></button>
+      <button class="menu-item" id="m-del" ><span class="mi-ic">🗑️</span><span>Excluir segmento atual</span></button>
+      <button class="menu-item line" id="m-sep"><span class="mi-ic">↕</span><span>Espaço entre itens ao copiar<br><span class="mi-sub" id="sep-state">linha em branco entre produtos</span></span></button>
+      <button class="menu-item" id="m-sync"><span class="mi-ic">☁️</span><span id="sync-label">Sincronizar entre aparelhos<br><span class="mi-sub">opcional — usa sua conta Google</span></span></button>
+    </div>
+    <input type="file" id="file-input" accept="application/json" style="display:none" />
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="google-btn" style="position:fixed;left:-9999px"></div>
+
+  <script>
+    'use strict';
+    // ════════════════ CONFIG (do seu caixa) ════════════════
+    const CAIXA_BASE = 'https://caixa-three.vercel.app/api/produtos';
+    const LOJA_ID = '361408';
+    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx-mco4fSqUPUg5PTTwPrt1LlH1MzNFkaHpQZFvaLr0BpzhVDNAT5ToNP1-UUzZrv41/exec';
+    const GOOGLE_CLIENT_ID = '1024817778733-055pb8698ie1d5oa46sna4isqpne6ba2.apps.googleusercontent.com';
+    const LOW_STOCK = 3;
+
+    const STORE = 'listas_lite_v1';
+    const HIST = 'listas_lite_hist_v1';
+    const USER = 'listas_lite_user_v1';
+    const THEME = 'listas_lite_theme';
+
+    const $ = id => document.getElementById(id);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const hoje = () => { const d = new Date(); const p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`; };
+
+    // ════════════════ ESTADO ════════════════
+    function novoSegmento(nome) { return { id: uid(), nome, sep: 'blank', hideZero: false, blocks: [] }; }
+    function novoBloco(text = '', link = null) { return { id: uid(), text, link }; }
+
+    let data = load();
+    let user = JSON.parse(localStorage.getItem(USER) || 'null');
+    let syncReady = false, _saveT = null, _pushT = null;
+    let focusedBlockId = null;
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORE);
+        if (raw) { const d = JSON.parse(raw); if (d && d.notes && d.notes.length) return d; }
+      } catch (e) {}
+      const d = {
+        v: 1, savedAt: Date.now(), currentId: null,
+        notes: [
+          novoSegmento('Varejo'),
+          novoSegmento('Atacado'),
+        ]
+      };
+      d.notes[1].sep = 'single';
+      d.currentId = d.notes[0].id;
+      return d;
+    }
+
+    const current = () => data.notes.find(n => n.id === data.currentId) || data.notes[0];
+
+    // ════════════════ PERSISTÊNCIA (silenciosa) ════════════════
+    function salvar(push = true) {
+      data.savedAt = Date.now();
+      try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (e) {}
+      setSaved('saving');
+      clearTimeout(_saveT);
+      _saveT = setTimeout(() => { setSaved(user && syncReady ? 'cloud' : 'local'); snapshot(); }, 500);
+      if (push && user && syncReady) { clearTimeout(_pushT); _pushT = setTimeout(pushCloud, 1200); }
+    }
+    function setSaved(state) {
+      const dot = $('savedot'), txt = $('savetxt');
+      dot.className = 'savedot' + (state === 'saving' ? ' saving' : state === 'off' ? ' off' : '');
+      txt.textContent = state === 'saving' ? 'salvando…' : state === 'cloud' ? 'salvo na nuvem' : state === 'off' ? 'offline' : 'salvo';
+    }
+
+    // histórico local (anel de ~25, dedupe por hash, intervalo mínimo)
+    let _lastHash = '';
+    function snapshot() {
+      try {
+        const h = JSON.stringify(data.notes).length + ':' + JSON.stringify(data.notes).slice(0, 200);
+        if (h === _lastHash) return;
+        _lastHash = h;
+        const list = JSON.parse(localStorage.getItem(HIST) || '[]');
+        const last = list[0];
+        if (last && Date.now() - last.ts < 90 * 1000) { list[0] = { ts: Date.now(), data: JSON.parse(JSON.stringify(data)) }; }
+        else list.unshift({ ts: Date.now(), data: JSON.parse(JSON.stringify(data)) });
+        localStorage.setItem(HIST, JSON.stringify(list.slice(0, 25)));
+      } catch (e) {}
+    }
+
+    // ════════════════ RENDER ABAS ════════════════
+    function renderTabs() {
+      const c = $('tabs'); c.innerHTML = '';
+      data.notes.forEach(n => {
+        const linked = n.blocks.filter(b => b.link).length;
+        const b = document.createElement('button');
+        b.className = 'tab' + (n.id === data.currentId ? ' active' : '');
+        b.innerHTML = `${esc(n.nome)}<span class="ct">${n.blocks.length || ''}</span>`;
+        b.onclick = () => { data.currentId = n.id; render(); };
+        c.appendChild(b);
+      });
+      const add = document.createElement('button');
+      add.className = 'tab-add'; add.textContent = '+';
+      add.onclick = () => {
+        const nome = prompt('Nome do novo segmento:', 'Novo');
+        if (nome === null) return;
+        const n = novoSegmento(nome.trim() || 'Novo'); data.notes.push(n); data.currentId = n.id; salvar(); render();
+      };
+      c.appendChild(add);
+    }
+
+    // ════════════════ RENDER NOTA ════════════════
+    function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }
+
+    function stkClass(link) {
+      if (!link) return 'add';
+      if (link.estoque == null) return 'stale';
+      if (link.estoque <= 0) return 'zero';
+      if (link.estoque <= LOW_STOCK) return 'low';
+      return 'ok';
+    }
+    function stkLabel(link) {
+      if (!link) return '+';
+      if (link.estoque == null) return '—';
+      return String(link.estoque);
+    }
+
+    function render() {
+      renderTabs();
+      const n = current();
+      const wrap = $('note'); wrap.innerHTML = '';
+
+      if (!n.blocks.length) {
+        wrap.innerHTML = `<div class="empty"><b>Nota vazia</b>Escreva à vontade — como no Keep.<br>Cada bloco é um produto ou um título.<br><br>Use <b style="display:inline">＋ do caixa</b> pra puxar um item com estoque ao vivo,<br>ou o menu <b style="display:inline">⋯ → Colar do Keep</b> pra trazer uma lista pronta.</div>`;
+      }
+
+      n.blocks.forEach(block => {
+        const row = document.createElement('div');
+        row.className = 'block' + (block.id === focusedBlockId ? ' focus' : '') + (block.link && block.link.estoque <= 0 && block.link.estoque != null ? ' zero' : '');
+        row.dataset.id = block.id;
+
+        const ta = document.createElement('textarea');
+        ta.className = 'block-ta'; ta.value = block.text; ta.rows = 1; ta.placeholder = 'Escreva aqui…';
+        ta.addEventListener('input', () => { block.text = ta.value; autoGrow(ta); salvar(); });
+        ta.addEventListener('focus', () => { focusedBlockId = block.id; updateFocus(block.id); });
+        ta.addEventListener('blur', () => { setTimeout(() => { if (focusedBlockId === block.id) { /* manter tools até clicar fora */ } }, 100); });
+        ta.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); addBlockAfter(block.id); }
+        });
+
+        const stk = document.createElement('button');
+        stk.className = 'stk ' + stkClass(block.link);
+        stk.innerHTML = block.link ? `<span class="d"></span>${stkLabel(block.link)}` : '+';
+        stk.title = block.link ? `Estoque: ${block.link.estoque ?? '?'} · toque pra trocar vínculo` : 'Vincular ao caixa';
+        stk.onclick = () => openSearch(block.id);
+
+        row.appendChild(ta); row.appendChild(stk);
+        wrap.appendChild(row);
+
+        const tools = document.createElement('div');
+        tools.className = 'block-tools' + (block.id === focusedBlockId ? ' show' : '');
+        tools.dataset.for = block.id;
+        renderTools(tools, block);
+        wrap.appendChild(tools);
+
+        requestAnimationFrame(() => autoGrow(ta));
+      });
+
+      const addRow = document.createElement('div');
+      addRow.className = 'add-row';
+      addRow.innerHTML = `<button class="btn ghost" id="add-free">＋ linha</button><button class="btn" id="add-caixa">＋ do caixa</button>`;
+      wrap.appendChild(addRow);
+      $('add-free').onclick = () => addBlockAfter(null);
+      $('add-caixa').onclick = () => openSearch(null, true);
+
+      $('b-hide').classList.toggle('on', !!n.hideZero);
+    }
+
+    function renderTools(tools, block) {
+      tools.innerHTML = '';
+      const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.className = 'tool ' + (cls || ''); b.innerHTML = txt; b.onclick = e => { e.preventDefault(); fn(); }; return b; };
+      tools.appendChild(mk('↑', '', () => moveBlock(block.id, -1)));
+      tools.appendChild(mk('↓', '', () => moveBlock(block.id, 1)));
+      if (block.link) {
+        if (block.link.venda) tools.appendChild(mk('venda ' + fmt(block.link.venda), 'chip', () => insertAtCursor(block.id, fmt(block.link.venda))));
+        if (block.link.custo) tools.appendChild(mk('custo ' + fmt(block.link.custo), 'chip', () => insertAtCursor(block.id, fmt(block.link.custo))));
+        tools.appendChild(mk('🔗 trocar', '', () => openSearch(block.id)));
+        tools.appendChild(mk('desvincular', '', () => { block.link = null; salvar(); render(); }));
+      } else {
+        tools.appendChild(mk('🔗 vincular', '', () => openSearch(block.id)));
+      }
+      tools.appendChild(mk('🗑️', 'danger', () => { current().blocks = current().blocks.filter(b => b.id !== block.id); salvar(); render(); }));
+    }
+
+    function fmt(v) { const n = Number(String(v).replace(',', '.')); return isNaN(n) ? String(v) : String(Math.round(n)); }
+
+    function updateFocus(id) {
+      document.querySelectorAll('.block').forEach(el => el.classList.toggle('focus', el.dataset.id === id));
+      document.querySelectorAll('.block-tools').forEach(el => el.classList.toggle('show', el.dataset.for === id));
+    }
+
+    function addBlockAfter(id) {
+      const n = current();
+      const nb = novoBloco('');
+      if (id == null) n.blocks.push(nb);
+      else { const i = n.blocks.findIndex(b => b.id === id); n.blocks.splice(i + 1, 0, nb); }
+      focusedBlockId = nb.id; salvar(); render();
+      requestAnimationFrame(() => { const el = document.querySelector(`.block[data-id="${nb.id}"] textarea`); if (el) el.focus(); });
+    }
+    function moveBlock(id, dir) {
+      const n = current(); const i = n.blocks.findIndex(b => b.id === id); const j = i + dir;
+      if (j < 0 || j >= n.blocks.length) return;
+      const [m] = n.blocks.splice(i, 1); n.blocks.splice(j, 0, m); salvar(); render();
+    }
+    function insertAtCursor(id, txt) {
+      const ta = document.querySelector(`.block[data-id="${id}"] textarea`); if (!ta) return;
+      const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? ta.value.length;
+      ta.value = ta.value.slice(0, s) + txt + ta.value.slice(e);
+      const b = current().blocks.find(b => b.id === id); if (b) b.text = ta.value;
+      ta.focus(); ta.selectionStart = ta.selectionEnd = s + txt.length; autoGrow(ta); salvar();
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.block') && !e.target.closest('.block-tools') && !e.target.closest('.add-row')) {
+        if (focusedBlockId) { focusedBlockId = null; updateFocus(null); }
+      }
+    });
+
+    // ════════════════ CAIXA API ════════════════
+    async function apiBusca(nome) {
+      const url = new URL(CAIXA_BASE);
+      url.searchParams.set('loja_id', LOJA_ID); url.searchParams.set('limite', '20'); url.searchParams.set('nome', nome);
+      const r = await fetch(url.toString());
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+    let _cat = [], _catTs = 0; const CAT_TTL = 5 * 60 * 1000;
+    async function carregarCatalogo(onProg) {
+      if (_cat.length && Date.now() - _catTs < CAT_TTL) return _cat;
+      const get = (pag) => { const u = new URL(CAIXA_BASE); u.searchParams.set('loja_id', LOJA_ID); u.searchParams.set('limite', '100'); u.searchParams.set('pagina', pag); return fetch(u.toString()).then(r => r.ok ? r.json() : null); };
+      const d1 = await get(1); if (!d1 || d1.code !== 200) throw new Error('API indisponível');
+      const total = d1.meta?.total_paginas || 1; let todos = [...(d1.data || [])];
+      onProg && onProg(1, total);
+      for (let p = 2; p <= total; p++) {
+        try { const d = await get(p); if (d && d.code === 200 && d.data) todos = todos.concat(d.data); } catch (e) {}
+        onProg && onProg(p, total);
+        if ((p - 1) % 3 === 0) await new Promise(r => setTimeout(r, 900));
+      }
+      _cat = todos; _catTs = Date.now(); return _cat;
+    }
+    const linkFrom = p => ({ prodId: p.id, sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0), custo: p.valor_custo || '', venda: p.valor_venda || '' });
+
+    // Atualizar estoque de todos os blocos vinculados
+    async function atualizarEstoque() {
+      const n = current();
+      const alvos = data.notes.flatMap(note => note.blocks.filter(b => b.link));
+      if (!alvos.length) { toast('Nenhum item vinculado ainda'); return; }
+      const btn = $('b-refresh'); btn.style.pointerEvents = 'none'; btn.textContent = '…';
+      try {
+        const cat = await carregarCatalogo();
+        const byId = new Map(cat.map(p => [String(p.id), p]));
+        let ok = 0;
+        alvos.forEach(b => { const p = byId.get(String(b.link.prodId)); if (p) { b.link = linkFrom(p); ok++; } else { b.link.estoque = null; } });
+        salvar(); render(); toast(`Estoque atualizado · ${ok} item(s)`);
+      } catch (e) { toast('Não consegui falar com o caixa'); }
+      btn.style.pointerEvents = ''; btn.textContent = '⟳';
+    }
+
+    // ════════════════ BUSCA / VÍNCULO (sheet) ════════════════
+    let searchTarget = null, searchCreate = false, _bt = null;
+    function openSearch(blockId, create = false) {
+      searchTarget = blockId; searchCreate = create;
+      const b = blockId ? current().blocks.find(x => x.id === blockId) : null;
+      $('search-title').textContent = create ? 'Adicionar do caixa' : (b && b.link ? 'Trocar vínculo' : 'Vincular ao caixa');
+      $('search-sub').textContent = create ? 'Escolha um produto — ele entra na lista com o estoque ao vivo.' : 'Pesquise pelo nome para ligar este item ao estoque.';
+      $('search-input').value = b && !b.link ? (b.text.split('\n')[0] || '') : '';
+      $('search-results').innerHTML = '';
+      openSheet('sh-search');
+      setTimeout(() => { $('search-input').focus(); if ($('search-input').value.trim().length >= 2) doSearch(); }, 250);
+    }
+    $('search-input').addEventListener('input', () => { clearTimeout(_bt); const q = $('search-input').value.trim(); if (q.length < 2) { $('search-results').innerHTML = ''; return; } _bt = setTimeout(doSearch, 400); });
+    $('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+
+    async function doSearch() {
+      const q = $('search-input').value.trim(); if (q.length < 2) return;
+      const box = $('search-results'); box.innerHTML = '<div class="res" style="justify-content:center;color:var(--ink-soft)">buscando…</div>';
+      try {
+        const d = await apiBusca(q);
+        if (!d || d.code !== 200 || !d.data || !d.data.length) { box.innerHTML = '<div class="res" style="justify-content:center;color:var(--ink-soft)">nenhum resultado</div>'; return; }
+        box.innerHTML = '';
+        d.data.slice(0, 20).forEach(p => {
+          const est = Number(p.estoque ?? 0);
+          const el = document.createElement('button'); el.className = 'res';
+          el.innerHTML = `<div class="res-main"><div class="res-name">${esc(p.nome)}</div><div class="res-meta">${esc(p.codigo_interno || p.codigo_barra || '—')} · R$ ${esc(fmt(p.valor_venda || 0))}</div></div><span class="badge ${est > 0 ? 'b-ok' : 'b-zero'}">${est}</span>`;
+          el.onclick = () => pick(p);
+          box.appendChild(el);
+        });
+      } catch (e) { box.innerHTML = `<div class="res" style="justify-content:center;color:var(--zero)">erro: ${esc(e.message)}</div>`; }
+    }
+    function pick(p) {
+      const n = current();
+      if (searchCreate) {
+        const txt = `${p.nome} - R$ ${fmt(p.valor_venda || 0)}`;
+        n.blocks.push(novoBloco(txt, linkFrom(p)));
+      } else {
+        const b = n.blocks.find(x => x.id === searchTarget);
+        if (b) { b.link = linkFrom(p); if (!b.text.trim()) b.text = `${p.nome} - R$ ${fmt(p.valor_venda || 0)}`; }
+      }
+      closeSheets(); salvar(); render();
+    }
+
+    // ════════════════ COPIAR / IMPORTAR ════════════════
+    function montarTexto(n) {
+      const sep = n.sep === 'single' ? '\n' : '\n\n';
+      return n.blocks
+        .filter(b => !(n.hideZero && b.link && b.link.estoque != null && b.link.estoque <= 0))
+        .map(b => b.text.replace(/\{\{data\}\}/gi, hoje()))
+        .filter(t => t.trim() !== '')
+        .join(sep)
+        .trim();
+    }
+    async function copiar() {
+      const txt = montarTexto(current());
+      if (!txt) { toast('Lista vazia'); return; }
+      try { await navigator.clipboard.writeText(txt); toast('Lista copiada ✓'); }
+      catch (e) {
+        const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); toast('Lista copiada ✓'); } catch (_) { toast('Copie manualmente'); }
+        ta.remove();
+      }
+    }
+    function importarTexto(raw) {
+      raw = raw.replace(/\r/g, '').trim(); if (!raw) return;
+      const n = current();
+      // separa por linha em branco; se não houver, separa por linha
+      let partes = raw.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      if (partes.length <= 1) { partes = raw.split('\n').map(s => s.trim()).filter(Boolean); n.sep = 'single'; }
+      else n.sep = 'blank';
+      partes.forEach(p => n.blocks.push(novoBloco(p)));
+      closeSheets(); salvar(); render(); toast(`${partes.length} item(s) importados`);
+    }
+
+    // ════════════════ HISTÓRICO ════════════════
+    function abrirHistorico() {
+      const list = JSON.parse(localStorage.getItem(HIST) || '[]');
+      const box = $('hist-list');
+      if (!list.length) { box.innerHTML = '<p class="sub">Ainda sem versões salvas.</p>'; }
+      else box.innerHTML = '';
+      list.forEach(snap => {
+        const total = (snap.data.notes || []).reduce((s, x) => s + x.blocks.length, 0);
+        const el = document.createElement('div'); el.className = 'hist-item';
+        el.innerHTML = `<div><div class="hist-when">${new Date(snap.ts).toLocaleString('pt-BR')}</div><div class="hist-desc">${(snap.data.notes || []).length} segmento(s) · ${total} item(s)</div></div>`;
+        const b = document.createElement('button'); b.className = 'btn sm ghost'; b.textContent = 'Restaurar';
+        b.onclick = () => { if (confirm('Restaurar esta versão? A atual vira uma nova entrada no histórico.')) { snapshot(); data = JSON.parse(JSON.stringify(snap.data)); if (!current()) data.currentId = data.notes[0].id; salvar(); render(); closeSheets(); toast('Versão restaurada'); } };
+        el.appendChild(b); box.appendChild(el);
+      });
+      openSheet('sh-hist');
+    }
+
+    // ════════════════ SHEETS helpers ════════════════
+    function openSheet(id) { $('scrim').classList.add('show'); $(id).classList.add('show'); }
+    function closeSheets() { $('scrim').classList.remove('show'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show')); }
+    $('scrim').onclick = closeSheets;
+
+    // ════════════════ TEMA ════════════════
+    function setTheme(t) { document.documentElement.dataset.theme = t; localStorage.setItem(THEME, t); $('b-theme').textContent = t === 'dark' ? '☀️' : '🌙'; }
+    setTheme(localStorage.getItem(THEME) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+    // ════════════════ NUVEM (opcional, silenciosa, última escrita vence) ════════════════
+    function migrarLegado(d) {
+      // converte formato do app antigo (listas/lista/prices) para o novo (notes/blocks)
+      if (!d) return null;
+      if (d.notes) return d; // já é novo formato
+      if (d.listas) {
+        const notes = d.listas.map(l => {
+          const blocks = (l.lista || []).map(it => {
+            let text = '';
+            if (it.type === 'header') text = (it.icon ? it.icon + ' ' : '') + (it.label || '').toUpperCase();
+            else if (it.type === 'free') text = it.text || '';
+            else text = (it.customText && it.customText.trim()) ? it.customText : `${it.label || ''}${it.price ? ' - R$ ' + it.price : ''}`;
+            const link = (it.prodId != null) ? { prodId: it.prodId, sysname: it.sysname || '', sku: it.sku || '', estoque: (it.estoque != null ? Number(it.estoque) : null), custo: it.apiData?.valor_custo || '', venda: it.apiData?.valor_venda || it.price || '' } : null;
+            return novoBloco(text, link);
+          });
+          return { id: l.id || uid(), nome: l.nome || 'Lista', sep: 'blank', hideZero: false, blocks };
+        });
+        return { v: 1, savedAt: d.savedAt || Date.now(), currentId: notes[0]?.id, notes };
+      }
+      return null;
+    }
+    async function pullCloud() {
+      if (!user) return;
+      try {
+        const r = await fetch(SHEETS_URL + '?email=' + encodeURIComponent(user.email));
+        if (!r.ok) throw 0;
+        const raw = await r.json();
+        const cloud = migrarLegado(raw);
+        const cloudTotal = cloud ? (cloud.notes || []).reduce((s, n) => s + n.blocks.length, 0) : 0;
+        const localTotal = (data.notes || []).reduce((s, n) => s + n.blocks.length, 0);
+        const tC = cloud?.savedAt || 0, tL = data.savedAt || 0;
+        // última escrita vence: nuvem mais nova (ou local vazio) → usa nuvem
+        if (cloud && cloudTotal > 0 && (tC > tL || localTotal === 0)) {
+          snapshot(); data = cloud; if (!current()) data.currentId = data.notes[0]?.id;
+          localStorage.setItem(STORE, JSON.stringify(data)); render(); toast('Sincronizado da nuvem ☁️');
+        }
+        syncReady = true; setSaved('cloud');
+        if (localTotal > 0 && (!cloud || cloudTotal === 0 || tL >= tC)) pushCloud();
+      } catch (e) { syncReady = true; setSaved('local'); }
+    }
+    async function pushCloud() {
+      if (!user || !syncReady) return;
+      try {
+        await fetch(SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ email: user.email, payload: data, _t: Date.now() }) });
+        setSaved('cloud');
+      } catch (e) { setSaved('off'); }
+    }
+    function initSync() {
+      if (!user) { setSaved('local'); return; }
+      $('sync-label').innerHTML = `Conta: ${esc(user.email)}<br><span class="mi-sub">tocar para sair</span>`;
+      pullCloud();
+    }
+    function gsiInit() {
+      if (!window.google || !google.accounts) return;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (resp) => {
+          try {
+            const p = JSON.parse(atob(resp.credential.split('.')[1]));
+            user = { email: p.email, name: p.name, picture: p.picture };
+            localStorage.setItem(USER, JSON.stringify(user));
+            $('sync-label').innerHTML = `Conta: ${esc(user.email)}<br><span class="mi-sub">tocar para sair</span>`;
+            toast('Conectado ☁️'); pullCloud();
+          } catch (e) { toast('Falha no login'); }
+        }
+      });
+    }
+    function loginGoogle() {
+      if (user) { if (confirm('Sair da conta ' + user.email + '? (os dados continuam neste aparelho)')) { user = null; localStorage.removeItem(USER); syncReady = false; setSaved('local'); $('sync-label').innerHTML = 'Sincronizar entre aparelhos<br><span class="mi-sub">opcional — usa sua conta Google</span>'; toast('Desconectado'); } return; }
+      if (!window.google) { toast('Carregando login…'); return; }
+      gsiInit();
+      google.accounts.id.renderButton($('google-btn'), { theme: document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline', size: 'large' });
+      google.accounts.id.prompt();
+      // fallback: clicar no botão renderizado
+      setTimeout(() => { const b = $('google-btn').querySelector('div[role=button]'); if (b) b.click(); }, 300);
+    }
+
+    // ════════════════ EVENTOS ════════════════
+    $('b-copy').onclick = copiar;
+    $('b-refresh').onclick = atualizarEstoque;
+    $('b-hist').onclick = abrirHistorico;
+    $('b-theme').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    $('b-menu').onclick = () => { updateSepLabel(); openSheet('sh-menu'); };
+    $('b-hide').onclick = () => { current().hideZero = !current().hideZero; salvar(); $('b-hide').classList.toggle('on', current().hideZero); toast(current().hideZero ? 'Itens sem estoque ocultados ao copiar' : 'Mostrando todos os itens'); };
+
+    $('m-import').onclick = () => { closeSheets(); $('import-text').value = ''; openSheet('sh-import'); setTimeout(() => $('import-text').focus(), 250); };
+    $('import-go').onclick = () => importarTexto($('import-text').value);
+    $('m-export').onclick = () => { closeSheets(); const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `listas-backup-${hoje().replace(/\//g, '-')}.json`; a.click(); toast('Backup baixado'); };
+    $('m-importfile').onclick = () => $('file-input').click();
+    $('file-input').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { const d = JSON.parse(rd.result); const conv = migrarLegado(d) || d; if (conv && conv.notes) { snapshot(); data = conv; if (!current()) data.currentId = data.notes[0].id; salvar(); render(); closeSheets(); toast('Backup restaurado'); } else toast('Arquivo inválido'); } catch (_) { toast('Arquivo inválido'); } }; rd.readAsText(f); e.target.value = ''; };
+    $('m-rename').onclick = () => { closeSheets(); const novo = prompt('Renomear segmento:', current().nome); if (novo !== null) { current().nome = novo.trim() || current().nome; salvar(); render(); } };
+    $('m-del').onclick = () => { closeSheets(); if (data.notes.length <= 1) { toast('Mantenha ao menos um segmento'); return; } if (confirm(`Excluir o segmento "${current().nome}" e seus itens?`)) { data.notes = data.notes.filter(n => n.id !== data.currentId); data.currentId = data.notes[0].id; salvar(); render(); } };
+    function updateSepLabel() { $('sep-state').textContent = current().sep === 'single' ? 'sem linha em branco (lista compacta)' : 'linha em branco entre produtos'; }
+    $('m-sep').onclick = () => { current().sep = current().sep === 'single' ? 'blank' : 'single'; updateSepLabel(); salvar(); toast('Espaçamento ao copiar alterado'); };
+    $('m-sync').onclick = () => { closeSheets(); loginGoogle(); };
+
+    let _tt;
+    function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2200); }
+
+    window.addEventListener('online', () => { if (user) pushCloud(); });
+    window.addEventListener('offline', () => setSaved('off'));
+
+    // ════════════════ BOOT ════════════════
+    render();
+    initSync();
+    window.closeSheets = closeSheets;
+  </script>
+</body>
+
+</html>
