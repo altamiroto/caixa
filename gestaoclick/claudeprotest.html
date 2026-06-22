@@ -340,6 +340,16 @@
     .chip-ins .cv { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--ink); }
     .chip-ins.custo { background: var(--bg); }
     .calc-hint { font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; margin-top: 10px; }
+    .resolved { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; color: var(--ok); white-space: pre-wrap; word-break: break-word; padding: 2px 2px 4px; display: none; }
+    .resolved.show { display: block; }
+    .resolved::before { content: '→ '; color: var(--ink-faint); }
+    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+    .seg button { padding: 6px 11px; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: var(--bg); }
+    .seg button.on { background: var(--primary); color: var(--on-primary); }
+    .lk-row { display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 11px; border: 1px solid var(--line); background: var(--bg); }
+    .lk-row .lk-main { flex: 1; min-width: 0; }
+    .lk-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lk-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
   </style>
 </head>
 
@@ -379,6 +389,19 @@
     <input class="field" id="search-input" placeholder="Ex.: Realme Note 60x, Smart TV 32…" autocomplete="off" />
     <div class="prog" id="search-prog"><i></i></div>
     <div class="results" id="search-results"></div>
+  </div>
+
+  <!-- Sheet: vínculos do item -->
+  <div class="sheet" id="sh-links">
+    <div class="grip"></div>
+    <h3>Vínculos do caixa</h3>
+    <p class="sub" id="links-name"></p>
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px" id="links-total"></div>
+    <div class="results" id="links-list"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="links-add">＋ adicionar vínculo</button>
+      <button class="btn" onclick="closeSheets()">Pronto</button>
+    </div>
   </div>
 
   <!-- Sheet: importar do Keep -->
@@ -560,7 +583,7 @@ R$ 885 (Dinheiro)
     function renderTabs() {
       const c = $('tabs'); c.innerHTML = '';
       data.notes.forEach(n => {
-        const linked = n.blocks.filter(b => b.link).length;
+        const linked = n.blocks.filter(b => getLinks(b).length).length;
         const b = document.createElement('button');
         b.className = 'tab' + (n.id === data.currentId ? ' active' : '');
         b.innerHTML = `${esc(n.nome)}<span class="ct">${n.blocks.length || ''}</span>`;
@@ -580,17 +603,29 @@ R$ 885 (Dinheiro)
     // ════════════════ RENDER NOTA ════════════════
     function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }
 
-    function stkClass(link) {
-      if (!link) return 'add';
-      if (link.estoque == null) return 'stale';
-      if (link.estoque <= 0) return 'zero';
-      if (link.estoque <= LOW_STOCK) return 'low';
+    // ── vínculos (um item pode ter vários produtos do caixa; estoque soma) ──
+    function getLinks(b) { if (b.links) return b.links; if (b.link) { b.links = [b.link]; delete b.link; return b.links; } return []; }
+    function firstLink(b) { const l = getLinks(b); return l[0] || null; }
+    function estoqueInfo(b) {
+      const ls = getLinks(b);
+      if (!ls.length) return { linked: false, total: null, stale: false };
+      let total = 0, known = false, stale = false;
+      ls.forEach(l => { if (l.estoque == null) stale = true; else { total += Number(l.estoque) || 0; known = true; } });
+      return { linked: true, total: known ? total : null, stale, count: ls.length };
+    }
+    function stkClass(b) {
+      const i = estoqueInfo(b);
+      if (!i.linked) return 'add';
+      if (i.total == null) return 'stale';
+      if (i.total <= 0) return 'zero';
+      if (i.total <= LOW_STOCK) return 'low';
       return 'ok';
     }
-    function stkLabel(link) {
-      if (!link) return '+';
-      if (link.estoque == null) return '—';
-      return String(link.estoque);
+    function stkLabel(b) {
+      const i = estoqueInfo(b);
+      if (!i.linked) return '+';
+      if (i.total == null) return '—';
+      return String(i.total) + (i.count > 1 ? '·' + i.count : '');
     }
 
     function render() {
@@ -604,26 +639,30 @@ R$ 885 (Dinheiro)
       }
 
       n.blocks.forEach(block => {
+        const info = estoqueInfo(block);
         const row = document.createElement('div');
-        row.className = 'block' + (block.id === focusedBlockId ? ' focus' : '') + (block.link && block.link.estoque <= 0 && block.link.estoque != null ? ' zero' : '');
+        row.className = 'block' + (block.id === focusedBlockId ? ' focus' : '') + (info.total != null && info.total <= 0 ? ' zero' : '');
         row.dataset.id = block.id;
 
+        const col = document.createElement('div'); col.style.cssText = 'flex:1;min-width:0';
         const ta = document.createElement('textarea');
         ta.className = 'block-ta'; ta.value = block.text; ta.rows = 1; ta.placeholder = 'Escreva aqui…';
-        ta.addEventListener('input', () => { block.text = ta.value; autoGrow(ta); salvar(); });
+        ta.addEventListener('input', () => { block.text = ta.value; autoGrow(ta); updateResolved(block, col); salvar(); });
         ta.addEventListener('focus', () => { focusedBlockId = block.id; updateFocus(block.id); });
-        ta.addEventListener('blur', () => { setTimeout(() => { if (focusedBlockId === block.id) { /* manter tools até clicar fora */ } }, 100); });
         ta.addEventListener('keydown', e => {
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); addBlockAfter(block.id); }
         });
+        col.appendChild(ta);
+        const resolved = document.createElement('div'); resolved.className = 'resolved'; resolved.dataset.res = block.id;
+        col.appendChild(resolved);
 
         const stk = document.createElement('button');
-        stk.className = 'stk ' + stkClass(block.link);
-        stk.innerHTML = block.link ? `<span class="d"></span>${stkLabel(block.link)}` : '+';
-        stk.title = block.link ? `Estoque: ${block.link.estoque ?? '?'} · toque pra trocar vínculo` : 'Vincular ao caixa';
-        stk.onclick = () => openSearch(block.id);
+        stk.className = 'stk ' + stkClass(block);
+        stk.innerHTML = info.linked ? `<span class="d"></span>${stkLabel(block)}` : '+';
+        stk.title = info.linked ? `Estoque somado: ${info.total ?? '?'} · ${info.count} vínculo(s)` : 'Vincular ao caixa';
+        stk.onclick = () => info.linked ? openLinks(block.id) : openSearch(block.id);
 
-        row.appendChild(ta); row.appendChild(stk);
+        row.appendChild(col); row.appendChild(stk);
         wrap.appendChild(row);
 
         const tools = document.createElement('div');
@@ -632,7 +671,7 @@ R$ 885 (Dinheiro)
         renderTools(tools, block);
         wrap.appendChild(tools);
 
-        requestAnimationFrame(() => autoGrow(ta));
+        requestAnimationFrame(() => { autoGrow(ta); updateResolved(block, col); });
       });
 
       const addRow = document.createElement('div');
@@ -650,11 +689,11 @@ R$ 885 (Dinheiro)
       const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.className = 'tool ' + (cls || ''); b.innerHTML = txt; b.onclick = e => { e.preventDefault(); fn(); }; return b; };
       tools.appendChild(mk('↑', '', () => moveBlock(block.id, -1)));
       tools.appendChild(mk('↓', '', () => moveBlock(block.id, 1)));
-      if (block.link) {
-        if (block.link.venda) tools.appendChild(mk('venda ' + fmt(block.link.venda), 'chip', () => insertAtCursor(block.id, fmt(block.link.venda))));
-        if (block.link.custo) tools.appendChild(mk('custo ' + fmt(block.link.custo), 'chip', () => insertAtCursor(block.id, fmt(block.link.custo))));
-        tools.appendChild(mk('🔗 trocar', '', () => openSearch(block.id)));
-        tools.appendChild(mk('desvincular', '', () => { block.link = null; salvar(); render(); }));
+      const ls = getLinks(block); const fl = ls[0];
+      if (ls.length) {
+        if (fl.venda) tools.appendChild(mk('venda ' + fmt(fl.venda), 'chip', () => insertAtCursor(block.id, fmt(fl.venda))));
+        if (fl.custo) tools.appendChild(mk('custo ' + fmt(fl.custo), 'chip', () => insertAtCursor(block.id, fmt(fl.custo))));
+        tools.appendChild(mk('🔗 vínculos' + (ls.length > 1 ? ' (' + ls.length + ')' : ''), '', () => openLinks(block.id)));
       } else {
         tools.appendChild(mk('🔗 vincular', '', () => openSearch(block.id)));
       }
@@ -688,7 +727,10 @@ R$ 885 (Dinheiro)
       const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? ta.value.length;
       ta.value = ta.value.slice(0, s) + txt + ta.value.slice(e);
       const b = current().blocks.find(b => b.id === id); if (b) b.text = ta.value;
-      ta.focus(); ta.selectionStart = ta.selectionEnd = s + txt.length; autoGrow(ta); salvar();
+      ta.focus(); ta.selectionStart = ta.selectionEnd = s + txt.length; autoGrow(ta);
+      const col = ta.closest('.block')?.querySelector('.resolved') ? ta.parentElement : null;
+      if (b && ta.parentElement) updateResolved(b, ta.parentElement);
+      salvar();
     }
 
     document.addEventListener('click', e => {
@@ -721,33 +763,60 @@ R$ 885 (Dinheiro)
     }
     const linkFrom = p => ({ prodId: p.id, sysname: p.nome, sku: p.codigo_interno || p.codigo_barra || '', estoque: Number(p.estoque ?? 0), custo: p.valor_custo || '', venda: p.valor_venda || '' });
 
-    // Atualizar estoque de todos os blocos vinculados
+    // Atualizar estoque de todos os blocos vinculados (soma cada vínculo)
     async function atualizarEstoque() {
-      const n = current();
-      const alvos = data.notes.flatMap(note => note.blocks.filter(b => b.link));
+      const alvos = data.notes.flatMap(note => note.blocks.filter(b => getLinks(b).length));
       if (!alvos.length) { toast('Nenhum item vinculado ainda'); return; }
       const btn = $('b-refresh'); btn.style.pointerEvents = 'none'; btn.textContent = '…';
       try {
         const cat = await carregarCatalogo();
         const byId = new Map(cat.map(p => [String(p.id), p]));
         let ok = 0;
-        alvos.forEach(b => { const p = byId.get(String(b.link.prodId)); if (p) { b.link = linkFrom(p); ok++; } else { b.link.estoque = null; } });
-        salvar(); render(); toast(`Estoque atualizado · ${ok} item(s)`);
+        alvos.forEach(b => { getLinks(b).forEach((l, i) => { const p = byId.get(String(l.prodId)); if (p) { b.links[i] = linkFrom(p); ok++; } else { l.estoque = null; } }); });
+        salvar(); render(); toast(`Estoque atualizado · ${ok} vínculo(s)`);
       } catch (e) { toast('Não consegui falar com o caixa'); }
       btn.style.pointerEvents = ''; btn.textContent = '⟳';
     }
 
     // ════════════════ BUSCA / VÍNCULO (sheet) ════════════════
-    let searchTarget = null, searchCreate = false, _bt = null;
+    let searchTarget = null, searchMode = 'link', _bt = null;
     function openSearch(blockId, create = false) {
-      searchTarget = blockId; searchCreate = create;
+      searchTarget = blockId; searchMode = create ? 'create' : 'link';
       const b = blockId ? current().blocks.find(x => x.id === blockId) : null;
-      $('search-title').textContent = create ? 'Adicionar do caixa' : (b && b.link ? 'Trocar vínculo' : 'Vincular ao caixa');
+      $('search-title').textContent = create ? 'Adicionar do caixa' : 'Vincular ao caixa';
       $('search-sub').textContent = create ? 'Escolha um produto — ele entra na lista com o estoque ao vivo.' : 'Pesquise pelo nome para ligar este item ao estoque.';
-      $('search-input').value = b && !b.link ? (b.text.split('\n')[0] || '') : '';
+      $('search-input').value = (b && !getLinks(b).length) ? (b.text.split('\n')[0] || '') : '';
       $('search-results').innerHTML = '';
       openSheet('sh-search');
       setTimeout(() => { $('search-input').focus(); if ($('search-input').value.trim().length >= 2) doSearch(); }, 250);
+    }
+    function addLinkSearch(blockId) {
+      searchTarget = blockId; searchMode = 'add';
+      $('search-title').textContent = 'Adicionar vínculo';
+      $('search-sub').textContent = 'Outro produto do caixa cujo estoque soma neste item.';
+      $('search-input').value = ''; $('search-results').innerHTML = '';
+      openSheet('sh-search');
+      setTimeout(() => $('search-input').focus(), 250);
+    }
+
+    // Gerenciador de vínculos (vários produtos por item)
+    function openLinks(blockId) {
+      const b = current().blocks.find(x => x.id === blockId); if (!b) return;
+      const ls = getLinks(b);
+      $('links-name').textContent = (b.text.split('\n')[0] || 'item');
+      const info = estoqueInfo(b);
+      $('links-total').textContent = 'Estoque somado: ' + (info.total ?? '?') + ' · ' + ls.length + ' vínculo(s)';
+      const box = $('links-list'); box.innerHTML = '';
+      ls.forEach((l, i) => {
+        const el = document.createElement('div'); el.className = 'lk-row';
+        el.innerHTML = `<div class="lk-main"><div class="lk-name">${esc(l.sysname || '(sem nome)')}</div><div class="lk-meta">${esc(l.sku || '—')} · estoque ${l.estoque ?? '?'}</div></div>`;
+        const rm = document.createElement('button'); rm.className = 'calc-x'; rm.textContent = '✕';
+        rm.onclick = () => { b.links.splice(i, 1); if (!b.links.length) delete b.links; salvar(); render(); openLinks(blockId); };
+        el.appendChild(rm); box.appendChild(el);
+      });
+      if (!ls.length) box.innerHTML = '<p class="sub">Nenhum vínculo ainda.</p>';
+      $('links-add').onclick = () => addLinkSearch(blockId);
+      openSheet('sh-links');
     }
     $('search-input').addEventListener('input', () => { clearTimeout(_bt); const q = $('search-input').value.trim(); if (q.length < 2) { $('search-results').innerHTML = ''; return; } _bt = setTimeout(doSearch, 400); });
     $('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
@@ -770,22 +839,50 @@ R$ 885 (Dinheiro)
     }
     function pick(p) {
       const n = current();
-      if (searchCreate) {
-        const txt = `${p.nome} - R$ ${fmt(p.valor_venda || 0)}`;
-        n.blocks.push(novoBloco(txt, linkFrom(p)));
+      if (searchMode === 'create') {
+        n.blocks.push(novoBloco(`${p.nome} - R$ ${fmt(p.valor_venda || 0)}`, linkFrom(p)));
+      } else if (searchMode === 'add') {
+        const b = n.blocks.find(x => x.id === searchTarget);
+        if (b) { const ls = getLinks(b); if (!ls.find(l => String(l.prodId) === String(p.id))) ls.push(linkFrom(p)); }
+        closeSheets(); salvar(); render(); openLinks(searchTarget); return;
       } else {
         const b = n.blocks.find(x => x.id === searchTarget);
-        if (b) { b.link = linkFrom(p); if (!b.text.trim()) b.text = `${p.nome} - R$ ${fmt(p.valor_venda || 0)}`; }
+        if (b) { b.links = [linkFrom(p)]; if (!b.text.trim()) b.text = `${p.nome} - R$ ${fmt(p.valor_venda || 0)}`; }
       }
       closeSheets(); salvar(); render();
+    }
+
+    // ════════════════ FÓRMULAS VIVAS (preço que recalcula sozinho) ════════════════
+    function normKey(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
+    function tokenMap(block) {
+      const map = {};
+      if (block.calc) { const r = computeCalc(block); map[normKey('custo')] = r.custo; r.mods.forEach(m => map[normKey(m.nome)] = m.val); }
+      const fl = firstLink(block);
+      if (fl) { if (map[normKey('venda')] == null && fl.venda) map[normKey('venda')] = fmt(fl.venda); if (map[normKey('custo')] == null && fl.custo) map[normKey('custo')] = fmt(fl.custo); }
+      return map;
+    }
+    function temToken(block) {
+      if (!/\{[^{}]+\}/.test(block.text)) return false;
+      const map = tokenMap(block);
+      return block.text.match(/\{([^{}]+)\}/g).some(t => map[normKey(t.slice(1, -1))] != null);
+    }
+    function resolveText(block) {
+      let t = block.text.replace(/\{\{data\}\}/gi, hoje());
+      const map = tokenMap(block);
+      return t.replace(/\{([^{}]+)\}/g, (full, name) => { const v = map[normKey(name)]; return v != null ? String(v) : full; });
+    }
+    function updateResolved(block, col) {
+      const el = col.querySelector('.resolved'); if (!el) return;
+      if (temToken(block)) { el.textContent = resolveText(block); el.classList.add('show'); }
+      else { el.classList.remove('show'); el.textContent = ''; }
     }
 
     // ════════════════ COPIAR / IMPORTAR ════════════════
     function montarTexto(n) {
       const sep = n.sep === 'single' ? '\n' : '\n\n';
       return n.blocks
-        .filter(b => !(n.hideZero && b.link && b.link.estoque != null && b.link.estoque <= 0))
-        .map(b => b.text.replace(/\{\{data\}\}/gi, hoje()))
+        .filter(b => { if (!n.hideZero) return true; const i = estoqueInfo(b); return !(i.total != null && i.total <= 0); })
+        .map(b => resolveText(b))
         .filter(t => t.trim() !== '')
         .join(sep)
         .trim();
@@ -826,8 +923,8 @@ R$ 885 (Dinheiro)
       for (const n of (snapData.notes || [])) { const b = (n.blocks || []).find(x => x.id === id); if (b) return { block: b, noteName: n.nome }; }
       return null;
     }
-    const estTag = link => { if (!link) return ''; const e = link.estoque; const cls = e == null ? '' : (e <= 0 ? 'e-zero' : 'e-ok'); return `<span class="tag ${cls}">estoque ${e == null ? '?' : e}</span>` + (link.venda ? `<span class="tag">venda ${fmt(link.venda)}</span>` : '') + (link.custo ? `<span class="tag">custo ${fmt(link.custo)}</span>` : ''); };
-    const sigOf = (text, link) => `${text}|${link ? (link.estoque ?? '') : ''}|${link ? link.venda : ''}|${link ? link.custo : ''}`;
+    const estTag = b => { const i = estoqueInfo(b); const fl = firstLink(b); if (!i.linked) return ''; const cls = i.total == null ? '' : (i.total <= 0 ? 'e-zero' : 'e-ok'); return `<span class="tag ${cls}">estoque ${i.total == null ? '?' : i.total}${i.count > 1 ? ' (' + i.count + ')' : ''}</span>` + (fl && fl.venda ? `<span class="tag">venda ${fmt(fl.venda)}</span>` : '') + (fl && fl.custo ? `<span class="tag">custo ${fmt(fl.custo)}</span>` : ''); };
+    const sigOf = b => { const i = estoqueInfo(b); const fl = firstLink(b) || {}; return `${b.text}|${i.total ?? ''}|${fl.venda || ''}|${fl.custo || ''}`; };
 
     function abrirHistorico() {
       const list = getHist();
@@ -870,10 +967,11 @@ R$ 885 (Dinheiro)
       const body = $('view-body'); body.innerHTML = '';
       if (!note || !note.blocks.length) { body.innerHTML = '<p class="sub">Segmento vazio nesta versão.</p>'; return; }
       note.blocks.forEach(bl => {
-        const z = bl.link && bl.link.estoque != null && bl.link.estoque <= 0;
+        const i = estoqueInfo(bl);
+        const z = i.total != null && i.total <= 0;
         const el = document.createElement('div'); el.className = 'ro-block' + (z ? ' zero' : '');
         el.innerHTML = `<div class="ro-text">${esc(bl.text) || '<span style="color:var(--ink-faint)">(vazio)</span>'}</div>` +
-          (bl.link ? `<span class="stk ${stkClass(bl.link)}" style="pointer-events:none"><span class="d"></span>${stkLabel(bl.link)}</span>` : '');
+          (i.linked ? `<span class="stk ${stkClass(bl)}" style="pointer-events:none"><span class="d"></span>${stkLabel(bl)}</span>` : '');
         body.appendChild(el);
       });
     }
@@ -899,10 +997,10 @@ R$ 885 (Dinheiro)
       // dedupe de valores iguais consecutivos — guarda o ts MAIS ANTIGO de cada valor (quando passou a ser assim)
       const linhas = [];
       brutos.forEach(e => {
-        const sig = sigOf(e.block.text, e.block.link);
+        const sig = sigOf(e.block);
         const ult = linhas[linhas.length - 1];
         if (ult && ult.sig === sig) { ult.desde = e.ts; }
-        else linhas.push({ sig, desde: e.ts, text: e.block.text, link: e.block.link, live: e.live });
+        else linhas.push({ sig, desde: e.ts, text: e.block.text, block: e.block, live: e.live });
       });
 
       $('item-sub').textContent = (atual.text.split('\n')[0] || 'item') + ' · ' + (linhas.length > 1 ? linhas.length + ' versões' : 'sem mudanças registradas ainda');
@@ -911,10 +1009,11 @@ R$ 885 (Dinheiro)
         const el = document.createElement('div'); el.className = 'tl' + (i === 0 ? ' now' : '');
         const cab = i === 0 ? 'valor atual' : quando(ln.desde);
         const ago = i === 0 ? ('desde ' + quando(ln.desde)) : relAgo(ln.desde);
+        const tags = estTag(ln.block);
         el.innerHTML =
           `<div class="tl-head"><span class="tl-when">${cab}</span><span class="tl-ago">${ago}</span></div>` +
           `<div class="tl-text">${esc(ln.text) || '<span class="gone">(linha vazia)</span>'}</div>` +
-          (ln.link ? `<div class="tl-data">${estTag(ln.link)}</div>` : '');
+          (tags ? `<div class="tl-data">${tags}</div>` : '');
         if (i > 0) {
           const u = document.createElement('button'); u.className = 'tl-use'; u.textContent = '↩ usar este texto';
           u.onclick = () => { snapshot(); const b = current().blocks.find(x => x.id === blockId); if (b) { b.text = ln.text; salvar(); render(); closeSheets(); toast('Texto do item restaurado'); } };
@@ -1044,12 +1143,12 @@ R$ 885 (Dinheiro)
     }
     function seedCalc(block) {
       if (block.calc) return block.calc;
+      const fl = firstLink(block);
       block.calc = {
-        custo: (block.link && block.link.custo) ? String(fmt(block.link.custo)) : '',
+        custo: (fl && fl.custo) ? String(fmt(fl.custo)) : '',
         mods: JSON.parse(JSON.stringify(data.priceRules)),
         extras: []
       };
-      // garante ids próprios das modalidades copiadas
       block.calc.mods.forEach(m => m.id = uid());
       return block.calc;
     }
@@ -1079,8 +1178,8 @@ R$ 885 (Dinheiro)
       _calcId = blockId; seedCalc(block);
       $('calc-name').textContent = (block.text.split('\n')[0] || 'item');
       $('calc-custo').value = block.calc.custo;
-      const pull = $('calc-pull');
-      if (block.link && block.link.custo) { pull.style.display = ''; pull.onclick = () => { block.calc.custo = String(fmt(block.link.custo)); $('calc-custo').value = block.calc.custo; salvar(); renderCalc(); }; }
+      const pull = $('calc-pull'); const fl = firstLink(block);
+      if (fl && fl.custo) { pull.style.display = ''; pull.onclick = () => { block.calc.custo = String(fmt(fl.custo)); $('calc-custo').value = block.calc.custo; salvar(); renderCalc(); }; }
       else pull.style.display = 'none';
       renderCalc();
       openSheet('sh-calc');
@@ -1145,11 +1244,30 @@ R$ 885 (Dinheiro)
       const res = computeCalc(block);
       const map = {}; res.mods.forEach(m => map[m.nome] = m.val);
       block.calc.mods.forEach(m => { const el = document.getElementById('rs-' + m.id); if (el) el.textContent = 'R$ ' + (map[m.nome] ?? 0); });
+      const ta = document.querySelector(`.block[data-id="${_calcId}"] textarea`);
+      if (ta && ta.parentElement) updateResolved(block, ta.parentElement);
       renderChips(res);
     }
+    let _chipMode = 'token';
     function renderChips(res) {
+      const block = current().blocks.find(b => b.id === _calcId);
       const ch = $('calc-chips'); ch.innerHTML = '';
-      const mkchip = (label, val, cls) => { const b = document.createElement('button'); b.className = 'chip-ins ' + (cls || ''); b.innerHTML = `<span class="cl">${esc(label)}</span><span class="cv">${val}</span>`; b.onclick = () => { insertAtCursor(_calcId, String(val)); toast(label + ' inserido'); }; return b; };
+      const seg = document.createElement('div'); seg.className = 'seg'; seg.style.marginBottom = '4px';
+      seg.innerHTML = `<button class="${_chipMode === 'token' ? 'on' : ''}" data-m="token">fórmula viva</button><button class="${_chipMode === 'fixed' ? 'on' : ''}" data-m="fixed">valor fixo</button>`;
+      seg.querySelectorAll('button').forEach(b => b.onclick = () => { _chipMode = b.dataset.m; renderChips(computeCalc(block)); });
+      const segWrap = document.createElement('div'); segWrap.style.cssText = 'flex-basis:100%;display:flex;align-items:center;gap:8px;margin-bottom:4px';
+      segWrap.appendChild(seg);
+      const hint = document.createElement('span'); hint.style.cssText = 'font-size:11px;color:var(--ink-soft)';
+      hint.textContent = _chipMode === 'token' ? 'recalcula sozinho se o custo mudar' : 'número travado no texto';
+      segWrap.appendChild(hint);
+      ch.appendChild(segWrap);
+
+      const mkchip = (label, val, cls) => {
+        const b = document.createElement('button'); b.className = 'chip-ins ' + (cls || '');
+        b.innerHTML = `<span class="cl">${esc(label)}</span><span class="cv">${val}</span>`;
+        b.onclick = () => { insertAtCursor(_calcId, _chipMode === 'token' ? '{' + label + '}' : String(val)); toast(label + (_chipMode === 'token' ? ' (fórmula) inserido' : ' inserido')); };
+        return b;
+      };
       ch.appendChild(mkchip('custo', res.custo, 'custo'));
       res.mods.forEach(m => ch.appendChild(mkchip(m.nome, m.val)));
     }
