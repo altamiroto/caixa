@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gerador de Catálogos</title>
+    <link rel="stylesheet" href="src/render/fonte.css" />
     <link rel="stylesheet" href="src/render/catalogo.css" />
     <style>
       :root {
@@ -263,6 +264,13 @@ R$ 965 (Dinheiro)"></textarea>
       const $ = (id) => document.getElementById(id);
       const palco = $('palco');
 
+      // A paginação mede texto no DOM: medir com a fonte de reserva daria
+      // altura errada. Tudo que gera catálogo espera por esta promessa.
+      const fontesProntas = Promise.all([
+        document.fonts.load('900 62px Inter'),
+        document.fonts.load('700 25px Inter'),
+      ]).then(() => document.fonts.ready);
+
       for (const t of listarTemas()) {
         const opt = new Option(t.nome, t.id, t.id === TEMA_PADRAO, t.id === TEMA_PADRAO);
         $('tema').append(opt);
@@ -306,7 +314,8 @@ R$ 965 (Dinheiro)"></textarea>
         };
       }
 
-      function gerar() {
+      async function gerar() {
+        await fontesProntas;
         const texto = $('entrada').value;
         palco.innerHTML = '';
         $('avisos').innerHTML = '';

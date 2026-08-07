@@ -72,6 +72,7 @@ src/
   render/
     template.js         Modelo -> HTML
     catalogo.css        A folha de estilo; tudo derivado de --escala
+    fonte.css           Inter embutida em base64 (+ INTER-LICENSE.txt)
     export.js           PNG no navegador
   themes/temas.js       As paletas
 tools/
@@ -181,12 +182,34 @@ Fonte, tamanho de coluna e preço têm **piso em pixels**: numa lista longa a
 escala cai muito, e sem piso o preço encolheria junto com a linha. A paginação
 já contabiliza a altura resultante do piso.
 
-## Ainda em aberto
+### A tipografia
 
-- **Fonte.** Usa a do sistema. Uma tipografia embutida deixaria o resultado
-  idêntico em qualquer máquina, ao custo de ~100 KB no repositório.
-- **Ordenação.** Mantém a ordem que você escreveu. Ordenar por preço dentro de
-  cada seção é fácil, se quiser.
+Inter vem **embutida em base64** (`src/render/fonte.css`, 48 KB de woff2, subset
+latino, variável 100–900). Não é preciosismo: a fonte precisa estar embutida
+porque a exportação PNG do navegador embrulha a página num SVG, e SVG não busca
+arquivo externo — fonte referenciada por URL sairia sem estilo na imagem. De
+quebra, o catálogo fica idêntico em qualquer máquina, em vez de virar Segoe UI
+no Windows e outra coisa no celular.
+
+Dois detalhes que custaram:
+
+- **A fonte é carregada antes de paginar.** A paginação mede texto no DOM; medir
+  com a fonte de reserva daria altura errada e página estourada. Por isso
+  `palco.html` só publica `window.__gc` depois do `document.fonts.ready`, e o
+  estúdio espera a mesma promessa antes de gerar.
+- **`font-feature-settings: 'calt' 0`.** Ligadas, as alternativas contextuais da
+  Inter trocam o "x" entre dígitos pelo sinal de multiplicação, e
+  "Realme Note 60x" saía como "Note 60×". Em nome de modelo isso é erro.
+
+Emoji fica fora do subset de propósito: o `unicode-range` deixa os emojis caírem
+para a fonte do sistema, que é quem sabe desenhá-los.
+
+### A ordem dos produtos
+
+Fica **como você escreveu**, e isso é decisão, não omissão. A sua ordem carrega
+informação que uma ordenação automática destruiria: a lista de TVs sobe por
+polegada (32", 40", 43", 50"...), a de celulares agrupa por marca e progride por
+geração. Ordenar por preço embaralharia as duas.
 
 ## Testes
 
@@ -198,6 +221,8 @@ npm test
 — conta produtos, confere preços e cores caso a caso.
 
 `tests/estudio.test.mjs` abre o `index.html` num Chromium, gera o catálogo e
-verifica três coisas: que os 42 celulares cabem em **uma** página, que os 42
-produtos continuam desenhados (caber não pode virar cortar) e que **nenhuma
-linha vaza da página**. É o teste que pega regressão de CSS.
+verifica quatro coisas: que os 42 celulares cabem em **uma** página, que os 42
+produtos continuam desenhados (caber não pode virar cortar), que **nenhuma linha
+vaza da página** e que a **Inter embutida está mesmo em uso** — se cair na fonte
+de reserva, as medidas mudam e o catálogo sai diferente em cada máquina. É o
+teste que pega regressão de CSS.

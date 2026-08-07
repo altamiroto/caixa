@@ -28,6 +28,15 @@
   --espaco-linha: calc(10px * var(--escala));
   --raio: calc(14px * var(--escala));
 
+  /*
+   * Inter vem embutida em fonte.css. As famílias de emoji ficam depois: o
+   * unicode-range da Inter não cobre emoji, então cada caractere cai na fonte
+   * que sabe desenhá-lo.
+   */
+  --fonte-texto: 'Inter', 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji',
+    system-ui, sans-serif;
+  --fonte-titulo: var(--fonte-texto);
+
   position: relative;
   box-sizing: border-box;
   width: var(--largura);
@@ -38,8 +47,13 @@
   padding: var(--margem);
   background: var(--fundo);
   color: var(--tinta);
-  font-family: var(--fonte-texto, 'Inter', 'Segoe UI', system-ui, sans-serif);
-  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-family: var(--fonte-texto);
+  /*
+   * 'calt' 0 desliga as alternativas contextuais da Inter. Ligadas, ela troca
+   * o "x" entre dígitos pelo sinal de multiplicação: "Realme Note 60x" saía
+   * como "Note 60×". Em nome de modelo isso é erro, não refinamento.
+   */
+  font-feature-settings: 'tnum' 1, 'lnum' 1, 'calt' 0;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -99,7 +113,7 @@
 
 .cabecalho__titulo {
   margin: calc(6px * var(--escala-cabecalho)) 0 0;
-  font-family: var(--fonte-titulo, 'Inter', 'Segoe UI', system-ui, sans-serif);
+  font-family: var(--fonte-titulo);
   font-size: calc(62px * var(--escala-cabecalho));
   line-height: 1.02;
   font-weight: 900;

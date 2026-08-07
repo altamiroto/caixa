@@ -104,6 +104,18 @@ test('estúdio gera pré-visualização e exporta PNG em 4K', async (t) => {
   });
   assert.deepEqual(vazamentos, [], 'linhas fora da página');
 
+  // A fonte embutida precisa estar realmente em uso. Se cair na fonte de
+  // reserva, a paginação mede alturas erradas e o catálogo sai diferente em
+  // cada máquina — que é exatamente o que embutir a fonte deveria evitar.
+  const fonte = await pagina.evaluate(() => ({
+    carregada: document.fonts.check('900 62px Inter'),
+    aplicada: getComputedStyle(document.querySelector('.moldura .pagina')).fontFamily,
+    embutida: [...document.fonts].some((f) => f.family === 'Inter' && f.status === 'loaded'),
+  }));
+  assert.ok(fonte.carregada, 'Inter não carregou');
+  assert.ok(fonte.embutida, 'Inter não veio do arquivo embutido');
+  assert.match(fonte.aplicada, /^"?Inter"?,/, `família aplicada: ${fonte.aplicada}`);
+
   // Exportação: o PNG precisa sair com 2160 px de largura.
   const dimensoes = await pagina.evaluate(async () => {
     const { paraPng } = await import('./src/render/export.js');
