@@ -38,7 +38,7 @@ npx serve .        # ou: python3 -m http.server
 
 | Opção | Padrão | O que faz |
 |---|---|---|
-| `--tema` | `noite` | `noite`, `natal`, `rose`, `neon`, `limpo` |
+| `--tema` | `noite` | 17 temas; veja a seção *Os temas* |
 | `--saida` | `./saida` | Diretório de destino |
 | `--marca` | — | Assinatura no rodapé |
 | `--sobretitulo` | `Lista de produtos` | Linha acima do título |
@@ -47,6 +47,12 @@ npx serve .        # ou: python3 -m http.server
 | `--fundo-imagem` | — | Foto de fundo (jpg/png/webp), embutida em base64 |
 | `--veu` | do tema | Cor/gradiente por cima da foto |
 | `--paginas-max` | `1` | Teto de páginas por catálogo |
+| `--remover` | — | Palavras a tirar do nome, separadas por vírgula |
+| `--alinhar-nome` | `esquerda` | `esquerda`, `centro` ou `direita` |
+| `--alinhar-cor` | `centro` | idem |
+| `--alinhar-preco` | `centro` | idem |
+| `--margens` | `padrao` | `padrao` ou `stories` (reserva a área da interface) |
+| `--margem-topo` / `--margem-lateral` / `--margem-base` | do preset | Em px, base 1080×1920 |
 | `--html` | — | Grava também o HTML de cada página |
 
 ## Como funciona
@@ -73,6 +79,7 @@ src/
     template.js         Modelo -> HTML
     catalogo.css        A folha de estilo; tudo derivado de --escala
     fonte.css           Inter embutida em base64 (+ INTER-LICENSE.txt)
+    limpeza.js          Remove do nome as palavras que o usuário escolher
     export.js           PNG no navegador
   themes/temas.js       As paletas
 tools/
@@ -131,6 +138,15 @@ O mesmo código roda no navegador e no Playwright — os dois têm DOM.
 
 ### Os temas
 
+São 17, em quatro famílias:
+
+| Família | Temas |
+|---|---|
+| Escuros | `noite`, `neon`, `grafite`, `oceano`, `ultravioleta` |
+| Claros | `limpo`, `rose`, `menta`, `coral`, `verao` |
+| Clássicos | `marinho`, `esmeralda`, `vinho`, `sepia`, `luxo` |
+| Sazonais | `natal`, `blackfriday` |
+
 Um tema é um conjunto de variáveis CSS em `src/themes/temas.js`. Para criar
 outro, copie um objeto e troque as cores:
 
@@ -153,6 +169,33 @@ estúdio ainda tem um campo para trocar só o fundo sem criar tema.
 Duas tintas separadas de propósito: `--tinta` é a da página, `--linha-tinta` é a
 de dentro da linha. Temas com linha escura sobre fundo claro (o `natal`) precisam
 disso — sem separar, o texto some.
+
+**Toda paleta passa por teste de contraste** (`tests/temas.test.mjs`). Cada par
+que aparece na página é medido pela fórmula da WCAG, com o piso escolhido pelo
+tamanho real do elemento: 3.0 para preço e título, que são grandes, e 4.5 para
+selo, pílula, nome e faixa de seção. Gradientes são avaliados parada a parada e
+vale a pior. Não é zelo excessivo — o teste reprovou sete das paletas na
+primeira execução, incluindo o preço do `noite`, que estava em 2.77 e já tinha
+sido entregue.
+
+### Ajustes de apresentação
+
+Três opções que não mudam o que foi lido, só como aparece:
+
+- **`--remover`** tira palavras do nome. Serve para o que se repete em toda
+  linha e o título já diz: `--remover "Smart TV"` limpa as 14 linhas da lista de
+  TVs. Ignora acento e caixa, casa palavra inteira (`TV` não come o `TV` de
+  `TVS`), aceita frase (`Tomada/Carregador`) e costura o que sobra. Se remover
+  tudo, o nome original volta — linha sem identificação seria pior.
+- **`--alinhar-*`** controla cada coluna. O padrão é nome à esquerda, cor e
+  preço centralizados. Com nomes curtos a coluna de nome sobra e o texto fica
+  longe do preço; `--alinhar-nome direita` encosta os dois.
+- **`--margens stories`** reserva a faixa que o Instagram e o WhatsApp cobrem
+  com a própria interface — foto de perfil no topo, campo de resposta embaixo.
+  Custa ~30% da altura, e é a diferença entre o catálogo ser lido e sair
+  cortado. As margens são px absolutos, não multiplicados por `--escala`: o
+  recorte acontece em pixels da imagem final, então uma margem que encolhesse
+  junto com a tabela deixaria de proteger justamente nas listas maiores.
 
 ## Decisões tomadas
 

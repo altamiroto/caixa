@@ -12,7 +12,14 @@
   --altura: 1920px;
   --escala: 1;
 
-  --margem: calc(56px * var(--escala));
+  /*
+   * Margens em px absolutos, não multiplicados por --escala: o recorte do
+   * Stories acontece em pixels da imagem final, então uma margem que encolhe
+   * junto com a tabela deixaria de proteger justamente nas listas maiores.
+   */
+  --margem-topo: 56px;
+  --margem-lateral: 56px;
+  --margem-base: 56px;
   /* O cabeçalho tem escala própria: ver escalaCabecalho() em template.js. */
   --escala-cabecalho: var(--escala);
   /*
@@ -44,7 +51,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: var(--margem);
+  padding: var(--margem-topo) var(--margem-lateral) var(--margem-base);
   background: var(--fundo);
   color: var(--tinta);
   font-family: var(--fonte-texto);
@@ -325,6 +332,39 @@
   font-weight: 700;
   opacity: 0.72;
   letter-spacing: 0;
+}
+
+/* ------------------------------------------------------- alinhamento das colunas */
+
+/*
+ * O padrão é nome à esquerda, cor e preço centralizados. Numa lista de nomes
+ * curtos a coluna de nome sobra e o texto fica longe do preço — alinhar o nome
+ * à direita cola os dois. É escolha de quem monta o catálogo, não do código.
+ */
+.pagina[data-alinha-nome='centro'] .linha__nome,
+.pagina[data-alinha-nome='centro'] .rotulos > :first-child {
+  text-align: center;
+}
+
+.pagina[data-alinha-nome='direita'] .linha__nome,
+.pagina[data-alinha-nome='direita'] .rotulos > :first-child {
+  text-align: right;
+}
+
+.pagina[data-alinha-cor='esquerda'] .linha__cor {
+  text-align: left;
+}
+
+.pagina[data-alinha-cor='direita'] .linha__cor {
+  text-align: right;
+}
+
+.pagina[data-alinha-preco='esquerda'] .linha__preco {
+  text-align: left;
+}
+
+.pagina[data-alinha-preco='direita'] .linha__preco {
+  text-align: right;
 }
 
 /* ------------------------------------------------------------------ rodapé */

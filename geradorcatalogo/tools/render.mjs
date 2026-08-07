@@ -18,6 +18,14 @@
  *   --fundo-imagem <arquivo>  foto de fundo da página (jpg/png/webp)
  *   --veu <css>       cor/gradiente por cima da foto; o tema define um padrão
  *   --paginas-max <n> teto de páginas por catálogo            (padrão: 1)
+ *   --remover <lista> palavras a tirar do nome, separadas por vírgula
+ *                     ex.: --remover "Smart TV,LANÇAMENTO"
+ *   --alinhar-nome  <esquerda|centro|direita>  (padrão: esquerda)
+ *   --alinhar-cor   <esquerda|centro|direita>  (padrão: centro)
+ *   --alinhar-preco <esquerda|centro|direita>  (padrão: centro)
+ *   --margens <padrao|stories>  preset de margem; `stories` reserva a área
+ *                     que Instagram e WhatsApp cobrem com a interface
+ *   --margem-topo <px> / --margem-lateral <px> / --margem-base <px>
  *   --largura <px>    largura final; a altura sai de 16/9    (padrão: 2160)
  *   --html            também grava o HTML de cada página
  *
@@ -33,7 +41,7 @@ import { dirname, join, normalize } from 'node:path';
 import { chromium } from 'playwright';
 
 import { parseVarios } from '../src/parser/parse.js';
-import { LARGURA, ALTURA } from '../src/render/template.js';
+import { LARGURA, ALTURA, ALINHAMENTOS, MARGENS } from '../src/render/template.js';
 import { TEMA_PADRAO, TEMAS } from '../src/themes/temas.js';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,6 +65,9 @@ function lerArgumentos(argv) {
     fundoImagem: undefined,
     veu: undefined,
     paginasMax: undefined,
+    remover: '',
+    alinhar: {},
+    margens: {},
     largura: 2160,
     html: false,
   };
@@ -72,6 +83,14 @@ function lerArgumentos(argv) {
     else if (a === '--fundo-imagem') opcoes.fundoImagem = proximo();
     else if (a === '--veu') opcoes.veu = proximo();
     else if (a === '--paginas-max') opcoes.paginasMax = Number(proximo());
+    else if (a === '--remover') opcoes.remover = proximo();
+    else if (a === '--alinhar-nome') opcoes.alinhar.nome = proximo();
+    else if (a === '--alinhar-cor') opcoes.alinhar.cor = proximo();
+    else if (a === '--alinhar-preco') opcoes.alinhar.preco = proximo();
+    else if (a === '--margens') opcoes.margens.preset = proximo();
+    else if (a === '--margem-topo') opcoes.margens.topo = Number(proximo());
+    else if (a === '--margem-lateral') opcoes.margens.lateral = Number(proximo());
+    else if (a === '--margem-base') opcoes.margens.base = Number(proximo());
     else if (a === '--largura') opcoes.largura = Number(proximo());
     else if (a === '--html') opcoes.html = true;
     else if (a.startsWith('--')) throw new Error(`Opção desconhecida: ${a}`);
@@ -81,6 +100,15 @@ function lerArgumentos(argv) {
   if (!opcoes.entrada) throw new Error('Informe o arquivo de entrada.');
   if (!TEMAS[opcoes.tema]) {
     throw new Error(`Tema "${opcoes.tema}" não existe. Use: ${Object.keys(TEMAS).join(', ')}`);
+  }
+  // Avisa em vez de aceitar calado: um valor errado viraria o padrão silencioso.
+  for (const [coluna, valor] of Object.entries(opcoes.alinhar)) {
+    if (!ALINHAMENTOS.includes(valor)) {
+      throw new Error(`Alinhamento "${valor}" (${coluna}) inválido. Use: ${ALINHAMENTOS.join(', ')}`);
+    }
+  }
+  if (opcoes.margens.preset && !MARGENS[opcoes.margens.preset]) {
+    throw new Error(`Margem "${opcoes.margens.preset}" não existe. Use: ${Object.keys(MARGENS).join(', ')}`);
   }
   return opcoes;
 }
@@ -185,6 +213,9 @@ async function main() {
     escalaMax: opcoes.escalaMax,
     paginasMax: opcoes.paginasMax,
     veu: opcoes.veu,
+    remover: opcoes.remover,
+    alinhar: opcoes.alinhar,
+    margens: opcoes.margens,
     // A foto vai embutida em base64: o navegador não tem acesso ao disco.
     fundoImagem: opcoes.fundoImagem ? await comoDataUri(opcoes.fundoImagem) : undefined,
   };

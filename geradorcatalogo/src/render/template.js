@@ -7,6 +7,7 @@
 
 import { formatarValor } from '../parser/precos.js';
 import { varsCss } from '../themes/temas.js';
+import { removerTermos } from './limpeza.js';
 
 export const LARGURA = 1080;
 export const ALTURA = 1920;
@@ -19,6 +20,47 @@ export const ALTURA = 1920;
  */
 export function escalaCabecalho(escala) {
   return Math.min(1.15, Math.max(0.78, escala * 0.45 + 0.5));
+}
+
+/**
+ * Margens da página, em px do projeto (base 1080x1920).
+ *
+ * `stories` reserva a área que Instagram e WhatsApp cobrem com a própria
+ * interface: foto de perfil e nome no topo, campo de resposta embaixo. Sai
+ * caro em espaço — ~30% da altura — mas é a diferença entre o catálogo ser
+ * lido e sair cortado.
+ */
+export const MARGENS = {
+  padrao: { topo: 56, lateral: 56, base: 56 },
+  stories: { topo: 250, lateral: 72, base: 320 },
+};
+
+/** Resolve as margens a partir do preset e das sobrescritas pontuais. */
+export function normalizarMargens(margens = {}) {
+  const base = MARGENS[margens.preset] ?? MARGENS.padrao;
+  const limitar = (v, padrao) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 && n <= 600 ? n : padrao;
+  };
+  return {
+    topo: limitar(margens.topo, base.topo),
+    lateral: limitar(margens.lateral, base.lateral),
+    base: limitar(margens.base, base.base),
+  };
+}
+
+/** Alinhamentos aceitos por coluna, e o padrão de cada uma. */
+export const ALINHAMENTOS = ['esquerda', 'centro', 'direita'];
+export const ALINHAMENTO_PADRAO = { nome: 'esquerda', cor: 'centro', preco: 'centro' };
+
+/** Descarta valor inválido em vez de gerar um atributo que o CSS ignora calado. */
+export function normalizarAlinhamento(alinhar = {}) {
+  const saida = { ...ALINHAMENTO_PADRAO };
+  for (const coluna of Object.keys(ALINHAMENTO_PADRAO)) {
+    const valor = alinhar[coluna];
+    if (valor && ALINHAMENTOS.includes(valor)) saida[coluna] = valor;
+  }
+  return saida;
 }
 
 export function escapar(texto) {
@@ -80,7 +122,10 @@ export function htmlProduto(produto, colunas, opcoes = {}) {
   const obs = produto.observacao
     ? `<span class="linha__obs">${escapar(produto.observacao)}</span>`
     : '';
-  const nome = `<div class="linha__nome">${selo}${escapar(produto.nome)}${obs}</div>`;
+  // A remoção é aplicada no desenho, não na leitura: o modelo segue com o
+  // nome completo, e trocar a lista de palavras não exige reprocessar a lista.
+  const nomeLimpo = removerTermos(produto.nome, opcoes.remover) || produto.nome;
+  const nome = `<div class="linha__nome">${selo}${escapar(nomeLimpo)}${obs}</div>`;
 
   const cor = colunas.mostrarCor
     ? produto.cores.length
@@ -167,6 +212,7 @@ export function htmlRodape(opcoes, numero, total) {
  * @param {number} params.escala
  */
 export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, opcoes = {} }) {
+  const margens = normalizarMargens(opcoes.margens);
   const estilo = [
     varsCss(opcoes.tema, opcoes.varsExtras),
     `--escala:${escala}`,
@@ -175,6 +221,9 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     `--escala-cabecalho:${escalaCabecalho(escala).toFixed(4)}`,
     opcoes.fundo ? `--fundo:${opcoes.fundo}` : '',
     opcoes.veu ? `--foto-veu:${opcoes.veu}` : '',
+    `--margem-topo:${margens.topo}px`,
+    `--margem-lateral:${margens.lateral}px`,
+    `--margem-base:${margens.base}px`,
   ]
     .filter(Boolean)
     .join(';');
@@ -188,9 +237,14 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
       )}')"></div>`
     : '';
 
+  const alinhar = normalizarAlinhamento(opcoes.alinhar);
+
   return `<article class="pagina" style="${estilo}"
     data-cores="${colunas.mostrarCor ? 'sim' : 'nao'}"
     data-precos="${colunas.precos.length}"
+    data-alinha-nome="${alinhar.nome}"
+    data-alinha-cor="${alinhar.cor}"
+    data-alinha-preco="${alinhar.preco}"
     data-pagina="${numero}">
     ${foto}
     <div class="pagina__brilho"></div>

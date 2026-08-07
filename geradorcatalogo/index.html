@@ -90,6 +90,11 @@
         grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
+      .tripla {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
       button {
         padding: 10px 14px;
         border: 1px solid var(--ui-borda);
@@ -233,6 +238,40 @@ R$ 965 (Dinheiro)"></textarea>
       </div>
 
       <div>
+        <label for="remover">Remover palavras do nome</label>
+        <input id="remover" placeholder="Smart TV, LANÇAMENTO" />
+        <p class="ajuda">
+          Separadas por vírgula. Serve para tirar o que se repete em toda linha e o
+          título já diz.
+        </p>
+      </div>
+
+      <div>
+        <label>Alinhamento das colunas</label>
+        <div class="tripla">
+          <select id="al-nome" aria-label="Alinhamento do nome"></select>
+          <select id="al-cor" aria-label="Alinhamento da cor"></select>
+          <select id="al-preco" aria-label="Alinhamento do preço"></select>
+        </div>
+        <p class="ajuda">
+          Nome · Cor · Preço. Com nomes curtos, alinhar o nome à direita encosta
+          ele nos preços.
+        </p>
+      </div>
+
+      <div>
+        <label for="margens">Margem das bordas</label>
+        <select id="margens">
+          <option value="padrao">Padrão — 56 px</option>
+          <option value="stories">Stories — reserva topo e base</option>
+        </select>
+        <p class="ajuda">
+          No Stories, a interface do app cobre o topo e a base da imagem. O preset
+          reserva essa área para o catálogo não sair cortado.
+        </p>
+      </div>
+
+      <div>
         <label for="fundo">Cor de fundo (opcional)</label>
         <input id="fundo" placeholder="#101820  ou  linear-gradient(...)" />
       </div>
@@ -258,7 +297,7 @@ R$ 965 (Dinheiro)"></textarea>
     <script type="module">
       import { parseVarios } from './src/parser/parse.js';
       import { paginar } from './src/layout/paginate.js';
-      import { listarTemas, TEMA_PADRAO } from './src/themes/temas.js';
+      import { temasPorGrupo, TEMA_PADRAO } from './src/themes/temas.js';
       import { paraPng, baixar, apelido } from './src/render/export.js';
 
       const $ = (id) => document.getElementById(id);
@@ -271,9 +310,25 @@ R$ 965 (Dinheiro)"></textarea>
         document.fonts.load('700 25px Inter'),
       ]).then(() => document.fonts.ready);
 
-      for (const t of listarTemas()) {
-        const opt = new Option(t.nome, t.id, t.id === TEMA_PADRAO, t.id === TEMA_PADRAO);
-        $('tema').append(opt);
+      // 17 temas numa lista corrida confundem; o agrupamento vem do próprio módulo.
+      for (const { grupo, temas } of temasPorGrupo()) {
+        const bloco = document.createElement('optgroup');
+        bloco.label = grupo;
+        for (const t of temas) {
+          bloco.append(new Option(t.nome, t.id, t.id === TEMA_PADRAO, t.id === TEMA_PADRAO));
+        }
+        $('tema').append(bloco);
+      }
+
+      const ALINHAMENTOS = [
+        ['esquerda', 'Esquerda'],
+        ['centro', 'Centro'],
+        ['direita', 'Direita'],
+      ];
+      for (const [campo, padrao] of [['al-nome', 'esquerda'], ['al-cor', 'centro'], ['al-preco', 'centro']]) {
+        for (const [valor, rotulo] of ALINHAMENTOS) {
+          $(campo).append(new Option(rotulo, valor, valor === padrao, valor === padrao));
+        }
       }
 
       $('exemplo').addEventListener('change', async (e) => {
@@ -311,6 +366,13 @@ R$ 965 (Dinheiro)"></textarea>
           sobretitulo: $('sobretitulo').value.trim() || 'Lista de produtos',
           fundo: $('fundo').value.trim() || undefined,
           fundoImagem: fotoDeFundo,
+          remover: $('remover').value,
+          alinhar: {
+            nome: $('al-nome').value,
+            cor: $('al-cor').value,
+            preco: $('al-preco').value,
+          },
+          margens: { preset: $('margens').value },
         };
       }
 
