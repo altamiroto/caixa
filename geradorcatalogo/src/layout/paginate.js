@@ -20,9 +20,17 @@
 
 import { htmlPagina, htmlProduto, htmlSecao, definirColunas, ALTURA } from '../render/template.js';
 
-export const ESCALA_MIN = 0.55;
+/*
+ * Piso baixo de propósito: a lista de celulares (42 produtos + 3 seções) precisa
+ * caber numa página só, e isso exige comprimir bastante. O cabeçalho não
+ * acompanha essa compressão — ver `escalaCabecalho` em template.js —, então o
+ * catálogo fica denso sem ficar estranho.
+ */
+export const ESCALA_MIN = 0.3;
 export const ESCALA_MAX = 1.15;
 const MAX_PAGINAS = 40;
+/** Padrão: um catálogo = uma imagem. */
+export const PAGINAS_MAX_PADRAO = 1;
 const FOLGA_PX = 1; // margem de segurança contra arredondamento sub-pixel
 
 /** Achata o catálogo numa sequência linear de blocos renderizáveis. */
@@ -208,9 +216,15 @@ export function paginar({ documento, janela, catalogo, opcoes = {} }) {
     throw new Error('Conteúdo não cabe nem na menor escala — revise a lista.');
   }
 
+  // Tenta primeiro caber no teto pedido (por padrão, uma página só). Se nem a
+  // menor escala der conta, cede e usa o mínimo de páginas possível — melhor
+  // dividir do que devolver algo ilegível.
+  const tetoPedido = opcoes.paginasMax ?? PAGINAS_MAX_PADRAO;
+  const inicio = Math.max(tetoPedido, noMinimo.paginas.length);
+
   // Busca o menor N viável e, dentro dele, a maior escala.
   let melhor = null;
-  for (let n = noMinimo.paginas.length; n <= MAX_PAGINAS; n += 1) {
+  for (let n = inicio; n <= MAX_PAGINAS; n += 1) {
     let lo = escalaMin;
     let hi = escalaMax;
     let achou = null;

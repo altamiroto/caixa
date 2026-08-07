@@ -22,6 +22,7 @@ export const TEMAS = {
     vars: {
       '--fundo': 'linear-gradient(160deg, #0b1b3a 0%, #12294f 45%, #0a1730 100%)',
       '--fundo-brilho': 'radial-gradient(circle at 78% 12%, rgba(56,189,248,.20), transparent 55%)',
+      '--foto-veu': 'linear-gradient(180deg, rgba(8,20,42,.86) 0%, rgba(8,20,42,.74) 45%, rgba(8,20,42,.90) 100%)',
       '--tinta': '#f1f6ff',
       '--tinta-suave': '#9db4d8',
       '--destaque': '#38bdf8',
@@ -52,6 +53,7 @@ export const TEMAS = {
     vars: {
       '--fundo': 'linear-gradient(170deg, #f6f1e7 0%, #eee5d4 100%)',
       '--fundo-brilho': 'radial-gradient(circle at 20% 8%, rgba(200,30,45,.10), transparent 45%)',
+      '--foto-veu': 'linear-gradient(180deg, rgba(246,241,231,.90) 0%, rgba(238,229,212,.82) 50%, rgba(246,241,231,.92) 100%)',
       '--tinta': '#25321f',
       '--tinta-suave': '#6b7355',
       '--destaque': '#9f1239',
@@ -82,6 +84,7 @@ export const TEMAS = {
     vars: {
       '--fundo': 'linear-gradient(165deg, #fdf3f0 0%, #f7e6e2 55%, #f1dcdd 100%)',
       '--fundo-brilho': 'radial-gradient(circle at 85% 10%, rgba(224,122,130,.16), transparent 50%)',
+      '--foto-veu': 'linear-gradient(180deg, rgba(253,243,240,.90) 0%, rgba(247,230,226,.82) 50%, rgba(241,220,221,.92) 100%)',
       '--tinta': '#3c2b2b',
       '--tinta-suave': '#8b6f6f',
       '--destaque': '#b04a55',
@@ -112,6 +115,7 @@ export const TEMAS = {
     vars: {
       '--fundo': 'linear-gradient(155deg, #0a0a0f 0%, #14101f 50%, #090911 100%)',
       '--fundo-brilho': 'radial-gradient(circle at 25% 85%, rgba(168,85,247,.22), transparent 55%)',
+      '--foto-veu': 'linear-gradient(180deg, rgba(10,10,15,.88) 0%, rgba(20,16,31,.78) 50%, rgba(9,9,17,.92) 100%)',
       '--tinta': '#eaeaf2',
       '--tinta-suave': '#9a9ab0',
       '--destaque': '#a855f7',
@@ -142,6 +146,7 @@ export const TEMAS = {
     vars: {
       '--fundo': '#ffffff',
       '--fundo-brilho': 'radial-gradient(circle at 90% 5%, rgba(37,99,235,.08), transparent 45%)',
+      '--foto-veu': 'linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.86) 50%, rgba(255,255,255,.94) 100%)',
       '--tinta': '#111827',
       '--tinta-suave': '#6b7280',
       '--destaque': '#2563eb',

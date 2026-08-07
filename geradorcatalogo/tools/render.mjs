@@ -15,6 +15,9 @@
  *   --marca <texto>   assinatura no rodapé
  *   --sobretitulo <t> linha acima do título                  (padrão: "Lista de produtos")
  *   --escala-max <n>  teto do ajuste tipográfico             (padrão: 1.15)
+ *   --fundo-imagem <arquivo>  foto de fundo da página (jpg/png/webp)
+ *   --veu <css>       cor/gradiente por cima da foto; o tema define um padrão
+ *   --paginas-max <n> teto de páginas por catálogo            (padrão: 1)
  *   --largura <px>    largura final; a altura sai de 16/9    (padrão: 2160)
  *   --html            também grava o HTML de cada página
  *
@@ -51,6 +54,9 @@ function lerArgumentos(argv) {
     marca: '',
     sobretitulo: 'Lista de produtos',
     escalaMax: undefined,
+    fundoImagem: undefined,
+    veu: undefined,
+    paginasMax: undefined,
     largura: 2160,
     html: false,
   };
@@ -63,6 +69,9 @@ function lerArgumentos(argv) {
     else if (a === '--marca') opcoes.marca = proximo();
     else if (a === '--sobretitulo') opcoes.sobretitulo = proximo();
     else if (a === '--escala-max') opcoes.escalaMax = Number(proximo());
+    else if (a === '--fundo-imagem') opcoes.fundoImagem = proximo();
+    else if (a === '--veu') opcoes.veu = proximo();
+    else if (a === '--paginas-max') opcoes.paginasMax = Number(proximo());
     else if (a === '--largura') opcoes.largura = Number(proximo());
     else if (a === '--html') opcoes.html = true;
     else if (a.startsWith('--')) throw new Error(`Opção desconhecida: ${a}`);
@@ -95,6 +104,23 @@ function acharChromium() {
     if (existsSync(alvo)) return alvo;
   }
   return undefined;
+}
+
+const MIMES = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+};
+
+/** Lê uma imagem do disco e devolve como data URI, para embutir na página. */
+async function comoDataUri(caminho) {
+  const ext = caminho.slice(caminho.lastIndexOf('.')).toLowerCase();
+  const mime = MIMES[ext];
+  if (!mime) throw new Error(`Formato de imagem não suportado: ${ext || caminho}`);
+  const dados = await readFile(caminho);
+  return `data:${mime};base64,${dados.toString('base64')}`;
 }
 
 /** Nome de arquivo seguro a partir do título do catálogo. */
@@ -157,6 +183,10 @@ async function main() {
     marca: opcoes.marca,
     sobretitulo: opcoes.sobretitulo,
     escalaMax: opcoes.escalaMax,
+    paginasMax: opcoes.paginasMax,
+    veu: opcoes.veu,
+    // A foto vai embutida em base64: o navegador não tem acesso ao disco.
+    fundoImagem: opcoes.fundoImagem ? await comoDataUri(opcoes.fundoImagem) : undefined,
   };
 
   for (const [indice, catalogo] of catalogos.entries()) {

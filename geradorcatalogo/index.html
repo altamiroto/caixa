@@ -232,8 +232,17 @@ R$ 965 (Dinheiro)"></textarea>
       </div>
 
       <div>
-        <label for="fundo">Fundo personalizado (opcional)</label>
+        <label for="fundo">Cor de fundo (opcional)</label>
         <input id="fundo" placeholder="#101820  ou  linear-gradient(...)" />
+      </div>
+
+      <div>
+        <label for="foto">Foto de fundo (opcional)</label>
+        <input id="foto" type="file" accept="image/*" />
+        <p class="ajuda">
+          Compõe o fundo da página inteira. O tema aplica um véu por cima para o
+          texto continuar legível.
+        </p>
       </div>
 
       <button id="gerar">Gerar catálogo</button>
@@ -268,12 +277,32 @@ R$ 965 (Dinheiro)"></textarea>
 
       $('gerar').addEventListener('click', gerar);
 
+      // A foto fica em memória como data URI: o SVG da exportação não consegue
+      // buscar arquivo externo, então ela precisa estar embutida.
+      let fotoDeFundo;
+
+      $('foto').addEventListener('change', (e) => {
+        const arquivo = e.target.files?.[0];
+        if (!arquivo) {
+          fotoDeFundo = undefined;
+          gerar();
+          return;
+        }
+        const leitor = new FileReader();
+        leitor.onload = () => {
+          fotoDeFundo = leitor.result;
+          gerar();
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+
       function opcoesAtuais() {
         return {
           tema: $('tema').value,
           marca: $('marca').value.trim(),
           sobretitulo: $('sobretitulo').value.trim() || 'Lista de produtos',
           fundo: $('fundo').value.trim() || undefined,
+          fundoImagem: fotoDeFundo,
         };
       }
 

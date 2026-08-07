@@ -44,6 +44,9 @@ npx serve .        # ou: python3 -m http.server
 | `--sobretitulo` | `Lista de produtos` | Linha acima do título |
 | `--largura` | `2160` | Largura final; a altura sai de 16/9 |
 | `--escala-max` | `1.15` | Teto do ajuste tipográfico |
+| `--fundo-imagem` | — | Foto de fundo (jpg/png/webp), embutida em base64 |
+| `--veu` | do tema | Cor/gradiente por cima da foto |
+| `--paginas-max` | `1` | Teto de páginas por catálogo |
 | `--html` | — | Grava também o HTML de cada página |
 
 ## Como funciona
@@ -150,24 +153,40 @@ Duas tintas separadas de propósito: `--tinta` é a da página, `--linha-tinta` 
 de dentro da linha. Temas com linha escura sobre fundo claro (o `natal`) precisam
 disso — sem separar, o texto some.
 
-## Decisões ainda em aberto
+## Decisões tomadas
 
-Coisas que ficaram num padrão razoável, mas que valem sua opinião:
+1. **Preço nunca é arredondado.** `999,99` sai como `999,99`.
 
-1. **Centavos.** Hoje o preço sai exato: `999,99`. Seus catálogos manuais
-   arredondam para `999`. Arredondar por padrão?
-2. **Foto do produto.** Seus catálogos manuais terminam com uma ou duas fotos
-   grandes. Dá para fazer, mas alguém precisa fornecer as imagens — banco local
-   por modelo? Busca automática?
-3. **Fonte.** Está usando a fonte do sistema. Uma tipografia embutida deixaria o
-   resultado idêntico em qualquer máquina, ao custo de ~100 KB no repositório.
-4. **Produto com um preço só.** Fones e carregadores têm só o parcelado; a coluna
-   "Dinheiro" fica com um traço. Alternativa: quando o produto tem preço único,
-   ocupar as duas colunas.
-5. **Ordenação.** Hoje mantém a ordem que você escreveu. Ordenar por preço dentro
-   de cada seção é fácil, se quiser.
-6. **Divisão em páginas.** Hoje corta pelo que couber. Poderia forçar uma seção
-   por página (uma imagem para REALME, outra para XIAOMI).
+2. **A foto compõe o fundo da página**, não é imagem de produto. Cada tema traz
+   um véu (`--foto-veu`) aplicado por cima — sem ele o texto some sobre a foto.
+   No terminal é `--fundo-imagem`; no estúdio, um seletor de arquivo.
+
+3. **Produto com um preço só repete o valor** nas duas colunas, em vez de deixar
+   uma com um traço. Vale para fone, carregador e afins.
+
+4. **Um catálogo é sempre uma imagem só.** Os 42 celulares cabem numa página,
+   comprimindo a tabela até caber. Se quiser dividir, use `--paginas-max 2`.
+
+Duas coisas foram necessárias para o item 4 não ficar estranho:
+
+- **O cabeçalho tem escala própria** (`escalaCabecalho`, em `template.js`). A
+  tabela comprime até 0,36; o título para em 0,78. Sem isso o catálogo perderia
+  a chamada e viraria planilha.
+- **A sublinha "10x 76,00" só aparece quando o produto foge do parcelamento
+  dominante.** O cabeçalho da coluna já diz "em até 10x", então repetir em toda
+  linha é redundante — e custava ~11 px cada, o que na lista de celulares era
+  exatamente a diferença entre uma página e duas.
+
+Fonte, tamanho de coluna e preço têm **piso em pixels**: numa lista longa a
+escala cai muito, e sem piso o preço encolheria junto com a linha. A paginação
+já contabiliza a altura resultante do piso.
+
+## Ainda em aberto
+
+- **Fonte.** Usa a do sistema. Uma tipografia embutida deixaria o resultado
+  idêntico em qualquer máquina, ao custo de ~100 KB no repositório.
+- **Ordenação.** Mantém a ordem que você escreveu. Ordenar por preço dentro de
+  cada seção é fácil, se quiser.
 
 ## Testes
 
@@ -178,6 +197,7 @@ npm test
 `tests/parse.test.mjs` roda o parser contra as quatro listas reais de `samples/`
 — conta produtos, confere preços e cores caso a caso.
 
-`tests/estudio.test.mjs` abre o `index.html` num Chromium, gera o catálogo,
-verifica que **nenhuma linha vaza da página** e que o PNG sai em 2160×3840.
-É o teste que pega regressão de CSS.
+`tests/estudio.test.mjs` abre o `index.html` num Chromium, gera o catálogo e
+verifica três coisas: que os 42 celulares cabem em **uma** página, que os 42
+produtos continuam desenhados (caber não pode virar cortar) e que **nenhuma
+linha vaza da página**. É o teste que pega regressão de CSS.

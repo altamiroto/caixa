@@ -74,13 +74,19 @@ test('estúdio gera pré-visualização e exporta PNG em 4K', async (t) => {
 
   await pagina.waitForSelector('.moldura .pagina', { timeout: 15000 });
 
-  // 42 produtos não cabem numa página só: a paginação tem que agir.
+  // A lista maior (42 produtos + 3 seções) tem que caber numa imagem só —
+  // é o requisito explícito para o catálogo de celulares.
   const paginas = await pagina.locator('.moldura .pagina').count();
-  assert.equal(paginas, 2, 'esperava 2 páginas');
+  assert.equal(paginas, 1, 'a lista de celulares tem que caber em uma página');
 
   const resumo = await pagina.textContent('#resumo');
   assert.match(resumo, /42 produtos/);
   assert.match(resumo, /2160×3840/);
+
+  // Todos os 45 blocos (42 produtos + 3 seções) precisam estar desenhados:
+  // caber numa página não pode significar cortar produto.
+  const blocos = await pagina.locator('.moldura .pagina .linha').count();
+  assert.equal(blocos, 42, 'produto sumiu ao comprimir para uma página');
 
   // Nenhuma linha pode vazar da área útil da página.
   const vazamentos = await pagina.evaluate(() => {
