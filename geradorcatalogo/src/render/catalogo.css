@@ -1,0 +1,322 @@
+/**
+ * Folha de estilo do catálogo.
+ *
+ * A página é montada em 1080x1920 px CSS (9:16) e exportada com fator de
+ * escala 2, resultando em 2160x3840 — 4K vertical. Todas as medidas saem de
+ * `--escala`, que a paginação ajusta para o conteúdo caber sem sobra nem corte.
+ */
+
+.pagina {
+  /* Dimensões de projeto. Não alterar sem revisar tools/render.mjs. */
+  --largura: 1080px;
+  --altura: 1920px;
+  --escala: 1;
+
+  --margem: calc(56px * var(--escala));
+  --fonte-nome: calc(25px * var(--escala));
+  --fonte-preco: calc(38px * var(--escala));
+  --fonte-cor: calc(18px * var(--escala));
+  --fonte-obs: calc(16px * var(--escala));
+  --altura-linha: calc(1.22);
+  --espaco-linha: calc(10px * var(--escala));
+  --raio: calc(14px * var(--escala));
+
+  position: relative;
+  box-sizing: border-box;
+  width: var(--largura);
+  height: var(--altura);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--margem);
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--fonte-texto, 'Inter', 'Segoe UI', system-ui, sans-serif);
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pagina *,
+.pagina *::before,
+.pagina *::after {
+  box-sizing: border-box;
+}
+
+/* Camada de brilho/textura por cima do fundo, atrás do conteúdo. */
+.pagina__brilho {
+  position: absolute;
+  inset: 0;
+  background: var(--fundo-brilho, none);
+  pointer-events: none;
+}
+
+.pagina > *:not(.pagina__brilho) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------- cabeçalho */
+
+.cabecalho {
+  flex: 0 0 auto;
+  text-align: center;
+  padding-bottom: calc(18px * var(--escala));
+}
+
+.cabecalho__sobretitulo {
+  font-size: calc(19px * var(--escala));
+  letter-spacing: calc(4px * var(--escala));
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--tinta-suave);
+}
+
+.cabecalho__titulo {
+  margin: calc(6px * var(--escala)) 0 0;
+  font-family: var(--fonte-titulo, 'Inter', 'Segoe UI', system-ui, sans-serif);
+  font-size: calc(62px * var(--escala));
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: calc(-1px * var(--escala));
+  text-transform: uppercase;
+  color: var(--titulo);
+  text-wrap: balance;
+}
+
+.cabecalho__data {
+  display: inline-block;
+  margin-top: calc(12px * var(--escala));
+  padding: calc(5px * var(--escala)) calc(18px * var(--escala));
+  border-radius: 999px;
+  background: var(--selo-fundo);
+  color: var(--selo-tinta);
+  font-size: calc(19px * var(--escala));
+  font-weight: 800;
+  letter-spacing: calc(1px * var(--escala));
+}
+
+.cabecalho__subtitulo {
+  margin: calc(12px * var(--escala)) auto 0;
+  max-width: 88%;
+  font-size: calc(19px * var(--escala));
+  line-height: 1.35;
+  color: var(--tinta-suave);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- colunas/grid */
+
+/*
+ * Cada linha é um grid próprio, então colunas "auto" não se alinhariam entre
+ * linhas — as larguras de cor e preço são fixas de propósito.
+ */
+.grade {
+  --col-cor: calc(150px * var(--escala));
+  --col-preco: calc(196px * var(--escala));
+  --colunas: minmax(0, 1fr) var(--col-preco) var(--col-preco);
+  display: grid;
+  grid-template-columns: var(--colunas);
+  align-items: center;
+  gap: 0 calc(12px * var(--escala));
+}
+
+.pagina[data-cores='sim'] .grade {
+  --colunas: minmax(0, 1fr) var(--col-cor) var(--col-preco) var(--col-preco);
+}
+
+.pagina[data-precos='1'] .grade {
+  --colunas: minmax(0, 1fr) var(--col-preco);
+}
+
+.pagina[data-cores='sim'][data-precos='1'] .grade {
+  --colunas: minmax(0, 1fr) var(--col-cor) var(--col-preco);
+}
+
+.rotulos {
+  flex: 0 0 auto;
+  padding: 0 calc(10px * var(--escala)) calc(8px * var(--escala));
+  font-size: calc(16px * var(--escala));
+  font-weight: 800;
+  letter-spacing: calc(1px * var(--escala));
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.rotulos__preco {
+  text-align: center;
+  line-height: 1.15;
+}
+
+.rotulos__preco small {
+  display: block;
+  font-size: calc(12px * var(--escala));
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* ------------------------------------------------------------------- corpo */
+
+.corpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-linha);
+}
+
+.secao {
+  margin-top: calc(6px * var(--escala));
+  padding: calc(7px * var(--escala)) calc(20px * var(--escala));
+  border-radius: var(--raio);
+  background: var(--secao-fundo);
+  color: var(--secao-tinta);
+  font-size: calc(23px * var(--escala));
+  font-weight: 900;
+  letter-spacing: calc(2px * var(--escala));
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.secao:first-child {
+  margin-top: 0;
+}
+
+.secao__cont {
+  margin-left: calc(8px * var(--escala));
+  font-size: calc(15px * var(--escala));
+  font-weight: 700;
+  opacity: 0.8;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.linha {
+  padding: calc(9px * var(--escala)) calc(16px * var(--escala));
+  border-radius: var(--raio);
+  border: 1px solid var(--linha-borda);
+  background: var(--linha-a);
+  /* Tinta própria: em temas de linha escura ela não pode herdar a da página. */
+  color: var(--linha-tinta, var(--tinta));
+}
+
+.linha:nth-child(even) {
+  background: var(--linha-b);
+}
+
+.linha__nome {
+  min-width: 0;
+  font-size: var(--fonte-nome);
+  line-height: var(--altura-linha);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.linha__selo {
+  display: inline-block;
+  margin-right: calc(7px * var(--escala));
+  padding: calc(1px * var(--escala)) calc(8px * var(--escala));
+  border-radius: calc(6px * var(--escala));
+  background: var(--selo-fundo);
+  color: var(--selo-tinta);
+  font-size: calc(13px * var(--escala));
+  font-weight: 900;
+  letter-spacing: calc(0.5px * var(--escala));
+  vertical-align: calc(2px * var(--escala));
+}
+
+.linha__obs {
+  display: block;
+  margin-top: calc(2px * var(--escala));
+  font-size: var(--fonte-obs);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--linha-tinta-suave, var(--tinta-suave));
+}
+
+.linha__cor {
+  padding: calc(4px * var(--escala)) calc(10px * var(--escala));
+  border-radius: 999px;
+  background: var(--pilula-fundo);
+  color: var(--pilula-tinta);
+  font-size: var(--fonte-cor);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Sem cor declarada, a célula fica vazia — nada de pílula fantasma. */
+.linha__cor--vazio {
+  background: none;
+}
+
+.linha__preco {
+  padding: calc(5px * var(--escala)) calc(12px * var(--escala));
+  border-radius: calc(10px * var(--escala));
+  font-size: var(--fonte-preco);
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.linha__preco--parcelado {
+  background: var(--preco-parcelado-fundo);
+  color: var(--preco-parcelado-tinta);
+}
+
+.linha__preco--avista {
+  background: var(--preco-avista-fundo);
+  color: var(--preco-avista-tinta);
+}
+
+.linha__preco--vazio {
+  background: none;
+  color: var(--linha-tinta-suave, var(--tinta-suave));
+  opacity: 0.45;
+  font-size: calc(24px * var(--escala));
+}
+
+.linha__parcela {
+  display: block;
+  font-size: calc(13px * var(--escala));
+  font-weight: 700;
+  opacity: 0.72;
+  letter-spacing: 0;
+}
+
+/* ------------------------------------------------------------------ rodapé */
+
+.rodape {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(16px * var(--escala));
+  padding-top: calc(14px * var(--escala));
+  font-size: calc(17px * var(--escala));
+  font-weight: 700;
+  color: var(--rodape-tinta);
+}
+
+.rodape__marca {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rodape__pagina {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Área de medição: fora da tela, mesma largura da página real. */
+.medidor {
+  position: absolute;
+  top: 0;
+  left: -20000px;
+  visibility: hidden;
+  pointer-events: none;
+}

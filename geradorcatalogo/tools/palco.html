@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Palco de renderização</title>
+    <link rel="stylesheet" href="../src/render/catalogo.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Onde a página do catálogo é injetada antes do screenshot. -->
+    <div id="palco"></div>
+
+    <script type="module">
+      // O renderizador (tools/render.mjs) chama window.__gc.paginar de fora.
+      // Os imports abaixo são resolvidos pelo próprio navegador.
+      import { paginar } from '../src/layout/paginate.js';
+      window.__gc = { paginar };
+    </script>
+  </body>
+</html>
