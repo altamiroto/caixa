@@ -118,7 +118,20 @@ function htmlPreco(preco, classe, mostrarParcela) {
 
 /** HTML de uma linha de produto. */
 export function htmlProduto(produto, colunas, opcoes = {}) {
-  const selo = produto.lancamento ? `<span class="linha__selo">NOVO</span>` : '';
+  // Por padrão o catálogo reproduz a palavra como ela veio na lista
+  // ("LANÇAMENTO - Redmi 15C"). O selo destacado é opt-in, via `opcoes.selo`,
+  // porque inventar um rótulo que o autor não escreveu é decisão dele, não do
+  // código. Para sumir de vez existe `--remover`.
+  const marcadorBruto = produto.marcador || (produto.lancamento ? 'LANÇAMENTO' : '');
+  // `--remover` também alcança o marcador: quem pede para tirar "LANÇAMENTO"
+  // quer que ele suma da linha, não só do nome. Aqui vazio significa some —
+  // ao contrário do nome, que volta ao original para a linha não ficar anônima.
+  const marcador = removerTermos(marcadorBruto, opcoes.remover);
+  const selo = !marcador
+    ? ''
+    : opcoes.selo
+      ? `<span class="linha__selo">${escapar(opcoes.selo)}</span>`
+      : `<span class="linha__marcador">${escapar(marcador)}</span> `;
   const obs = produto.observacao
     ? `<span class="linha__obs">${escapar(produto.observacao)}</span>`
     : '';
@@ -160,20 +173,24 @@ export function htmlSecao(titulo, continuacao = false) {
 
 /** Cabeçalho da página. */
 export function htmlCabecalho(catalogo, opcoes = {}) {
-  const sobretitulo = opcoes.sobretitulo ?? 'Lista de produtos';
-  const data = catalogo.data
-    ? `<div class="cabecalho__data">${escapar(catalogo.data)}</div>`
-    : '';
-  const subtitulo =
-    opcoes.mostrarSubtitulo !== false && catalogo.subtitulo
-      ? `<div class="cabecalho__subtitulo">${escapar(catalogo.subtitulo)}</div>`
-      : '';
-  return `<header class="cabecalho">
-    <div class="cabecalho__sobretitulo">${escapar(sobretitulo)}</div>
-    <h1 class="cabecalho__titulo">${escapar(catalogo.titulo)}</h1>
-    ${data}
-    ${subtitulo}
-  </header>`;
+  // Cada linha do cabeçalho é substituível e some quando fica vazia. O que vem
+  // da lista é ponto de partida, não imposição.
+  const titulo = (opcoes.titulo ?? catalogo.titulo ?? '').trim();
+  const sobretitulo = (opcoes.sobretitulo ?? 'Lista de produtos').trim();
+  const dataTexto = opcoes.mostrarData === false ? '' : (opcoes.data ?? catalogo.data ?? '').trim();
+  const subtituloTexto =
+    opcoes.mostrarSubtitulo === false ? '' : (opcoes.subtitulo ?? catalogo.subtitulo ?? '').trim();
+
+  const partes = [
+    sobretitulo ? `<div class="cabecalho__sobretitulo">${escapar(sobretitulo)}</div>` : '',
+    titulo ? `<h1 class="cabecalho__titulo">${escapar(titulo)}</h1>` : '',
+    dataTexto ? `<div class="cabecalho__data">${escapar(dataTexto)}</div>` : '',
+    subtituloTexto ? `<div class="cabecalho__subtitulo">${escapar(subtituloTexto)}</div>` : '',
+  ].filter(Boolean);
+
+  // Cabeçalho totalmente vazio não deve reservar espaço nenhum.
+  if (!partes.length) return '<header class="cabecalho cabecalho--vazio"></header>';
+  return `<header class="cabecalho">${partes.join('')}</header>`;
 }
 
 /** Faixa com os nomes das colunas. */

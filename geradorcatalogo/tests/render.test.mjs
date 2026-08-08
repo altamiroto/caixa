@@ -18,6 +18,7 @@ import {
   ALINHAMENTO_PADRAO,
   htmlPagina,
   htmlProduto,
+  htmlCabecalho,
   definirColunas,
 } from '../src/render/template.js';
 
@@ -167,4 +168,82 @@ test('remover tudo do nome não deixa a linha sem identificação', () => {
   };
   const html = htmlProduto(produto, definirColunas(catalogoFalso), { remover: 'Smart TV' });
   assert.match(html, /Smart TV/, 'sobrando vazio, o nome original tem que voltar');
+});
+
+// ---------------------------------------------------------------- cabeçalho e selo
+
+const produtoLancamento = () => ({
+  nome: 'Redmi 15C 4/128GB',
+  cores: [],
+  observacao: '',
+  lancamento: true,
+  marcador: 'LANÇAMENTO',
+  emoji: '',
+  avista: { valor: 830, tipo: 'avista', parcelas: null, valorParcela: null, rotulo: '', bruto: '' },
+  parcelado: null,
+  bruto: [],
+  avisos: [],
+});
+
+test('por padrão o marcador sai como o autor escreveu', () => {
+  const html = htmlProduto(produtoLancamento(), definirColunas(catalogoFalso), {});
+  assert.match(html, /LANÇAMENTO/);
+  assert.doesNotMatch(html, /NOVO/, 'o código não pode inventar um rótulo');
+  assert.doesNotMatch(html, /linha__selo/, 'sem --selo não existe cápsula');
+});
+
+test('--selo troca o marcador por uma cápsula com o texto pedido', () => {
+  const html = htmlProduto(produtoLancamento(), definirColunas(catalogoFalso), { selo: 'NOVO' });
+  assert.match(html, /<span class="linha__selo">NOVO<\/span>/);
+  assert.doesNotMatch(html, /LANÇAMENTO/);
+});
+
+test('produto sem marcador não ganha nada', () => {
+  const p = { ...produtoLancamento(), lancamento: false, marcador: '' };
+  const html = htmlProduto(p, definirColunas(catalogoFalso), { selo: 'NOVO' });
+  assert.doesNotMatch(html, /linha__selo|linha__marcador/);
+});
+
+test('o marcador pode ser removido junto com as outras palavras', () => {
+  const html = htmlProduto(produtoLancamento(), definirColunas(catalogoFalso), {
+    remover: 'LANÇAMENTO',
+  });
+  assert.doesNotMatch(html, /LANÇAMENTO/);
+  assert.match(html, /Redmi 15C/);
+});
+
+test('título e data do cabeçalho podem ser substituídos', () => {
+  const semOpcoes = htmlCabecalho(catalogoFalso, {});
+  assert.match(semOpcoes, /Teste/);
+  assert.match(semOpcoes, /07\/08\/26/);
+
+  const trocado = htmlCabecalho(catalogoFalso, { titulo: 'CELULARES', data: 'HOJE' });
+  assert.match(trocado, /CELULARES/);
+  assert.match(trocado, /HOJE/);
+  assert.doesNotMatch(trocado, /Teste/);
+  assert.doesNotMatch(trocado, /07\/08\/26/);
+});
+
+test('cada linha do cabeçalho pode ser escondida', () => {
+  const semData = htmlCabecalho(catalogoFalso, { mostrarData: false });
+  assert.doesNotMatch(semData, /cabecalho__data/);
+  assert.match(semData, /Teste/, 'esconder a data não pode levar o título junto');
+
+  const semSobretitulo = htmlCabecalho(catalogoFalso, { sobretitulo: '' });
+  assert.doesNotMatch(semSobretitulo, /cabecalho__sobretitulo/);
+
+  const comSubtitulo = { ...catalogoFalso, subtitulo: 'Samsung, Xiaomi' };
+  assert.match(htmlCabecalho(comSubtitulo, {}), /Samsung, Xiaomi/);
+  assert.doesNotMatch(htmlCabecalho(comSubtitulo, { mostrarSubtitulo: false }), /Samsung, Xiaomi/);
+});
+
+test('cabeçalho totalmente vazio não reserva espaço', () => {
+  const html = htmlCabecalho(catalogoFalso, {
+    titulo: '',
+    sobretitulo: '',
+    mostrarData: false,
+    mostrarSubtitulo: false,
+  });
+  assert.match(html, /cabecalho--vazio/);
+  assert.doesNotMatch(html, /cabecalho__/);
 });

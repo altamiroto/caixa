@@ -10,10 +10,16 @@
  *   node tools/render.mjs samples/apple.txt --tema rose --marca "Minha Loja"
  *
  * Opções:
- *   --tema <id>       noite | natal | rose | neon | limpo   (padrão: noite)
+ *   --tema <id>       17 temas; veja o README                (padrão: noite)
  *   --saida <dir>     diretório de destino                   (padrão: ./saida)
  *   --marca <texto>   assinatura no rodapé
- *   --sobretitulo <t> linha acima do título                  (padrão: "Lista de produtos")
+ *   --sobretitulo <t> linha acima do título; vazio esconde  (padrão: "Lista de produtos")
+ *   --titulo <texto>  substitui o título lido da lista
+ *   --data <texto>    substitui a data lida da lista
+ *   --sem-data        esconde a data
+ *   --sem-subtitulo   esconde a linha de marcas
+ *   --selo <texto>    destaca o lançamento como cápsula com esse texto;
+ *                     sem a opção, a palavra sai como você escreveu
  *   --escala-max <n>  teto do ajuste tipográfico             (padrão: 1.15)
  *   --fundo-imagem <arquivo>  foto de fundo da página (jpg/png/webp)
  *   --veu <css>       cor/gradiente por cima da foto; o tema define um padrão
@@ -61,6 +67,11 @@ function lerArgumentos(argv) {
     saida: join(process.cwd(), 'saida'),
     marca: '',
     sobretitulo: 'Lista de produtos',
+    titulo: undefined,
+    data: undefined,
+    mostrarData: true,
+    mostrarSubtitulo: true,
+    selo: undefined,
     escalaMax: undefined,
     fundoImagem: undefined,
     veu: undefined,
@@ -79,6 +90,11 @@ function lerArgumentos(argv) {
     else if (a === '--saida') opcoes.saida = proximo();
     else if (a === '--marca') opcoes.marca = proximo();
     else if (a === '--sobretitulo') opcoes.sobretitulo = proximo();
+    else if (a === '--titulo') opcoes.titulo = proximo();
+    else if (a === '--data') opcoes.data = proximo();
+    else if (a === '--sem-data') opcoes.mostrarData = false;
+    else if (a === '--sem-subtitulo') opcoes.mostrarSubtitulo = false;
+    else if (a === '--selo') opcoes.selo = proximo();
     else if (a === '--escala-max') opcoes.escalaMax = Number(proximo());
     else if (a === '--fundo-imagem') opcoes.fundoImagem = proximo();
     else if (a === '--veu') opcoes.veu = proximo();
@@ -210,6 +226,11 @@ async function main() {
     tema: opcoes.tema,
     marca: opcoes.marca,
     sobretitulo: opcoes.sobretitulo,
+    titulo: opcoes.titulo,
+    data: opcoes.data,
+    mostrarData: opcoes.mostrarData,
+    mostrarSubtitulo: opcoes.mostrarSubtitulo,
+    selo: opcoes.selo,
     escalaMax: opcoes.escalaMax,
     paginasMax: opcoes.paginasMax,
     veu: opcoes.veu,

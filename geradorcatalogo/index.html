@@ -90,6 +90,26 @@
         grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
+      .marcadores {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .marcadores label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--ui-tinta);
+      }
+      .marcadores input {
+        width: auto;
+        accent-color: var(--ui-acento);
+      }
       .tripla {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -226,6 +246,11 @@ R$ 965 (Dinheiro)"></textarea>
         </div>
       </div>
 
+      <div>
+        <label for="titulo">Título</label>
+        <input id="titulo" placeholder="usa o da lista" />
+      </div>
+
       <div class="dupla">
         <div>
           <label for="sobretitulo">Linha de cima</label>
@@ -235,6 +260,22 @@ R$ 965 (Dinheiro)"></textarea>
           <label for="marca">Assinatura</label>
           <input id="marca" placeholder="@sualoja" />
         </div>
+      </div>
+
+      <div class="dupla">
+        <div>
+          <label for="data">Data</label>
+          <input id="data" placeholder="usa a da lista" />
+        </div>
+        <div>
+          <label for="selo">Selo de lançamento</label>
+          <input id="selo" placeholder="sai como você escreveu" />
+        </div>
+      </div>
+
+      <div class="marcadores">
+        <label><input type="checkbox" id="mostrar-data" checked /> Mostrar data</label>
+        <label><input type="checkbox" id="mostrar-subtitulo" checked /> Mostrar linha de marcas</label>
       </div>
 
       <div>
@@ -363,7 +404,12 @@ R$ 965 (Dinheiro)"></textarea>
         return {
           tema: $('tema').value,
           marca: $('marca').value.trim(),
-          sobretitulo: $('sobretitulo').value.trim() || 'Lista de produtos',
+          sobretitulo: $('sobretitulo').value,
+          titulo: $('titulo').value.trim() || undefined,
+          data: $('data').value.trim() || undefined,
+          mostrarData: $('mostrar-data').checked,
+          mostrarSubtitulo: $('mostrar-subtitulo').checked,
+          selo: $('selo').value.trim() || undefined,
           fundo: $('fundo').value.trim() || undefined,
           fundoImagem: fotoDeFundo,
           remover: $('remover').value,

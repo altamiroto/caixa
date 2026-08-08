@@ -110,6 +110,11 @@
   padding-bottom: calc(18px * var(--escala-cabecalho));
 }
 
+/* Cabeçalho sem nenhuma linha não pode ocupar altura. */
+.cabecalho--vazio {
+  padding: 0;
+}
+
 .cabecalho__sobretitulo {
   font-size: calc(19px * var(--escala-cabecalho));
   letter-spacing: calc(4px * var(--escala-cabecalho));
@@ -270,6 +275,15 @@
   font-weight: 900;
   letter-spacing: calc(0.5px * var(--escala));
   vertical-align: calc(2px * var(--escala));
+}
+
+/*
+ * A palavra de lançamento, do jeito que o autor escreveu. Só ganha realce de
+ * cor — virar cápsula é o comportamento de `--selo`, que é opcional.
+ */
+.linha__marcador {
+  color: var(--destaque);
+  font-weight: 900;
 }
 
 .linha__obs {

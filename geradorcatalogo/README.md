@@ -41,7 +41,11 @@ npx serve .        # ou: python3 -m http.server
 | `--tema` | `noite` | 17 temas; veja a seção *Os temas* |
 | `--saida` | `./saida` | Diretório de destino |
 | `--marca` | — | Assinatura no rodapé |
-| `--sobretitulo` | `Lista de produtos` | Linha acima do título |
+| `--sobretitulo` | `Lista de produtos` | Linha acima do título; vazio esconde |
+| `--titulo` | o da lista | Substitui o título |
+| `--data` | a da lista | Substitui a data |
+| `--sem-data` / `--sem-subtitulo` | — | Escondem essas linhas |
+| `--selo` | — | Destaca o lançamento como cápsula com esse texto |
 | `--largura` | `2160` | Largura final; a altura sai de 16/9 |
 | `--escala-max` | `1.15` | Teto do ajuste tipográfico |
 | `--fundo-imagem` | — | Foto de fundo (jpg/png/webp), embutida em base64 |
@@ -106,7 +110,7 @@ O que ele já aguenta, tirado das listas reais:
   `10 de R$ 278,00(R$ 2.780)`.
 - Erros de digitação reais: `R$ 1. 330`, `(Dinheiro88`, negrito fechado no
   lugar errado.
-- `LANÇAMENTO` vira um selo, não fica no nome.
+- `LANÇAMENTO` vira campo próprio (`marcador`), preservando a palavra escrita.
 - Observações como `(Bateria 92%, Todo Original)` viram campo próprio.
 
 O que ele não entende sai em `catalogo.avisos`, com nível e número da linha —
@@ -177,6 +181,25 @@ selo, pílula, nome e faixa de seção. Gradientes são avaliados parada a parad
 vale a pior. Não é zelo excessivo — o teste reprovou sete das paletas na
 primeira execução, incluindo o preço do `noite`, que estava em 2.77 e já tinha
 sido entregue.
+
+### O cabeçalho
+
+Cada linha é substituível e some quando fica vazia: `--titulo`, `--sobretitulo`,
+`--data`, `--sem-data`, `--sem-subtitulo`. O que o parser leu da lista é ponto
+de partida, não imposição. Cabeçalho totalmente vazio não reserva altura — a
+tabela ocupa a página inteira.
+
+Quando uma entrada gera vários catálogos (a lista da Apple gera dois),
+`--titulo` renomeia todos. Para títulos diferentes, rode um de cada vez.
+
+### O marcador de lançamento
+
+Por padrão o catálogo **reproduz a palavra como você escreveu** — quem digitou
+`LANÇAMENTO - Redmi 15C` vê `LANÇAMENTO Redmi 15C`, só com realce de cor.
+Inventar um rótulo que o autor não escreveu é decisão dele, não do código.
+
+- `--selo NOVO` troca a palavra por uma cápsula destacada com esse texto.
+- `--remover "LANÇAMENTO"` faz sumir de vez.
 
 ### Ajustes de apresentação
 

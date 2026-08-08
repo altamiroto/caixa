@@ -18,6 +18,7 @@
  * @property {string[]} cores      ["Preto", "Azul"]
  * @property {string} observacao   "(Bateria 92%, Todo Original)" -> "Bateria 92%, Todo Original"
  * @property {boolean} lancamento  true quando a linha trazia "LANÇAMENTO"
+ * @property {string} marcador     A palavra como veio ("LANÇAMENTO", "NOVO")
  * @property {string} emoji        Emoji que prefixava a linha
  * @property {Preco|null} avista
  * @property {Preco|null} parcelado
