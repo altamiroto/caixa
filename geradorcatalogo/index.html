@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gerador de Catálogos</title>
+    <link rel="stylesheet" href="src/render/fonte.css" />
+    <link rel="stylesheet" href="src/render/catalogo.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ui-fundo: #0f1116;
+        --ui-painel: #171a21;
+        --ui-borda: #272c37;
+        --ui-tinta: #e8ecf4;
+        --ui-suave: #98a2b6;
+        --ui-acento: #3b82f6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        display: grid;
+        grid-template-columns: minmax(340px, 400px) 1fr;
+        height: 100vh;
+        background: var(--ui-fundo);
+        color: var(--ui-tinta);
+        font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      @media (max-width: 860px) {
+        body {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+      }
+
+      .painel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid var(--ui-borda);
+        background: var(--ui-painel);
+      }
+      .painel h1 {
+        margin: 0;
+        font-size: 19px;
+        letter-spacing: -0.2px;
+      }
+      .painel p.ajuda {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--ui-suave);
+      }
+      textarea,
+      input,
+      select {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid var(--ui-borda);
+        border-radius: 8px;
+        background: #0d0f14;
+        color: var(--ui-tinta);
+        font: inherit;
+      }
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+        font: 13px/1.45 ui-monospace, monospace;
+      }
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: 2px solid var(--ui-acento);
+        outline-offset: 1px;
+      }
+      .dupla {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .tripla {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+      button {
+        padding: 10px 14px;
+        border: 1px solid var(--ui-borda);
+        border-radius: 8px;
+        background: var(--ui-acento);
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.secundario {
+        background: #232838;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .avisos {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 13px;
+      }
+      .avisos li {
+        padding: 7px 10px;
+        border-left: 3px solid;
+        border-radius: 0 6px 6px 0;
+        background: #0d0f14;
+      }
+      .avisos li[data-nivel='erro'] {
+        border-color: #ef4444;
+      }
+      .avisos li[data-nivel='atencao'] {
+        border-color: #f59e0b;
+      }
+      .avisos li[data-nivel='info'] {
+        border-color: #475569;
+        color: var(--ui-suave);
+      }
+      .resumo {
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+
+      /* --------------------------------------------------------- pré-visualização */
+      .palco {
+        padding: 24px;
+        overflow: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 24px;
+        background: #08090c;
+      }
+      .cartao {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      /* A página é sempre 1080x1920; encolhemos só para caber na tela. */
+      .moldura {
+        width: 360px;
+        height: 640px;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+      }
+      .moldura .pagina {
+        transform: scale(0.3333);
+        transform-origin: top left;
+      }
+      .cartao__acoes {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+      .cartao__acoes button {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+      .vazio {
+        margin: auto;
+        max-width: 340px;
+        text-align: center;
+        color: var(--ui-suave);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="painel">
+      <div>
+        <h1>Gerador de Catálogos</h1>
+        <p class="ajuda">
+          Cole a lista como você manda no WhatsApp. Várias mensagens de uma vez viram
+          catálogos separados.
+        </p>
+      </div>
+
+      <div>
+        <label for="entrada">Lista de produtos</label>
+        <textarea id="entrada" spellcheck="false" placeholder="📢 *SMARTPHONES (07/08/26)*
+
+📱 *Realme C71 4/128gb* - Branco
+R$ 1.089 (10x)
+R$ 965 (Dinheiro)"></textarea>
+      </div>
+
+      <div class="dupla">
+        <div>
+          <label for="tema">Tema</label>
+          <select id="tema"></select>
+        </div>
+        <div>
+          <label for="exemplo">Carregar exemplo</label>
+          <select id="exemplo">
+            <option value="">—</option>
+            <option value="smartphones.txt">Smartphones</option>
+            <option value="apple.txt">Apple</option>
+            <option value="tvs.txt">Smart TVs</option>
+            <option value="acessorios.txt">Acessórios</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dupla">
+        <div>
+          <label for="sobretitulo">Linha de cima</label>
+          <input id="sobretitulo" value="Lista de produtos" />
+        </div>
+        <div>
+          <label for="marca">Assinatura</label>
+          <input id="marca" placeholder="@sualoja" />
+        </div>
+      </div>
+
+      <div>
+        <label for="remover">Remover palavras do nome</label>
+        <input id="remover" placeholder="Smart TV, LANÇAMENTO" />
+        <p class="ajuda">
+          Separadas por vírgula. Serve para tirar o que se repete em toda linha e o
+          título já diz.
+        </p>
+      </div>
+
+      <div>
+        <label>Alinhamento das colunas</label>
+        <div class="tripla">
+          <select id="al-nome" aria-label="Alinhamento do nome"></select>
+          <select id="al-cor" aria-label="Alinhamento da cor"></select>
+          <select id="al-preco" aria-label="Alinhamento do preço"></select>
+        </div>
+        <p class="ajuda">
+          Nome · Cor · Preço. Com nomes curtos, alinhar o nome à direita encosta
+          ele nos preços.
+        </p>
+      </div>
+
+      <div>
+        <label for="margens">Margem das bordas</label>
+        <select id="margens">
+          <option value="padrao">Padrão — 56 px</option>
+          <option value="stories">Stories — reserva topo e base</option>
+        </select>
+        <p class="ajuda">
+          No Stories, a interface do app cobre o topo e a base da imagem. O preset
+          reserva essa área para o catálogo não sair cortado.
+        </p>
+      </div>
+
+      <div>
+        <label for="fundo">Cor de fundo (opcional)</label>
+        <input id="fundo" placeholder="#101820  ou  linear-gradient(...)" />
+      </div>
+
+      <div>
+        <label for="foto">Foto de fundo (opcional)</label>
+        <input id="foto" type="file" accept="image/*" />
+        <p class="ajuda">
+          Compõe o fundo da página inteira. O tema aplica um véu por cima para o
+          texto continuar legível.
+        </p>
+      </div>
+
+      <button id="gerar">Gerar catálogo</button>
+      <p class="resumo" id="resumo"></p>
+      <ul class="avisos" id="avisos"></ul>
+    </section>
+
+    <main class="palco" id="palco">
+      <p class="vazio">Cole uma lista à esquerda e clique em <strong>Gerar catálogo</strong>.</p>
+    </main>
+
+    <script type="module">
+      import { parseVarios } from './src/parser/parse.js';
+      import { paginar } from './src/layout/paginate.js';
+      import { temasPorGrupo, TEMA_PADRAO } from './src/themes/temas.js';
+      import { paraPng, baixar, apelido } from './src/render/export.js';
+
+      const $ = (id) => document.getElementById(id);
+      const palco = $('palco');
+
+      // A paginação mede texto no DOM: medir com a fonte de reserva daria
+      // altura errada. Tudo que gera catálogo espera por esta promessa.
+      const fontesProntas = Promise.all([
+        document.fonts.load('900 62px Inter'),
+        document.fonts.load('700 25px Inter'),
+      ]).then(() => document.fonts.ready);
+
+      // 17 temas numa lista corrida confundem; o agrupamento vem do próprio módulo.
+      for (const { grupo, temas } of temasPorGrupo()) {
+        const bloco = document.createElement('optgroup');
+        bloco.label = grupo;
+        for (const t of temas) {
+          bloco.append(new Option(t.nome, t.id, t.id === TEMA_PADRAO, t.id === TEMA_PADRAO));
+        }
+        $('tema').append(bloco);
+      }
+
+      const ALINHAMENTOS = [
+        ['esquerda', 'Esquerda'],
+        ['centro', 'Centro'],
+        ['direita', 'Direita'],
+      ];
+      for (const [campo, padrao] of [['al-nome', 'esquerda'], ['al-cor', 'centro'], ['al-preco', 'centro']]) {
+        for (const [valor, rotulo] of ALINHAMENTOS) {
+          $(campo).append(new Option(rotulo, valor, valor === padrao, valor === padrao));
+        }
+      }
+
+      $('exemplo').addEventListener('change', async (e) => {
+        if (!e.target.value) return;
+        const r = await fetch(`./samples/${e.target.value}`);
+        $('entrada').value = await r.text();
+        gerar();
+      });
+
+      $('gerar').addEventListener('click', gerar);
+
+      // A foto fica em memória como data URI: o SVG da exportação não consegue
+      // buscar arquivo externo, então ela precisa estar embutida.
+      let fotoDeFundo;
+
+      $('foto').addEventListener('change', (e) => {
+        const arquivo = e.target.files?.[0];
+        if (!arquivo) {
+          fotoDeFundo = undefined;
+          gerar();
+          return;
+        }
+        const leitor = new FileReader();
+        leitor.onload = () => {
+          fotoDeFundo = leitor.result;
+          gerar();
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+
+      function opcoesAtuais() {
+        return {
+          tema: $('tema').value,
+          marca: $('marca').value.trim(),
+          sobretitulo: $('sobretitulo').value.trim() || 'Lista de produtos',
+          fundo: $('fundo').value.trim() || undefined,
+          fundoImagem: fotoDeFundo,
+          remover: $('remover').value,
+          alinhar: {
+            nome: $('al-nome').value,
+            cor: $('al-cor').value,
+            preco: $('al-preco').value,
+          },
+          margens: { preset: $('margens').value },
+        };
+      }
+
+      async function gerar() {
+        await fontesProntas;
+        const texto = $('entrada').value;
+        palco.innerHTML = '';
+        $('avisos').innerHTML = '';
+        $('resumo').textContent = '';
+
+        let catalogos;
+        try {
+          catalogos = parseVarios(texto);
+        } catch (erro) {
+          mostrarAvisos([{ nivel: 'erro', mensagem: erro.message }]);
+          return;
+        }
+
+        if (!catalogos.length) {
+          palco.innerHTML = '<p class="vazio">Nada reconhecido nessa lista.</p>';
+          return;
+        }
+
+        const opcoes = opcoesAtuais();
+        const avisos = [];
+        let totalPaginas = 0;
+        let totalProdutos = 0;
+
+        for (const catalogo of catalogos) {
+          let resultado;
+          try {
+            resultado = paginar({ documento: document, janela: window, catalogo, opcoes });
+          } catch (erro) {
+            avisos.push({ nivel: 'erro', mensagem: `${catalogo.titulo}: ${erro.message}` });
+            continue;
+          }
+          totalPaginas += resultado.paginas.length;
+          totalProdutos += catalogo.resumo.totalProdutos;
+          avisos.push(...catalogo.avisos);
+
+          resultado.paginas.forEach((p, i) => {
+            palco.append(montarCartao(catalogo, p, i, resultado.paginas.length));
+          });
+        }
+
+        $('resumo').textContent =
+          `${catalogos.length} catálogo(s), ${totalProdutos} produtos, ${totalPaginas} página(s) · 2160×3840`;
+        mostrarAvisos(avisos);
+      }
+
+      function montarCartao(catalogo, pagina, indice, total) {
+        const cartao = document.createElement('div');
+        cartao.className = 'cartao';
+
+        const moldura = document.createElement('div');
+        moldura.className = 'moldura';
+        moldura.innerHTML = pagina.html;
+
+        const acoes = document.createElement('div');
+        acoes.className = 'cartao__acoes';
+        const rotulo = document.createElement('span');
+        rotulo.textContent = total > 1 ? `Página ${indice + 1} de ${total}` : 'Página única';
+
+        const botao = document.createElement('button');
+        botao.className = 'secundario';
+        botao.textContent = 'Baixar PNG';
+        botao.addEventListener('click', async () => {
+          botao.disabled = true;
+          botao.textContent = 'Gerando…';
+          try {
+            const alvo = moldura.querySelector('.pagina');
+            // O preview está reduzido; a exportação usa a página em tamanho real.
+            alvo.style.transform = 'none';
+            const blob = await paraPng(alvo);
+            alvo.style.transform = '';
+            const sufixo = total > 1 ? `-${String(indice + 1).padStart(2, '0')}` : '';
+            baixar(blob, `${apelido(catalogo.titulo)}${sufixo}.png`);
+            botao.textContent = 'Baixar PNG';
+          } catch (erro) {
+            botao.textContent = 'Falhou';
+            mostrarAvisos([{ nivel: 'erro', mensagem: erro.message }]);
+          } finally {
+            botao.disabled = false;
+          }
+        });
+
+        acoes.append(rotulo, botao);
+        cartao.append(moldura, acoes);
+        return cartao;
+      }
+
+      function mostrarAvisos(lista) {
+        const ul = $('avisos');
+        const relevantes = lista.filter((a) => a.nivel !== 'info');
+        for (const a of relevantes.slice(0, 25)) {
+          const li = document.createElement('li');
+          li.dataset.nivel = a.nivel;
+          li.textContent = a.linha ? `Linha ${a.linha}: ${a.mensagem}` : a.mensagem;
+          ul.append(li);
+        }
+      }
+    </script>
+  </body>
+</html>
