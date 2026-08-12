@@ -1677,7 +1677,13 @@
         <div>
           <div class="ia-prompt-row">
             <span class="ia-label" style="margin-bottom:0;">Prompt da IA</span>
-            <button class="ia-btn-restaurar" id="ia-restaurar">↺ Restaurar</button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <select id="ia-provider" class="ia-select" style="font-size:11px; padding:5px 8px;" title="Qual IA processa a lista">
+                <option value="groq">🟢 Groq (padrão)</option>
+                <option value="deepseek">🧪 DeepSeek (teste)</option>
+              </select>
+              <button class="ia-btn-restaurar" id="ia-restaurar">↺ Restaurar</button>
+            </div>
           </div>
           <textarea class="ia-prompt-ta" id="ia-prompt"></textarea>
         </div>
@@ -2270,8 +2276,38 @@
     // ════════════════════════
     // BUSCA EM LOTE POR IA
     // ════════════════════════
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v3';
-    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em processar listas de produtos.\nAnalise a lista bruta e retorne um array de objetos JSON.\nPara cada produto encontrado, extraia:\n- \"original\": a linha original completa exatamente como o usuário colou (com cor, preço, etc).\n- \"busca\": o nome limpo do produto (remova preço, cor e marketing, mantendo apenas marca, modelo, memória e conectividade).\n\nRetorne APENAS JSON válido, sem markdown.\n\nExemplo de saída:\n[\n  {\"original\": \"Motorola Moto G15 256gb 4G - Bege - 650\", \"busca\": \"Motorola Moto G15 256gb 4G\"},\n  {\"original\": \"Realme Note 60 4/256gb Verde\", \"busca\": \"Realme Note 60 4/256gb\"}\n]";
+    // v4: tira a instrução de "um objeto por cor" (isso inflava MUITO a
+    // saída — dezenas de objetos JSON completos repetidos). Agora a IA só
+    // identifica as cores da linha (array "cores") e o JavaScript
+    // (expandirCoresDaLista) multiplica em cards separados, de graça.
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v4';
+    const IA_PROMPT_DEFAULT = `Você processa listas de produtos eletrônicos (catálogos de preço do WhatsApp ou listas de estoque físico) e devolve um array JSON.
+
+IGNORE linhas que são só: quantidade solta ("6", "6\t+"), título/cabeçalho de seção (*SAMSUNG*, 📢 Lista Exclusiva), data solta, preço isolado, saudação ou aviso sem produto.
+
+CORRIJA typos óbvios antes de gerar "busca": XAIOM/XAOMI/XAIOMI → Xiaomi, ZUL → Azul, "1286GB" → "128GB".
+
+Para cada produto real, extraia:
+- "original": a linha como veio, limpa (sem emoji, sem *marcação*, sem crase).
+- "busca": nome padronizado para busca — marca + modelo (com Pro/Max/Plus/Ultra/FE se houver) + memória no formato "8/256gb" ou "256gb" + conectividade (4G/5G, só se mencionada). NUNCA inclua cor, preço, bateria, condição ou specs de marketing (HDR, Alexa, Gaming Hub, polegadas de TV etc).
+- "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Titanium/Natural/Desert/Storm Titanium→Cinza. Se a linha citar 2+ cores ("Preto/Branco", "Preto | Verde"), liste todas separadas. Se não houver cor identificável, use [].
+
+Se o mesmo produto (mesma "busca") aparecer em seções diferentes (ex.: varejo e atacado), inclua apenas uma vez — priorize a ocorrência com mais informação.
+
+Retorne APENAS o array JSON válido, sem markdown, sem texto antes ou depois.
+
+Exemplo de entrada:
+📱 Redmi Note 14 Pro 5G 8/256GB - Preto - R$ 1.785
+📱 Samsung Galaxy A36 5G 8/256gb - Preto/Branco
+XAIOM Redmi Note 15 8/256GB azul
+6\t+
+
+Exemplo de saída:
+[
+  {"original":"Redmi Note 14 Pro 5G 8/256GB","busca":"Redmi Note 14 Pro 5G 8/256gb","cores":["Preto"]},
+  {"original":"Samsung Galaxy A36 5G 8/256gb","busca":"Samsung Galaxy A36 5G 8/256gb","cores":["Preto","Branco"]},
+  {"original":"Redmi Note 15 8/256GB","busca":"Xiaomi Redmi Note 15 8/256gb","cores":["Azul"]}
+]`;
 
     let _iaResultados = [];
 
@@ -3012,6 +3048,14 @@
       localStorage.setItem(IA_PROMPT_KEY, this.value);
     });
 
+    // Provedor de IA: Groq é o padrão; DeepSeek fica disponível só pra
+    // quem quiser testar/comparar. A escolha fica salva no navegador.
+    const IA_PROVIDER_KEY = 'jeta_ia_provider_v1';
+    document.getElementById('ia-provider').value = localStorage.getItem(IA_PROVIDER_KEY) || 'groq';
+    document.getElementById('ia-provider').addEventListener('change', function () {
+      localStorage.setItem(IA_PROVIDER_KEY, this.value);
+    });
+
     document.getElementById('ia-restaurar').addEventListener('click', function () {
       document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT;
       localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT);
@@ -3175,7 +3219,7 @@
 
       const u = _debugIA.usage;
       const resumoTokens = u
-        ? '🔢 Entrada: <b>' + (u.prompt_tokens ?? '?') + '</b>' +
+        ? '🤖 Provedor: <b>' + _debugIA.provider + '</b><br>🔢 Entrada: <b>' + (u.prompt_tokens ?? '?') + '</b>' +
           ' &nbsp;·&nbsp; Saída: <b>' + (u.completion_tokens ?? '?') + '</b>' +
           ' &nbsp;·&nbsp; Total: <b>' + (u.total_tokens ?? '?') + '</b>' +
           (u.completion_tokens_details ? '<br><span style="color:#888;">detalhes de saída: ' + JSON.stringify(u.completion_tokens_details) + '</span>' : '') +
@@ -3192,8 +3236,42 @@
       box.style.display = 'block';
     }
 
-    async function chamarGroq(system, user) {
-      const corpoRequisicao = { systemPrompt: system, messages: user };
+    // Recebe o array cru que a IA devolveu (um objeto por LINHA da lista,
+    // com "cores": [...]) e multiplica em uma entrada por cor — trabalho
+    // mecânico que não precisa de IA nenhuma, é de graça e instantâneo.
+    // Também descarta duplicatas (mesma busca + mesma cor).
+    function expandirCoresDaLista(itens) {
+      const vistos = new Set();
+      const expandido = [];
+      itens.forEach(function (itemRaw) {
+        if (typeof itemRaw === 'string') {
+          const chave = itemRaw.trim().toLowerCase();
+          if (chave && !vistos.has(chave)) { vistos.add(chave); expandido.push({ original: itemRaw, busca: itemRaw }); }
+          return;
+        }
+        const busca = itemRaw.busca || itemRaw.original || 'Produto';
+        const originalBase = itemRaw.original || busca;
+        let cores = Array.isArray(itemRaw.cores) ? itemRaw.cores.filter(Boolean)
+          : (itemRaw.cor ? [itemRaw.cor] : []); // "cor" (string) = compatibilidade com prompts antigos/customizados
+        if (!cores.length) cores = [null];
+
+        cores.forEach(function (cor) {
+          const original = cor ? (busca + ' - ' + cor) : originalBase;
+          const chave = (busca + '::' + (cor || '')).toLowerCase();
+          if (vistos.has(chave)) return;
+          vistos.add(chave);
+          expandido.push({ original: original, busca: busca });
+        });
+      });
+      return expandido;
+    }
+
+    // Endpoint continua em /api/groq (não mexe), mas agora aceita "provider"
+    // pra escolher o modelo por trás — Groq é o padrão, DeepSeek é opção de
+    // teste selecionável no dropdown ao lado do prompt.
+    async function chamarIA(system, user) {
+      const provider = document.getElementById('ia-provider').value || 'groq';
+      const corpoRequisicao = { systemPrompt: system, messages: user, provider: provider };
       const inicio = Date.now();
 
       const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
@@ -3209,16 +3287,17 @@
       _debugIA = {
         horario: new Date().toLocaleTimeString('pt-BR'),
         duracaoMs: Date.now() - inicio,
+        provider: provider,
         requisicao: corpoRequisicao,
         resposta: d !== null ? d : textoResp,
         usage: (d && d.usage) ? d.usage : null
       };
       renderizarDebugIA();
 
-      if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
+      if (!resp.ok) throw new Error('IA (' + provider + ') HTTP ' + resp.status);
       if (d && d.choices && d.choices[0] && d.choices[0].message)
         return d.choices[0].message.content.trim();
-      throw new Error('Resposta inesperada do Groq');
+      throw new Error('Resposta inesperada da IA (' + provider + ')');
     }
 
     // "Consultar Lista" e "Balanço" eram duas funções quase idênticas (as
@@ -3247,12 +3326,14 @@
         const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         localStorage.setItem(IA_PROMPT_KEY, prompt);
 
-        const resposta = await chamarGroq(
+        const resposta = await chamarIA(
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
           prompt + '\n\nLista:\n' + raw
         );
-        const itens = JSON.parse(resposta.replace(/```json|```/g, '').trim());
-        if (!Array.isArray(itens) || !itens.length) throw new Error('IA não retornou lista válida.');
+        const itensBrutos = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        if (!Array.isArray(itensBrutos) || !itensBrutos.length) throw new Error('IA não retornou lista válida.');
+        const itens = expandirCoresDaLista(itensBrutos);
+        if (!itens.length) throw new Error('Nenhum produto identificado na lista.');
 
         document.getElementById('ia-passo1').style.display = 'none';
         document.getElementById('ia-passo2').style.display = 'flex';
@@ -3284,9 +3365,10 @@
         const idsListados = new Set();
 
         for (var i = 0; i < itens.length; i++) {
+          // itens já vem normalizado por expandirCoresDaLista: {original, busca}
           let itemRaw = itens[i];
-          let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto");
-          let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
+          let nomeOriginal = itemRaw.original || itemRaw.busca || "Produto";
+          let nomeBusca = itemRaw.busca || itemRaw.original || "Produto";
 
           status.textContent = '(' + (i + 1) + '/' + itens.length + ') ' + nomeOriginal.substring(0, 45) + '…';
           prog.style.width = (40 + Math.round(((i + 1) / itens.length) * 60)) + '%';
