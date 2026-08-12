@@ -2294,12 +2294,19 @@
       return [...new Set(achadas)].sort().join('+');
     }
 
-    function chaveAprendizado(label) {
-      label = (label || '').trim();
-      if (!label) return '';
-      const toks = tokensModelo(label);
-      const base = toks.length ? toks.slice().sort().join('|') : normStr(label);
-      const cor = extrairCorParaChave(label);
+    // "labelBusca" é o texto usado pra achar candidatos (o campo "busca" que
+    // a IA gera de propósito SEM cor, pra buscar mais largo no catálogo).
+    // "labelOriginal" é a linha da lista como o usuário colou, COM cor — é
+    // dela que a cor da chave é extraída. Sem separar os dois, duas cores
+    // do mesmo modelo geram a mesma chave (o "busca" delas é idêntico) e
+    // ensinar/excluir numa cor afetaria a outra por engano.
+    function chaveAprendizado(labelBusca, labelOriginal) {
+      labelBusca = (labelBusca || '').trim();
+      if (!labelBusca) return '';
+      const toks = tokensModelo(labelBusca);
+      const base = toks.length ? toks.slice().sort().join('|') : normStr(labelBusca);
+      const fonteCor = (labelOriginal || '').trim() || labelBusca;
+      const cor = extrairCorParaChave(fonteCor);
       return cor ? base + '::' + cor : base;
     }
 
@@ -2406,11 +2413,13 @@
         : '🔗 Planilha configurada — sincronizando…';
     }
 
-    // Registra que "label" corresponde ao produto do sistema `produto`.
+    // Registra que o item da lista corresponde ao produto do sistema
+    // `produto`. labelOriginal (com cor) é o que decide a chave; labelBusca
+    // é só o texto mostrado como "exemplo" quando não há original.
     // Atualiza a cópia local na hora (feedback imediato) e propaga para a
     // planilha compartilhada em segundo plano.
-    function ensinarAlias(label, produto) {
-      const key = chaveAprendizado(label);
+    function ensinarAlias(labelBusca, labelOriginal, produto) {
+      const key = chaveAprendizado(labelBusca, labelOriginal);
       if (!key || !produto || !produto.id) return;
       const map = carregarAliases();
       const atual = map[key] || {};
@@ -2418,7 +2427,7 @@
       const entrada = {
         id: produto.id,
         nome: produto.nome,
-        exemplo: (label || '').trim(),
+        exemplo: (labelOriginal || labelBusca || '').trim(),
         aprendidoEm: new Date().toISOString(),
         // preserva exclusões já feitas para essa chave (ex.: "nunca sugira X")
         excluidos: excluidosAtuais.filter(x => String(x) !== String(produto.id))
@@ -2461,8 +2470,8 @@
       _enviarAoSheet({ action: 'delete', key: key });
     }
 
-    function buscarAlias(label) {
-      const key = chaveAprendizado(label);
+    function buscarAlias(labelBusca, labelOriginal) {
+      const key = chaveAprendizado(labelBusca, labelOriginal);
       if (!key) return null;
       const map = carregarAliases();
       return map[key] || null;
@@ -2820,7 +2829,8 @@
 
     async function buscarVinculosDoItem(item) {
       const label = item.label || item.sysname || '';
-      const alias = buscarAlias(label);
+      const labelOriginal = item.original || label;
+      const alias = buscarAlias(label, labelOriginal);
 
       let candidatos = [];
       if (_prodCache.length) {
@@ -2948,8 +2958,11 @@
           const nome = decodeURIComponent(this.dataset.pnome);
           adicionarAoCarrinho({ id: this.dataset.pid, nome: nome, estoque: parseInt(this.dataset.pest) });
           // Escolha manual = correção explícita: ensina o vínculo para as próximas buscas.
-          const rotuloOriginal = _iaResultados[idx] ? (_iaResultados[idx].busca || _iaResultados[idx].nome) : q;
-          ensinarAlias(rotuloOriginal, { id: this.dataset.pid, nome: nome });
+          // .nome é a linha original (com cor) — decide a chave. .busca (sem cor) é reserva.
+          const item0 = _iaResultados[idx];
+          const buscaTxt = item0 ? (item0.busca || item0.nome || q) : q;
+          const originalTxt = item0 ? (item0.nome || item0.busca || q) : q;
+          ensinarAlias(buscaTxt, originalTxt, { id: this.dataset.pid, nome: nome });
           mostrarToast('🧠 Aprendido: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '"');
           this.textContent = '✓';
           this.className = 'ia-cand-btn dis';
@@ -3157,7 +3170,7 @@
           status.textContent = '(' + (i + 1) + '/' + itens.length + ') ' + nomeOriginal.substring(0, 45) + '…';
           prog.style.width = (40 + Math.round(((i + 1) / itens.length) * 60)) + '%';
 
-          const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
+          const vinculos = await buscarVinculosDoItem({ label: nomeBusca, original: nomeOriginal, sysname: '', sku: '', prodId: null });
           const card = document.createElement('div');
           card.id = 'ia-card-' + i;
 
@@ -3196,7 +3209,7 @@
             const temEst = total > 0;
             if (temEst) comEst++; else semEst++;
 
-            var chaveItem = encodeURIComponent(chaveAprendizado(nomeBusca));
+            var chaveItem = encodeURIComponent(chaveAprendizado(nomeBusca, nomeOriginal));
             var candidatos = '';
             vinculos.forEach(function (v) {
               candidatos +=
@@ -3247,7 +3260,9 @@
             const idx = b.dataset.idx;
             adicionarAoCarrinho({ id: b.dataset.pid, nome: nome, estoque: parseInt(b.dataset.pest) });
             const idxItem = _iaResultados[idx];
-            ensinarAlias(idxItem ? (idxItem.busca || idxItem.nome) : nome, { id: b.dataset.pid, nome: nome });
+            const buscaTxt = idxItem ? (idxItem.busca || idxItem.nome || nome) : nome;
+            const originalTxt = idxItem ? (idxItem.nome || idxItem.busca || nome) : nome;
+            ensinarAlias(buscaTxt, originalTxt, { id: b.dataset.pid, nome: nome });
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
 
             // Com grupo selecionado, a escolha manual corrige a divergência
