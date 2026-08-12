@@ -1669,7 +1669,7 @@
           <span class="ia-label" style="margin-bottom:0;">Produtos que o sistema já aprendeu a reconhecer</span>
           <button class="ia-btn-restaurar" id="ia-aprendizado-limpar">🗑️ Limpar tudo</button>
         </div>
-        <div style="font-size:11px; color:#6b6b6b;">Toda vez que você escolhe manualmente qual produto do sistema corresponde a um item da lista, essa escolha fica salva e passa a ser usada automaticamente nas próximas buscas com o mesmo nome — mesmo que a cor ou o preço mudem.</div>
+        <div style="font-size:11px; color:#6b6b6b;">Toda vez que você escolhe manualmente qual produto do sistema corresponde a um item da lista, essa escolha fica salva e passa a ser usada automaticamente nas próximas buscas do mesmo modelo NA MESMA COR — mesmo que preço, parcelamento ou a ordem das palavras mudem. Cores diferentes do mesmo modelo são aprendidas separadamente, porque geralmente são estoques diferentes.</div>
 
         <div style="border:1px dashed #e0e0e0; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
           <span class="ia-label" style="margin-bottom:0;">🔗 Sincronização entre dispositivos (Google Sheets)</span>
@@ -2264,14 +2264,31 @@
     let _ultimaSincronizacao = null;
 
     // Chave estável: usa os mesmos tokens de modelo já extraídos pelo motor
-    // de busca (marca/modelo/memória), ignorando cor, preço e "ruído" de
-    // marketing — assim o aprendizado continua valendo mesmo quando o texto
-    // da lista do dia muda um pouco (cor diferente, preço diferente etc).
+    // de busca (marca/modelo/memória), ignorando preço, parcelamento e
+    // "ruído" de marketing — assim o aprendizado continua valendo mesmo
+    // quando o texto da lista do dia muda um pouco. A cor é adicionada de
+    // volta como parte da chave (ver extrairCorParaChave), porque cores
+    // diferentes do mesmo modelo costumam ser produtos/estoques diferentes
+    // no sistema — sem isso, ensinar numa cor aplicaria errado o estoque
+    // de outra cor do mesmo modelo.
+    const CORES_PARA_CHAVE = ['preto', 'preta', 'branco', 'branca', 'azul', 'verde', 'roxo', 'roxa',
+      'cinza', 'dourado', 'dourada', 'rosa', 'prata', 'bege', 'vermelho', 'vermelha',
+      'amarelo', 'amarela', 'grafite', 'gold', 'creme', 'titanium', 'aurora', 'marrom',
+      'laranja', 'vinho', 'silver', 'blue', 'black', 'white', 'purple', 'gray', 'grey', 'transparente'];
+
+    function extrairCorParaChave(label) {
+      const n = normStr(label);
+      const achadas = CORES_PARA_CHAVE.filter(c => new RegExp('\\b' + c + '\\b').test(n));
+      return [...new Set(achadas)].sort().join('+');
+    }
+
     function chaveAprendizado(label) {
       label = (label || '').trim();
       if (!label) return '';
       const toks = tokensModelo(label);
-      return toks.length ? toks.slice().sort().join('|') : normStr(label);
+      const base = toks.length ? toks.slice().sort().join('|') : normStr(label);
+      const cor = extrairCorParaChave(label);
+      return cor ? base + '::' + cor : base;
     }
 
     function carregarAliases() {
