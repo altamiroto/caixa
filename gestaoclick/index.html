@@ -2280,7 +2280,11 @@
     // saída — dezenas de objetos JSON completos repetidos). Agora a IA só
     // identifica as cores da linha (array "cores") e o JavaScript
     // (expandirCoresDaLista) multiplica em cards separados, de graça.
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v4';
+    // v5: pede pra IA manter o código/referência do modelo em "busca" —
+    // sem isso, produtos diferentes da mesma marca/tamanho (ex.: duas TVs
+    // 40" de modelos distintos) viravam a mesma busca genérica, o que
+    // atrapalha tanto a deduplicação quanto a busca real no catálogo.
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v5';
     const IA_PROMPT_DEFAULT = `Você processa listas de produtos eletrônicos (catálogos de preço do WhatsApp ou listas de estoque físico) e devolve um array JSON.
 
 IGNORE linhas que são só: quantidade solta ("6", "6\t+"), título/cabeçalho de seção (*SAMSUNG*, 📢 Lista Exclusiva), data solta, preço isolado, saudação ou aviso sem produto.
@@ -2289,10 +2293,10 @@ CORRIJA typos óbvios antes de gerar "busca": XAIOM/XAOMI/XAIOMI → Xiaomi, ZUL
 
 Para cada produto real, extraia:
 - "original": a linha como veio, limpa (sem emoji, sem *marcação*, sem crase).
-- "busca": nome padronizado para busca — marca + modelo (com Pro/Max/Plus/Ultra/FE se houver) + memória no formato "8/256gb" ou "256gb" + conectividade (4G/5G, só se mencionada). NUNCA inclua cor, preço, bateria, condição ou specs de marketing (HDR, Alexa, Gaming Hub, polegadas de TV etc).
+- "busca": nome padronizado para busca — marca + modelo + memória no formato "8/256gb" ou "256gb" (quando houver) + conectividade (4G/5G, só se mencionada) + polegadas para TVs (ex.: 43"). IMPORTANTE: sempre mantenha o CÓDIGO/REFERÊNCIA do produto quando existir (ex.: 43UA7500PSA, 40S5400A, U8100F, Pro/Max/Plus/Ultra/FE) — é isso que diferencia produtos parecidos da mesma marca e tamanho/memória; nunca resuma pra um nome genérico. NUNCA inclua cor, preço, bateria, condição ou specs de marketing (HDR, Alexa, Gaming Hub, Xbox Cloud Gaming etc).
 - "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Titanium/Natural/Desert/Storm Titanium→Cinza. Se a linha citar 2+ cores ("Preto/Branco", "Preto | Verde"), liste todas separadas. Se não houver cor identificável, use [].
 
-Se o mesmo produto (mesma "busca") aparecer em seções diferentes (ex.: varejo e atacado), inclua apenas uma vez — priorize a ocorrência com mais informação.
+Se a MESMA linha (produto idêntico, mesmo código/modelo) aparecer repetida em seções diferentes (ex.: varejo e atacado), inclua apenas uma vez — priorize a ocorrência com mais informação. Produtos parecidos mas com código/modelo diferente NÃO são duplicata — mantenha os dois.
 
 Retorne APENAS o array JSON válido, sem markdown, sem texto antes ou depois.
 
@@ -2301,13 +2305,18 @@ Exemplo de entrada:
 📱 Samsung Galaxy A36 5G 8/256gb - Preto/Branco
 XAIOM Redmi Note 15 8/256GB azul
 6\t+
+📺 Smart TV 40" TCL Full HD LED 40S5400A Android - R$ 1390
+📺 Smart TV 40" TCL Full HD QLED 40S5K Google TV - R$ 1300
 
 Exemplo de saída:
 [
   {"original":"Redmi Note 14 Pro 5G 8/256GB","busca":"Redmi Note 14 Pro 5G 8/256gb","cores":["Preto"]},
   {"original":"Samsung Galaxy A36 5G 8/256gb","busca":"Samsung Galaxy A36 5G 8/256gb","cores":["Preto","Branco"]},
-  {"original":"Redmi Note 15 8/256GB","busca":"Xiaomi Redmi Note 15 8/256gb","cores":["Azul"]}
-]`;
+  {"original":"Redmi Note 15 8/256GB","busca":"Xiaomi Redmi Note 15 8/256gb","cores":["Azul"]},
+  {"original":"Smart TV 40\" TCL Full HD LED 40S5400A Android","busca":"TCL 40S5400A 40\"","cores":[]},
+  {"original":"Smart TV 40\" TCL Full HD QLED 40S5K Google TV","busca":"TCL 40S5K 40\"","cores":[]}
+]
+(repare que as duas TVs TCL de 40" têm buscas DIFERENTES — 40S5400A e 40S5K são modelos distintos, mesmo com marca e tamanho iguais)`;
 
     let _iaResultados = [];
 
@@ -3257,7 +3266,13 @@ Exemplo de saída:
 
         cores.forEach(function (cor) {
           const original = cor ? (busca + ' - ' + cor) : originalBase;
-          const chave = (busca + '::' + (cor || '')).toLowerCase();
+          // Dedup pela linha ORIGINAL, não pela "busca". A IA às vezes
+          // simplifica demais a busca (ex.: duas TVs 40" de modelos
+          // diferentes viram a mesma busca genérica) — usar "busca" aqui
+          // fazia produtos DIFERENTES serem descartados como se fossem o
+          // mesmo. A linha original é o que de fato distingue duas
+          // ocorrências repetidas do mesmo produto (varejo/atacado).
+          const chave = (originalBase + '::' + (cor || '')).toLowerCase();
           if (vistos.has(chave)) return;
           vistos.add(chave);
           expandido.push({ original: original, busca: busca });
