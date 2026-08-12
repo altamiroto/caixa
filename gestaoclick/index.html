@@ -1269,6 +1269,66 @@
       color: #888;
     }
 
+    .ia-cand-badge-aprendido {
+      font-size: 10px;
+      font-weight: 700;
+      color: #7c3aed;
+      background: rgba(124, 58, 237, .12);
+      padding: 1px 6px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .ia-aprendizado-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 9px;
+      padding: 8px 10px;
+      background: #f9f9f9;
+    }
+
+    .ia-aprendizado-item .info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ia-aprendizado-item .rotulo {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a1a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ia-aprendizado-item .alvo {
+      font-size: 11px;
+      color: #6b6b6b;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ia-aprendizado-item .btn-esquecer {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      color: #c0392b;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 4px 9px;
+    }
+
+    .ia-aprendizado-item .btn-esquecer:hover {
+      background: #fef2f2;
+    }
+
     .ia-btn-trocar {
       background: #f0f0f0;
       color: #6b6b6b;
@@ -1564,7 +1624,10 @@
     <div id="ia-lote-modal">
       <div class="ia-lh">
         <h2>🤖 Busca em Lote por IA</h2>
-        <button class="ia-btn-fechar" id="ia-lote-fechar-topo">✕</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="ia-btn-restaurar" id="ia-ver-aprendizados">🧠 Aprendizados (<span id="ia-aprendizado-count">0</span>)</button>
+          <button class="ia-btn-fechar" id="ia-lote-fechar-topo">✕</button>
+        </div>
       </div>
       <div class="ia-lb" id="ia-passo1">
         <div>
@@ -1589,7 +1652,7 @@
           <div class="ia-actions-row">
             <button class="ia-btn-processar" id="ia-processar" style="flex:1;">🤖 Consultar Lista →</button>
             <button class="ia-btn-balanco" id="ia-balanco" style="flex:1;">⚖️ Balanço</button>
-            <button class="ia-btn-mover" id="ia-mover-grupo">📦 Mover p/ Grupo</button>
+            <button class="ia-btn-mover" id="ia-mover-grupo">📋 Copiar Divergências</button>
           </div>
         </div>
       </div>
@@ -1600,6 +1663,14 @@
         <div class="ia-res-status" id="ia-status">Processando…</div>
         <div id="ia-balanco-res" class="ia-balanco-results" style="display:none;"></div>
         <div class="ia-res-grid" id="ia-grid"></div>
+      </div>
+      <div class="ia-lb" id="ia-passo-aprendizado" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span class="ia-label" style="margin-bottom:0;">Produtos que o sistema já aprendeu a reconhecer</span>
+          <button class="ia-btn-restaurar" id="ia-aprendizado-limpar">🗑️ Limpar tudo</button>
+        </div>
+        <div style="font-size:11px; color:#6b6b6b;">Toda vez que você escolhe manualmente qual produto do sistema corresponde a um item da lista, essa escolha fica salva aqui (só neste navegador) e passa a ser usada automaticamente nas próximas buscas com o mesmo nome.</div>
+        <div class="ia-res-grid" id="ia-aprendizado-lista" style="max-height:50vh;"></div>
       </div>
       <div class="ia-lote-footer">
         <button class="ia-btn-fechar" id="ia-fechar-rodape">← Fechar</button>
@@ -1675,6 +1746,7 @@
   <script>
     const lojaIdJeta = "361408";
     let resultadosBuscaLoteGlobal = [];
+    let _ultimasSobrasBalanco = [];
     let todosProdutos = [];
     let produtosFiltrados = [];
     let carrinho = {};
@@ -2151,6 +2223,67 @@
     const CACHE_TTL = 5 * 60 * 1000;
     let _abaAtiva = "TODOS";
 
+    // ════════════════════════
+    // APRENDIZADO DE VÍNCULOS (correspondência lista ↔ produto)
+    // Guardado só no navegador (localStorage). Nunca é enviado para o
+    // sistema da loja — serve apenas para melhorar as buscas seguintes.
+    // ════════════════════════
+    const ALIAS_KEY = 'jeta_aliases_v1';
+
+    // Chave estável: usa os mesmos tokens de modelo já extraídos pelo motor
+    // de busca (marca/modelo/memória), ignorando cor, preço e "ruído" de
+    // marketing — assim o aprendizado continua valendo mesmo quando o texto
+    // da lista do dia muda um pouco (cor diferente, preço diferente etc).
+    function chaveAprendizado(label) {
+      label = (label || '').trim();
+      if (!label) return '';
+      const toks = tokensModelo(label);
+      return toks.length ? toks.slice().sort().join('|') : normStr(label);
+    }
+
+    function carregarAliases() {
+      try { return JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}'); }
+      catch (e) { return {}; }
+    }
+
+    function salvarAliasMap(map) {
+      localStorage.setItem(ALIAS_KEY, JSON.stringify(map));
+      atualizarContadorAprendizado();
+    }
+
+    // Registra que "label" corresponde ao produto do sistema `produto`.
+    function ensinarAlias(label, produto) {
+      const key = chaveAprendizado(label);
+      if (!key || !produto || !produto.id) return;
+      const map = carregarAliases();
+      map[key] = {
+        id: produto.id,
+        nome: produto.nome,
+        exemplo: (label || '').trim(),
+        aprendidoEm: new Date().toISOString()
+      };
+      salvarAliasMap(map);
+    }
+
+    function esquecerAlias(key) {
+      const map = carregarAliases();
+      delete map[key];
+      salvarAliasMap(map);
+      renderizarAprendizados();
+    }
+
+    function buscarAlias(label) {
+      const key = chaveAprendizado(label);
+      if (!key) return null;
+      const map = carregarAliases();
+      return map[key] || null;
+    }
+
+    function atualizarContadorAprendizado() {
+      const el2 = document.getElementById('ia-aprendizado-count');
+      if (el2) el2.textContent = Object.keys(carregarAliases()).length;
+    }
+
     async function carregarGrupos() {
       const url = `${API_HOST}/api/proxy?rota=grupos_produtos&loja_id=${lojaIdJeta}`;
       try {
@@ -2497,9 +2630,12 @@
     }
 
     async function buscarVinculosDoItem(item) {
+      const label = item.label || item.sysname || '';
+      const alias = buscarAlias(label);
+
       let candidatos = [];
       if (_prodCache.length) {
-        const queries = gerarQueries(item.label || item.sysname || '');
+        const queries = gerarQueries(label);
         for (const q of queries) {
           buscarNoCacheLocal(q).forEach(p => {
             if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
@@ -2514,7 +2650,7 @@
           ).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
         }
       } else {
-        const queries = gerarQueries(item.label || item.sysname || '');
+        const queries = gerarQueries(label);
         for (const q of queries) {
           try {
             const d = await apiGet({ nome: q });
@@ -2524,24 +2660,52 @@
           if (candidatos.length >= 10) break;
         }
       }
-      if (!candidatos.length) return [];
-      const label = item.label || item.sysname || '';
-      const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
-      const threshold = ehTV ? 0.20 : 0.55;
-      return candidatos
-        .filter(p => !ehAcessorio(p.nome))
-        .filter(p => filtroTecnico(label, p.nome))
-        .map(p => ({ p, score: scoreNome(label, p.nome) }))
-        .filter(({ score }) => score >= threshold)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
-        .map(({ p }) => ({
-          id: p.id, nome: p.nome,
-          sku: p.codigo_interno || p.codigo_barra || '',
-          estoque: Number(p.estoque ?? 0),
-          grupo_id: p.grupo_id,
-          nome_grupo: p.grupo_nome || p.grupo || '',
-        }));
+
+      let resultado = [];
+      if (candidatos.length) {
+        const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
+        const threshold = ehTV ? 0.20 : 0.55;
+        resultado = candidatos
+          .filter(p => !ehAcessorio(p.nome))
+          .filter(p => filtroTecnico(label, p.nome))
+          .map(p => ({ p, score: scoreNome(label, p.nome) }))
+          .filter(({ score }) => score >= threshold)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 8)
+          .map(({ p }) => ({
+            id: p.id, nome: p.nome,
+            sku: p.codigo_interno || p.codigo_barra || '',
+            estoque: Number(p.estoque ?? 0),
+            grupo_id: p.grupo_id,
+            nome_grupo: p.grupo_nome || p.grupo || '',
+            aprendido: false,
+          }));
+      }
+
+      // Se já ensinamos qual produto corresponde a este texto, ele entra
+      // como primeira opção (destacado), sem depender do score da busca.
+      if (alias) {
+        const jaNoResultado = resultado.find(r => String(r.id) === String(alias.id));
+        if (jaNoResultado) {
+          jaNoResultado.aprendido = true;
+          resultado = [jaNoResultado, ...resultado.filter(r => r !== jaNoResultado)];
+        } else {
+          const prodAprendido = _prodCache.find(p => String(p.id) === String(alias.id))
+            || candidatos.find(p => String(p.id) === String(alias.id));
+          if (prodAprendido) {
+            resultado = [{
+              id: prodAprendido.id, nome: prodAprendido.nome,
+              sku: prodAprendido.codigo_interno || prodAprendido.codigo_barra || '',
+              estoque: Number(prodAprendido.estoque ?? 0),
+              grupo_id: prodAprendido.grupo_id,
+              nome_grupo: prodAprendido.grupo_nome || prodAprendido.grupo || '',
+              aprendido: true,
+            }, ...resultado];
+          }
+        }
+      }
+
+      return resultado;
     }
 
     // NOVA FUNÇÃO PARA BUSCA DINÂMICA DENTRO DO CARD DO MODAL DA IA
@@ -2585,7 +2749,12 @@
 
       resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
         b.addEventListener('click', function () {
-          adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) });
+          const nome = decodeURIComponent(this.dataset.pnome);
+          adicionarAoCarrinho({ id: this.dataset.pid, nome: nome, estoque: parseInt(this.dataset.pest) });
+          // Escolha manual = correção explícita: ensina o vínculo para as próximas buscas.
+          const rotuloOriginal = _iaResultados[idx] ? (_iaResultados[idx].busca || _iaResultados[idx].nome) : q;
+          ensinarAlias(rotuloOriginal, { id: this.dataset.pid, nome: nome });
+          mostrarToast('🧠 Aprendido: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '"');
           this.textContent = '✓';
           this.className = 'ia-cand-btn dis';
           this.disabled = true;
@@ -2610,11 +2779,51 @@
     document.getElementById('btn-abrir-ia-lote').addEventListener('click', function () {
       document.getElementById('ia-passo1').style.display = 'flex';
       document.getElementById('ia-passo2').style.display = 'none';
+      document.getElementById('ia-passo-aprendizado').style.display = 'none';
       document.getElementById('ia-erro').style.display = 'none';
       document.getElementById('ia-add-todos').style.display = 'none';
+      document.getElementById('ia-mover-grupo').style.display = 'none';
       document.getElementById('ia-resumo').textContent = '';
       document.getElementById('ia-lote-overlay').classList.add('open');
       setTimeout(function () { document.getElementById('ia-raw').focus(); }, 80);
+    });
+
+    function renderizarAprendizados() {
+      const map = carregarAliases();
+      const entradas = Object.entries(map).sort((a, b) => (b[1].aprendidoEm || '').localeCompare(a[1].aprendidoEm || ''));
+      const lista = document.getElementById('ia-aprendizado-lista');
+      atualizarContadorAprendizado();
+      if (!entradas.length) {
+        lista.innerHTML = '<div class="status-msg">Nenhum vínculo aprendido ainda. Use "🔄 Trocar" ou escolha entre os candidatos na Busca em Lote — a escolha fica salva aqui.</div>';
+        return;
+      }
+      lista.innerHTML = entradas.map(function ([key, v]) {
+        return '<div class="ia-aprendizado-item">' +
+          '<div class="info">' +
+          '<span class="rotulo" title="' + v.exemplo + '">' + v.exemplo + '</span>' +
+          '<span class="alvo">→ ' + v.nome + '</span>' +
+          '</div>' +
+          '<button class="btn-esquecer" data-key="' + encodeURIComponent(key) + '">🗑️ Esquecer</button>' +
+          '</div>';
+      }).join('');
+      lista.querySelectorAll('.btn-esquecer').forEach(function (b) {
+        b.addEventListener('click', function () { esquecerAlias(decodeURIComponent(this.dataset.key)); });
+      });
+    }
+
+    document.getElementById('ia-ver-aprendizados').addEventListener('click', function () {
+      document.getElementById('ia-passo1').style.display = 'none';
+      document.getElementById('ia-passo2').style.display = 'none';
+      document.getElementById('ia-passo-aprendizado').style.display = 'flex';
+      renderizarAprendizados();
+    });
+
+    document.getElementById('ia-aprendizado-limpar').addEventListener('click', function () {
+      if (!confirm('Apagar todos os vínculos aprendidos neste navegador?')) return;
+      localStorage.setItem(ALIAS_KEY, '{}');
+      atualizarContadorAprendizado();
+      renderizarAprendizados();
+      mostrarToast('🗑️ Aprendizado limpo');
     });
 
     function fecharIaLote() {
@@ -2647,6 +2856,9 @@
         return;
       }
       document.getElementById('ia-erro').style.display = 'none';
+      document.getElementById('ia-mover-grupo').style.display = 'none';
+      resultadosBuscaLoteGlobal = [];
+      _ultimasSobrasBalanco = [];
       const btn = this;
       btn.disabled = true; btn.textContent = '⏳ Processando…';
 
@@ -2718,10 +2930,11 @@
             vinculos.forEach(function (v) {
               candidatos +=
                 '<div class="ia-cand-row">' +
+                (v.aprendido ? '<span class="ia-cand-badge-aprendido" title="Vínculo ensinado anteriormente">🧠</span>' : '') +
                 '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
                 '<span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' +
                 (v.estoque > 0
-                  ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
+                  ? '<button class="ia-cand-btn add ia-add-vinc" data-idx="' + i + '" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
                   : '<button class="ia-cand-btn dis" disabled>+</button>') +
                 '</div>';
             });
@@ -2746,12 +2959,15 @@
           card.innerHTML = baseHtml;
 
           grid.appendChild(card);
-          _iaResultados.push({ nome: nomeOriginal, vinculos: vinculos || [] });
+          _iaResultados.push({ nome: nomeOriginal, busca: nomeBusca, vinculos: vinculos || [] });
         }
 
         grid.querySelectorAll('.ia-add-vinc').forEach(function (b) {
           b.addEventListener('click', function () {
-            adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
+            const nome = decodeURIComponent(b.dataset.pnome);
+            adicionarAoCarrinho({ id: b.dataset.pid, nome: nome, estoque: parseInt(b.dataset.pest) });
+            const idxItem = _iaResultados[b.dataset.idx];
+            ensinarAlias(idxItem ? (idxItem.busca || idxItem.nome) : nome, { id: b.dataset.pid, nome: nome });
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
           });
         });
@@ -2827,6 +3043,8 @@
       el('ia-balanco-res').style.display = 'none';
       el('ia-grid').innerHTML = '';
       el('ia-add-todos').style.display = 'none';
+      el('ia-mover-grupo').style.display = 'none';
+      _ultimasSobrasBalanco = [];
 
       try {
         const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
@@ -2872,6 +3090,7 @@
         }
 
         const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
+        _ultimasSobrasBalanco = sobras;
         el('ia-status').innerHTML = '✅ Balanço Concluído';
         el('ia-mover-grupo').style.display = 'flex';
 
@@ -2908,82 +3127,55 @@
       el('ia-balanco').disabled = false;
     }
 
-    async function moverProdutosParaGrupo() {
-      const grupoId = el('ia-grupo-ref').value;
-      const vinculados = resultadosBuscaLoteGlobal.filter(r => r.vinculo);
-      if (!vinculados.length) { mostrarToast('⚠️ Nenhum produto vinculado para mover.'); return; }
-      if (!confirm(`Deseja mover ${vinculados.length} produtos para este grupo?`)) return;
+    // Este painel é apenas de CONFERÊNCIA: ele nunca grava nada no sistema
+    // da loja. Esta função só monta um relatório de texto (divergências
+    // entre a lista e o grupo) para você copiar e resolver manualmente
+    // onde preferir (no próprio sistema, por exemplo).
+    function copiarDivergenciasGrupo() {
+      const grupoNome = el('ia-grupo-ref').selectedOptions[0]?.textContent || 'grupo selecionado';
+      const foraDoGrupo = resultadosBuscaLoteGlobal.filter(r => r.vinculo && r.foraDoGrupo);
+      const naoEncontrados = resultadosBuscaLoteGlobal.filter(r => !r.vinculo);
 
-      el('ia-mover-grupo').disabled = true;
-      el('ia-prog').style.width = '0%';
-      let sucessos = 0;
-
-      for (let i = 0; i < vinculados.length; i++) {
-        const item = vinculados[i];
-        el('ia-status').innerHTML = `📦 Movendo (${i + 1}/${vinculados.length}): ${item.vinculo.nome.substring(0, 30)}...`;
-        el('ia-prog').style.width = ((i + 1) / vinculados.length * 100) + '%';
-
-        try {
-          let produtoParaUpdate = null;
-          
-          // 1. Tenta buscar como Produto
-          const resGetP = await fetch(`${API_HOST}/api/proxy?rota=produtos/${item.vinculo.id}&loja_id=${lojaIdJeta}`);
-          const dataGetP = await resGetP.json();
-          
-          if (dataGetP.code === 200) {
-            produtoParaUpdate = dataGetP.data;
-          } else {
-            // 2. Se falhar, tenta buscar como Serviço
-            const resGetS = await fetch(`${API_HOST}/api/proxy?rota=servicos/${item.vinculo.id}&loja_id=${lojaIdJeta}`);
-            const dataGetS = await resGetS.json();
-            if (dataGetS.code === 200) {
-              produtoParaUpdate = dataGetS.data;
-            }
-          }
-
-          let res;
-          if (produtoParaUpdate) {
-            // 3. Update com objeto COMPLETO (Estratégia mais segura)
-            produtoParaUpdate.grupo_id = Number(grupoId);
-            res = await fetch(`${API_HOST}/api/proxy?rota=${produtoParaUpdate.id_servico ? 'servicos' : 'produtos'}/${item.vinculo.id}&loja_id=${lojaIdJeta}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(produtoParaUpdate)
-            });
-          } else {
-            // 4. Fallback: Se não conseguir buscar dados, tenta update parcial 
-            res = await fetch(`${API_HOST}/api/proxy?rota=produtos/${item.vinculo.id}&loja_id=${lojaIdJeta}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ grupo_id: Number(grupoId) })
-            });
-          }
-
-          if (res.ok) {
-            sucessos++;
-          } else {
-            const errData = await res.json().catch(() => ({}));
-            console.error('Falha ao mover:', item.vinculo.nome, errData);
-          }
-        } catch (e) { 
-          console.error('Erro de rede ao mover:', item.vinculo.nome, e); 
-        }
-
-        if (i > 0 && i % 3 === 0) await new Promise(r => setTimeout(r, 800)); // Evita rate limit
+      if (!foraDoGrupo.length && !naoEncontrados.length && !_ultimasSobrasBalanco.length) {
+        mostrarToast('✅ Nenhuma divergência para copiar — tudo bate.');
+        return;
       }
 
-      el('ia-status').innerHTML = `✅ Concluído: ${sucessos} movidos com sucesso!`;
-      el('ia-mover-grupo').disabled = false;
-      mostrarToast(`📦 ${sucessos} produtos movidos.`);
+      const linhas = [`📋 DIVERGÊNCIAS — grupo "${grupoNome}" — ${new Date().toLocaleDateString('pt-BR')}`, ''];
+
+      if (foraDoGrupo.length) {
+        linhas.push(`🔀 Itens da lista cadastrados em OUTRO grupo (${foraDoGrupo.length}):`);
+        foraDoGrupo.forEach(r => linhas.push(`  • ${r.vinculo.nome} — está em "${r.vinculo.nome_grupo || 'não definido'}"`));
+        linhas.push('');
+      }
+
+      if (naoEncontrados.length) {
+        linhas.push(`❌ Itens da lista NÃO encontrados no sistema (${naoEncontrados.length}):`);
+        naoEncontrados.forEach(r => linhas.push(`  • ${r.original}`));
+        linhas.push('');
+      }
+
+      if (_ultimasSobrasBalanco.length) {
+        linhas.push(`⚠️ Itens com estoque neste grupo que NÃO aparecem na lista (${_ultimasSobrasBalanco.length}):`);
+        _ultimasSobrasBalanco.forEach(p => linhas.push(`  • ${p.nome} — ${p.estoque} un.`));
+      }
+
+      const texto = linhas.join('\n');
+      navigator.clipboard.writeText(texto).then(() => {
+        mostrarToast('📋 Divergências copiadas — cole no WhatsApp ou onde precisar.');
+      }).catch(() => {
+        mostrarToast('⚠️ Não foi possível copiar automaticamente.');
+      });
     }
 
     el('ia-balanco').addEventListener('click', () => { el('ia-balanco').disabled = true; realizarBalanco(); });
-    el('ia-mover-grupo').addEventListener('click', moverProdutosParaGrupo);
+    el('ia-mover-grupo').addEventListener('click', copiarDivergenciasGrupo);
 
     // Inicialização imediata dos grupos e cache silencioso
     window.addEventListener('DOMContentLoaded', () => {
       carregarGrupos();
       carregarCacheProdutos(); // Carrega em background para a IA e busca inteligente
+      atualizarContadorAprendizado();
     });
   </script>
 </body>
