@@ -1309,7 +1309,7 @@
 
     .ia-aprendizado-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
       border: 1px solid #e0e0e0;
       border-radius: 9px;
@@ -1322,7 +1322,7 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
     }
 
     .ia-aprendizado-item .rotulo {
@@ -1334,12 +1334,25 @@
       white-space: nowrap;
     }
 
+    .ia-aprendizado-item .rotulo-chave {
+      font-weight: 400;
+      font-style: italic;
+      color: #888;
+    }
+
     .ia-aprendizado-item .alvo {
       font-size: 11px;
       color: #6b6b6b;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      white-space: normal;
+      line-height: 1.4;
+    }
+
+    .ia-aprendizado-item .alvo.ok {
+      color: #1e8e5a;
+    }
+
+    .ia-aprendizado-item .alvo.excl {
+      color: #c0392b;
     }
 
     .ia-aprendizado-item .btn-esquecer {
@@ -2998,22 +3011,65 @@
       if (_sheetUrl) sincronizarAliasesRemoto(); // atualiza com o que outros dispositivos ensinaram
     });
 
+    // Reconstrói um texto legível a partir da CHAVE (marca/modelo/memória +
+    // cor), usado quando não há "exemplo" salvo — é o caso dos vínculos
+    // criados só por exclusão (🚫), que nunca tiveram um texto de busca
+    // guardado junto.
+    function formatarChaveLegivel(key) {
+      if (!key) return '(busca vazia)';
+      const partes = key.split('::');
+      const tokens = (partes[0] || '').split('|').filter(Boolean);
+      const texto = tokens.join(' ').toUpperCase() || '(modelo não identificado)';
+      if (!partes[1]) return texto;
+      const cores = partes[1].split('+').map(function (c) { return c.charAt(0).toUpperCase() + c.slice(1); }).join('/');
+      return texto + ' · ' + cores;
+    }
+
+    // Busca o nome do produto no catálogo já carregado, pra não mostrar só
+    // um ID cru na tela. Se o catálogo ainda não carregou ou o produto não
+    // existe mais, mostra o ID mesmo (ainda dá pra "Esquecer" o vínculo).
+    function nomeProdutoPorId(id) {
+      const p = _prodCache.find(function (p) { return String(p.id) === String(id); });
+      return p ? p.nome : ('produto #' + id);
+    }
+
     function renderizarAprendizados() {
       const map = carregarAliases();
       const entradas = Object.entries(map).sort((a, b) => (b[1].aprendidoEm || '').localeCompare(a[1].aprendidoEm || ''));
       const lista = document.getElementById('ia-aprendizado-lista');
       atualizarContadorAprendizado();
       if (!entradas.length) {
-        lista.innerHTML = '<div class="status-msg">Nenhum vínculo aprendido ainda. Use "➕ Buscar outro produto" ou escolha entre os candidatos na Busca em Lote — a escolha fica salva aqui.</div>';
+        lista.innerHTML = '<div class="status-msg">Nenhum vínculo aprendido ainda. Use "➕ Buscar outro produto" ou os botões "+" / "🚫" nos candidatos da Busca em Lote — a escolha fica salva aqui.</div>';
         return;
       }
       lista.innerHTML = entradas.map(function ([key, v]) {
+        const temExemplo = v.exemplo && v.exemplo.trim();
+        const rotulo = temExemplo ? v.exemplo : formatarChaveLegivel(key);
+        const rotuloHtml = temExemplo
+          ? rotulo
+          : rotulo + ' <span class="rotulo-chave">(busca sem exemplo salvo)</span>';
+
+        const temCerto = v.id && v.nome;
+        const excluidos = Array.isArray(v.excluidos) ? v.excluidos.filter(Boolean) : [];
+
+        let linhas = '';
+        if (temCerto) {
+          linhas += '<span class="alvo ok">✅ Sempre sugerir automaticamente: <b>' + v.nome + '</b></span>';
+        }
+        if (excluidos.length) {
+          const nomesExcl = excluidos.map(nomeProdutoPorId).join(', ');
+          linhas += '<span class="alvo excl">🚫 Nunca sugerir: ' + nomesExcl + '</span>';
+        }
+        if (!temCerto && !excluidos.length) {
+          linhas += '<span class="alvo">(sem regra ativa — pode esquecer)</span>';
+        }
+
         return '<div class="ia-aprendizado-item">' +
           '<div class="info">' +
-          '<span class="rotulo" title="' + v.exemplo + '">' + v.exemplo + '</span>' +
-          '<span class="alvo">→ ' + v.nome + '</span>' +
+          '<span class="rotulo" title="' + rotulo + '">' + rotuloHtml + '</span>' +
+          linhas +
           '</div>' +
-          '<button class="btn-esquecer" data-key="' + encodeURIComponent(key) + '">🗑️ Esquecer</button>' +
+          '<button class="btn-esquecer" data-key="' + encodeURIComponent(key) + '">🗑️ Esquecer tudo</button>' +
           '</div>';
       }).join('');
       lista.querySelectorAll('.btn-esquecer').forEach(function (b) {
