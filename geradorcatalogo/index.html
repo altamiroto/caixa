@@ -278,6 +278,14 @@ R$ 965 (Dinheiro)"></textarea>
         <label><input type="checkbox" id="mostrar-subtitulo" checked /> Mostrar linha de marcas</label>
       </div>
 
+      <div class="marcadores">
+        <label><input type="checkbox" id="tema-aleatorio" /> Tema aleatório a cada geração</label>
+        <p class="ajuda" id="sorteio-info">
+          Sorteia uma paleta inédita, sempre distante em cor das últimas usadas.
+          Ignora o tema escolhido acima.
+        </p>
+      </div>
+
       <div>
         <label for="remover">Remover palavras do nome</label>
         <input id="remover" placeholder="Smart TV, LANÇAMENTO" />
@@ -338,7 +346,11 @@ R$ 965 (Dinheiro)"></textarea>
     <script type="module">
       import { parseVarios } from './src/parser/parse.js';
       import { paginar } from './src/layout/paginate.js';
-      import { temasPorGrupo, TEMA_PADRAO } from './src/themes/temas.js';
+      import {
+        temasPorGrupo,
+        TEMA_PADRAO,
+        sortearTema,
+      } from './src/themes/temas.js';
       import { paraPng, baixar, apelido } from './src/render/export.js';
 
       const $ = (id) => document.getElementById(id);
@@ -381,6 +393,12 @@ R$ 965 (Dinheiro)"></textarea>
 
       $('gerar').addEventListener('click', gerar);
 
+      // Com o sorteio ligado, escolher tema na lista não teria efeito.
+      $('tema-aleatorio').addEventListener('change', (e) => {
+        $('tema').disabled = e.target.checked;
+        gerar();
+      });
+
       // A foto fica em memória como data URI: o SVG da exportação não consegue
       // buscar arquivo externo, então ela precisa estar embutida.
       let fotoDeFundo;
@@ -399,6 +417,45 @@ R$ 965 (Dinheiro)"></textarea>
         };
         leitor.readAsDataURL(arquivo);
       });
+
+      /*
+       * Memória do sorteio. O contador guardado é o que faz a cor do dia seguinte
+       * nascer longe da de hoje: sem ele, cada recarga voltaria à mesma paleta.
+       */
+      const CHAVE_SORTEIO = 'gc:sorteio';
+
+      function lerSorteio() {
+        try {
+          const bruto = localStorage.getItem(CHAVE_SORTEIO);
+          const dados = bruto ? JSON.parse(bruto) : null;
+          if (dados && Number.isFinite(dados.contador)) return dados;
+        } catch {
+          // localStorage bloqueado (aba anônima, permissão): segue sem memória.
+        }
+        return { contador: 0, matizes: [] };
+      }
+
+      function gravarSorteio(dados) {
+        try {
+          localStorage.setItem(CHAVE_SORTEIO, JSON.stringify(dados));
+        } catch {
+          // Sem memória o sorteio ainda funciona; só perde a distância histórica.
+        }
+      }
+
+      /** Sorteia, registra e devolve o id do tema a usar nesta geração. */
+      function temaSorteado() {
+        const estado = lerSorteio();
+        const tema = sortearTema({
+          contador: estado.contador,
+          evitar: estado.matizes.slice(-6),
+        });
+        gravarSorteio({
+          contador: estado.contador + 1,
+          matizes: [...estado.matizes, tema.matiz].slice(-6),
+        });
+        return tema;
+      }
 
       function opcoesAtuais() {
         return {
@@ -443,6 +500,11 @@ R$ 965 (Dinheiro)"></textarea>
         }
 
         const opcoes = opcoesAtuais();
+        let sorteado = null;
+        if ($('tema-aleatorio').checked) {
+          sorteado = temaSorteado();
+          opcoes.tema = sorteado;
+        }
         const avisos = [];
         let totalPaginas = 0;
         let totalProdutos = 0;
@@ -464,8 +526,10 @@ R$ 965 (Dinheiro)"></textarea>
           });
         }
 
+        const usado = sorteado ? ` · tema: ${sorteado.nome} (${sorteado.estilo})` : '';
         $('resumo').textContent =
-          `${catalogos.length} catálogo(s), ${totalProdutos} produtos, ${totalPaginas} página(s) · 2160×3840`;
+          `${catalogos.length} catálogo(s), ${totalProdutos} produtos, ` +
+          `${totalPaginas} página(s) · 2160×3840${usado}`;
         mostrarAvisos(avisos);
       }
 

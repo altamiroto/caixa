@@ -15,8 +15,12 @@
  * @property {Record<string,string>} vars Variáveis CSS aplicadas na página
  */
 
+import { catalogoGerado, sortearTema } from './gerador.js';
+
+export { gerarTema, sortearTema, FAMILIAS, ESTILOS } from './gerador.js';
+
 /** @type {Record<string, Tema>} */
-export const TEMAS = {
+export const TEMAS_CURADOS = {
   noite: {
     id: 'noite',
     nome: 'Noite (azul)',
@@ -561,33 +565,64 @@ export const TEMAS = {
   },
 };
 
+/*
+ * Os curados vêm primeiro por serem os desenhados à mão; os gerados entram
+ * depois, sem sobrescrever nenhum id existente.
+ */
+/** @type {Record<string, Tema>} */
+export const TEMAS = { ...TEMAS_CURADOS };
+for (const tema of catalogoGerado()) {
+  if (!TEMAS[tema.id]) TEMAS[tema.id] = tema;
+}
+
 export const TEMA_PADRAO = 'noite';
 
-export function obterTema(id) {
-  return TEMAS[id] ?? TEMAS[TEMA_PADRAO];
+/**
+ * Resolve um tema a partir do id **ou** de um objeto de tema já pronto.
+ *
+ * Aceitar o objeto não é conveniência: a paginação roda dentro do navegador,
+ * que tem a sua própria instância deste módulo. Um tema sorteado no Node e
+ * registrado só lá não existiria do outro lado, e cairia calado no padrão.
+ * Passar o objeto atravessa a fronteira.
+ */
+export function obterTema(temaOuId) {
+  if (temaOuId && typeof temaOuId === 'object' && temaOuId.vars) return temaOuId;
+  return TEMAS[temaOuId] ?? TEMAS[TEMA_PADRAO];
 }
 
 export function listarTemas() {
   return Object.values(TEMAS).map(({ id, nome, grupo }) => ({ id, nome, grupo }));
 }
 
-/** Ordem em que os grupos aparecem no seletor. */
-export const GRUPOS = ['Escuros', 'Claros', 'Clássicos', 'Sazonais'];
+/** Ordem em que os grupos aparecem no seletor. Os curados vêm primeiro. */
+export const GRUPOS = [
+  'Escuros', 'Claros', 'Clássicos', 'Sazonais',
+  'Gerados · Escuros', 'Gerados · Claros', 'Gerados · Clássicos', 'Gerados · Vibrantes',
+];
 
 /** Temas agrupados, para montar um seletor com 17 opções que não confunda. */
 export function temasPorGrupo() {
-  return GRUPOS.map((grupo) => ({
+  const todos = listarTemas();
+  const conhecidos = GRUPOS.map((grupo) => ({
     grupo,
-    temas: listarTemas().filter((t) => t.grupo === grupo),
-  })).filter((g) => g.temas.length);
+    temas: todos.filter((t) => t.grupo === grupo),
+  }));
+  // Grupo que apareça fora da ordem conhecida não pode sumir do seletor.
+  const sobrando = todos.filter((t) => !GRUPOS.includes(t.grupo));
+  for (const t of sobrando) {
+    const alvo = conhecidos.find((g) => g.grupo === t.grupo);
+    if (alvo) alvo.temas.push(t);
+    else conhecidos.push({ grupo: t.grupo, temas: [t] });
+  }
+  return conhecidos.filter((g) => g.temas.length);
 }
 
 /**
  * Monta o bloco `style` da página a partir do tema, aplicando substituições
  * pontuais (fundo customizado, cor de destaque escolhida na hora).
  */
-export function varsCss(temaId, sobrescritas = {}) {
-  const tema = obterTema(temaId);
+export function varsCss(temaOuId, sobrescritas = {}) {
+  const tema = obterTema(temaOuId);
   const vars = { ...tema.vars, ...sobrescritas };
   return Object.entries(vars)
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
