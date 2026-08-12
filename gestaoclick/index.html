@@ -1307,6 +1307,20 @@
       opacity: 1;
     }
 
+    .ia-debug-pre {
+      background: #1a1a1a;
+      color: #d4d4d4;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 8px 10px;
+      border-radius: 6px;
+      max-height: 220px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .ia-aprendizado-item {
       display: flex;
       align-items: flex-start;
@@ -1685,6 +1699,12 @@
           <div class="ia-prog-inner" id="ia-prog"></div>
         </div>
         <div class="ia-res-status" id="ia-status">Processando…</div>
+        <!-- DEBUG TEMPORÁRIO: mostra tokens + requisição/resposta bruta da IA
+             pra investigar consumo de tokens anormal. Remover depois. -->
+        <details id="ia-debug-box" style="display:none; border:1px dashed #f39c12; border-radius:8px; padding:8px 10px; background:#fffbeb; margin-bottom:4px;">
+          <summary style="cursor:pointer; font-size:12px; font-weight:700; color:#8a6d00;">🐞 Debug da IA (temporário) — clique pra abrir</summary>
+          <div id="ia-debug-conteudo" style="margin-top:8px;"></div>
+        </details>
         <div id="ia-balanco-res" class="ia-balanco-results" style="display:none;"></div>
         <div class="ia-res-grid" id="ia-grid"></div>
       </div>
@@ -3143,15 +3163,60 @@
       if (e.target === this) fecharIaLote();
     });
 
+    // DEBUG TEMPORÁRIO — guarda a última requisição/resposta da IA (com
+    // contagem de tokens) pra investigar consumo anormal. Remover depois
+    // (junto com o bloco #ia-debug-box no HTML e renderizarDebugIA abaixo).
+    let _debugIA = null;
+
+    function renderizarDebugIA() {
+      const box = document.getElementById('ia-debug-box');
+      const conteudo = document.getElementById('ia-debug-conteudo');
+      if (!box || !conteudo || !_debugIA) return;
+
+      const u = _debugIA.usage;
+      const resumoTokens = u
+        ? '🔢 Entrada: <b>' + (u.prompt_tokens ?? '?') + '</b>' +
+          ' &nbsp;·&nbsp; Saída: <b>' + (u.completion_tokens ?? '?') + '</b>' +
+          ' &nbsp;·&nbsp; Total: <b>' + (u.total_tokens ?? '?') + '</b>' +
+          (u.completion_tokens_details ? '<br><span style="color:#888;">detalhes de saída: ' + JSON.stringify(u.completion_tokens_details) + '</span>' : '') +
+          (u.prompt_tokens_details ? '<br><span style="color:#888;">detalhes de entrada: ' + JSON.stringify(u.prompt_tokens_details) + '</span>' : '')
+        : '⚠️ A resposta não trouxe "usage" (contagem de tokens) — veja a resposta bruta abaixo.';
+
+      conteudo.innerHTML =
+        '<div style="font-size:12px; margin-bottom:8px;">' + resumoTokens +
+        '<br>⏱️ ' + _debugIA.duracaoMs + 'ms &nbsp;·&nbsp; ' + _debugIA.horario + '</div>' +
+        '<div class="ia-label" style="margin-bottom:2px;">Requisição enviada (raw):</div>' +
+        '<pre class="ia-debug-pre">' + JSON.stringify(_debugIA.requisicao, null, 2).replace(/</g, '&lt;') + '</pre>' +
+        '<div class="ia-label" style="margin:8px 0 2px;">Resposta recebida (raw):</div>' +
+        '<pre class="ia-debug-pre">' + JSON.stringify(_debugIA.resposta, null, 2).replace(/</g, '&lt;') + '</pre>';
+      box.style.display = 'block';
+    }
+
     async function chamarGroq(system, user) {
+      const corpoRequisicao = { systemPrompt: system, messages: user };
+      const inicio = Date.now();
+
       const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt: system, messages: user })
+        body: JSON.stringify(corpoRequisicao)
       });
+
+      const textoResp = await resp.text();
+      let d = null;
+      try { d = JSON.parse(textoResp); } catch (e) { /* resposta não era JSON válido */ }
+
+      _debugIA = {
+        horario: new Date().toLocaleTimeString('pt-BR'),
+        duracaoMs: Date.now() - inicio,
+        requisicao: corpoRequisicao,
+        resposta: d !== null ? d : textoResp,
+        usage: (d && d.usage) ? d.usage : null
+      };
+      renderizarDebugIA();
+
       if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
-      const d = await resp.json();
-      if (d.choices && d.choices[0] && d.choices[0].message)
+      if (d && d.choices && d.choices[0] && d.choices[0].message)
         return d.choices[0].message.content.trim();
       throw new Error('Resposta inesperada do Groq');
     }
