@@ -2991,7 +2991,7 @@
       const lista = document.getElementById('ia-aprendizado-lista');
       atualizarContadorAprendizado();
       if (!entradas.length) {
-        lista.innerHTML = '<div class="status-msg">Nenhum vínculo aprendido ainda. Use "🔄 Trocar" ou escolha entre os candidatos na Busca em Lote — a escolha fica salva aqui.</div>';
+        lista.innerHTML = '<div class="status-msg">Nenhum vínculo aprendido ainda. Use "➕ Buscar outro produto" ou escolha entre os candidatos na Busca em Lote — a escolha fica salva aqui.</div>';
         return;
       }
       lista.innerHTML = entradas.map(function ([key, v]) {
@@ -3187,7 +3187,7 @@
               '<div class="ia-card-head" style="align-items:flex-start;">' +
               infoHtml +
               '<span class="ia-badge nf" style="margin-top:2px;">N/A</span>' +
-              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button>' +
+              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">➕ Buscar e adicionar produto</button>' +
               '</div>' +
               '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
@@ -3221,7 +3221,7 @@
               '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '">' + (temEst ? '✓ ' : '⚠ ') + total + '</span>' +
               (grupoId ? foraBadgeHtml : '') +
               '</div>' +
-              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button>' +
+              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">➕ Buscar outro produto</button>' +
               '</div>' +
               candidatos;
           }
@@ -3229,7 +3229,8 @@
           // Adiciona a área oculta de busca em todos os cards
           baseHtml +=
             '<div class="ia-dd-area" id="ia-dd-area-' + i + '">' +
-            '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '">' +
+            '<div style="font-size:10px;color:#888;">Digite parte do nome, busque no catálogo completo e clique "+" para adicionar esse produto como candidato desta linha (a escolha já fica ensinada):</div>' +
+            '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto no catálogo..." value="' + nomeBusca + '">' +
             '<div class="ia-dd-results" id="ia-dd-res-' + i + '"></div>' +
             '</div>';
 
@@ -3274,7 +3275,7 @@
         grid.querySelectorAll('.ia-cand-esquecer').forEach(function (b) {
           b.addEventListener('click', function () {
             esquecerAlias(decodeURIComponent(this.dataset.key));
-            mostrarToast('🗑️ Vínculo esquecido. Use "🔄 Trocar" para ensinar o produto correto.');
+            mostrarToast('🗑️ Vínculo esquecido. Use "➕ Buscar outro produto" para ensinar o produto correto.');
             const linha = this.closest('.ia-cand-row');
             linha.style.opacity = '0.4';
             this.disabled = true;
