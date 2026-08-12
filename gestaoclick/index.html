@@ -2253,7 +2253,13 @@
     const ALIAS_PENDENTES_KEY = 'jeta_aliases_pendentes_v1';
     const SHEET_URL_KEY = 'jeta_sheet_url_v1';
 
-    let _sheetUrl = localStorage.getItem(SHEET_URL_KEY) || '';
+    // URL padrão do backend (Google Apps Script) que guarda os vínculos
+    // aprendidos. Já vem configurada para todos os dispositivos — não
+    // precisa colar em lugar nenhum. Só é sobrescrita se alguém salvar uma
+    // URL diferente manualmente no painel "🧠 Aprendizados".
+    const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzZMptQSTJYROyynSdlEPOqHQ4oF68EncnPMp4IfhImQsxXEPAzxhvQky03by3JqQlj/exec';
+
+    let _sheetUrl = localStorage.getItem(SHEET_URL_KEY) || DEFAULT_SHEET_URL;
     let _sincronizando = false;
     let _ultimaSincronizacao = null;
 
@@ -2321,10 +2327,21 @@
 
     // Busca a planilha inteira e substitui a cópia local. Chamado ao abrir
     // o painel e manualmente pelo botão "Sincronizar agora".
+    let _syncFalhou = false;
+
+    // A nuvem (planilha) é a fonte de verdade — o localStorage é só um
+    // fallback para quando a rede estiver indisponível. Por isso esta
+    // função é aguardada (await) antes de qualquer casamento de produtos
+    // (Consultar Lista / Balanço), garantindo que a busca use o que está
+    // na planilha agora, e não uma cópia antiga deste aparelho.
     async function sincronizarAliasesRemoto(manual) {
-      if (!_sheetUrl || _sincronizando) return;
+      if (!_sheetUrl) { _syncFalhou = false; atualizarStatusSincronizacao(); return; }
+      if (_sincronizando) {
+        while (_sincronizando) await new Promise(r => setTimeout(r, 50));
+        return;
+      }
       _sincronizando = true;
-      atualizarStatusSincronizacao('⏳ Sincronizando…');
+      atualizarStatusSincronizacao('⏳ Buscando aprendizado atualizado na nuvem…');
       try {
         await _flushPendentes();
         const r = await fetch(_sheetUrl + (_sheetUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
@@ -2332,12 +2349,18 @@
         if (d && d.ok && d.aliases) {
           localStorage.setItem(ALIAS_KEY, JSON.stringify(d.aliases));
           _ultimaSincronizacao = new Date();
+          _syncFalhou = false;
           atualizarContadorAprendizado();
           renderizarAprendizados();
+        } else {
+          _syncFalhou = true;
         }
         atualizarStatusSincronizacao();
       } catch (e) {
-        atualizarStatusSincronizacao(manual ? '⚠️ Falha ao sincronizar — verifique a URL/conexão.' : null);
+        _syncFalhou = true;
+        atualizarStatusSincronizacao(manual
+          ? '⚠️ Falha ao sincronizar — verifique a URL/conexão.'
+          : '⚠️ Sem conexão com a nuvem agora — usando a última cópia conhecida.');
       } finally {
         _sincronizando = false;
       }
@@ -2348,8 +2371,9 @@
       if (!el2) return;
       if (mensagemForcada) { el2.textContent = mensagemForcada; return; }
       if (!_sheetUrl) { el2.textContent = '📵 Sem sincronização — aprendizado salvo só neste aparelho.'; return; }
+      if (_syncFalhou) { el2.textContent = '⚠️ Sem conexão com a nuvem agora — usando a última cópia conhecida (pode estar desatualizada).'; return; }
       el2.textContent = _ultimaSincronizacao
-        ? '✅ Sincronizado às ' + _ultimaSincronizacao.toLocaleTimeString('pt-BR')
+        ? '✅ Atualizado com a nuvem às ' + _ultimaSincronizacao.toLocaleTimeString('pt-BR')
         : '🔗 Planilha configurada — sincronizando…';
     }
 
@@ -2919,14 +2943,15 @@
       });
     }
 
-    document.getElementById('ia-ver-aprendizados').addEventListener('click', function () {
+    document.getElementById('ia-ver-aprendizados').addEventListener('click', async function () {
       document.getElementById('ia-passo1').style.display = 'none';
       document.getElementById('ia-passo2').style.display = 'none';
       document.getElementById('ia-passo-aprendizado').style.display = 'flex';
       document.getElementById('ia-sheet-url').value = _sheetUrl;
+      document.getElementById('ia-aprendizado-lista').innerHTML = '<div class="status-msg">⏳ Buscando na nuvem…</div>';
       atualizarStatusSincronizacao();
+      await sincronizarAliasesRemoto();
       renderizarAprendizados();
-      if (_sheetUrl) sincronizarAliasesRemoto();
     });
 
     document.getElementById('ia-aprendizado-limpar').addEventListener('click', function () {
@@ -3030,6 +3055,10 @@
         const status = document.getElementById('ia-status');
         grid.innerHTML = '';
         _iaResultados = [];
+
+        status.textContent = '🔗 Atualizando aprendizado com a nuvem…';
+        prog.style.width = '2%';
+        await sincronizarAliasesRemoto();
 
         status.textContent = 'Baixando catálogo de produtos…';
         prog.style.width = '5%';
@@ -3188,14 +3217,17 @@
 
       el('ia-passo1').style.display = 'none';
       el('ia-passo2').style.display = 'flex';
-      el('ia-status').innerHTML = '⚖️ Realizando Balanço...';
       el('ia-balanco-res').style.display = 'none';
       el('ia-grid').innerHTML = '';
       el('ia-add-todos').style.display = 'none';
       el('ia-mover-grupo').style.display = 'none';
       _ultimasSobrasBalanco = [];
 
+      el('ia-status').innerHTML = '🔗 Atualizando aprendizado com a nuvem…';
+      await sincronizarAliasesRemoto();
+
       try {
+        el('ia-status').innerHTML = '⚖️ Realizando Balanço...';
         const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         const respText = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
         
