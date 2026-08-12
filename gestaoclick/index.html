@@ -1279,6 +1279,20 @@
       flex-shrink: 0;
     }
 
+    .ia-cand-esquecer {
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px;
+      opacity: .6;
+    }
+
+    .ia-cand-esquecer:hover {
+      opacity: 1;
+    }
+
     .ia-aprendizado-item {
       display: flex;
       align-items: center;
@@ -3125,7 +3139,10 @@
             vinculos.forEach(function (v) {
               candidatos +=
                 '<div class="ia-cand-row">' +
-                (v.aprendido ? '<span class="ia-cand-badge-aprendido" title="Vínculo ensinado anteriormente">🧠</span>' : '') +
+                (v.aprendido
+                  ? '<span class="ia-cand-badge-aprendido" title="Vínculo ensinado anteriormente">🧠</span>' +
+                    '<button class="ia-cand-esquecer" data-key="' + encodeURIComponent(chaveAprendizado(nomeBusca)) + '" title="Este vínculo está errado? Clique para esquecer.">🗑️</button>'
+                  : '') +
                 '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
                 '<span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' +
                 (v.estoque > 0
@@ -3164,6 +3181,18 @@
             const idxItem = _iaResultados[b.dataset.idx];
             ensinarAlias(idxItem ? (idxItem.busca || idxItem.nome) : nome, { id: b.dataset.pid, nome: nome });
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
+          });
+        });
+
+        // Botão 🗑️ ao lado do selo 🧠: desfaz o vínculo aprendido ali mesmo,
+        // sem precisar abrir o painel "Aprendizados" separado.
+        grid.querySelectorAll('.ia-cand-esquecer').forEach(function (b) {
+          b.addEventListener('click', function () {
+            esquecerAlias(decodeURIComponent(this.dataset.key));
+            mostrarToast('🗑️ Vínculo esquecido. Use "🔄 Trocar" para ensinar o produto correto.');
+            const linha = this.closest('.ia-cand-row');
+            linha.style.opacity = '0.4';
+            this.disabled = true;
           });
         });
 
