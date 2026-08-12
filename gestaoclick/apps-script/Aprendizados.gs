@@ -28,6 +28,13 @@
 
 const ABA = 'aliases';
 
+// IMPORTANTE: nunca usar vírgula como separador de lista dentro de uma
+// célula. Em planilhas com locale pt-BR (Brasil), a VÍRGULA é o separador
+// DECIMAL — então "95251769,84" (dois IDs excluídos juntados por vírgula)
+// é lido pelo Sheets como o número 95251769.84, corrompendo os dois IDs
+// numa coisa só. Ponto e vírgula nunca é confundido com número.
+const SEP_LISTA = ';';
+
 function _planilha() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(ABA);
@@ -35,6 +42,12 @@ function _planilha() {
     sheet = ss.insertSheet(ABA);
     sheet.appendRow(['key', 'produtoId', 'nome', 'exemplo', 'aprendidoEm', 'excluidos']);
   }
+  // Reforço extra: força as colunas de ID a serem sempre texto, nunca
+  // número. Sem isso, um produtoId só de dígitos (ex.: "9525176984")
+  // também corre risco de virar Number e formatar/arredondar diferente
+  // do valor original quando a planilha exibir/recalcular a célula.
+  sheet.getRange('B2:B').setNumberFormat('@');
+  sheet.getRange('F2:F').setNumberFormat('@');
   return sheet;
 }
 
@@ -56,8 +69,9 @@ function doGet(e) {
     if (!l[0]) return;
     const excluidosStr = (l[5] || '').toString();
     map[l[0]] = {
-      id: l[1], nome: l[2], exemplo: l[3], aprendidoEm: l[4],
-      excluidos: excluidosStr ? excluidosStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : []
+      id: (l[1] === '' || l[1] === null) ? '' : l[1].toString(),
+      nome: l[2], exemplo: l[3], aprendidoEm: l[4],
+      excluidos: excluidosStr ? excluidosStr.split(SEP_LISTA).map(function (s) { return s.trim(); }).filter(Boolean) : []
     };
   });
   return _saida({ ok: true, aliases: map });
@@ -95,10 +109,14 @@ function doPost(e) {
     }
 
     if (acao === 'set') {
-      const excluidosStr = Array.isArray(body.excluidos) ? body.excluidos.join(',') : (body.excluidos || '');
+      const excluidosStr = Array.isArray(body.excluidos) ? body.excluidos.join(SEP_LISTA) : (body.excluidos || '');
+      // As colunas B e F já foram forçadas para "Texto simples" em
+      // _planilha() (setNumberFormat('@')) — é isso que garante que o
+      // Sheets nunca tente interpretar o valor como número/data, sem
+      // precisar de truques de prefixo que poderiam sujar o valor salvo.
       const linha = [
         body.key,
-        body.id,
+        (body.id === undefined || body.id === null) ? '' : String(body.id),
         body.nome,
         body.exemplo || '',
         body.aprendidoEm || new Date().toISOString(),
