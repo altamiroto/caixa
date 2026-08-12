@@ -1669,8 +1669,23 @@
           <span class="ia-label" style="margin-bottom:0;">Produtos que o sistema já aprendeu a reconhecer</span>
           <button class="ia-btn-restaurar" id="ia-aprendizado-limpar">🗑️ Limpar tudo</button>
         </div>
-        <div style="font-size:11px; color:#6b6b6b;">Toda vez que você escolhe manualmente qual produto do sistema corresponde a um item da lista, essa escolha fica salva aqui (só neste navegador) e passa a ser usada automaticamente nas próximas buscas com o mesmo nome.</div>
-        <div class="ia-res-grid" id="ia-aprendizado-lista" style="max-height:50vh;"></div>
+        <div style="font-size:11px; color:#6b6b6b;">Toda vez que você escolhe manualmente qual produto do sistema corresponde a um item da lista, essa escolha fica salva e passa a ser usada automaticamente nas próximas buscas com o mesmo nome — mesmo que a cor ou o preço mudem.</div>
+
+        <div style="border:1px dashed #e0e0e0; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+          <span class="ia-label" style="margin-bottom:0;">🔗 Sincronização entre dispositivos (Google Sheets)</span>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="ia-sheet-url" class="ia-dd-search" style="flex:1;"
+              placeholder="Cole aqui a URL do Web App (.../exec)" value="">
+            <button class="ia-btn-restaurar" id="ia-sheet-url-salvar">💾 Salvar</button>
+          </div>
+          <div id="ia-sync-status" style="font-size:11px; color:#6b6b6b;">📵 Sem sincronização — aprendizado salvo só neste aparelho.</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="ia-btn-restaurar" id="ia-sync-agora">🔄 Sincronizar agora</button>
+            <button class="ia-btn-restaurar" id="ia-sync-enviar-locais">⬆️ Enviar aprendizados deste aparelho</button>
+          </div>
+        </div>
+
+        <div class="ia-res-grid" id="ia-aprendizado-lista" style="max-height:40vh;"></div>
       </div>
       <div class="ia-lote-footer">
         <button class="ia-btn-fechar" id="ia-fechar-rodape">← Fechar</button>
@@ -2225,10 +2240,22 @@
 
     // ════════════════════════
     // APRENDIZADO DE VÍNCULOS (correspondência lista ↔ produto)
-    // Guardado só no navegador (localStorage). Nunca é enviado para o
-    // sistema da loja — serve apenas para melhorar as buscas seguintes.
+    //
+    // Guardado localmente (localStorage) como uma cópia rápida/offline, e
+    // opcionalmente sincronizado com uma planilha do Google Sheets (via um
+    // Apps Script — ver gestaoclick/apps-script/Aprendizados.gs) para que o
+    // aprendizado feito num dispositivo valha nos outros também.
+    //
+    // Nunca é enviado para o sistema da loja — serve só para melhorar as
+    // buscas seguintes deste painel.
     // ════════════════════════
     const ALIAS_KEY = 'jeta_aliases_v1';
+    const ALIAS_PENDENTES_KEY = 'jeta_aliases_pendentes_v1';
+    const SHEET_URL_KEY = 'jeta_sheet_url_v1';
+
+    let _sheetUrl = localStorage.getItem(SHEET_URL_KEY) || '';
+    let _sincronizando = false;
+    let _ultimaSincronizacao = null;
 
     // Chave estável: usa os mesmos tokens de modelo já extraídos pelo motor
     // de busca (marca/modelo/memória), ignorando cor, preço e "ruído" de
@@ -2251,18 +2278,97 @@
       atualizarContadorAprendizado();
     }
 
+    function carregarPendentes() {
+      try { return JSON.parse(localStorage.getItem(ALIAS_PENDENTES_KEY) || '[]'); }
+      catch (e) { return []; }
+    }
+
+    function salvarPendentes(lista) {
+      localStorage.setItem(ALIAS_PENDENTES_KEY, JSON.stringify(lista));
+    }
+
+    // Envia uma alteração (set/delete/clear) para a planilha, em segundo
+    // plano. Se não houver planilha configurada, ou a rede falhar, a
+    // alteração fica na fila de pendentes e é reenviada na próxima
+    // sincronização — assim nada se perde mesmo offline.
+    async function _enviarAoSheet(payload) {
+      if (!_sheetUrl) return;
+      try {
+        await fetch(_sheetUrl, {
+          method: 'POST',
+          // Content-Type text/plain de propósito: evita o preflight CORS
+          // que o Apps Script não responde bem. O corpo continua sendo JSON.
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        const pendentes = carregarPendentes();
+        pendentes.push(payload);
+        salvarPendentes(pendentes);
+      }
+    }
+
+    // Reenvia tudo que ficou pendente (ex.: feito offline) para a planilha.
+    async function _flushPendentes() {
+      if (!_sheetUrl) return;
+      const pendentes = carregarPendentes();
+      if (!pendentes.length) return;
+      salvarPendentes([]);
+      for (const payload of pendentes) {
+        await _enviarAoSheet(payload);
+      }
+    }
+
+    // Busca a planilha inteira e substitui a cópia local. Chamado ao abrir
+    // o painel e manualmente pelo botão "Sincronizar agora".
+    async function sincronizarAliasesRemoto(manual) {
+      if (!_sheetUrl || _sincronizando) return;
+      _sincronizando = true;
+      atualizarStatusSincronizacao('⏳ Sincronizando…');
+      try {
+        await _flushPendentes();
+        const r = await fetch(_sheetUrl + (_sheetUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
+        const d = await r.json();
+        if (d && d.ok && d.aliases) {
+          localStorage.setItem(ALIAS_KEY, JSON.stringify(d.aliases));
+          _ultimaSincronizacao = new Date();
+          atualizarContadorAprendizado();
+          renderizarAprendizados();
+        }
+        atualizarStatusSincronizacao();
+      } catch (e) {
+        atualizarStatusSincronizacao(manual ? '⚠️ Falha ao sincronizar — verifique a URL/conexão.' : null);
+      } finally {
+        _sincronizando = false;
+      }
+    }
+
+    function atualizarStatusSincronizacao(mensagemForcada) {
+      const el2 = document.getElementById('ia-sync-status');
+      if (!el2) return;
+      if (mensagemForcada) { el2.textContent = mensagemForcada; return; }
+      if (!_sheetUrl) { el2.textContent = '📵 Sem sincronização — aprendizado salvo só neste aparelho.'; return; }
+      el2.textContent = _ultimaSincronizacao
+        ? '✅ Sincronizado às ' + _ultimaSincronizacao.toLocaleTimeString('pt-BR')
+        : '🔗 Planilha configurada — sincronizando…';
+    }
+
     // Registra que "label" corresponde ao produto do sistema `produto`.
+    // Atualiza a cópia local na hora (feedback imediato) e propaga para a
+    // planilha compartilhada em segundo plano.
     function ensinarAlias(label, produto) {
       const key = chaveAprendizado(label);
       if (!key || !produto || !produto.id) return;
       const map = carregarAliases();
-      map[key] = {
+      const entrada = {
         id: produto.id,
         nome: produto.nome,
         exemplo: (label || '').trim(),
         aprendidoEm: new Date().toISOString()
       };
+      map[key] = entrada;
       salvarAliasMap(map);
+      _enviarAoSheet(Object.assign({ action: 'set', key: key }, entrada));
     }
 
     function esquecerAlias(key) {
@@ -2270,6 +2376,7 @@
       delete map[key];
       salvarAliasMap(map);
       renderizarAprendizados();
+      _enviarAoSheet({ action: 'delete', key: key });
     }
 
     function buscarAlias(label) {
@@ -2786,6 +2893,7 @@
       document.getElementById('ia-resumo').textContent = '';
       document.getElementById('ia-lote-overlay').classList.add('open');
       setTimeout(function () { document.getElementById('ia-raw').focus(); }, 80);
+      if (_sheetUrl) sincronizarAliasesRemoto(); // atualiza com o que outros dispositivos ensinaram
     });
 
     function renderizarAprendizados() {
@@ -2815,15 +2923,56 @@
       document.getElementById('ia-passo1').style.display = 'none';
       document.getElementById('ia-passo2').style.display = 'none';
       document.getElementById('ia-passo-aprendizado').style.display = 'flex';
+      document.getElementById('ia-sheet-url').value = _sheetUrl;
+      atualizarStatusSincronizacao();
       renderizarAprendizados();
+      if (_sheetUrl) sincronizarAliasesRemoto();
     });
 
     document.getElementById('ia-aprendizado-limpar').addEventListener('click', function () {
-      if (!confirm('Apagar todos os vínculos aprendidos neste navegador?')) return;
+      if (!confirm('Apagar todos os vínculos aprendidos (em todos os dispositivos sincronizados)?')) return;
       localStorage.setItem(ALIAS_KEY, '{}');
       atualizarContadorAprendizado();
       renderizarAprendizados();
+      _enviarAoSheet({ action: 'clear' });
       mostrarToast('🗑️ Aprendizado limpo');
+    });
+
+    document.getElementById('ia-sheet-url-salvar').addEventListener('click', function () {
+      const url = document.getElementById('ia-sheet-url').value.trim();
+      _sheetUrl = url;
+      localStorage.setItem(SHEET_URL_KEY, url);
+      atualizarStatusSincronizacao();
+      if (url) {
+        mostrarToast('🔗 Planilha conectada — sincronizando…');
+        sincronizarAliasesRemoto(true);
+      } else {
+        mostrarToast('📵 Sincronização desativada — usando só este aparelho.');
+      }
+    });
+
+    document.getElementById('ia-sync-agora').addEventListener('click', function () {
+      if (!_sheetUrl) { mostrarToast('⚠️ Configure a URL da planilha primeiro.'); return; }
+      sincronizarAliasesRemoto(true);
+    });
+
+    document.getElementById('ia-sync-enviar-locais').addEventListener('click', async function () {
+      if (!_sheetUrl) { mostrarToast('⚠️ Configure a URL da planilha primeiro.'); return; }
+      const map = carregarAliases();
+      const entradas = Object.entries(map);
+      if (!entradas.length) { mostrarToast('Nada para enviar — nenhum aprendizado local.'); return; }
+      if (!confirm(`Enviar ${entradas.length} vínculo(s) deste aparelho para a planilha?`)) return;
+      const btn = this;
+      btn.disabled = true;
+      let enviados = 0;
+      for (const [key, v] of entradas) {
+        atualizarStatusSincronizacao('⬆️ Enviando ' + (enviados + 1) + '/' + entradas.length + '…');
+        await _enviarAoSheet(Object.assign({ action: 'set', key: key }, v));
+        enviados++;
+      }
+      btn.disabled = false;
+      mostrarToast('✅ ' + enviados + ' vínculo(s) enviados para a planilha');
+      sincronizarAliasesRemoto();
     });
 
     function fecharIaLote() {
@@ -3176,6 +3325,7 @@
       carregarGrupos();
       carregarCacheProdutos(); // Carrega em background para a IA e busca inteligente
       atualizarContadorAprendizado();
+      if (_sheetUrl) sincronizarAliasesRemoto(); // puxa aprendizados de outros dispositivos
     });
   </script>
 </body>
