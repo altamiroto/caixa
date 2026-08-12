@@ -33,7 +33,7 @@ function _planilha() {
   let sheet = ss.getSheetByName(ABA);
   if (!sheet) {
     sheet = ss.insertSheet(ABA);
-    sheet.appendRow(['key', 'produtoId', 'nome', 'exemplo', 'aprendidoEm']);
+    sheet.appendRow(['key', 'produtoId', 'nome', 'exemplo', 'aprendidoEm', 'excluidos']);
   }
   return sheet;
 }
@@ -44,7 +44,9 @@ function _saida(obj) {
 }
 
 // GET → devolve todos os vínculos aprendidos, no mesmo formato usado
-// no localStorage do painel: { [chave]: {id, nome, exemplo, aprendidoEm} }
+// no localStorage do painel:
+// { [chave]: {id, nome, exemplo, aprendidoEm, excluidos: [ids]} }
+// "excluidos" são produtos marcados como "nunca sugerir" para essa chave.
 function doGet(e) {
   const sheet = _planilha();
   const valores = sheet.getDataRange().getValues();
@@ -52,12 +54,16 @@ function doGet(e) {
   const map = {};
   valores.forEach(function (l) {
     if (!l[0]) return;
-    map[l[0]] = { id: l[1], nome: l[2], exemplo: l[3], aprendidoEm: l[4] };
+    const excluidosStr = (l[5] || '').toString();
+    map[l[0]] = {
+      id: l[1], nome: l[2], exemplo: l[3], aprendidoEm: l[4],
+      excluidos: excluidosStr ? excluidosStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : []
+    };
   });
   return _saida({ ok: true, aliases: map });
 }
 
-// POST → { action: 'set', key, id, nome, exemplo, aprendidoEm }
+// POST → { action: 'set', key, id, nome, exemplo, aprendidoEm, excluidos: [ids] }
 //         { action: 'delete', key }
 //         { action: 'clear' }
 // Observação: o painel envia como Content-Type "text/plain" de propósito,
@@ -89,12 +95,14 @@ function doPost(e) {
     }
 
     if (acao === 'set') {
+      const excluidosStr = Array.isArray(body.excluidos) ? body.excluidos.join(',') : (body.excluidos || '');
       const linha = [
         body.key,
         body.id,
         body.nome,
         body.exemplo || '',
-        body.aprendidoEm || new Date().toISOString()
+        body.aprendidoEm || new Date().toISOString(),
+        excluidosStr
       ];
       if (linhaExistente > 0) {
         sheet.getRange(linhaExistente, 1, 1, linha.length).setValues([linha]);

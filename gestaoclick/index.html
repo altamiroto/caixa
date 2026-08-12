@@ -1293,6 +1293,20 @@
       opacity: 1;
     }
 
+    .ia-cand-excluir {
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px;
+      opacity: .35;
+    }
+
+    .ia-cand-excluir:hover {
+      opacity: 1;
+    }
+
     .ia-aprendizado-item {
       display: flex;
       align-items: center;
@@ -1463,8 +1477,7 @@
       gap: 10px;
     }
 
-    .ia-btn-processar,
-    .ia-btn-balanco {
+    .ia-btn-processar {
       flex: 1;
       padding: 12px;
       border: none;
@@ -1477,23 +1490,11 @@
       justify-content: center;
       gap: 8px;
       transition: all 0.2s;
-    }
-
-    .ia-btn-processar {
       background: var(--accent-color);
     }
 
     .ia-btn-processar:hover {
       opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .ia-btn-balanco {
-      background: #2ecc71;
-    }
-
-    .ia-btn-balanco:hover {
-      background: #27ae60;
       transform: translateY(-1px);
     }
 
@@ -1534,8 +1535,6 @@
       align-items: center;
       gap: 6px;
     }
-    .ia-btn-balanco { background: #2ecc71; }
-    .ia-btn-balanco:hover { background: #27ae60; transform: translateY(-1px); }
     .ia-btn-mover { background: #3498db; flex: 1; padding: 12px; border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
     .ia-btn-mover:hover { background: #2980b9; transform: translateY(-1px); }
   </style>
@@ -1658,15 +1657,13 @@
         <div id="ia-erro" class="ia-erro"></div>
         <div class="ia-balanco-ctrl">
           <div class="ia-field-group">
-            <span class="ia-label">Grupo para Balanço</span>
+            <span class="ia-label">Grupo (opcional — compara a lista com o estoque do grupo)</span>
             <select id="ia-grupo-ref" class="ia-select">
-              <option value="">Carregando grupos...</option>
+              <option value="">Não comparar com nenhum grupo</option>
             </select>
           </div>
           <div class="ia-actions-row">
             <button class="ia-btn-processar" id="ia-processar" style="flex:1;">🤖 Consultar Lista →</button>
-            <button class="ia-btn-balanco" id="ia-balanco" style="flex:1;">⚖️ Balanço</button>
-            <button class="ia-btn-mover" id="ia-mover-grupo">📋 Copiar Divergências</button>
           </div>
         </div>
       </div>
@@ -1704,6 +1701,7 @@
       <div class="ia-lote-footer">
         <button class="ia-btn-fechar" id="ia-fechar-rodape">← Fechar</button>
         <span id="ia-resumo" style="font-size:12px;color:#6b6b6b;flex:1;text-align:center;"></span>
+        <button class="ia-btn-mover" id="ia-mover-grupo" style="flex:none;">📋 Copiar Divergências</button>
         <button class="ia-btn-add-todos" id="ia-add-todos">🛒 Adicionar todos com estoque</button>
       </div>
     </div>
@@ -2415,11 +2413,40 @@
       const key = chaveAprendizado(label);
       if (!key || !produto || !produto.id) return;
       const map = carregarAliases();
+      const atual = map[key] || {};
+      const excluidosAtuais = Array.isArray(atual.excluidos) ? atual.excluidos : [];
       const entrada = {
         id: produto.id,
         nome: produto.nome,
         exemplo: (label || '').trim(),
-        aprendidoEm: new Date().toISOString()
+        aprendidoEm: new Date().toISOString(),
+        // preserva exclusões já feitas para essa chave (ex.: "nunca sugira X")
+        excluidos: excluidosAtuais.filter(x => String(x) !== String(produto.id))
+      };
+      map[key] = entrada;
+      salvarAliasMap(map);
+      _enviarAoSheet(Object.assign({ action: 'set', key: key }, entrada));
+    }
+
+    // Marca um candidato específico como "nunca sugira de novo para esta
+    // busca" — diferente de ensinar (que aponta o certo), isso é uma
+    // exclusão negativa: útil quando várias cores/variantes do mesmo
+    // modelo aparecem juntas como candidatas e algumas nunca deveriam
+    // valer pra essa busca específica. Recebe a CHAVE já calculada (não um
+    // texto bruto), do mesmo jeito que esquecerAlias.
+    function excluirCandidato(key, produtoId) {
+      if (!key || !produtoId) return;
+      const map = carregarAliases();
+      const atual = map[key] || {};
+      const excluidos = Array.isArray(atual.excluidos) ? atual.excluidos.slice() : [];
+      const idStr = String(produtoId);
+      if (!excluidos.includes(idStr)) excluidos.push(idStr);
+      const entrada = {
+        id: atual.id || '',
+        nome: atual.nome || '',
+        exemplo: atual.exemplo || '',
+        aprendidoEm: atual.aprendidoEm || new Date().toISOString(),
+        excluidos: excluidos
       };
       map[key] = entrada;
       salvarAliasMap(map);
@@ -2462,7 +2489,7 @@
     function popularSelectGruposIA() {
       const sel = document.getElementById('ia-grupo-ref');
       if (!sel) return;
-      sel.innerHTML = '<option value="">-- Selecione o Grupo --</option>' +
+      sel.innerHTML = '<option value="">Não comparar com nenhum grupo</option>' +
         _listaGrupos.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
     }
 
@@ -2844,6 +2871,13 @@
           }));
       }
 
+      // Candidatos marcados como "nunca sugira" para esta busca (🚫) nunca
+      // aparecem, mesmo que o motor de similaridade ache que combinam.
+      if (alias && Array.isArray(alias.excluidos) && alias.excluidos.length) {
+        const excluidos = alias.excluidos.map(String);
+        resultado = resultado.filter(r => !excluidos.includes(String(r.id)));
+      }
+
       // Se já ensinamos qual produto corresponde a este texto, ele entra
       // como primeira opção (destacado), sem depender do score da busca.
       if (alias) {
@@ -3053,6 +3087,12 @@
       throw new Error('Resposta inesperada do Groq');
     }
 
+    // "Consultar Lista" e "Balanço" eram duas funções quase idênticas (as
+    // duas limpam a lista com IA e casam cada item com buscarVinculosDoItem)
+    // — a única diferença real do Balanço era comparar o resultado com um
+    // grupo. Por isso viraram um fluxo só: se um grupo estiver selecionado,
+    // a comparação (fora do grupo / sobras) aparece junto dos mesmos cards,
+    // sem duplicar a busca nem perder a possibilidade de corrigir/ensinar.
     document.getElementById('ia-processar').addEventListener('click', async function () {
       const raw = document.getElementById('ia-raw').value.trim();
       if (!raw) {
@@ -3062,8 +3102,10 @@
       }
       document.getElementById('ia-erro').style.display = 'none';
       document.getElementById('ia-mover-grupo').style.display = 'none';
+      document.getElementById('ia-balanco-res').style.display = 'none';
       resultadosBuscaLoteGlobal = [];
       _ultimasSobrasBalanco = [];
+      const grupoId = document.getElementById('ia-grupo-ref').value;
       const btn = this;
       btn.disabled = true; btn.textContent = '⏳ Processando…';
 
@@ -3091,6 +3133,12 @@
         prog.style.width = '2%';
         await sincronizarAliasesRemoto();
 
+        let produtosNoGrupo = [];
+        if (grupoId) {
+          status.textContent = '📦 Carregando produtos do grupo selecionado…';
+          produtosNoGrupo = await carregarProdutosDoGrupo(grupoId);
+        }
+
         status.textContent = 'Baixando catálogo de produtos…';
         prog.style.width = '5%';
         await carregarCacheProdutos(function (pag, total) {
@@ -3099,6 +3147,7 @@
         });
 
         var comEst = 0, semEst = 0, naoAch = 0;
+        const idsListados = new Set();
 
         for (var i = 0; i < itens.length; i++) {
           let itemRaw = itens[i];
@@ -3110,6 +3159,7 @@
 
           const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
           const card = document.createElement('div');
+          card.id = 'ia-card-' + i;
 
           let baseHtml = '';
 
@@ -3120,6 +3170,17 @@
             '<span class="ia-nome" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + tituloEscapado + '">' + nomeOriginal + '</span>' +
             (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
             '</div>';
+
+          const top = vinculos && vinculos.length ? vinculos[0] : null;
+          const foraDoGrupo = !!(grupoId && top && String(top.grupo_id) !== String(grupoId));
+          const foraBadgeHtml = '<span id="ia-fora-badge-' + i + '" title="Este produto está cadastrado em outro grupo" ' +
+            'style="background:#e74c3c;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;margin-top:2px;' + (foraDoGrupo ? '' : 'display:none;') + '">' +
+            '🚩 ' + (top ? (top.nome_grupo || 'outro grupo') : '') + '</span>';
+
+          if (grupoId) {
+            resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: top, foraDoGrupo: foraDoGrupo });
+            if (top) idsListados.add(top.id);
+          }
 
           if (!vinculos || !vinculos.length) {
             baseHtml =
@@ -3135,26 +3196,31 @@
             const temEst = total > 0;
             if (temEst) comEst++; else semEst++;
 
+            var chaveItem = encodeURIComponent(chaveAprendizado(nomeBusca));
             var candidatos = '';
             vinculos.forEach(function (v) {
               candidatos +=
                 '<div class="ia-cand-row">' +
                 (v.aprendido
                   ? '<span class="ia-cand-badge-aprendido" title="Vínculo ensinado anteriormente">🧠</span>' +
-                    '<button class="ia-cand-esquecer" data-key="' + encodeURIComponent(chaveAprendizado(nomeBusca)) + '" title="Este vínculo está errado? Clique para esquecer.">🗑️</button>'
+                    '<button class="ia-cand-esquecer" data-key="' + chaveItem + '" title="Este vínculo está errado? Clique para esquecer.">🗑️</button>'
                   : '') +
                 '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
                 '<span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' +
                 (v.estoque > 0
-                  ? '<button class="ia-cand-btn add ia-add-vinc" data-idx="' + i + '" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
+                  ? '<button class="ia-cand-btn add ia-add-vinc" data-idx="' + i + '" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '" data-grupoid="' + (v.grupo_id != null ? v.grupo_id : '') + '" data-nomegrupo="' + encodeURIComponent(v.nome_grupo || '') + '">+</button>'
                   : '<button class="ia-cand-btn dis" disabled>+</button>') +
+                '<button class="ia-cand-excluir" data-key="' + chaveItem + '" data-pid="' + v.id + '" title="Não é esse produto — nunca sugerir de novo para esta busca">🚫</button>' +
                 '</div>';
             });
 
             baseHtml =
               '<div class="ia-card-head" style="align-items:flex-start;">' +
               infoHtml +
-              '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '" style="margin-top:2px;">' + (temEst ? '✓ ' : '⚠ ') + total + '</span>' +
+              '<div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">' +
+              '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '">' + (temEst ? '✓ ' : '⚠ ') + total + '</span>' +
+              (grupoId ? foraBadgeHtml : '') +
+              '</div>' +
               '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button>' +
               '</div>' +
               candidatos;
@@ -3177,10 +3243,29 @@
         grid.querySelectorAll('.ia-add-vinc').forEach(function (b) {
           b.addEventListener('click', function () {
             const nome = decodeURIComponent(b.dataset.pnome);
+            const idx = b.dataset.idx;
             adicionarAoCarrinho({ id: b.dataset.pid, nome: nome, estoque: parseInt(b.dataset.pest) });
-            const idxItem = _iaResultados[b.dataset.idx];
+            const idxItem = _iaResultados[idx];
             ensinarAlias(idxItem ? (idxItem.busca || idxItem.nome) : nome, { id: b.dataset.pid, nome: nome });
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
+
+            // Com grupo selecionado, a escolha manual corrige a divergência
+            // mostrada nesse card (produto certo substitui o palpite
+            // automático usado no relatório/Copiar Divergências).
+            if (grupoId && resultadosBuscaLoteGlobal[idx]) {
+              const nomeGrupoEscolhido = decodeURIComponent(b.dataset.nomegrupo || '');
+              const foraAgora = String(b.dataset.grupoid || '') !== String(grupoId);
+              resultadosBuscaLoteGlobal[idx].vinculo = {
+                id: b.dataset.pid, nome: nome, estoque: parseInt(b.dataset.pest),
+                grupo_id: b.dataset.grupoid || '', nome_grupo: nomeGrupoEscolhido
+              };
+              resultadosBuscaLoteGlobal[idx].foraDoGrupo = foraAgora;
+              const badge = document.getElementById('ia-fora-badge-' + idx);
+              if (badge) {
+                badge.style.display = foraAgora ? '' : 'none';
+                badge.textContent = '🚩 ' + (nomeGrupoEscolhido || 'outro grupo');
+              }
+            }
           });
         });
 
@@ -3193,6 +3278,18 @@
             const linha = this.closest('.ia-cand-row');
             linha.style.opacity = '0.4';
             this.disabled = true;
+          });
+        });
+
+        // 🚫 em qualquer candidato: nunca mais sugerir esse produto para
+        // esta mesma busca (cor/modelo errado aparecendo junto dos certos).
+        grid.querySelectorAll('.ia-cand-excluir').forEach(function (b) {
+          b.addEventListener('click', function () {
+            excluirCandidato(decodeURIComponent(this.dataset.key), this.dataset.pid);
+            mostrarToast('🚫 Não vai mais sugerir esse produto para essa busca.');
+            const linha = this.closest('.ia-cand-row');
+            linha.style.opacity = '0.3';
+            linha.querySelectorAll('button').forEach(function (bb) { bb.disabled = true; });
           });
         });
 
@@ -3218,10 +3315,24 @@
           });
         });
 
+        let resumoTxt = '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+
+        if (grupoId) {
+          const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
+          _ultimasSobrasBalanco = sobras;
+          document.getElementById('ia-mover-grupo').style.display = 'flex';
+          const resDiv = document.getElementById('ia-balanco-res');
+          resDiv.style.display = 'block';
+          resDiv.innerHTML = sobras.length
+            ? '<h4>⚠️ Itens em estoque NESTE GRUPO que não aparecem na sua lista (' + sobras.length + '):</h4>' +
+              sobras.map(p => '<div class="ia-balanco-item"><span>' + p.nome.substring(0, 45) + '</span><span class="ia-balanco-badge">' + p.estoque + ' em estoque</span></div>').join('')
+            : '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
+          resumoTxt += '  •  🔀 ' + resultadosBuscaLoteGlobal.filter(r => r.foraDoGrupo).length + ' fora do grupo  •  📦 ' + sobras.length + ' sobrando no grupo';
+        }
+
         status.textContent = 'Concluído!';
         prog.style.width = '100%';
-        document.getElementById('ia-resumo').textContent =
-          '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+        document.getElementById('ia-resumo').textContent = resumoTxt;
         if (comEst > 0) document.getElementById('ia-add-todos').style.display = 'block';
 
       } catch (err) {
@@ -3253,105 +3364,6 @@
         const d = await r.json();
         return (d.code === 200 && d.data) ? d.data : [];
       } catch (e) { return []; }
-    }
-
-    async function realizarBalanco() {
-      const raw = el('ia-raw').value.trim();
-      const grupoId = el('ia-grupo-ref').value;
-      if (!raw) { mostrarToast('⚠ Cole a lista primeiro'); return; }
-      if (!grupoId) { mostrarToast('⚠ Selecione um grupo para o balanço'); return; }
-
-      el('ia-passo1').style.display = 'none';
-      el('ia-passo2').style.display = 'flex';
-      el('ia-balanco-res').style.display = 'none';
-      el('ia-grid').innerHTML = '';
-      el('ia-add-todos').style.display = 'none';
-      el('ia-mover-grupo').style.display = 'none';
-      _ultimasSobrasBalanco = [];
-
-      el('ia-status').innerHTML = '🔗 Atualizando aprendizado com a nuvem…';
-      await sincronizarAliasesRemoto();
-
-      try {
-        el('ia-status').innerHTML = '⚖️ Realizando Balanço...';
-        const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
-        const respText = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
-        
-        let itensListados;
-        try {
-          itensListados = JSON.parse(respText.replace(/```json|```/g, '').trim());
-        } catch (e) {
-          console.error('Erro de parse JSON da IA:', respText, e);
-          el('ia-status').innerHTML = '❌ Resposta da IA com formato inválido. Tente novamente.';
-          el('ia-balanco').disabled = false;
-          return;
-        }
-
-        if (!Array.isArray(itensListados) || !itensListados.length) {
-          el('ia-status').innerHTML = '❌ Não foi possível identificar itens na lista.';
-          return;
-        }
-
-        const produtosNoGrupo = await carregarProdutosDoGrupo(grupoId);
-        const idsListados = new Set();
-        resultadosBuscaLoteGlobal = [];
-        
-        el('ia-status').innerHTML = `🔍 Cruzando ${itensListados.length} itens com ${produtosNoGrupo.length} do grupo...`;
-
-        for (let i = 0; i < itensListados.length; i++) {
-          const item = itensListados[i];
-          const nomeOriginal = typeof item === 'string' ? item : (item.original || item.busca || "Produto");
-          const nomeBusca = typeof item === 'string' ? item : (item.busca || item.original);
-          
-          el('ia-prog').style.width = ((i + 1) / itensListados.length * 100) + '%';
-          const vs = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
-          
-          if (vs && vs.length > 0) {
-            const v = vs[0];
-            idsListados.add(v.id);
-            const foraDoGrupo = String(v.grupo_id) !== String(grupoId);
-            resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: v, foraDoGrupo });
-          } else {
-            resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: null });
-          }
-        }
-
-        const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
-        _ultimasSobrasBalanco = sobras;
-        el('ia-status').innerHTML = '✅ Balanço Concluído';
-        el('ia-mover-grupo').style.display = 'flex';
-
-        if (sobras.length > 0) {
-          el('ia-balanco-res').style.display = 'block';
-          el('ia-balanco-res').innerHTML = `<h4>⚠️ Itens em Estoque NESTE GRUPO não mencionados na lista:</h4>` +
-            sobras.map(p => `<div class="ia-balanco-item"><span>${p.nome.substring(0, 45)}...</span><span class="ia-balanco-badge">${p.estoque} em estoque</span></div>`).join('');
-        } else {
-          el('ia-balanco-res').style.display = 'block';
-          el('ia-balanco-res').innerHTML = '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
-        }
-
-        el('ia-grid').innerHTML = resultadosBuscaLoteGlobal.map((res, idx) => `
-          <div class="ia-res-card" style="background:#fff; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid ${res.foraDoGrupo ? '#e74c3c' : '#eee'};">
-            <div style="font-weight:700; font-size:12px; margin-bottom:2px; display:flex; align-items:center; gap:8px;">
-              ${res.original}
-              ${res.foraDoGrupo ? '<span title="Este produto pertence a OUTRO grupo" style="background:#e74c3c; color:#fff; font-size:9px; padding:1px 5px; border-radius:4px;">🚩 OUTRO GRUPO</span>' : ''}
-            </div>
-            ${res.vinculo ? `
-              <div class="ia-cand-row" style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:6px; border-radius:6px;">
-                <span style="flex:1; font-size:11px;">${res.vinculo.nome}</span>
-                <span class="ia-cand-est ok" style="font-size:11px;">✓ ${res.vinculo.estoque}</span>
-                <button class="ia-cand-btn add" onclick="adicionarAoCarrinho({id:'${res.vinculo.id}', nome:'${res.vinculo.nome}', estoque:${res.vinculo.estoque}})">+</button>
-              </div>
-              ${res.foraDoGrupo ? `<div style="font-size:10px; color:#c0392b; margin-top:4px;">Grupo Atual: <b>${res.vinculo.nome_grupo || 'Não definido'}</b></div>` : ''}
-            ` : `<div style="font-size:11px; color:#e74c3c;">Não vinculado automaticamente.</div>`}
-          </div>
-        `).join('');
-
-      } catch (err) {
-        console.error(err);
-        el('ia-status').innerHTML = '❌ Erro ao realizar balanço';
-      }
-      el('ia-balanco').disabled = false;
     }
 
     // Este painel é apenas de CONFERÊNCIA: ele nunca grava nada no sistema
@@ -3395,7 +3407,6 @@
       });
     }
 
-    el('ia-balanco').addEventListener('click', () => { el('ia-balanco').disabled = true; realizarBalanco(); });
     el('ia-mover-grupo').addEventListener('click', copiarDivergenciasGrupo);
 
     // Inicialização imediata dos grupos e cache silencioso
