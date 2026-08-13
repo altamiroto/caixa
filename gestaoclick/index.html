@@ -2309,7 +2309,7 @@
     // sem isso, produtos diferentes da mesma marca/tamanho (ex.: duas TVs
     // 40" de modelos distintos) viravam a mesma busca genérica, o que
     // atrapalha tanto a deduplicação quanto a busca real no catálogo.
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v6';
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v7';
     const IA_PROMPT_DEFAULT = `Você processa listas de produtos eletrônicos (catálogos de preço do WhatsApp ou listas de estoque físico) e devolve um array JSON.
 
 IGNORE linhas que são só: quantidade solta ("6", "6\t+"), título/cabeçalho de seção (*SAMSUNG*, 📢 Lista Exclusiva), data solta, preço isolado, saudação ou aviso sem produto.
@@ -2319,7 +2319,9 @@ CORRIJA typos óbvios antes de gerar "busca": XAIOM/XAOMI/XAIOMI → Xiaomi, ZUL
 Para cada produto real, extraia:
 - "original": a linha como veio, limpa (sem emoji, sem *marcação*, sem crase).
 - "busca": nome padronizado para busca — marca + modelo + memória no formato "8/256gb" ou "256gb" (quando houver) + conectividade (4G/5G, só se mencionada) + polegadas para TVs (ex.: 43"). IMPORTANTE: sempre mantenha o CÓDIGO/REFERÊNCIA do produto quando existir (ex.: 43UA7500PSA, 40S5400A, U8100F, Pro/Max/Plus/Ultra/FE) — é isso que diferencia produtos parecidos da mesma marca e tamanho/memória; nunca resuma pra um nome genérico. NUNCA inclua cor, preço, bateria, condição ou specs de marketing (HDR, Alexa, Gaming Hub, Xbox Cloud Gaming etc).
-- "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Titanium/Natural/Desert/Storm Titanium→Cinza. Se a linha citar 2+ cores ("Preto/Branco", "Preto | Verde", "Preto/Azul/Titanium"), liste TODAS separadas, sem exceção — é um erro grave esquecer uma cor do meio ou do fim da lista (ex.: "Preto/Azul/Titanium" DEVE virar ["Preto","Azul","Cinza"], nunca só ["Preto","Azul"]); cada cor esquecida é um produto inteiro que desaparece do relatório de estoque. Se não houver cor identificável, use [].
+- "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Natural/Desert→Cinza. IMPORTANTE: "Titanium"/"Titânio" NUNCA vira Cinza — mantenha como "Titanium" (é uma cor própria; produtos reais têm SKU "Titanium" separado do SKU "Cinza", tratar como sinônimo esconde produto errado).
+  Regra de separação: só quebre em cores DIFERENTES quando houver separador explícito entre elas ("/", "|", ",") — ex.: "Preto/Branco", "Preto | Verde", "Preto/Azul/Titanium" (aqui SIM são 3 cores: ["Preto","Azul","Titanium"], nunca esqueça nenhuma, é erro grave sumir com a do meio/fim). Quando NÃO há separador — duas ou mais palavras de cor grudadas formando um nome comercial composto, tipo "Titanium Prata", "Titânio Prata", "Space Gray", "Phantom Black", "Rose Gold" — isso é UMA cor só, mantenha as palavras juntas como uma única string no array (ex.: "S25 Ultra - Titanium Prata" → cores:["Titanium Prata"], NUNCA ["Titanium","Prata"] — quebrar em duas cores diferentes faz a busca falhar porque não existe produto separado "Titanium" nem produto separado "Prata", só existe o composto).
+  Se não houver cor identificável, use [].
 
 Se a MESMA linha (produto idêntico, mesmo código/modelo) aparecer repetida em seções diferentes (ex.: varejo e atacado), inclua apenas uma vez — priorize a ocorrência com mais informação. Produtos parecidos mas com código/modelo diferente NÃO são duplicata — mantenha os dois.
 
@@ -2400,7 +2402,15 @@ Exemplo de saída:
       rosa: 'rosa', pink: 'rosa', rose: 'rosa',
       dourado: 'dourado', dourada: 'dourado', gold: 'dourado', golden: 'dourado',
       vermelho: 'vermelho', vermelha: 'vermelho', red: 'vermelho',
-      cinza: 'cinza', gray: 'cinza', grey: 'cinza', titanium: 'cinza', natural: 'cinza', desert: 'cinza', aurora: 'cinza', 'storm titanium': 'cinza',
+      cinza: 'cinza', gray: 'cinza', grey: 'cinza', natural: 'cinza', desert: 'cinza', aurora: 'cinza',
+      // "Titanium"/"Titânio" NÃO é sinônimo automático de Cinza — em vários
+      // produtos reais são SKUs DIFERENTES (ex.: "... TITANIUM COLOR" e
+      // "... CINZA" cadastrados separadamente, com estoques diferentes).
+      // Tratar como cor própria evita casar um pelo outro sem o usuário
+      // pedir; se ele quiser considerar equivalentes, isso é uma decisão
+      // dele via aprendizado (ensinar o vínculo manualmente), não algo
+      // que o sistema decide sozinho.
+      titanium: 'titanium', titanio: 'titanium',
       bege: 'bege', creme: 'bege',
       amarelo: 'amarelo', amarela: 'amarelo',
       marrom: 'marrom',
@@ -2835,35 +2845,56 @@ Exemplo de saída:
       const loja = lojaIdJeta;
       const delay = ms => new Promise(r => setTimeout(r, ms));
 
-      const url1 = new URL(base);
-      url1.searchParams.set('loja_id', loja);
-      url1.searchParams.set('limite', '100');
-      url1.searchParams.set('pagina', '1');
-      const r1 = await fetch(url1.toString());
-      if (!r1.ok) throw new Error('HTTP ' + r1.status);
-      const d1 = await r1.json();
-      if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+      // Busca uma página com retentativas (falha de rede/instabilidade
+      // pontual da API não pode virar "página sumida" silenciosa — já
+      // aconteceu de verdade: uma página cortada tirava produtos reais
+      // (com estoque, às vezes até com aprendizado salvo) da busca inteira
+      // sem nenhum aviso, parecendo aleatório e difícil de reproduzir.
+      async function buscarPagina(p, tentativas) {
+        for (let t = 0; t < (tentativas || 3); t++) {
+          try {
+            const url = new URL(base);
+            url.searchParams.set('loja_id', loja);
+            url.searchParams.set('limite', '100');
+            url.searchParams.set('pagina', p);
+            const r = await fetch(url.toString());
+            if (r.ok) {
+              const d = await r.json();
+              if (d.code === 200) return d;
+            }
+          } catch (e) { /* tenta de novo abaixo */ }
+          if (t < (tentativas || 3) - 1) await delay(800 * (t + 1));
+        }
+        return null;
+      }
+
+      const d1 = await buscarPagina(1);
+      if (!d1) throw new Error('Não foi possível carregar o catálogo de produtos (falha na página 1, mesmo após tentar de novo).');
 
       const totalPaginas = d1.meta?.total_paginas || 1;
       let todos = [...(d1.data || [])];
+      let paginasComFalha = 0;
 
       if (onProgress) onProgress(1, totalPaginas, todos.length);
 
       for (let p = 2; p <= totalPaginas; p++) {
-        const url = new URL(base);
-        url.searchParams.set('loja_id', loja);
-        url.searchParams.set('limite', '100');
-        url.searchParams.set('pagina', p);
-        try {
-          const r = await fetch(url.toString());
-          if (r.ok) {
-            const d = await r.json();
-            if (d.code === 200 && d.data) todos = todos.concat(d.data);
-          }
-        } catch (e) { /* ignora página com falha */ }
+        const d = await buscarPagina(p);
+        if (d && d.data) todos = todos.concat(d.data);
+        else paginasComFalha++;
 
         if (onProgress) onProgress(p, totalPaginas, todos.length);
         if ((p - 1) % 3 === 0) await delay(1100);
+      }
+
+      if (paginasComFalha > 0) {
+        // NUNCA guarda um catálogo incompleto como se fosse o completo —
+        // isso já causou produtos reais sumirem da busca e do relatório de
+        // sobras sem aviso nenhum. Melhor falhar alto e visível (o usuário
+        // vê o erro e pode tentar de novo) do que continuar calado com
+        // dados faltando.
+        _prodCache = [];
+        _prodCacheTs = 0;
+        throw new Error('Catálogo carregado incompleto: ' + paginasComFalha + ' de ' + totalPaginas + ' página(s) falharam mesmo após tentar de novo. Tente processar de novo — se persistir, pode ser instabilidade temporária na API da loja.');
       }
 
       _prodCache = todos;
@@ -3452,9 +3483,19 @@ Exemplo de saída:
         });
         if (!melhor || melhorScore < 0.6) return;
 
-        const jaTem = new Set((Array.isArray(item.cores) ? item.cores : []).map(function (c) {
-          return CORES_CANONICAS[normStr(c)] || normStr(c);
-        }));
+        // Varre cada cor que a IA já devolveu procurando TODAS as cores
+        // canônicas contidas nela — não só um match exato. Isso é o que
+        // faz nomes compostos ("Titanium Prata") contarem como já cobrindo
+        // "titanium" E "prata", em vez de serem tratados como uma cor
+        // desconhecida e gerar uma re-inclusão duplicada e errada delas
+        // separadas.
+        const jaTem = new Set();
+        (Array.isArray(item.cores) ? item.cores : []).forEach(function (c) {
+          const nc = normStr(c);
+          CORES_PARA_CHAVE.forEach(function (k) {
+            if (new RegExp('\\b' + k + '\\b').test(nc)) jaTem.add(CORES_CANONICAS[k]);
+          });
+        });
         const nLinha = normStr(melhor);
         CORES_PARA_CHAVE.forEach(function (c) {
           if (!new RegExp('\\b' + c + '\\b').test(nLinha)) return;
@@ -3936,7 +3977,7 @@ Exemplo de saída:
     // Inicialização imediata dos grupos e cache silencioso
     window.addEventListener('DOMContentLoaded', () => {
       carregarGrupos();
-      carregarCacheProdutos(); // Carrega em background para a IA e busca inteligente
+      carregarCacheProdutos().catch(function () { /* tentativa em background — falha aqui só significa que o próximo uso real vai tentar de novo (e aí sim mostrar erro) */ }); // Carrega em background para a IA e busca inteligente
       atualizarContadorAprendizado();
       if (_sheetUrl) sincronizarAliasesRemoto(); // puxa aprendizados de outros dispositivos
     });
