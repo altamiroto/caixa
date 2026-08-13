@@ -3830,11 +3830,41 @@ Exemplo de saída:
     // --- RECONCILIAÇÃO / BALANÇO DE ESTOQUE ---
     async function carregarProdutosDoGrupo(grupoId) {
       if (!grupoId) return _prodCache;
-      const url = `${API_HOST}/api/produtos?loja_id=${lojaIdJeta}&grupo_id=${grupoId}&limite=500`;
+      const delay = ms => new Promise(r => setTimeout(r, ms));
       try {
-        const r = await fetch(url);
-        const d = await r.json();
-        return (d.code === 200 && d.data) ? d.data : [];
+        const url1 = new URL(`${API_HOST}/api/produtos`);
+        url1.searchParams.set('loja_id', lojaIdJeta);
+        url1.searchParams.set('grupo_id', grupoId);
+        url1.searchParams.set('limite', '100');
+        url1.searchParams.set('pagina', '1');
+        const r1 = await fetch(url1.toString());
+        const d1 = await r1.json();
+        if (d1.code !== 200) return [];
+
+        let todos = [...(d1.data || [])];
+        // IMPORTANTE: assim como carregarCacheProdutos, precisa varrer TODAS
+        // as páginas — uma única requisição (mesmo com limite alto) pode ser
+        // cortada pela API antes do fim do grupo, fazendo produtos com
+        // estoque sumirem silenciosamente do cálculo de "sobras" (bug real
+        // já visto: produto existente e com estoque não aparecia porque
+        // ficava na 2ª página, que nunca era buscada).
+        const totalPaginas = d1.meta?.total_paginas || 1;
+        for (let p = 2; p <= totalPaginas; p++) {
+          const url = new URL(`${API_HOST}/api/produtos`);
+          url.searchParams.set('loja_id', lojaIdJeta);
+          url.searchParams.set('grupo_id', grupoId);
+          url.searchParams.set('limite', '100');
+          url.searchParams.set('pagina', p);
+          try {
+            const r = await fetch(url.toString());
+            if (r.ok) {
+              const d = await r.json();
+              if (d.code === 200 && d.data) todos = todos.concat(d.data);
+            }
+          } catch (e) { /* ignora página com falha */ }
+          if ((p - 1) % 3 === 0) await delay(1100);
+        }
+        return todos;
       } catch (e) { return []; }
     }
 
