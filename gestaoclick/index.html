@@ -1732,6 +1732,10 @@
           <summary style="cursor:pointer; font-size:12px; font-weight:700; color:#8a6d00;">🐞 Debug da IA (temporário) — clique pra abrir</summary>
           <div id="ia-debug-conteudo" style="margin-top:8px;"></div>
         </details>
+        <details id="ia-debug-balanco-box" style="display:none; border:1px dashed #7c3aed; border-radius:8px; padding:8px 10px; background:#f5f0ff; margin-bottom:4px;">
+          <summary style="cursor:pointer; font-size:12px; font-weight:700; color:#5b21b6;">🔍 Debug da conciliação (temporário) — clique pra abrir</summary>
+          <div id="ia-debug-balanco-conteudo" style="margin-top:8px;"></div>
+        </details>
         <div id="ia-balanco-res" class="ia-balanco-results" style="display:none;"></div>
         <div class="ia-res-grid" id="ia-grid"></div>
       </div>
@@ -3357,6 +3361,40 @@ Exemplo de saída:
     // contagem de tokens) pra investigar consumo anormal. Remover depois
     // (junto com o bloco #ia-debug-box no HTML e renderizarDebugIA abaixo).
     let _debugIA = null;
+    let _debugBalanco = null;
+
+    // DEBUG TEMPORÁRIO — mostra, pra cada linha da lista, quais candidatos
+    // o motor de busca achou e qual foi contado como "resolvido" (topId),
+    // mais a lista COMPLETA de produtos do grupo com estoque > 0 pra dar
+    // pra achar (Ctrl+F) um produto específico e ver exatamente onde ele
+    // apareceu (ou não apareceu) durante a conciliação.
+    function renderizarDebugBalanco() {
+      const box = document.getElementById('ia-debug-balanco-box');
+      const conteudo = document.getElementById('ia-debug-balanco-conteudo');
+      if (!box || !conteudo || !_debugBalanco) return;
+
+      const linhasTraco = _debugBalanco.tracoConciliacao.map(function (t) {
+        const candStr = t.candidatos.map(function (c) {
+          return '    ' + (c.aprendido ? '🧠 ' : '') + c.nome + ' (id=' + c.id + ', estoque=' + c.estoque + ')';
+        }).join('\n');
+        return t.original + '  [cor alvo: ' + (t.corAlvo || '(nenhuma)') + ', cor confirmada: ' + t.corConfirmada + ']\n' +
+          '  → resolvido: ' + (t.topId ? (t.topNome + ' (id=' + t.topId + ')') : '(NENHUM — não contou pra conciliação)') + '\n' +
+          (candStr || '    (nenhum candidato encontrado)');
+      }).join('\n\n');
+
+      const listaGrupo = _debugBalanco.produtosNoGrupo
+        .filter(function (p) { return p.estoque > 0; })
+        .map(function (p) { return p.nome + '  (id=' + p.id + ', estoque=' + p.estoque + ')' + (_debugBalanco.idsListados.includes(p.id) ? '  ✅ contado na lista' : '  ⚠️ NÃO contado'); })
+        .join('\n');
+
+      conteudo.innerHTML =
+        '<div style="font-size:11px;color:#888;margin-bottom:6px;">Grupo: ' + _debugBalanco.grupoId + ' · ' + _debugBalanco.totalProdutosNoGrupo + ' produtos no grupo · use Ctrl+F do navegador pra achar um produto específico.</div>' +
+        '<div class="ia-label" style="margin-bottom:2px;">Rastro por linha da lista:</div>' +
+        '<pre class="ia-debug-pre">' + linhasTraco.replace(/</g, '&lt;') + '</pre>' +
+        '<div class="ia-label" style="margin:8px 0 2px;">Todos os produtos COM ESTOQUE neste grupo (✅ = contado como presente na lista, ⚠️ = não contado → deveria estar em "sobras"):</div>' +
+        '<pre class="ia-debug-pre">' + listaGrupo.replace(/</g, '&lt;') + '</pre>';
+      box.style.display = 'block';
+    }
 
     function renderizarDebugIA() {
       const box = document.getElementById('ia-debug-box');
@@ -3468,6 +3506,8 @@ Exemplo de saída:
       document.getElementById('ia-erro').style.display = 'none';
       document.getElementById('ia-mover-grupo').style.display = 'none';
       document.getElementById('ia-balanco-res').style.display = 'none';
+      document.getElementById('ia-debug-balanco-box').style.display = 'none';
+      _debugBalanco = null;
       resultadosBuscaLoteGlobal = [];
       _ultimasSobrasBalanco = [];
       const grupoId = document.getElementById('ia-grupo-ref').value;
@@ -3515,6 +3555,7 @@ Exemplo de saída:
 
         var comEst = 0, semEst = 0, naoAch = 0;
         const idsListados = new Set();
+        const tracoConciliacao = []; // DEBUG TEMPORÁRIO — ver renderizarDebugBalanco
 
         for (var i = 0; i < itens.length; i++) {
           // itens já vem normalizado por expandirCoresDaLista: {original, busca}
@@ -3548,6 +3589,18 @@ Exemplo de saída:
           // sobras. O card continua mostrando os candidatos pra escolha
           // manual de qualquer forma (isso não depende de "top").
           const top = (vinculos && vinculos.length && vinculos.corConfirmada) ? vinculos[0] : null;
+
+          if (grupoId) {
+            tracoConciliacao.push({
+              original: nomeOriginal, busca: nomeBusca,
+              corAlvo: extrairCorParaChave(nomeOriginal),
+              qtdCandidatos: vinculos ? vinculos.length : 0,
+              corConfirmada: !!(vinculos && vinculos.corConfirmada),
+              candidatos: (vinculos || []).map(v => ({ id: v.id, nome: v.nome, estoque: v.estoque, aprendido: !!v.aprendido })),
+              topId: top ? top.id : null, topNome: top ? top.nome : null
+            });
+          }
+
           const foraDoGrupo = !!(grupoId && top && String(top.grupo_id) !== String(grupoId));
           const foraBadgeHtml = '<span id="ia-fora-badge-' + i + '" title="Este produto está cadastrado em outro grupo" ' +
             'style="background:#e74c3c;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;margin-top:2px;' + (foraDoGrupo ? '' : 'display:none;') + '">' +
@@ -3731,6 +3784,22 @@ Exemplo de saída:
               sobras.map(p => '<div class="ia-balanco-item"><span>' + p.nome.substring(0, 45) + '</span><span class="ia-balanco-badge">' + p.estoque + ' em estoque</span></div>').join('')
             : '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
           resumoTxt += '  •  🔀 ' + resultadosBuscaLoteGlobal.filter(r => r.foraDoGrupo).length + ' fora do grupo  •  📦 ' + sobras.length + ' sobrando no grupo';
+
+          // DEBUG TEMPORÁRIO — rastro completo da conciliação: pra cada
+          // linha da lista, quais candidatos apareceram e qual foi
+          // "resolvido" (topId); mais a lista inteira de produtos do grupo
+          // (produtosNoGrupo) com id/nome/estoque, pra buscar diretamente
+          // (Ctrl+F) um produto específico e ver se ele apareceu como
+          // candidato de alguma linha ou não apareceu em lugar nenhum.
+          _debugBalanco = {
+            grupoId: grupoId,
+            totalProdutosNoGrupo: produtosNoGrupo.length,
+            produtosNoGrupo: produtosNoGrupo.map(function (p) { return { id: p.id, nome: p.nome, estoque: Number(p.estoque || 0) }; }),
+            idsListados: [...idsListados],
+            tracoConciliacao: tracoConciliacao,
+            sobras: sobras.map(function (p) { return { id: p.id, nome: p.nome, estoque: p.estoque }; })
+          };
+          renderizarDebugBalanco();
         }
 
         status.textContent = 'Concluído!';
