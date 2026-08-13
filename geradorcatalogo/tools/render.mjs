@@ -10,7 +10,9 @@
  *   node tools/render.mjs samples/apple.txt --tema rose --marca "Minha Loja"
  *
  * Opções:
- *   --tema <id>       17 temas; veja o README                (padrão: noite)
+ *   --tema <id>       121 temas; veja o README                (padrão: noite)
+ *                     use `aleatorio` para sortear um tema inédito a cada run
+ *   --semente <n>     torna o sorteio reproduzível
  *   --saida <dir>     diretório de destino                   (padrão: ./saida)
  *   --marca <texto>   assinatura no rodapé
  *   --sobretitulo <t> linha acima do título; vazio esconde  (padrão: "Lista de produtos")
@@ -48,7 +50,7 @@ import { chromium } from 'playwright';
 
 import { parseVarios } from '../src/parser/parse.js';
 import { LARGURA, ALTURA, ALINHAMENTOS, MARGENS } from '../src/render/template.js';
-import { TEMA_PADRAO, TEMAS } from '../src/themes/temas.js';
+import { TEMA_PADRAO, TEMAS, sortearTema } from '../src/themes/temas.js';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HOST = 'http://gerador.local';
@@ -79,6 +81,7 @@ function lerArgumentos(argv) {
     remover: '',
     alinhar: {},
     margens: {},
+    semente: undefined,
     largura: 2160,
     html: false,
   };
@@ -107,6 +110,7 @@ function lerArgumentos(argv) {
     else if (a === '--margem-topo') opcoes.margens.topo = Number(proximo());
     else if (a === '--margem-lateral') opcoes.margens.lateral = Number(proximo());
     else if (a === '--margem-base') opcoes.margens.base = Number(proximo());
+    else if (a === '--semente') opcoes.semente = Number(proximo());
     else if (a === '--largura') opcoes.largura = Number(proximo());
     else if (a === '--html') opcoes.html = true;
     else if (a.startsWith('--')) throw new Error(`Opção desconhecida: ${a}`);
@@ -114,8 +118,12 @@ function lerArgumentos(argv) {
   }
 
   if (!opcoes.entrada) throw new Error('Informe o arquivo de entrada.');
-  if (!TEMAS[opcoes.tema]) {
-    throw new Error(`Tema "${opcoes.tema}" não existe. Use: ${Object.keys(TEMAS).join(', ')}`);
+  if (opcoes.tema !== 'aleatorio' && !TEMAS[opcoes.tema]) {
+    const amostra = Object.keys(TEMAS).slice(0, 8).join(', ');
+    throw new Error(
+      `Tema "${opcoes.tema}" não existe. São ${Object.keys(TEMAS).length} temas ` +
+        `(ex.: ${amostra}...) — ou use "aleatorio".`,
+    );
   }
   // Avisa em vez de aceitar calado: um valor errado viraria o padrão silencioso.
   for (const [coluna, valor] of Object.entries(opcoes.alinhar)) {
@@ -221,9 +229,21 @@ async function main() {
   const pagina = await contexto.newPage();
   await montarPalco(pagina);
 
+  // Sorteio: sem semente, o contador vem do relógio, então cada execução do dia
+  // sai com cor claramente diferente da anterior.
+  let sorteado = null;
+  if (opcoes.tema === 'aleatorio') {
+    const contador = Number.isFinite(opcoes.semente)
+      ? opcoes.semente
+      : Math.floor(Date.now() / 1000);
+    sorteado = sortearTema({ contador });
+    console.log(`Tema sorteado: ${sorteado.nome} (${sorteado.estilo})`);
+  }
+
   const gerados = [];
   const opcoesLayout = {
-    tema: opcoes.tema,
+    // O objeto inteiro, não o id: ver obterTema em src/themes/temas.js.
+    tema: sorteado ?? opcoes.tema,
     marca: opcoes.marca,
     sobretitulo: opcoes.sobretitulo,
     titulo: opcoes.titulo,

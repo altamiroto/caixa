@@ -33,7 +33,11 @@
   --fonte-obs: max(calc(16px * var(--escala)), 10px);
   --altura-linha: calc(1.22);
   --espaco-linha: calc(10px * var(--escala));
-  --raio: calc(14px * var(--escala));
+  /*
+   * --raio-mult vem do tema: é o eixo "estilo" do gerador (cápsula, plano,
+   * contorno, bloco). Tema que não define fica em 1, o desenho original.
+   */
+  --raio: calc(14px * var(--escala) * var(--raio-mult, 1));
 
   /*
    * Inter vem embutida em fonte.css. As famílias de emoji ficam depois: o
