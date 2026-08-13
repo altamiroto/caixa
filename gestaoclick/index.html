@@ -2603,6 +2603,44 @@ Exemplo de saída:
       return map[key] || null;
     }
 
+    // Palavras de marca que a IA às vezes inclui, às vezes não, pro MESMO
+    // produto (ex.: "Xiaomi Note 15" numa rodada, "Xiaomi Redmi Note 15" na
+    // seguinte; "Samsung A17" vs "Samsung Galaxy A17"). Isso fragmenta a
+    // chave de aprendizado em duas diferentes pro mesmo produto real, e o
+    // vínculo já ensinado "some" só porque o texto de hoje variou.
+    const TOKENS_MARCA_FLEXIVEIS = new Set(['redmi', 'galaxy', 'xiaomi', 'samsung', 'apple', 'moto', 'motorola']);
+
+    // Remove as palavras de marca flexíveis e devolve o restante ordenado —
+    // é o "núcleo" que realmente distingue um produto (modelo, memória,
+    // conectividade, sufixo Pro/Max/Ultra etc.), sem o ruído da IA variar
+    // se escreveu "Redmi"/"Galaxy" ou não.
+    function nucleoChave(baseTokensStr) {
+      return (baseTokensStr || '').split('|').filter(t => t && !TOKENS_MARCA_FLEXIVEIS.has(t)).sort().join('|');
+    }
+
+    // Como buscarAlias, mas se não achar a chave exata, procura por outra
+    // chave com a MESMA cor e o MESMO núcleo (só a marca variando) antes de
+    // desistir. Isso é o que faz um vínculo confirmado continuar valendo
+    // mesmo quando a IA reformula a busca de um jeito ligeiramente
+    // diferente na próxima consulta.
+    function buscarAliasTolerante(labelBusca, labelOriginal) {
+      const key = chaveAprendizado(labelBusca, labelOriginal);
+      if (!key) return null;
+      const map = carregarAliases();
+      if (map[key]) return map[key];
+
+      const [baseAtual, corAtual] = key.split('::');
+      const nucleoAtual = nucleoChave(baseAtual);
+      if (!nucleoAtual) return null;
+
+      for (const k in map) {
+        const [baseK, corK] = k.split('::');
+        if ((corK || '') !== (corAtual || '')) continue; // cor sempre exata, nunca aproxima
+        if (nucleoChave(baseK) === nucleoAtual) return map[k];
+      }
+      return null;
+    }
+
     function atualizarContadorAprendizado() {
       const el2 = document.getElementById('ia-aprendizado-count');
       if (el2) el2.textContent = Object.keys(carregarAliases()).length;
@@ -2956,7 +2994,7 @@ Exemplo de saída:
     async function buscarVinculosDoItem(item) {
       const label = item.label || item.sysname || '';
       const labelOriginal = item.original || label;
-      const alias = buscarAlias(label, labelOriginal);
+      const alias = buscarAliasTolerante(label, labelOriginal);
 
       let candidatos = [];
       if (_prodCache.length) {
@@ -3015,9 +3053,20 @@ Exemplo de saída:
       // quanto em pelo menos um candidato; senão mantém a lista cheia
       // (fallback seguro — melhor mostrar demais do que esconder o certo).
       const corAlvo = extrairCorParaChave(labelOriginal);
+      // Fica true quando a cor pedida bateu com pelo menos um candidato de
+      // verdade. Quando fica false (cor pedida, mas nenhum candidato tem
+      // essa cor reconhecível no nome — nome do produto sem cor no texto,
+      // grafia diferente etc.), o filtro "falha aberto" e mantém a lista
+      // cheia — só que aí o 1º colocado pode ser a cor ERRADA por pura
+      // coincidência de score. corConfirmada avisa o chamador pra não
+      // confiar cegamente nesse 1º colocado pra fins de conciliação
+      // (balanço/sobras), só pra exibir candidatos mesmo.
+      let corConfirmada = !corAlvo; // sem cor pedida, não há o que confirmar/negar
       if (corAlvo && resultado.length > 1) {
         const filtradoPorCor = resultado.filter(r => extrairCorParaChave(r.nome) === corAlvo);
-        if (filtradoPorCor.length) resultado = filtradoPorCor;
+        if (filtradoPorCor.length) { resultado = filtradoPorCor; corConfirmada = true; }
+      } else if (corAlvo && resultado.length === 1) {
+        corConfirmada = extrairCorParaChave(resultado[0].nome) === corAlvo;
       }
 
       // Candidatos marcados como "nunca sugira" para esta busca (🚫) nunca
@@ -3055,6 +3104,11 @@ Exemplo de saída:
         }
       }
 
+      // Sinaliza pro chamador (a) se o 1º colocado é confiável pra fins de
+      // conciliação — confirmado por cor OU explicitamente ensinado (humano
+      // sempre vence a heurística) — e (b) qual é, pra não precisar
+      // recalcular. Um vínculo aprendido no topo é sempre confiável.
+      resultado.corConfirmada = corConfirmada || (resultado.length > 0 && resultado[0].aprendido === true);
       return resultado;
     }
 
@@ -3485,7 +3539,15 @@ Exemplo de saída:
             (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
             '</div>';
 
-          const top = vinculos && vinculos.length ? vinculos[0] : null;
+          // Só conta como "resolvido" pra fins de conciliação (sobra/fora
+          // do grupo/relatório de divergências) quando a cor foi confirmada
+          // ou o produto foi ensinado manualmente. Sem isso, um candidato
+          // ambíguo (cor não identificável em nenhuma opção) podia virar o
+          // "1º colocado" só por coincidência de score e ser contado como
+          // certo — fazendo um produto de verdade sumir do relatório de
+          // sobras. O card continua mostrando os candidatos pra escolha
+          // manual de qualquer forma (isso não depende de "top").
+          const top = (vinculos && vinculos.length && vinculos.corConfirmada) ? vinculos[0] : null;
           const foraDoGrupo = !!(grupoId && top && String(top.grupo_id) !== String(grupoId));
           const foraBadgeHtml = '<span id="ia-fora-badge-' + i + '" title="Este produto está cadastrado em outro grupo" ' +
             'style="background:#e74c3c;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;margin-top:2px;' + (foraDoGrupo ? '' : 'display:none;') + '">' +
