@@ -1307,6 +1307,27 @@
       opacity: 1;
     }
 
+    .ia-cand-confirmar {
+      flex-shrink: 0;
+      background: #eafaf1;
+      border: 1px solid #a8e6c1;
+      color: #1e8e5a;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .ia-cand-confirmar:hover:not(:disabled) {
+      background: #1e8e5a;
+      color: #fff;
+    }
+
+    .ia-cand-confirmar:disabled {
+      cursor: default;
+    }
+
     .ia-debug-pre {
       background: #1a1a1a;
       color: #d4d4d4;
@@ -2361,14 +2382,33 @@ Exemplo de saída:
     // diferentes do mesmo modelo costumam ser produtos/estoques diferentes
     // no sistema — sem isso, ensinar numa cor aplicaria errado o estoque
     // de outra cor do mesmo modelo.
-    const CORES_PARA_CHAVE = ['preto', 'preta', 'branco', 'branca', 'azul', 'verde', 'roxo', 'roxa',
-      'cinza', 'dourado', 'dourada', 'rosa', 'prata', 'bege', 'vermelho', 'vermelha',
-      'amarelo', 'amarela', 'grafite', 'gold', 'creme', 'titanium', 'aurora', 'marrom',
-      'laranja', 'vinho', 'silver', 'blue', 'black', 'white', 'purple', 'gray', 'grey', 'transparente'];
+    // Mapa de sinônimo → cor CANÔNICA. Sem isso, "Preto" (de um card) e
+    // "Preta"/"Black"/"Midnight" (do nome do produto no catálogo) geravam
+    // chaves DIFERENTES mesmo sendo a mesma cor — quebrando tanto o
+    // aprendizado quanto o filtro de candidatos por cor.
+    const CORES_CANONICAS = {
+      preto: 'preto', preta: 'preto', black: 'preto', midnight: 'preto', grafite: 'preto', graphite: 'preto', 'space gray': 'preto',
+      branco: 'branco', branca: 'branco', white: 'branco', starlight: 'branco', estelar: 'branco',
+      prata: 'prata', silver: 'prata',
+      azul: 'azul', blue: 'azul', pacific: 'azul', sierra: 'azul',
+      verde: 'verde', green: 'verde', alpine: 'verde',
+      roxo: 'roxo', roxa: 'roxo', purple: 'roxo', violeta: 'roxo',
+      rosa: 'rosa', pink: 'rosa', rose: 'rosa',
+      dourado: 'dourado', dourada: 'dourado', gold: 'dourado', golden: 'dourado',
+      vermelho: 'vermelho', vermelha: 'vermelho', red: 'vermelho',
+      cinza: 'cinza', gray: 'cinza', grey: 'cinza', titanium: 'cinza', natural: 'cinza', desert: 'cinza', aurora: 'cinza', 'storm titanium': 'cinza',
+      bege: 'bege', creme: 'bege',
+      amarelo: 'amarelo', amarela: 'amarelo',
+      marrom: 'marrom',
+      laranja: 'laranja',
+      vinho: 'vinho',
+      transparente: 'transparente'
+    };
+    const CORES_PARA_CHAVE = Object.keys(CORES_CANONICAS).sort(function (a, b) { return b.length - a.length; });
 
     function extrairCorParaChave(label) {
       const n = normStr(label);
-      const achadas = CORES_PARA_CHAVE.filter(c => new RegExp('\\b' + c + '\\b').test(n));
+      const achadas = CORES_PARA_CHAVE.filter(c => new RegExp('\\b' + c + '\\b').test(n)).map(c => CORES_CANONICAS[c]);
       return [...new Set(achadas)].sort().join('+');
     }
 
@@ -2528,9 +2568,17 @@ Exemplo de saída:
       const excluidos = Array.isArray(atual.excluidos) ? atual.excluidos.slice() : [];
       const idStr = String(produtoId);
       if (!excluidos.includes(idStr)) excluidos.push(idStr);
+
+      // Contradição: se esse mesmo produto era o "correto" confirmado
+      // (ensinado) para essa chave, excluir precisa desfazer a confirmação
+      // — não faz sentido um produto ser ao mesmo tempo "sempre sugerir" e
+      // "nunca sugerir". Sem isso, buscarVinculosDoItem tirava o produto
+      // da lista pelo filtro de excluídos e depois o readicionava pelo
+      // caminho de promoção do aprendizado, ignorando a exclusão.
+      const eraOProdutoConfirmado = atual.id && String(atual.id) === idStr;
       const entrada = {
-        id: atual.id || '',
-        nome: atual.nome || '',
+        id: eraOProdutoConfirmado ? '' : (atual.id || ''),
+        nome: eraOProdutoConfirmado ? '' : (atual.nome || ''),
         exemplo: atual.exemplo || '',
         aprendidoEm: atual.aprendidoEm || new Date().toISOString(),
         excluidos: excluidos
@@ -2959,16 +3007,34 @@ Exemplo de saída:
           }));
       }
 
+      // Filtra candidatos pela cor já identificada (labelOriginal já vem com
+      // a cor específica dessa linha, ver expandirCoresDaLista). Isso é o
+      // que reduz "sempre aparece mais de um candidato" — antes a busca
+      // ignorava cor completamente e mostrava toda a família de cores do
+      // modelo. Só filtra quando dá pra identificar a cor tanto na busca
+      // quanto em pelo menos um candidato; senão mantém a lista cheia
+      // (fallback seguro — melhor mostrar demais do que esconder o certo).
+      const corAlvo = extrairCorParaChave(labelOriginal);
+      if (corAlvo && resultado.length > 1) {
+        const filtradoPorCor = resultado.filter(r => extrairCorParaChave(r.nome) === corAlvo);
+        if (filtradoPorCor.length) resultado = filtradoPorCor;
+      }
+
       // Candidatos marcados como "nunca sugira" para esta busca (🚫) nunca
-      // aparecem, mesmo que o motor de similaridade ache que combinam.
-      if (alias && Array.isArray(alias.excluidos) && alias.excluidos.length) {
-        const excluidos = alias.excluidos.map(String);
+      // aparecem, mesmo que o motor de similaridade (ou o filtro de cor
+      // acima) ache que combinam.
+      const excluidos = (alias && Array.isArray(alias.excluidos)) ? alias.excluidos.map(String) : [];
+      if (excluidos.length) {
         resultado = resultado.filter(r => !excluidos.includes(String(r.id)));
       }
 
       // Se já ensinamos qual produto corresponde a este texto, ele entra
-      // como primeira opção (destacado), sem depender do score da busca.
-      if (alias) {
+      // como primeira opção (destacado), sem depender do score/cor da
+      // busca. Nunca promove um produto que também esteja na lista de
+      // excluídos — evita reintroduzir pela promoção o que acabou de ser
+      // removido pelo filtro acima (ex.: excluir o mesmo produto que
+      // estava confirmado como correto).
+      if (alias && alias.id && !excluidos.includes(String(alias.id))) {
         const jaNoResultado = resultado.find(r => String(r.id) === String(alias.id));
         if (jaNoResultado) {
           jaNoResultado.aprendido = true;
@@ -3023,28 +3089,45 @@ Exemplo de saída:
         return `<div class="ia-cand-row">
                   <span class="ia-cand-nome" title="${p.nome}">${p.nome}</span>
                   <span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span>
-                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" 
-                          data-pid="${p.id}" 
-                          data-pnome="${encodeURIComponent(p.nome)}" 
-                          data-pest="${est}" 
+                  <button class="ia-cand-confirmar ia-confirmar-dinamico" data-pid="${p.id}" data-pnome="${encodeURIComponent(p.nome)}" title="Confirmar que este é o produto certo (não adiciona ao carrinho — funciona mesmo sem estoque)">✓</button>
+                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}"
+                          data-pid="${p.id}"
+                          data-pnome="${encodeURIComponent(p.nome)}"
+                          data-pest="${est}"
+                          title="Adicionar ao carrinho"
                           ${!ok ? 'disabled' : ''}>+</button>
                 </div>`;
       }).join('');
+
+      function ensinarDaBuscaDinamica(pid, nome) {
+        const item0 = _iaResultados[idx];
+        const buscaTxt = item0 ? (item0.busca || item0.nome || q) : q;
+        const originalTxt = item0 ? (item0.nome || item0.busca || q) : q;
+        ensinarAlias(buscaTxt, originalTxt, { id: pid, nome: nome });
+      }
 
       resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
         b.addEventListener('click', function () {
           const nome = decodeURIComponent(this.dataset.pnome);
           adicionarAoCarrinho({ id: this.dataset.pid, nome: nome, estoque: parseInt(this.dataset.pest) });
-          // Escolha manual = correção explícita: ensina o vínculo para as próximas buscas.
-          // .nome é a linha original (com cor) — decide a chave. .busca (sem cor) é reserva.
-          const item0 = _iaResultados[idx];
-          const buscaTxt = item0 ? (item0.busca || item0.nome || q) : q;
-          const originalTxt = item0 ? (item0.nome || item0.busca || q) : q;
-          ensinarAlias(buscaTxt, originalTxt, { id: this.dataset.pid, nome: nome });
+          ensinarDaBuscaDinamica(this.dataset.pid, nome);
           mostrarToast('🧠 Aprendido: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '"');
-          this.textContent = '✓';
-          this.className = 'ia-cand-btn dis';
-          this.disabled = true;
+          resDiv.querySelectorAll('button').forEach(bb => { bb.disabled = true; bb.style.opacity = '.5'; });
+          this.textContent = '✓ adicionado';
+        });
+      });
+
+      // Confirma o vínculo SEM depender de estoque > 0 — antes só dava pra
+      // ensinar clicando em "+", que fica desabilitado quando o produto
+      // está zerado, tornando impossível confirmar um candidato sem
+      // estoque (mesmo quando ele é, de fato, o produto certo).
+      resDiv.querySelectorAll('.ia-confirmar-dinamico').forEach(b => {
+        b.addEventListener('click', function () {
+          const nome = decodeURIComponent(this.dataset.pnome);
+          ensinarDaBuscaDinamica(this.dataset.pid, nome);
+          mostrarToast('🧠 Confirmado: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '" (não adicionado ao carrinho)');
+          resDiv.querySelectorAll('.ia-confirmar-dinamico').forEach(bb => { bb.disabled = true; bb.style.opacity = '.5'; });
+          this.textContent = '✓✓';
         });
       });
     }
@@ -3430,6 +3513,7 @@ Exemplo de saída:
             var chaveItem = encodeURIComponent(chaveAprendizado(nomeBusca, nomeOriginal));
             var candidatos = '';
             vinculos.forEach(function (v) {
+              var dadosComuns = ' data-idx="' + i + '" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '" data-grupoid="' + (v.grupo_id != null ? v.grupo_id : '') + '" data-nomegrupo="' + encodeURIComponent(v.nome_grupo || '') + '"';
               candidatos +=
                 '<div class="ia-cand-row">' +
                 (v.aprendido
@@ -3438,9 +3522,10 @@ Exemplo de saída:
                   : '') +
                 '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
                 '<span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' +
+                '<button class="ia-cand-confirmar ia-confirmar-vinc"' + dadosComuns + ' title="Confirmar que este é o produto certo (não adiciona ao carrinho — funciona mesmo sem estoque)">✓</button>' +
                 (v.estoque > 0
-                  ? '<button class="ia-cand-btn add ia-add-vinc" data-idx="' + i + '" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '" data-grupoid="' + (v.grupo_id != null ? v.grupo_id : '') + '" data-nomegrupo="' + encodeURIComponent(v.nome_grupo || '') + '">+</button>'
-                  : '<button class="ia-cand-btn dis" disabled>+</button>') +
+                  ? '<button class="ia-cand-btn add ia-add-vinc"' + dadosComuns + ' title="Adicionar ao carrinho">+</button>'
+                  : '<button class="ia-cand-btn dis" disabled title="Sem estoque — use o ✓ pra confirmar sem adicionar ao carrinho">+</button>') +
                 '<button class="ia-cand-excluir" data-key="' + chaveItem + '" data-pid="' + v.id + '" title="Não é esse produto — nunca sugerir de novo para esta busca">🚫</button>' +
                 '</div>';
             });
@@ -3472,34 +3557,56 @@ Exemplo de saída:
           _iaResultados.push({ nome: nomeOriginal, busca: nomeBusca, vinculos: vinculos || [] });
         }
 
+        // Compartilhado entre "+" (adiciona ao carrinho) e "✓" (só
+        // confirma): ensina o vínculo e, se houver grupo selecionado,
+        // corrige a divergência mostrada nesse card (produto certo
+        // substitui o palpite automático usado no relatório/Copiar
+        // Divergências).
+        function ensinarECorrigirDivergencia(botao) {
+          const nome = decodeURIComponent(botao.dataset.pnome);
+          const idx = botao.dataset.idx;
+          const idxItem = _iaResultados[idx];
+          const buscaTxt = idxItem ? (idxItem.busca || idxItem.nome || nome) : nome;
+          const originalTxt = idxItem ? (idxItem.nome || idxItem.busca || nome) : nome;
+          ensinarAlias(buscaTxt, originalTxt, { id: botao.dataset.pid, nome: nome });
+
+          if (grupoId && resultadosBuscaLoteGlobal[idx]) {
+            const nomeGrupoEscolhido = decodeURIComponent(botao.dataset.nomegrupo || '');
+            const foraAgora = String(botao.dataset.grupoid || '') !== String(grupoId);
+            resultadosBuscaLoteGlobal[idx].vinculo = {
+              id: botao.dataset.pid, nome: nome, estoque: parseInt(botao.dataset.pest),
+              grupo_id: botao.dataset.grupoid || '', nome_grupo: nomeGrupoEscolhido
+            };
+            resultadosBuscaLoteGlobal[idx].foraDoGrupo = foraAgora;
+            const badge = document.getElementById('ia-fora-badge-' + idx);
+            if (badge) {
+              badge.style.display = foraAgora ? '' : 'none';
+              badge.textContent = '🚩 ' + (nomeGrupoEscolhido || 'outro grupo');
+            }
+          }
+          return nome;
+        }
+
         grid.querySelectorAll('.ia-add-vinc').forEach(function (b) {
           b.addEventListener('click', function () {
-            const nome = decodeURIComponent(b.dataset.pnome);
-            const idx = b.dataset.idx;
-            adicionarAoCarrinho({ id: b.dataset.pid, nome: nome, estoque: parseInt(b.dataset.pest) });
-            const idxItem = _iaResultados[idx];
-            const buscaTxt = idxItem ? (idxItem.busca || idxItem.nome || nome) : nome;
-            const originalTxt = idxItem ? (idxItem.nome || idxItem.busca || nome) : nome;
-            ensinarAlias(buscaTxt, originalTxt, { id: b.dataset.pid, nome: nome });
+            adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
+            ensinarECorrigirDivergencia(b);
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
+            const linha = b.closest('.ia-cand-row');
+            const confirmar = linha && linha.querySelector('.ia-confirmar-vinc');
+            if (confirmar) { confirmar.disabled = true; confirmar.style.opacity = '.5'; confirmar.textContent = '✓✓'; }
+          });
+        });
 
-            // Com grupo selecionado, a escolha manual corrige a divergência
-            // mostrada nesse card (produto certo substitui o palpite
-            // automático usado no relatório/Copiar Divergências).
-            if (grupoId && resultadosBuscaLoteGlobal[idx]) {
-              const nomeGrupoEscolhido = decodeURIComponent(b.dataset.nomegrupo || '');
-              const foraAgora = String(b.dataset.grupoid || '') !== String(grupoId);
-              resultadosBuscaLoteGlobal[idx].vinculo = {
-                id: b.dataset.pid, nome: nome, estoque: parseInt(b.dataset.pest),
-                grupo_id: b.dataset.grupoid || '', nome_grupo: nomeGrupoEscolhido
-              };
-              resultadosBuscaLoteGlobal[idx].foraDoGrupo = foraAgora;
-              const badge = document.getElementById('ia-fora-badge-' + idx);
-              if (badge) {
-                badge.style.display = foraAgora ? '' : 'none';
-                badge.textContent = '🚩 ' + (nomeGrupoEscolhido || 'outro grupo');
-              }
-            }
+        // ✓ Confirmar: ensina o vínculo SEM depender de estoque > 0. Antes
+        // só dava pra ensinar clicando em "+", que fica desabilitado com
+        // estoque zerado — tornando impossível confirmar candidato sem
+        // estoque, mesmo quando ele é, de fato, o produto certo.
+        grid.querySelectorAll('.ia-confirmar-vinc').forEach(function (b) {
+          b.addEventListener('click', function () {
+            const nome = ensinarECorrigirDivergencia(b);
+            mostrarToast('🧠 Confirmado: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '" (não adicionado ao carrinho)');
+            b.disabled = true; b.style.opacity = '.5'; b.textContent = '✓✓';
           });
         });
 
