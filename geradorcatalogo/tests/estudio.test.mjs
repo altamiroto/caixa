@@ -147,3 +147,37 @@ test('estúdio separa mensagens coladas em catálogos distintos', async (t) => {
   assert.match(resumo, /2 catálogo\(s\)/);
   assert.deepEqual(erros, []);
 });
+
+test('o checkbox de tema aleatório troca a paleta a cada geração', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await pagina.evaluate(() => localStorage.removeItem('gc:sorteio'));
+  await pagina.fill('#entrada', await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'));
+
+  // Sem o sorteio, duas gerações seguidas dão exatamente o mesmo fundo.
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+  const fundoDe = () =>
+    pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).backgroundImage);
+  const fixo1 = await fundoDe();
+  await pagina.click('#gerar');
+  assert.equal(await fixo1, await fundoDe(), 'sem sorteio o tema tem que ser estável');
+
+  // Ligado, cada geração traz uma paleta diferente da anterior.
+  await pagina.check('#tema-aleatorio');
+  await pagina.waitForSelector('.moldura .pagina');
+  assert.ok(await pagina.isDisabled('#tema'), 'o seletor de tema deve ficar inerte');
+
+  const fundos = [await fundoDe()];
+  for (let i = 0; i < 3; i += 1) {
+    await pagina.click('#gerar');
+    await pagina.waitForSelector('.moldura .pagina');
+    fundos.push(await fundoDe());
+  }
+  assert.equal(new Set(fundos).size, fundos.length, `paleta repetida: ${fundos.length} gerações`);
+
+  // O nome do tema sorteado precisa aparecer, senão não dá para repetir depois.
+  assert.match(await pagina.textContent('#resumo'), /tema: .+/);
+  assert.deepEqual(erros, []);
+});

@@ -38,7 +38,8 @@ npx serve .        # ou: python3 -m http.server
 
 | Opção | Padrão | O que faz |
 |---|---|---|
-| `--tema` | `noite` | 17 temas; veja a seção *Os temas* |
+| `--tema` | `noite` | 121 temas, ou `aleatorio` para sortear |
+| `--semente` | relógio | Torna o sorteio reproduzível |
 | `--saida` | `./saida` | Diretório de destino |
 | `--marca` | — | Assinatura no rodapé |
 | `--sobretitulo` | `Lista de produtos` | Linha acima do título; vazio esconde |
@@ -85,7 +86,10 @@ src/
     fonte.css           Inter embutida em base64 (+ INTER-LICENSE.txt)
     limpeza.js          Remove do nome as palavras que o usuário escolher
     export.js           PNG no navegador
-  themes/temas.js       As paletas
+  themes/
+    temas.js            As 17 paletas curadas + o catálogo gerado
+    gerador.js          Constrói paletas a partir de matiz, família e estilo
+    cor.js              Conversão, composição e contraste
 tools/
   render.mjs            Renderizador de linha de comando
   palco.html            Página que o Playwright usa para medir e fotografar
@@ -142,45 +146,68 @@ O mesmo código roda no navegador e no Playwright — os dois têm DOM.
 
 ### Os temas
 
-São 17, em quatro famílias:
+São **121**: 17 desenhadas à mão e 104 geradas.
 
-| Família | Temas |
+| Família | Curados |
 |---|---|
 | Escuros | `noite`, `neon`, `grafite`, `oceano`, `ultravioleta` |
 | Claros | `limpo`, `rose`, `menta`, `coral`, `verao` |
 | Clássicos | `marinho`, `esmeralda`, `vinho`, `sepia`, `luxo` |
 | Sazonais | `natal`, `blackfriday` |
 
-Um tema é um conjunto de variáveis CSS em `src/themes/temas.js`. Para criar
-outro, copie um objeto e troque as cores:
-
-```js
-meutema: {
-  id: 'meutema',
-  nome: 'Meu tema',
-  vars: {
-    '--fundo': 'linear-gradient(160deg, #123 0%, #456 100%)',
-    '--linha-tinta': '#fff',      // tinta dentro da linha
-    '--preco-avista-fundo': '#0ea5e9',
-    // ...
-  },
-}
-```
-
-`--fundo` aceita cor sólida, gradiente ou `url(...)` com imagem em base64. O
-estúdio ainda tem um campo para trocar só o fundo sem criar tema.
+Um tema é um conjunto de variáveis CSS. Para criar outro à mão, copie um objeto
+em `src/themes/temas.js` e troque as cores; `--fundo` aceita cor sólida,
+gradiente ou `url(...)` com imagem em base64.
 
 Duas tintas separadas de propósito: `--tinta` é a da página, `--linha-tinta` é a
 de dentro da linha. Temas com linha escura sobre fundo claro (o `natal`) precisam
 disso — sem separar, o texto some.
 
-**Toda paleta passa por teste de contraste** (`tests/temas.test.mjs`). Cada par
-que aparece na página é medido pela fórmula da WCAG, com o piso escolhido pelo
-tamanho real do elemento: 3.0 para preço e título, que são grandes, e 4.5 para
-selo, pílula, nome e faixa de seção. Gradientes são avaliados parada a parada e
-vale a pior. Não é zelo excessivo — o teste reprovou sete das paletas na
-primeira execução, incluindo o preço do `noite`, que estava em 2.77 e já tinha
-sido entregue.
+#### O gerador
+
+Escrever cem paletas à mão daria cem chances de errar contraste. As 104 geradas
+são **construídas**: o fundo sai de uma receita por família, e cada tinta é
+calculada por `tintaSobre`, que caminha a luminosidade até fechar a razão
+exigida. Quando a tinta não pode ceder — a faixa de seção já é branca —, a busca
+inverte e é o fundo que escurece (`luminosidadeDeFundo`). Em matiz amarela ou
+verde, branco sobre o acento "bonito" não fecha 4.5, e essa é a única saída.
+
+Três eixos de variação:
+
+- **matiz** (0–360), 26 posições no círculo;
+- **família**: `escuro`, `claro`, `classico`, `vibrante`;
+- **estilo**: `capsula`, `plano`, `contorno`, `bloco` — muda o raio das
+  cápsulas, o preenchimento e a borda da linha, via `--raio-mult`.
+
+#### Tema aleatório
+
+Marque **Tema aleatório a cada geração** no estúdio, ou use `--tema aleatorio`
+no terminal. Serve para quem publica várias listas por dia e não quer escolher
+paleta toda vez.
+
+A matiz avança pelo **ângulo áureo** (137,5°) a partir de um contador guardado
+no navegador, não por sorteio uniforme: assim dois catálogos seguidos ficam
+sempre a 137° um do outro no círculo de cores, enquanto sortear ao acaso
+repetiria vizinhança com frequência incômoda. Família e estilo rodam em ciclos
+de tamanhos diferentes, então as 16 combinações aparecem antes de repetir.
+
+O tema sorteado aparece no resumo (`tema: Turquesa vibrante (bloco)`), e
+`--semente N` reproduz um sorteio específico.
+
+#### A garantia de legibilidade
+
+`tests/temas.test.mjs` mede cada par que aparece na página pela fórmula da WCAG,
+com o piso escolhido pelo tamanho real do elemento: 3.0 para preço e título, que
+são grandes, e 4.5 para selo, pílula, nome e faixa de seção. Gradientes são
+avaliados parada a parada e vale a pior.
+
+O teste cobre os 121 temas do catálogo **e** varre o gerador em 36 matizes × 4
+famílias × 4 estilos — 576 paletas. Isso importa porque o sorteio pode produzir
+qualquer matiz, não só as 26 da lista fixa.
+
+Não é zelo excessivo: na primeira execução o teste reprovou sete das paletas
+curadas, incluindo o preço do `noite`, que estava em 2.77 e já tinha sido
+entregue.
 
 ### O cabeçalho
 
