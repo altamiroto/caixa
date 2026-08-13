@@ -2309,7 +2309,7 @@
     // sem isso, produtos diferentes da mesma marca/tamanho (ex.: duas TVs
     // 40" de modelos distintos) viravam a mesma busca genérica, o que
     // atrapalha tanto a deduplicação quanto a busca real no catálogo.
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v5';
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v6';
     const IA_PROMPT_DEFAULT = `Você processa listas de produtos eletrônicos (catálogos de preço do WhatsApp ou listas de estoque físico) e devolve um array JSON.
 
 IGNORE linhas que são só: quantidade solta ("6", "6\t+"), título/cabeçalho de seção (*SAMSUNG*, 📢 Lista Exclusiva), data solta, preço isolado, saudação ou aviso sem produto.
@@ -2319,7 +2319,7 @@ CORRIJA typos óbvios antes de gerar "busca": XAIOM/XAOMI/XAIOMI → Xiaomi, ZUL
 Para cada produto real, extraia:
 - "original": a linha como veio, limpa (sem emoji, sem *marcação*, sem crase).
 - "busca": nome padronizado para busca — marca + modelo + memória no formato "8/256gb" ou "256gb" (quando houver) + conectividade (4G/5G, só se mencionada) + polegadas para TVs (ex.: 43"). IMPORTANTE: sempre mantenha o CÓDIGO/REFERÊNCIA do produto quando existir (ex.: 43UA7500PSA, 40S5400A, U8100F, Pro/Max/Plus/Ultra/FE) — é isso que diferencia produtos parecidos da mesma marca e tamanho/memória; nunca resuma pra um nome genérico. NUNCA inclua cor, preço, bateria, condição ou specs de marketing (HDR, Alexa, Gaming Hub, Xbox Cloud Gaming etc).
-- "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Titanium/Natural/Desert/Storm Titanium→Cinza. Se a linha citar 2+ cores ("Preto/Branco", "Preto | Verde"), liste todas separadas. Se não houver cor identificável, use [].
+- "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Titanium/Natural/Desert/Storm Titanium→Cinza. Se a linha citar 2+ cores ("Preto/Branco", "Preto | Verde", "Preto/Azul/Titanium"), liste TODAS separadas, sem exceção — é um erro grave esquecer uma cor do meio ou do fim da lista (ex.: "Preto/Azul/Titanium" DEVE virar ["Preto","Azul","Cinza"], nunca só ["Preto","Azul"]); cada cor esquecida é um produto inteiro que desaparece do relatório de estoque. Se não houver cor identificável, use [].
 
 Se a MESMA linha (produto idêntico, mesmo código/modelo) aparecer repetida em seções diferentes (ex.: varejo e atacado), inclua apenas uma vez — priorize a ocorrência com mais informação. Produtos parecidos mas com código/modelo diferente NÃO são duplicata — mantenha os dois.
 
@@ -3420,6 +3420,54 @@ Exemplo de saída:
       box.style.display = 'block';
     }
 
+    // Rede de segurança determinística — NÃO depende da IA acertar. Já
+    // aconteceu de verdade: a IA recebe uma linha "Preto/Azul/Titanium" e
+    // devolve cores:["Preto","Azul"], comendo o Titanium sem avisar — o
+    // produto correspondente simplesmente nunca entra na conciliação,
+    // porque nenhuma linha "cor: titanium" chega a ser gerada. Isso pode
+    // acontecer com qualquer cor, não só titanium, e com qualquer provider.
+    // Aqui comparamos a lista de cores que a IA devolveu para cada item
+    // contra a linha ORIGINAL que o usuário colou (achada por sobreposição
+    // de tokens do modelo, não pela ordem) e devolvemos qualquer cor
+    // conhecida que apareça no texto bruto e não esteja no array da IA.
+    function recuperarCoresPerdidas(itensBrutos, rawTexto) {
+      const linhas = (rawTexto || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      if (!linhas.length) return itensBrutos;
+      const linhasTokens = linhas.map(function (l) { return { linha: l, tokens: new Set(tokensModelo(l)) }; });
+
+      itensBrutos.forEach(function (item) {
+        if (typeof item !== 'object' || !item) return;
+        const busca = item.busca || item.original || '';
+        const tokensItem = tokensModelo(busca);
+        if (!tokensItem.length) return;
+
+        // Acha a linha bruta que mais se parece com este item (maior
+        // fração dos tokens do modelo presentes na linha) — exige uma
+        // sobreposição alta pra evitar associar o item à linha errada.
+        let melhor = null, melhorScore = 0;
+        linhasTokens.forEach(function (lt) {
+          const inter = tokensItem.filter(function (t) { return lt.tokens.has(t); }).length;
+          const score = inter / tokensItem.length;
+          if (score > melhorScore) { melhorScore = score; melhor = lt.linha; }
+        });
+        if (!melhor || melhorScore < 0.6) return;
+
+        const jaTem = new Set((Array.isArray(item.cores) ? item.cores : []).map(function (c) {
+          return CORES_CANONICAS[normStr(c)] || normStr(c);
+        }));
+        const nLinha = normStr(melhor);
+        CORES_PARA_CHAVE.forEach(function (c) {
+          if (!new RegExp('\\b' + c + '\\b').test(nLinha)) return;
+          const canon = CORES_CANONICAS[c];
+          if (jaTem.has(canon)) return;
+          jaTem.add(canon);
+          if (!Array.isArray(item.cores)) item.cores = [];
+          item.cores.push(canon.charAt(0).toUpperCase() + canon.slice(1));
+        });
+      });
+      return itensBrutos;
+    }
+
     // Recebe o array cru que a IA devolveu (um objeto por LINHA da lista,
     // com "cores": [...]) e multiplica em uma entrada por cor — trabalho
     // mecânico que não precisa de IA nenhuma, é de graça e instantâneo.
@@ -3524,6 +3572,7 @@ Exemplo de saída:
         );
         const itensBrutos = JSON.parse(resposta.replace(/```json|```/g, '').trim());
         if (!Array.isArray(itensBrutos) || !itensBrutos.length) throw new Error('IA não retornou lista válida.');
+        recuperarCoresPerdidas(itensBrutos, raw);
         const itens = expandirCoresDaLista(itensBrutos);
         if (!itens.length) throw new Error('Nenhum produto identificado na lista.');
 
