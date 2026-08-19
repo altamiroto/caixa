@@ -107,7 +107,6 @@ export default async function handler(req, res) {
       "openai/gpt-oss-20b",
       "groq/compound",
       "groq/compound-mini",
-      "openai/gpt-oss-safeguard-20b",
       "allam-2-7b"
     ];
 
