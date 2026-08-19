@@ -193,16 +193,14 @@ export default async function handler(req, res) {
         continue;
       }
 
-      console.error(`Erro no modelo ${model}:`, result.data);
+      // Sempre tenta o próximo modelo da cadeia, seja qual for o erro
+      // (429 esgotado, 404/model_not_found descontinuado, 413 payload,
+      // 400 contexto excedido nesse modelo específico, 500 instabilidade
+      // etc.) — um erro de um modelo não significa que os outros vão
+      // falhar igual, e o ponto inteiro dessa cadeia é resiliência. Só
+      // desiste de fato depois de esgotar todos os modelos da lista.
+      console.error(`Erro no modelo ${model} (HTTP ${result.status}), tentando o próximo:`, result.data);
       lastResult = result;
-
-      const codigo = result.data?.error?.code;
-      const esgotadoOuIndisponivel =
-        result.status === 429 ||
-        result.status === 404 ||
-        codigo === 'model_not_found' ||
-        codigo === 'model_decommissioned';
-      if (!esgotadoOuIndisponivel) break;
     }
 
     return res.status(lastResult?.status || 500).json({
