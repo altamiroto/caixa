@@ -148,22 +148,20 @@ export default async function handler(req, res) {
         temperature: 0.1
       };
       // Modelos de raciocínio gastam parte do orçamento de tokens
-      // "pensando" (campo reasoning) antes de preencher o content final.
-      // A causa raiz do content vazio era o orçamento de tokens acabar
-      // no meio do caminho — por isso max_completion_tokens generoso
-      // abaixo. reasoning_effort baixo/desligado é só um reforço, não a
-      // correção principal (listas maiores precisam de algum raciocínio
-      // pra não sair com JSON malformado).
+      // "pensando" (campo reasoning) antes de preencher o content final —
+      // reasoning_effort baixo/desligado evita isso. NÃO define
+      // max_completion_tokens explícito: o tier grátis da Groq tem um teto
+      // de TPM (tokens por minuto) fixo — 8000 pra esses modelos — e
+      // definir max_completion_tokens faz a Groq reservar esse valor
+      // inteiro de saída IGUAL, então input + max_completion_tokens
+      // facilmente estoura os 8000 e toda requisição cai em 413 "Request
+      // too large" mesmo pra listas pequenas. Sem o parâmetro, a Groq usa
+      // o próprio default e só concede o que sobrar do teto de verdade.
       if (model === "qwen/qwen3.6-27b") {
         corpo.reasoning_effort = "none"; // família qwen3 aceita desligar de vez
-        corpo.max_completion_tokens = 8000;
       } else if (model.startsWith("openai/gpt-oss")) {
         corpo.reasoning_effort = "low"; // gpt-oss não aceita "none" (erro 400); low é o mínimo
-        corpo.max_completion_tokens = 8000;
       }
-      // allam-2-7b não tem reasoning_effort nem confirmação de contexto
-      // grande — deixa sem max_completion_tokens explícito pra não
-      // arriscar um 400 de "valor inválido" nesse modelo pequeno.
 
       console.log(`Fazendo requisição à API groq (modelo: ${model})...`);
       const result = await chamarModelo(apiUrl, apiKey, corpo);
