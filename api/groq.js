@@ -119,6 +119,23 @@ export default async function handler(req, res) {
     // que passaria como "sucesso" e só quebraria o parse no front-end.
     const esperaJson = /json/i.test(systemPrompt);
 
+    // Extrai e valida o JSON de dentro do texto, tolerando cerca (```json)
+    // e frases antes/depois que o modelo às vezes cola mesmo mandado não
+    // fazer isso (ex: "Aqui está o resultado:" antes do array).
+    function extrairJson(texto) {
+      let limpo = texto.replace(/```json/gi, '').replace(/```/g, '').trim();
+      try { return { ok: true, valor: JSON.parse(limpo) }; } catch (e) { /* tenta isolar abaixo */ }
+
+      const iniA = limpo.indexOf('['), iniO = limpo.indexOf('{');
+      const inicio = (iniA === -1) ? iniO : (iniO === -1 ? iniA : Math.min(iniA, iniO));
+      if (inicio === -1) return { ok: false };
+      const abre = limpo[inicio], fecha = abre === '[' ? ']' : '}';
+      const fim = limpo.lastIndexOf(fecha);
+      if (fim === -1 || fim <= inicio) return { ok: false };
+      const fatia = limpo.slice(inicio, fim + 1);
+      try { return { ok: true, valor: JSON.parse(fatia) }; } catch (e) { return { ok: false }; }
+    }
+
     let lastResult = null;
     for (const model of GROQ_MODELS) {
       const corpo = {
@@ -130,16 +147,22 @@ export default async function handler(req, res) {
         temperature: 0.1
       };
       // Modelos de raciocínio gastam parte do orçamento de tokens
-      // "pensando" (campo reasoning) antes de preencher o content final —
-      // no padrão (medium), às vezes o orçamento acaba antes do content
-      // ser escrito e a resposta volta vazia. Pra essa tarefa (extração
-      // simples de lista), raciocínio não ajuda em nada, só atrasa e
-      // arrisca esvaziar o content — desliga sempre que o modelo permitir.
+      // "pensando" (campo reasoning) antes de preencher o content final.
+      // A causa raiz do content vazio era o orçamento de tokens acabar
+      // no meio do caminho — por isso max_completion_tokens generoso
+      // abaixo. reasoning_effort baixo/desligado é só um reforço, não a
+      // correção principal (listas maiores precisam de algum raciocínio
+      // pra não sair com JSON malformado).
       if (model === "qwen/qwen3.6-27b") {
         corpo.reasoning_effort = "none"; // família qwen3 aceita desligar de vez
+        corpo.max_completion_tokens = 8000;
       } else if (model.startsWith("openai/gpt-oss")) {
         corpo.reasoning_effort = "low"; // gpt-oss não aceita "none" (erro 400); low é o mínimo
+        corpo.max_completion_tokens = 8000;
       }
+      // allam-2-7b não tem reasoning_effort nem confirmação de contexto
+      // grande — deixa sem max_completion_tokens explícito pra não
+      // arriscar um 400 de "valor inválido" nesse modelo pequeno.
 
       console.log(`Fazendo requisição à API groq (modelo: ${model})...`);
       const result = await chamarModelo(apiUrl, apiKey, corpo);
@@ -151,16 +174,17 @@ export default async function handler(req, res) {
             console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
             return res.status(200).json(result.data);
           }
-          const limpo = conteudo.replace(/```json/gi, '').replace(/```/g, '').trim();
-          try {
-            JSON.parse(limpo);
+          const extraido = extrairJson(conteudo);
+          if (extraido.ok) {
             console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
+            // Devolve só o JSON limpo (sem cerca ```/texto ao redor) —
+            // o front-end faz um JSON.parse estrito, sem essa tolerância.
+            result.data.choices[0].message.content = JSON.stringify(extraido.valor);
             return res.status(200).json(result.data);
-          } catch (parseError) {
-            console.error(`Modelo ${model} respondeu, mas não é JSON válido (provável truncamento), tentando o próximo`);
-            lastResult = { status: 502, data: { error: `Modelo ${model} não devolveu JSON válido`, details: limpo.slice(0, 500) } };
-            continue;
           }
+          console.error(`Modelo ${model} respondeu, mas não é JSON válido (provável truncamento), tentando o próximo`);
+          lastResult = { status: 502, data: { error: `Modelo ${model} não devolveu JSON válido`, details: conteudo.slice(0, 500) } };
+          continue;
         }
         // HTTP 200 mas sem conteúdo de fato (ex: reasoning consumiu todos
         // os tokens) — não adianta devolver pro front-end, tenta o próximo.
