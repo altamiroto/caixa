@@ -137,6 +137,7 @@ export default async function handler(req, res) {
     }
 
     let lastResult = null;
+    const tentativas = []; // motivo de CADA modelo que falhou, não só o último
     for (const model of GROQ_MODELS) {
       const corpo = {
         model,
@@ -184,12 +185,14 @@ export default async function handler(req, res) {
           }
           console.error(`Modelo ${model} respondeu, mas não é JSON válido (provável truncamento), tentando o próximo`);
           lastResult = { status: 502, data: { error: `Modelo ${model} não devolveu JSON válido`, details: conteudo.slice(0, 500) } };
+          tentativas.push({ modelo: model, motivo: 'JSON inválido', preview: conteudo.slice(0, 300) });
           continue;
         }
         // HTTP 200 mas sem conteúdo de fato (ex: reasoning consumiu todos
         // os tokens) — não adianta devolver pro front-end, tenta o próximo.
         console.error(`Modelo ${model} respondeu vazio, tentando o próximo`);
         lastResult = { status: 502, data: { error: `Modelo ${model} retornou resposta vazia` } };
+        tentativas.push({ modelo: model, motivo: 'resposta vazia' });
         continue;
       }
 
@@ -201,10 +204,16 @@ export default async function handler(req, res) {
       // desiste de fato depois de esgotar todos os modelos da lista.
       console.error(`Erro no modelo ${model} (HTTP ${result.status}), tentando o próximo:`, result.data);
       lastResult = result;
+      tentativas.push({ modelo: model, motivo: `HTTP ${result.status}: ${result.data?.error?.message || JSON.stringify(result.data?.error) || result.data}` });
     }
 
+    // Cadeia inteira esgotada — devolve o motivo de CADA modelo (não só o
+    // último), pra dar pra diagnosticar de uma vez sem precisar repetir o
+    // ciclo "tenta de novo, olha o erro genérico, ajusta um modelo".
+    console.error('Todos os modelos da cadeia Groq falharam:', tentativas);
     return res.status(lastResult?.status || 500).json({
       error: lastResult?.data?.error?.message || lastResult?.data?.error || 'Erro na API groq',
+      tentativas,
       details: lastResult?.data
     });
 

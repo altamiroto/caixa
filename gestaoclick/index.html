@@ -3575,6 +3575,10 @@ Exemplo de saída:
       renderizarDebugIA();
 
       if (!resp.ok) {
+        if (d && Array.isArray(d.tentativas) && d.tentativas.length) {
+          const resumo = d.tentativas.map(function (t) { return t.modelo + ': ' + t.motivo; }).join(' | ');
+          throw new Error('IA (' + provider + ') — todos os modelos falharam: ' + resumo);
+        }
         const msgErro = (d && (d.error?.message || d.error)) || ('HTTP ' + resp.status);
         const brutoDet = d && d.details ? (typeof d.details === 'string' ? d.details : JSON.stringify(d.details)) : '';
         throw new Error('IA (' + provider + ') ' + msgErro + (brutoDet ? ' — ' + brutoDet.slice(0, 300) : ''));
