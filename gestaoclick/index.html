@@ -3618,7 +3618,7 @@ Exemplo de saída:
         try {
           itensBrutos = JSON.parse(resposta.replace(/```json|```/g, '').trim());
         } catch (e) {
-          throw new Error('A IA não devolveu um JSON válido. Resposta: "' + resposta.slice(0, 200) + '"');
+          throw new Error('A IA não devolveu um JSON válido. Resposta: "' + resposta.slice(0, 400) + '"');
         }
         if (!Array.isArray(itensBrutos) || !itensBrutos.length) throw new Error('IA não retornou lista válida.');
         recuperarCoresPerdidas(itensBrutos, raw);

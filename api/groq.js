@@ -112,6 +112,13 @@ export default async function handler(req, res) {
       "allam-2-7b"
     ];
 
+    // Todo uso atual desse endpoint pede JSON no systemPrompt ("retorne
+    // apenas JSON válido"). Quando é o caso, validamos se o content
+    // realmente é JSON parseável antes de aceitar a resposta — protege
+    // contra truncamento (resposta cortada no meio, sem fechar colchete)
+    // que passaria como "sucesso" e só quebraria o parse no front-end.
+    const esperaJson = /json/i.test(systemPrompt);
+
     let lastResult = null;
     for (const model of GROQ_MODELS) {
       const corpo = {
@@ -140,8 +147,20 @@ export default async function handler(req, res) {
       if (result.ok) {
         const conteudo = result.data?.choices?.[0]?.message?.content;
         if (conteudo && conteudo.trim()) {
-          console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
-          return res.status(200).json(result.data);
+          if (!esperaJson) {
+            console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
+            return res.status(200).json(result.data);
+          }
+          const limpo = conteudo.replace(/```json/gi, '').replace(/```/g, '').trim();
+          try {
+            JSON.parse(limpo);
+            console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
+            return res.status(200).json(result.data);
+          } catch (parseError) {
+            console.error(`Modelo ${model} respondeu, mas não é JSON válido (provável truncamento), tentando o próximo`);
+            lastResult = { status: 502, data: { error: `Modelo ${model} não devolveu JSON válido`, details: limpo.slice(0, 500) } };
+            continue;
+          }
         }
         // HTTP 200 mas sem conteúdo de fato (ex: reasoning consumiu todos
         // os tokens) — não adianta devolver pro front-end, tenta o próximo.
