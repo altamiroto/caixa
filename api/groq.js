@@ -101,12 +101,14 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key da Groq não configurada no servidor' });
     }
     const apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+    // groq/compound e groq/compound-mini ficam de fora: são sistemas
+    // agentic (podem chamar ferramentas, navegar, etc.) e às vezes devolvem
+    // content vazio pra uma tarefa que só precisa de "responda só com JSON"
+    // — quebra o JSON.parse do front-end com "Unexpected end of JSON input".
     const GROQ_MODELS = [
       "openai/gpt-oss-120b",
       "qwen/qwen3.6-27b",
       "openai/gpt-oss-20b",
-      "groq/compound",
-      "groq/compound-mini",
       "allam-2-7b"
     ];
 

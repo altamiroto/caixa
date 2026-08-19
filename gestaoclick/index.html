@@ -3567,6 +3567,7 @@ Exemplo de saída:
         horario: new Date().toLocaleTimeString('pt-BR'),
         duracaoMs: Date.now() - inicio,
         provider: provider,
+        modelo: (d && d.model) ? d.model : null,
         requisicao: corpoRequisicao,
         resposta: d !== null ? d : textoResp,
         usage: (d && d.usage) ? d.usage : null
@@ -3574,9 +3575,11 @@ Exemplo de saída:
       renderizarDebugIA();
 
       if (!resp.ok) throw new Error('IA (' + provider + ') HTTP ' + resp.status);
-      if (d && d.choices && d.choices[0] && d.choices[0].message)
-        return d.choices[0].message.content.trim();
-      throw new Error('Resposta inesperada da IA (' + provider + ')');
+      const conteudo = (d && d.choices && d.choices[0] && d.choices[0].message) ? d.choices[0].message.content : null;
+      const modeloUsado = (d && d.model) ? ' (modelo ' + d.model + ')' : '';
+      if (!conteudo || !conteudo.trim())
+        throw new Error('IA (' + provider + ')' + modeloUsado + ' retornou resposta vazia. Tente novamente.');
+      return conteudo.trim();
     }
 
     // "Consultar Lista" e "Balanço" eram duas funções quase idênticas (as
@@ -3611,7 +3614,12 @@ Exemplo de saída:
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
           prompt + '\n\nLista:\n' + raw
         );
-        const itensBrutos = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        let itensBrutos;
+        try {
+          itensBrutos = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        } catch (e) {
+          throw new Error('A IA não devolveu um JSON válido. Resposta: "' + resposta.slice(0, 200) + '"');
+        }
         if (!Array.isArray(itensBrutos) || !itensBrutos.length) throw new Error('IA não retornou lista válida.');
         recuperarCoresPerdidas(itensBrutos, raw);
         const itens = expandirCoresDaLista(itensBrutos);
