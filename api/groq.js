@@ -122,13 +122,32 @@ export default async function handler(req, res) {
         ],
         temperature: 0.1
       };
+      // Modelos de raciocínio gastam parte do orçamento de tokens
+      // "pensando" (campo reasoning) antes de preencher o content final —
+      // no padrão (medium), às vezes o orçamento acaba antes do content
+      // ser escrito e a resposta volta vazia. Pra essa tarefa (extração
+      // simples de lista), raciocínio não ajuda em nada, só atrasa e
+      // arrisca esvaziar o content — desliga sempre que o modelo permitir.
+      if (model === "qwen/qwen3.6-27b") {
+        corpo.reasoning_effort = "none"; // família qwen3 aceita desligar de vez
+      } else if (model.startsWith("openai/gpt-oss")) {
+        corpo.reasoning_effort = "low"; // gpt-oss não aceita "none" (erro 400); low é o mínimo
+      }
 
       console.log(`Fazendo requisição à API groq (modelo: ${model})...`);
       const result = await chamarModelo(apiUrl, apiKey, corpo);
 
       if (result.ok) {
-        console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
-        return res.status(200).json(result.data);
+        const conteudo = result.data?.choices?.[0]?.message?.content;
+        if (conteudo && conteudo.trim()) {
+          console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
+          return res.status(200).json(result.data);
+        }
+        // HTTP 200 mas sem conteúdo de fato (ex: reasoning consumiu todos
+        // os tokens) — não adianta devolver pro front-end, tenta o próximo.
+        console.error(`Modelo ${model} respondeu vazio, tentando o próximo`);
+        lastResult = { status: 502, data: { error: `Modelo ${model} retornou resposta vazia` } };
+        continue;
       }
 
       console.error(`Erro no modelo ${model}:`, result.data);
