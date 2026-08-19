@@ -1,3 +1,35 @@
+// Faz a chamada HTTP e devolve { ok, status, data } já com o corpo parseado,
+// sem lançar exceção em erro de API (só em erro de rede/fetch).
+async function chamarModelo(apiUrl, apiKey, corpo) {
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(corpo)
+  });
+
+  const responseText = await response.text();
+  console.log('Status da resposta:', response.status);
+  console.log('Resposta recebida (primeiros 200 chars):', responseText.substring(0, 200));
+
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (parseError) {
+    console.error('Erro ao fazer parse do JSON:', parseError);
+    console.error('Resposta completa:', responseText);
+    return {
+      ok: false,
+      status: 500,
+      data: { error: 'Resposta inválida da API', details: responseText.substring(0, 500) }
+    };
+  }
+
+  return { ok: response.ok, status: response.status, data };
+}
+
 export default async function handler(req, res) {
   // Configura CORS (se necessário)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,15 +58,13 @@ export default async function handler(req, res) {
     // (seletor "Provedor de IA" na Busca em Lote, usado pra testar).
     const prov = provider === 'deepseek' ? 'deepseek' : 'groq';
 
-    let apiUrl, apiKey, corpo;
     if (prov === 'deepseek') {
-      apiKey = process.env.DEEPSEEK;
+      const apiKey = process.env.DEEPSEEK;
       if (!apiKey) {
         console.error('DEEPSEEK (API key) não configurada');
         return res.status(500).json({ error: 'API key da DeepSeek não configurada no servidor' });
       }
-      apiUrl = "https://api.deepseek.com/chat/completions";
-      corpo = {
+      const corpo = {
         model: "deepseek-v4-flash",
         // V4 Flash vem com "thinking" ligado por padrão (esforço alto);
         // desligamos explicitamente pra resposta rápida, sem raciocínio
@@ -46,64 +76,76 @@ export default async function handler(req, res) {
         ],
         temperature: 0.1
       };
-    } else {
-      apiKey = process.env.GROQ_API_KEY;
-      if (!apiKey) {
-        console.error('GROQ_API_KEY não configurada');
-        return res.status(500).json({ error: 'API key da Groq não configurada no servidor' });
+
+      console.log('Fazendo requisição à API deepseek...');
+      const result = await chamarModelo("https://api.deepseek.com/chat/completions", apiKey, corpo);
+      if (!result.ok) {
+        console.error('Erro da API deepseek:', result.data);
+        return res.status(result.status).json({
+          error: result.data?.error?.message || result.data?.error || 'Erro na API deepseek',
+          details: result.data
+        });
       }
-      apiUrl = "https://api.groq.com/openai/v1/chat/completions";
-      corpo = {
-        model: "llama-3.3-70b-versatile",
+      console.log('Resposta processada com sucesso (deepseek)');
+      return res.status(200).json(result.data);
+    }
+
+    // Groq: tenta uma cadeia de modelos, em ordem, passando para o próximo
+    // quando um deles esgota a cota (429) ou não está mais disponível
+    // (ex: llama-3.3-70b-versatile foi descontinuado pela Groq). Só desiste
+    // na cadeia toda, ou num erro que não é de quota/disponibilidade
+    // (ex: prompt inválido), caso em que propaga o erro imediatamente.
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      console.error('GROQ_API_KEY não configurada');
+      return res.status(500).json({ error: 'API key da Groq não configurada no servidor' });
+    }
+    const apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+    const GROQ_MODELS = [
+      "openai/gpt-oss-120b",
+      "qwen/qwen3.6-27b",
+      "openai/gpt-oss-20b",
+      "groq/compound",
+      "groq/compound-mini",
+      "openai/gpt-oss-safeguard-20b",
+      "allam-2-7b"
+    ];
+
+    let lastResult = null;
+    for (const model of GROQ_MODELS) {
+      const corpo = {
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: messages }
         ],
         temperature: 0.1
       };
+
+      console.log(`Fazendo requisição à API groq (modelo: ${model})...`);
+      const result = await chamarModelo(apiUrl, apiKey, corpo);
+
+      if (result.ok) {
+        console.log(`Resposta processada com sucesso (groq, modelo: ${model})`);
+        return res.status(200).json(result.data);
+      }
+
+      console.error(`Erro no modelo ${model}:`, result.data);
+      lastResult = result;
+
+      const codigo = result.data?.error?.code;
+      const esgotadoOuIndisponivel =
+        result.status === 429 ||
+        result.status === 404 ||
+        codigo === 'model_not_found' ||
+        codigo === 'model_decommissioned';
+      if (!esgotadoOuIndisponivel) break;
     }
 
-    console.log('Fazendo requisição à API ' + prov + '...');
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(corpo)
+    return res.status(lastResult?.status || 500).json({
+      error: lastResult?.data?.error?.message || lastResult?.data?.error || 'Erro na API groq',
+      details: lastResult?.data
     });
-
-    // Pega o texto da resposta primeiro
-    const responseText = await response.text();
-    console.log('Status da resposta:', response.status);
-    console.log('Resposta recebida (primeiros 200 chars):', responseText.substring(0, 200));
-
-    // Tenta fazer o parse do JSON
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Erro ao fazer parse do JSON:', parseError);
-      console.error('Resposta completa:', responseText);
-      return res.status(500).json({
-        error: 'Resposta inválida da API ' + prov,
-        details: responseText.substring(0, 500)
-      });
-    }
-
-    // Verifica se houve erro na API
-    if (!response.ok) {
-      console.error('Erro da API ' + prov + ':', data);
-      return res.status(response.status).json({
-        error: data.error?.message || ('Erro na API ' + prov),
-        details: data
-      });
-    }
-
-    // Retorna a resposta bem-sucedida
-    console.log('Resposta processada com sucesso (' + prov + ')');
-    return res.status(200).json(data);
 
   } catch (error) {
     console.error('Erro no handler:', error);
