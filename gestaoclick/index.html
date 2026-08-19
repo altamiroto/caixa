@@ -3574,7 +3574,11 @@ Exemplo de saída:
       };
       renderizarDebugIA();
 
-      if (!resp.ok) throw new Error('IA (' + provider + ') HTTP ' + resp.status);
+      if (!resp.ok) {
+        const msgErro = (d && (d.error?.message || d.error)) || ('HTTP ' + resp.status);
+        const brutoDet = d && d.details ? (typeof d.details === 'string' ? d.details : JSON.stringify(d.details)) : '';
+        throw new Error('IA (' + provider + ') ' + msgErro + (brutoDet ? ' — ' + brutoDet.slice(0, 300) : ''));
+      }
       const conteudo = (d && d.choices && d.choices[0] && d.choices[0].message) ? d.choices[0].message.content : null;
       const modeloUsado = (d && d.model) ? ' (modelo ' + d.model + ')' : '';
       if (!conteudo || !conteudo.trim())
