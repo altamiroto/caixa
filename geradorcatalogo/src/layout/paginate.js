@@ -18,7 +18,16 @@
  * Funciona igual no navegador e no Playwright: os dois têm DOM.
  */
 
-import { htmlPagina, htmlProduto, htmlSecao, definirColunas, ALTURA } from '../render/template.js';
+import {
+  htmlPagina,
+  htmlProduto,
+  htmlSecao,
+  htmlPar,
+  definirColunas,
+  normalizarLayout,
+  ehDuasColunas,
+  ALTURA,
+} from '../render/template.js';
 
 /*
  * Piso baixo de propósito: a lista de celulares (42 produtos + 3 seções) precisa
@@ -33,19 +42,35 @@ const MAX_PAGINAS = 40;
 export const PAGINAS_MAX_PADRAO = 1;
 const FOLGA_PX = 1; // margem de segurança contra arredondamento sub-pixel
 
-/** Achata o catálogo numa sequência linear de blocos renderizáveis. */
+/**
+ * Achata o catálogo numa sequência linear de blocos renderizáveis.
+ *
+ * Nos layouts de duas colunas os produtos são emparelhados **aqui**, e o par
+ * vira um bloco só. É o que mantém a paginação intacta: ela continua medindo e
+ * empilhando blocos numa coluna, sem precisar saber que existem duas.
+ *
+ * O pareamento não atravessa seção — o último produto de uma seção nunca fica
+ * ao lado do primeiro da seguinte.
+ */
 function montarItens(catalogo, colunas, opcoes) {
+  const duasColunas = ehDuasColunas(normalizarLayout(opcoes.layout));
   const itens = [];
+
   for (const secao of catalogo.secoes) {
     if (secao.titulo) {
       itens.push({ tipo: 'secao', titulo: secao.titulo, html: htmlSecao(secao.titulo) });
     }
-    for (const produto of secao.produtos) {
+
+    const passo = duasColunas ? 2 : 1;
+    for (let i = 0; i < secao.produtos.length; i += passo) {
+      const grupo = secao.produtos.slice(i, i + passo);
+      const desenhos = grupo.map((p) => htmlProduto(p, colunas, opcoes));
       itens.push({
         tipo: 'produto',
-        produto,
+        produto: grupo[0],
+        produtos: grupo,
         secao: secao.titulo,
-        html: htmlProduto(produto, colunas, opcoes),
+        html: duasColunas ? htmlPar(desenhos[0], desenhos[1]) : desenhos[0],
       });
     }
   }
@@ -63,7 +88,9 @@ function obterMedidor(documento) {
   return host;
 }
 
+/** Altura com margens. Aceita ausente: nos cartões não existe faixa de rótulos. */
 function alturaComMargem(el, janela) {
+  if (!el) return 0;
   const estilo = janela.getComputedStyle(el);
   return (
     el.getBoundingClientRect().height +

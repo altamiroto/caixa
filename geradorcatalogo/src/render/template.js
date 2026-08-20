@@ -116,8 +116,31 @@ function htmlPreco(preco, classe, mostrarParcela) {
   return `<div class="linha__preco linha__preco--${classe}">${escapar(valor)}${parcela}</div>`;
 }
 
-/** HTML de uma linha de produto. */
-export function htmlProduto(produto, colunas, opcoes = {}) {
+/**
+ * Layouts disponíveis para o corpo do catálogo.
+ *
+ * `tabela` é o original: uma linha por produto, largura inteira. Os outros três
+ * põem dois produtos por linha, o que só compensa quando o nome é curto — numa
+ * lista de TVs, com nome de 86 caracteres na mediana, metade da largura faz o
+ * texto quebrar em cinco linhas e a página render menos, não mais.
+ */
+export const LAYOUTS = ['tabela', 'grade', 'vitrine', 'duplo'];
+export const LAYOUT_PADRAO = 'tabela';
+
+/** O layout põe dois produtos lado a lado? */
+export function ehDuasColunas(layout) {
+  return layout === 'grade' || layout === 'vitrine' || layout === 'duplo';
+}
+
+export function normalizarLayout(layout) {
+  return LAYOUTS.includes(layout) ? layout : LAYOUT_PADRAO;
+}
+
+/**
+ * As partes de um produto, já limpas e formatadas.
+ * Os quatro layouts montam a mesma informação em arranjos diferentes.
+ */
+function pecasDoProduto(produto, colunas, opcoes) {
   // Por padrão o catálogo reproduz a palavra como ela veio na lista
   // ("LANÇAMENTO - Redmi 15C"). O selo destacado é opt-in, via `opcoes.selo`,
   // porque inventar um rótulo que o autor não escreveu é decisão dele, não do
@@ -132,19 +155,14 @@ export function htmlProduto(produto, colunas, opcoes = {}) {
     : opcoes.selo
       ? `<span class="linha__selo">${escapar(opcoes.selo)}</span>`
       : `<span class="linha__marcador">${escapar(marcador)}</span> `;
+
   const obs = produto.observacao
     ? `<span class="linha__obs">${escapar(produto.observacao)}</span>`
     : '';
+
   // A remoção é aplicada no desenho, não na leitura: o modelo segue com o
   // nome completo, e trocar a lista de palavras não exige reprocessar a lista.
-  const nomeLimpo = removerTermos(produto.nome, opcoes.remover) || produto.nome;
-  const nome = `<div class="linha__nome">${selo}${escapar(nomeLimpo)}${obs}</div>`;
-
-  const cor = colunas.mostrarCor
-    ? produto.cores.length
-      ? `<div class="linha__cor">${escapar(produto.cores.join(' / '))}</div>`
-      : `<div class="linha__cor linha__cor--vazio"></div>`
-    : '';
+  const nome = removerTermos(produto.nome, opcoes.remover) || produto.nome;
 
   // Produto com um preço só (fone, carregador) repete o valor nas duas colunas
   // em vez de deixar uma delas com um traço.
@@ -158,11 +176,98 @@ export function htmlProduto(produto, colunas, opcoes = {}) {
   const mostrarParcela =
     opcoes.mostrarParcela ?? (parcelas !== null && parcelas !== colunas.parcelasDominante);
 
+  return {
+    selo,
+    obs,
+    nome,
+    cores: produto.cores.join(' / '),
+    precoDe: (tipo) => produto[tipo] ?? unico,
+    mostrarParcela,
+  };
+}
+
+/** Cartão: nome em cima, cor, e os dois preços lado a lado embaixo. */
+function htmlCartao(produto, colunas, opcoes, pecas) {
+  const cor = pecas.cores
+    ? `<div class="cartao__cor">${escapar(pecas.cores)}</div>`
+    : '';
+
+  const rotulos = { parcelado: rotuloParcelado(colunas).titulo, avista: 'Dinheiro / Pix' };
   const precos = colunas.precos
-    .map((tipo) => htmlPreco(produto[tipo] ?? unico, tipo, mostrarParcela))
+    .map((tipo) => {
+      const preco = pecas.precoDe(tipo);
+      if (!preco) return '';
+      return `<div class="cartao__preco cartao__preco--${tipo}">
+        <span class="cartao__rotulo">${escapar(rotulos[tipo])}</span>
+        ${escapar(formatarValor(preco.valor))}
+      </div>`;
+    })
+    .join('');
+
+  return `<div class="cartao">
+    <div class="cartao__nome">${pecas.selo}${escapar(pecas.nome)}${pecas.obs}</div>
+    ${cor}
+    <div class="cartao__precos">${precos}</div>
+  </div>`;
+}
+
+/** Vitrine: o preço à vista vira o herói, e o parcelado desce para nota. */
+function htmlVitrine(produto, colunas, opcoes, pecas) {
+  const cor = pecas.cores
+    ? `<div class="cartao__cor">${escapar(pecas.cores)}</div>`
+    : '';
+
+  const heroi = pecas.precoDe('avista') ?? pecas.precoDe('parcelado');
+  const outro = pecas.precoDe('parcelado');
+  const n = colunas.parcelasDominante;
+  const nota =
+    outro && heroi && outro.valor !== heroi.valor
+      ? `<div class="cartao__nota">ou ${escapar(formatarValor(outro.valor))} em ${
+          outro.parcelas ?? n ?? 10
+        }x</div>`
+      : '';
+
+  return `<div class="cartao cartao--vitrine">
+    <div class="cartao__nome">${pecas.selo}${escapar(pecas.nome)}${pecas.obs}</div>
+    ${cor}
+    <div class="cartao__heroi">
+      ${heroi ? escapar(formatarValor(heroi.valor)) : '—'}
+      <span class="cartao__rotulo">à vista</span>
+    </div>
+    ${nota}
+  </div>`;
+}
+
+/** HTML de uma linha de produto, no layout pedido. */
+export function htmlProduto(produto, colunas, opcoes = {}) {
+  // Por padrão o catálogo reproduz a palavra como ela veio na lista
+  // ("LANÇAMENTO - Redmi 15C"). O selo destacado é opt-in, via `opcoes.selo`,
+  // porque inventar um rótulo que o autor não escreveu é decisão dele, não do
+  // código. Para sumir de vez existe `--remover`.
+  const layout = normalizarLayout(opcoes.layout);
+  const pecas = pecasDoProduto(produto, colunas, opcoes);
+
+  if (layout === 'grade') return htmlCartao(produto, colunas, opcoes, pecas);
+  if (layout === 'vitrine') return htmlVitrine(produto, colunas, opcoes, pecas);
+
+  // `tabela` e `duplo` compartilham o desenho da linha; o que muda é a largura,
+  // e disso o CSS cuida pelo data-layout da página.
+  const nome = `<div class="linha__nome">${pecas.selo}${escapar(pecas.nome)}${pecas.obs}</div>`;
+  const cor = colunas.mostrarCor
+    ? pecas.cores
+      ? `<div class="linha__cor">${escapar(pecas.cores)}</div>`
+      : `<div class="linha__cor linha__cor--vazio"></div>`
+    : '';
+  const precos = colunas.precos
+    .map((tipo) => htmlPreco(pecas.precoDe(tipo), tipo, pecas.mostrarParcela))
     .join('');
 
   return `<div class="linha grade">${nome}${cor}${precos}</div>`;
+}
+
+/** Envolve dois produtos numa linha só, para a paginação medir o par junto. */
+export function htmlPar(a, b = '') {
+  return `<div class="par">${a}${b || '<div class="par__vazio"></div>'}</div>`;
 }
 
 /** HTML de um título de seção. */
@@ -262,11 +367,14 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     data-alinha-nome="${alinhar.nome}"
     data-alinha-cor="${alinhar.cor}"
     data-alinha-preco="${alinhar.preco}"
+    data-layout="${normalizarLayout(opcoes.layout)}"
     data-pagina="${numero}">
     ${foto}
     <div class="pagina__brilho"></div>
     ${htmlCabecalho(catalogo, opcoes)}
-    ${htmlRotulos(catalogo, colunas)}
+    ${['grade', 'vitrine'].includes(normalizarLayout(opcoes.layout))
+      ? '' // O cartão traz o rótulo do preço dentro de si.
+      : htmlRotulos(catalogo, colunas)}
     <div class="corpo">${blocos.join('')}</div>
     ${htmlRodape(opcoes, numero, total)}
   </article>`;

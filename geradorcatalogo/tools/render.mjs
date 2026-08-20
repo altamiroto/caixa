@@ -26,6 +26,8 @@
  *   --fundo-imagem <arquivo>  foto de fundo da página (jpg/png/webp)
  *   --veu <css>       cor/gradiente por cima da foto; o tema define um padrão
  *   --paginas-max <n> teto de páginas por catálogo            (padrão: 1)
+ *   --layout <t>      tabela | grade | vitrine | duplo        (padrão: tabela)
+ *                     os três últimos põem dois produtos por linha
  *   --remover <lista> palavras a tirar do nome, separadas por vírgula
  *                     ex.: --remover "Smart TV,LANÇAMENTO"
  *   --alinhar-nome  <esquerda|centro|direita>  (padrão: esquerda)
@@ -49,7 +51,7 @@ import { dirname, join, normalize } from 'node:path';
 import { chromium } from 'playwright';
 
 import { parseVarios } from '../src/parser/parse.js';
-import { LARGURA, ALTURA, ALINHAMENTOS, MARGENS } from '../src/render/template.js';
+import { LARGURA, ALTURA, ALINHAMENTOS, MARGENS, LAYOUTS } from '../src/render/template.js';
 import { TEMA_PADRAO, TEMAS, sortearTema } from '../src/themes/temas.js';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -78,6 +80,7 @@ function lerArgumentos(argv) {
     fundoImagem: undefined,
     veu: undefined,
     paginasMax: undefined,
+    layout: undefined,
     remover: '',
     alinhar: {},
     margens: {},
@@ -102,6 +105,7 @@ function lerArgumentos(argv) {
     else if (a === '--fundo-imagem') opcoes.fundoImagem = proximo();
     else if (a === '--veu') opcoes.veu = proximo();
     else if (a === '--paginas-max') opcoes.paginasMax = Number(proximo());
+    else if (a === '--layout') opcoes.layout = proximo();
     else if (a === '--remover') opcoes.remover = proximo();
     else if (a === '--alinhar-nome') opcoes.alinhar.nome = proximo();
     else if (a === '--alinhar-cor') opcoes.alinhar.cor = proximo();
@@ -130,6 +134,9 @@ function lerArgumentos(argv) {
     if (!ALINHAMENTOS.includes(valor)) {
       throw new Error(`Alinhamento "${valor}" (${coluna}) inválido. Use: ${ALINHAMENTOS.join(', ')}`);
     }
+  }
+  if (opcoes.layout && !LAYOUTS.includes(opcoes.layout)) {
+    throw new Error(`Layout "${opcoes.layout}" não existe. Use: ${LAYOUTS.join(', ')}`);
   }
   if (opcoes.margens.preset && !MARGENS[opcoes.margens.preset]) {
     throw new Error(`Margem "${opcoes.margens.preset}" não existe. Use: ${Object.keys(MARGENS).join(', ')}`);
@@ -254,6 +261,7 @@ async function main() {
     escalaMax: opcoes.escalaMax,
     paginasMax: opcoes.paginasMax,
     veu: opcoes.veu,
+    layout: opcoes.layout,
     remover: opcoes.remover,
     alinhar: opcoes.alinhar,
     margens: opcoes.margens,

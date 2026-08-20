@@ -287,6 +287,20 @@ R$ 965 (Dinheiro)"></textarea>
       </div>
 
       <div>
+        <label for="layout">Layout do corpo</label>
+        <select id="layout">
+          <option value="tabela">Tabela — uma linha por produto</option>
+          <option value="duplo">Duplo — duas linhas por faixa</option>
+          <option value="grade">Grade — cartão, dois por faixa</option>
+          <option value="vitrine">Vitrine — cartão com preço em destaque</option>
+        </select>
+        <p class="ajuda">
+          Duas colunas rendem mais quando o nome é curto. Em lista de TV, com nome
+          longo, o texto quebra demais e a página cabe menos.
+        </p>
+      </div>
+
+      <div>
         <label for="remover">Remover palavras do nome</label>
         <input id="remover" placeholder="Smart TV, LANÇAMENTO" />
         <p class="ajuda">
@@ -469,6 +483,7 @@ R$ 965 (Dinheiro)"></textarea>
           selo: $('selo').value.trim() || undefined,
           fundo: $('fundo').value.trim() || undefined,
           fundoImagem: fotoDeFundo,
+          layout: $('layout').value,
           remover: $('remover').value,
           alinhar: {
             nome: $('al-nome').value,

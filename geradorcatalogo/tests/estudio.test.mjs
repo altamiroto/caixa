@@ -181,3 +181,56 @@ test('o checkbox de tema aleatório troca a paleta a cada geração', async (t) 
   assert.match(await pagina.textContent('#resumo'), /tema: .+/);
   assert.deepEqual(erros, []);
 });
+
+test('layout de duas colunas pareia sem atravessar seção nem vazar da página', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await pagina.fill('#entrada', await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'));
+  await pagina.selectOption('#layout', 'duplo');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  // Realme 10, Samsung 6, Xiaomi 26 produtos: 5 + 3 + 13 pares, nenhum vazio,
+  // porque o pareamento respeita a fronteira de seção.
+  assert.equal(await pagina.locator('.moldura .par').count(), 21);
+  assert.equal(await pagina.locator('.moldura .par__vazio').count(), 0);
+  assert.equal(await pagina.locator('.moldura .linha').count(), 42, 'produto sumiu no pareamento');
+
+  // Duas colunas têm que render mais: mesma página única, escala bem maior.
+  const escala = await pagina.$eval('.moldura .pagina', (el) =>
+    Number(getComputedStyle(el).getPropertyValue('--escala')),
+  );
+  assert.equal(await pagina.locator('.moldura .pagina').count(), 1);
+  assert.ok(escala > 0.6, `esperava escala bem acima da tabela (0.34), veio ${escala}`);
+
+  const vazamentos = await pagina.evaluate(() => {
+    const p = document.querySelector('.moldura .pagina');
+    const limite = p.getBoundingClientRect();
+    return [...p.querySelectorAll('.par, .secao')]
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.bottom > limite.bottom + 0.5 || r.top < limite.top - 0.5;
+      })
+      .map((el) => el.textContent.slice(0, 40));
+  });
+  assert.deepEqual(vazamentos, [], 'bloco fora da página');
+  assert.deepEqual(erros, []);
+});
+
+test('seção com número ímpar de produtos deixa uma vaga vazia, não um cartão largo', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  // A lista de acessórios tem uma seção só, com 28 produtos... e a de iPhones
+  // semi-novos tem 21, que é ímpar.
+  await pagina.fill('#entrada', await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8'));
+  await pagina.selectOption('#layout', 'grade');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  // 5 produtos (ímpar) + 21 produtos (ímpar) = duas vagas vazias.
+  assert.equal(await pagina.locator('.moldura .par__vazio').count(), 2);
+  assert.equal(await pagina.locator('.moldura .cartao').count(), 26);
+  assert.deepEqual(erros, []);
+});
