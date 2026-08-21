@@ -9,6 +9,9 @@
  *   node tools/render.mjs samples/smartphones.txt --tema noite --saida saida/
  *   node tools/render.mjs samples/apple.txt --tema rose --marca "Minha Loja"
  *
+ * Vários arquivos de uma vez, cada um virando a sua imagem:
+ *   node tools/render.mjs samples/*.txt --tema aleatorio
+ *
  * Opções:
  *   --tema <id>       121 temas; veja o README                (padrão: noite)
  *                     use `aleatorio` para sortear um tema inédito a cada run
@@ -66,7 +69,7 @@ const TIPOS = {
 
 function lerArgumentos(argv) {
   const opcoes = {
-    entrada: null,
+    entradas: [],
     tema: TEMA_PADRAO,
     saida: join(process.cwd(), 'saida'),
     marca: '',
@@ -118,10 +121,10 @@ function lerArgumentos(argv) {
     else if (a === '--largura') opcoes.largura = Number(proximo());
     else if (a === '--html') opcoes.html = true;
     else if (a.startsWith('--')) throw new Error(`Opção desconhecida: ${a}`);
-    else opcoes.entrada = a;
+    else opcoes.entradas.push(a);
   }
 
-  if (!opcoes.entrada) throw new Error('Informe o arquivo de entrada.');
+  if (!opcoes.entradas.length) throw new Error('Informe ao menos um arquivo de entrada.');
   if (opcoes.tema !== 'aleatorio' && !TEMAS[opcoes.tema]) {
     const amostra = Object.keys(TEMAS).slice(0, 8).join(', ');
     throw new Error(
@@ -182,6 +185,27 @@ async function comoDataUri(caminho) {
   return `data:${mime};base64,${dados.toString('base64')}`;
 }
 
+/**
+ * Garante nome de arquivo único.
+ *
+ * Duas listas podem ter o mesmo título — mandar a mesma lista duas vezes, ou
+ * duas datas do mesmo produto. Sem isso, a segunda sobrescrevia a primeira em
+ * silêncio e o lote saía com uma imagem a menos.
+ */
+function semRepetir(base, usados) {
+  if (!usados.has(base)) {
+    usados.add(base);
+    return base;
+  }
+  for (let n = 2; ; n += 1) {
+    const tentativa = `${base}-${n}`;
+    if (!usados.has(tentativa)) {
+      usados.add(tentativa);
+      return tentativa;
+    }
+  }
+}
+
 /** Nome de arquivo seguro a partir do título do catálogo. */
 function apelido(texto, indice) {
   const base = String(texto ?? '')
@@ -216,11 +240,16 @@ async function montarPalco(pagina) {
 
 async function main() {
   const opcoes = lerArgumentos(process.argv.slice(2));
-  const texto = await readFile(opcoes.entrada, 'utf8');
-  const catalogos = parseVarios(texto);
+
+  // Cada arquivo é lido em separado, e um arquivo ainda pode trazer várias
+  // mensagens coladas — as duas formas de agrupar se somam.
+  const catalogos = [];
+  for (const arquivo of opcoes.entradas) {
+    catalogos.push(...parseVarios(await readFile(arquivo, 'utf8')));
+  }
 
   if (!catalogos.length) {
-    console.error('Nenhum catálogo reconhecido na entrada.');
+    console.error('Nenhum catálogo reconhecido nas entradas.');
     process.exitCode = 1;
     return;
   }
@@ -238,19 +267,14 @@ async function main() {
 
   // Sorteio: sem semente, o contador vem do relógio, então cada execução do dia
   // sai com cor claramente diferente da anterior.
-  let sorteado = null;
-  if (opcoes.tema === 'aleatorio') {
-    const contador = Number.isFinite(opcoes.semente)
-      ? opcoes.semente
-      : Math.floor(Date.now() / 1000);
-    sorteado = sortearTema({ contador });
-    console.log(`Tema sorteado: ${sorteado.nome} (${sorteado.estilo})`);
-  }
+  const contadorBase = Number.isFinite(opcoes.semente)
+    ? opcoes.semente
+    : Math.floor(Date.now() / 1000);
 
   const gerados = [];
+  const nomesUsados = new Set();
   const opcoesLayout = {
-    // O objeto inteiro, não o id: ver obterTema em src/themes/temas.js.
-    tema: sorteado ?? opcoes.tema,
+    tema: opcoes.tema,
     marca: opcoes.marca,
     sobretitulo: opcoes.sobretitulo,
     titulo: opcoes.titulo,
@@ -270,11 +294,21 @@ async function main() {
   };
 
   for (const [indice, catalogo] of catalogos.entries()) {
-    const nomeBase = apelido(catalogo.titulo, indice);
+    const nomeBase = semRepetir(apelido(catalogo.titulo, indice), nomesUsados);
+
+    // Com o sorteio ligado, cada catálogo ganha o seu tema: cada imagem vai
+    // para um post diferente, e sair tudo da mesma cor anularia o sorteio.
+    // O objeto inteiro, não o id: ver obterTema em src/themes/temas.js.
+    const opcoesDoCatalogo = { ...opcoesLayout };
+    let sorteado = null;
+    if (opcoes.tema === 'aleatorio') {
+      sorteado = sortearTema({ contador: contadorBase + indice });
+      opcoesDoCatalogo.tema = sorteado;
+    }
 
     const resultado = await pagina.evaluate(
       ([cat, op]) => window.__gc.paginar({ documento: document, janela: window, catalogo: cat, opcoes: op }),
-      [catalogo, opcoesLayout],
+      [catalogo, opcoesDoCatalogo],
     );
 
     for (const [i, p] of resultado.paginas.entries()) {
@@ -304,6 +338,7 @@ async function main() {
     console.log(
       `${catalogo.titulo || '(sem título)'} — ${catalogo.resumo.totalProdutos} produtos, ` +
         `${resultado.paginas.length} página(s), escala ${resultado.escala.toFixed(3)}` +
+        (sorteado ? `, tema ${sorteado.nome}` : '') +
         (avisos.length ? `, ${avisos.length} aviso(s)` : ''),
     );
     for (const a of avisos) console.log(`   [${a.nivel}] linha ${a.linha ?? '?'}: ${a.mensagem}`);

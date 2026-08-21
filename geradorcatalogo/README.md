@@ -23,8 +23,8 @@ npm test                    # parser + estúdio ponta a ponta
 # um catálogo
 node tools/render.mjs samples/smartphones.txt --tema noite --marca "@sualoja"
 
-# escolhendo tema e destino
-node tools/render.mjs samples/apple.txt --tema rose --saida ./saida
+# vários de uma vez, cada um com o seu tema sorteado
+node tools/render.mjs samples/*.txt --tema aleatorio --saida ./saida
 ```
 
 Para o estúdio, sirva a pasta (não abra por `file://` — os módulos ES precisam
@@ -53,6 +53,9 @@ npx serve .        # ou: python3 -m http.server
 | `--veu` | do tema | Cor/gradiente por cima da foto |
 | `--paginas-max` | `1` | Teto de páginas por catálogo |
 | `--layout` | `tabela` | `tabela`, `duplo`, `grade` ou `vitrine` |
+
+Vários arquivos de entrada podem ser passados de uma vez; cada um vira a sua
+imagem.
 | `--remover` | — | Palavras a tirar do nome, separadas por vírgula |
 | `--alinhar-nome` | `esquerda` | `esquerda`, `centro` ou `direita` |
 | `--alinhar-cor` | `centro` | idem |
@@ -60,6 +63,30 @@ npx serve .        # ou: python3 -m http.server
 | `--margens` | `padrao` | `padrao` ou `stories` (reserva a área da interface) |
 | `--margem-topo` / `--margem-lateral` / `--margem-base` | do preset | Em px, base 1080×1920 |
 | `--html` | — | Grava também o HTML de cada página |
+
+### Várias listas de uma vez
+
+Publicar quatro listas por dia não deveria custar quatro rodadas do programa.
+
+No estúdio, **uma caixa por lista**: o botão *Adicionar outra lista* cria mais
+caixas, cada uma vira uma imagem, e *Baixar todas as imagens* salva o lote. No
+terminal, basta passar vários arquivos:
+
+```bash
+node tools/render.mjs celulares.txt tvs.txt acessorios.txt --tema aleatorio
+```
+
+As duas formas de agrupar se somam: uma caixa (ou um arquivo) ainda pode conter
+várias mensagens coladas, e o parser as separa como sempre fez. A diferença é
+que a fronteira entre caixas é **explícita** — não depende de o parser adivinhar
+onde uma lista acaba e a outra começa.
+
+Com o sorteio ligado, **cada catálogo ganha o seu tema**. Cada imagem vai para
+um post diferente, e sair tudo da mesma cor anularia o motivo de sortear.
+
+Nomes de arquivo repetidos são desambiguados (`smart-tvs.png`,
+`smart-tvs-2.png`): duas listas podem ter o mesmo título, e sem isso a segunda
+sobrescreveria a primeira em silêncio.
 
 ## Como funciona
 
