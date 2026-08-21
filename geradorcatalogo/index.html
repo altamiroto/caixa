@@ -90,6 +90,44 @@
         grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
+      .lista {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .lista textarea {
+        min-height: 150px;
+        padding-right: 40px;
+      }
+      .lista__cabeca {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: var(--ui-suave);
+      }
+      .lista__remover {
+        padding: 2px 9px;
+        border-color: transparent;
+        background: transparent;
+        color: var(--ui-suave);
+        font-size: 16px;
+        line-height: 1;
+      }
+      .lista__remover:hover {
+        color: #f87171;
+      }
+      /* Com uma lista só, remover deixaria a tela sem entrada nenhuma. */
+      .listas--unica .lista__remover {
+        display: none;
+      }
+      .palco__barra {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: -6px;
+      }
       .marcadores {
         display: flex;
         flex-direction: column;
@@ -221,12 +259,13 @@
       </div>
 
       <div>
-        <label for="entrada">Lista de produtos</label>
-        <textarea id="entrada" spellcheck="false" placeholder="📢 *SMARTPHONES (07/08/26)*
-
-📱 *Realme C71 4/128gb* - Branco
-R$ 1.089 (10x)
-R$ 965 (Dinheiro)"></textarea>
+        <label>Listas de produtos</label>
+        <div id="listas"></div>
+        <button type="button" class="secundario" id="adicionar">+ Adicionar outra lista</button>
+        <p class="ajuda">
+          Uma caixa por lista. Cada uma vira uma imagem, e todas saem de uma vez.
+          Dentro de uma caixa, mensagens coladas também viram catálogos separados.
+        </p>
       </div>
 
       <div class="dupla">
@@ -283,6 +322,20 @@ R$ 965 (Dinheiro)"></textarea>
         <p class="ajuda" id="sorteio-info">
           Sorteia uma paleta inédita, sempre distante em cor das últimas usadas.
           Ignora o tema escolhido acima.
+        </p>
+      </div>
+
+      <div>
+        <label for="layout">Layout do corpo</label>
+        <select id="layout">
+          <option value="tabela">Tabela — uma linha por produto</option>
+          <option value="duplo">Duplo — duas linhas por faixa</option>
+          <option value="grade">Grade — cartão, dois por faixa</option>
+          <option value="vitrine">Vitrine — cartão com preço em destaque</option>
+        </select>
+        <p class="ajuda">
+          Duas colunas rendem mais quando o nome é curto. Em lista de TV, com nome
+          longo, o texto quebra demais e a página cabe menos.
         </p>
       </div>
 
@@ -384,10 +437,71 @@ R$ 965 (Dinheiro)"></textarea>
         }
       }
 
+      /* ------------------------------------------------- as caixas de lista */
+
+      const PLACEHOLDER = `📢 *SMARTPHONES (07/08/26)*
+
+📱 *Realme C71 4/128gb* - Branco
+R$ 1.089 (10x)
+R$ 965 (Dinheiro)`;
+
+      /** Todas as caixas, na ordem em que aparecem. */
+      function caixas() {
+        return [...$('listas').querySelectorAll('textarea')];
+      }
+
+      /** Renumera os rótulos e esconde o "remover" quando só resta uma caixa. */
+      function arrumarListas() {
+        const blocos = [...$('listas').children];
+        blocos.forEach((bloco, i) => {
+          bloco.querySelector('.lista__numero').textContent = `Lista ${i + 1}`;
+        });
+        $('listas').classList.toggle('listas--unica', blocos.length <= 1);
+      }
+
+      function adicionarLista(texto = '', focar = false) {
+        const bloco = document.createElement('div');
+        bloco.className = 'lista';
+
+        const cabeca = document.createElement('div');
+        cabeca.className = 'lista__cabeca';
+        const numero = document.createElement('span');
+        numero.className = 'lista__numero';
+        const remover = document.createElement('button');
+        remover.type = 'button';
+        remover.className = 'lista__remover';
+        remover.title = 'Remover esta lista';
+        remover.textContent = '×';
+        remover.addEventListener('click', () => {
+          bloco.remove();
+          arrumarListas();
+        });
+        cabeca.append(numero, remover);
+
+        const campo = document.createElement('textarea');
+        campo.spellcheck = false;
+        campo.placeholder = PLACEHOLDER;
+        campo.value = texto;
+
+        bloco.append(cabeca, campo);
+        $('listas').append(bloco);
+        arrumarListas();
+        if (focar) campo.focus();
+        return campo;
+      }
+
+      adicionarLista();
+      $('adicionar').addEventListener('click', () => adicionarLista('', true));
+
+      // O exemplo entra na primeira caixa vazia, ou numa nova — assim carregar
+      // um exemplo não apaga o que já foi colado.
       $('exemplo').addEventListener('change', async (e) => {
         if (!e.target.value) return;
         const r = await fetch(`./samples/${e.target.value}`);
-        $('entrada').value = await r.text();
+        const texto = await r.text();
+        const vaga = caixas().find((c) => !c.value.trim());
+        if (vaga) vaga.value = texto;
+        else adicionarLista(texto);
         gerar();
       });
 
@@ -469,6 +583,7 @@ R$ 965 (Dinheiro)"></textarea>
           selo: $('selo').value.trim() || undefined,
           fundo: $('fundo').value.trim() || undefined,
           fundoImagem: fotoDeFundo,
+          layout: $('layout').value,
           remover: $('remover').value,
           alinhar: {
             nome: $('al-nome').value,
@@ -479,37 +594,71 @@ R$ 965 (Dinheiro)"></textarea>
         };
       }
 
+      /*
+       * Nomes de arquivo já usados nesta geração. Duas listas podem ter o mesmo
+       * título, e sem isso o segundo download sobrescreveria o primeiro.
+       */
+      let nomesUsados = new Set();
+
+      function semRepetir(base) {
+        if (!nomesUsados.has(base)) {
+          nomesUsados.add(base);
+          return base;
+        }
+        for (let n = 2; ; n += 1) {
+          const tentativa = `${base}-${n}`;
+          if (!nomesUsados.has(tentativa)) {
+            nomesUsados.add(tentativa);
+            return tentativa;
+          }
+        }
+      }
+
       async function gerar() {
         await fontesProntas;
-        const texto = $('entrada').value;
+        nomesUsados = new Set();
         palco.innerHTML = '';
         $('avisos').innerHTML = '';
         $('resumo').textContent = '';
 
-        let catalogos;
-        try {
-          catalogos = parseVarios(texto);
-        } catch (erro) {
-          mostrarAvisos([{ nivel: 'erro', mensagem: erro.message }]);
-          return;
-        }
+        const avisos = [];
+        const catalogos = [];
+
+        // Cada caixa é lida em separado: a fronteira entre listas é explícita,
+        // sem depender de o parser adivinhar onde uma acaba e a outra começa.
+        caixas().forEach((campo, i) => {
+          const texto = campo.value.trim();
+          if (!texto) return;
+          try {
+            catalogos.push(...parseVarios(texto));
+          } catch (erro) {
+            avisos.push({ nivel: 'erro', mensagem: `Lista ${i + 1}: ${erro.message}` });
+          }
+        });
 
         if (!catalogos.length) {
-          palco.innerHTML = '<p class="vazio">Nada reconhecido nessa lista.</p>';
+          palco.innerHTML = '<p class="vazio">Nada reconhecido nas listas.</p>';
+          mostrarAvisos(avisos);
           return;
         }
 
-        const opcoes = opcoesAtuais();
-        let sorteado = null;
-        if ($('tema-aleatorio').checked) {
-          sorteado = temaSorteado();
-          opcoes.tema = sorteado;
-        }
-        const avisos = [];
+        const base = opcoesAtuais();
+        const aleatorio = $('tema-aleatorio').checked;
+        const sorteados = [];
         let totalPaginas = 0;
         let totalProdutos = 0;
 
         for (const catalogo of catalogos) {
+          // Com o sorteio ligado, cada catálogo ganha o seu tema: cada imagem
+          // vai para um post diferente, e sair tudo da mesma cor anularia o
+          // motivo de sortear.
+          const opcoes = { ...base };
+          if (aleatorio) {
+            const tema = temaSorteado();
+            opcoes.tema = tema;
+            sorteados.push(tema.nome);
+          }
+
           let resultado;
           try {
             resultado = paginar({ documento: document, janela: window, catalogo, opcoes });
@@ -521,19 +670,48 @@ R$ 965 (Dinheiro)"></textarea>
           totalProdutos += catalogo.resumo.totalProdutos;
           avisos.push(...catalogo.avisos);
 
+          const nomeBase = semRepetir(apelido(catalogo.titulo));
           resultado.paginas.forEach((p, i) => {
-            palco.append(montarCartao(catalogo, p, i, resultado.paginas.length));
+            palco.append(montarCartao(nomeBase, p, i, resultado.paginas.length));
           });
         }
 
-        const usado = sorteado ? ` · tema: ${sorteado.nome} (${sorteado.estilo})` : '';
+        if (palco.querySelector('.moldura')) palco.prepend(montarBarra());
+
+        const usado = sorteados.length ? ` · temas: ${sorteados.join(', ')}` : '';
         $('resumo').textContent =
           `${catalogos.length} catálogo(s), ${totalProdutos} produtos, ` +
           `${totalPaginas} página(s) · 2160×3840${usado}`;
         mostrarAvisos(avisos);
       }
 
-      function montarCartao(catalogo, pagina, indice, total) {
+      /** Barra acima das prévias, com o botão de baixar tudo de uma vez. */
+      function montarBarra() {
+        const barra = document.createElement('div');
+        barra.className = 'palco__barra';
+
+        const botao = document.createElement('button');
+        botao.id = 'baixar-todas';
+        botao.textContent = 'Baixar todas as imagens';
+        botao.addEventListener('click', async () => {
+          const alvos = [...palco.querySelectorAll('.cartao__acoes button')];
+          botao.disabled = true;
+          for (const [i, alvo] of alvos.entries()) {
+            botao.textContent = `Baixando ${i + 1} de ${alvos.length}…`;
+            alvo.click();
+            // O navegador engasga com downloads em rajada; o intervalo dá
+            // tempo de cada um ser aceito antes do próximo.
+            await new Promise((r) => setTimeout(r, 700));
+          }
+          botao.textContent = 'Baixar todas as imagens';
+          botao.disabled = false;
+        });
+
+        barra.append(botao);
+        return barra;
+      }
+
+      function montarCartao(nomeBase, pagina, indice, total) {
         const cartao = document.createElement('div');
         cartao.className = 'cartao';
 
@@ -559,7 +737,7 @@ R$ 965 (Dinheiro)"></textarea>
             const blob = await paraPng(alvo);
             alvo.style.transform = '';
             const sufixo = total > 1 ? `-${String(indice + 1).padStart(2, '0')}` : '';
-            baixar(blob, `${apelido(catalogo.titulo)}${sufixo}.png`);
+            baixar(blob, `${nomeBase}${sufixo}.png`);
             botao.textContent = 'Baixar PNG';
           } catch (erro) {
             botao.textContent = 'Falhou';

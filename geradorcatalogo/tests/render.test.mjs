@@ -19,7 +19,10 @@ import {
   htmlPagina,
   htmlProduto,
   htmlCabecalho,
+  htmlPar,
   definirColunas,
+  ehDuasColunas,
+  normalizarLayout,
 } from '../src/render/template.js';
 
 const catalogoFalso = {
@@ -246,4 +249,68 @@ test('cabeçalho totalmente vazio não reserva espaço', () => {
   });
   assert.match(html, /cabecalho--vazio/);
   assert.doesNotMatch(html, /cabecalho__/);
+});
+
+// ------------------------------------------------------------------ layouts
+
+test('cada layout desenha um arranjo diferente da mesma informação', () => {
+  const colunas = definirColunas(catalogoFalso);
+  const p = produtoLancamento();
+
+  const tabela = htmlProduto(p, colunas, { layout: 'tabela' });
+  assert.match(tabela, /class="linha grade"/);
+  assert.doesNotMatch(tabela, /cartao/);
+
+  const grade = htmlProduto(p, colunas, { layout: 'grade' });
+  assert.match(grade, /class="cartao"/);
+  assert.match(grade, /cartao__precos/);
+
+  const vitrine = htmlProduto(p, colunas, { layout: 'vitrine' });
+  assert.match(vitrine, /cartao--vitrine/);
+  assert.match(vitrine, /cartao__heroi/);
+
+  // `duplo` reaproveita o desenho da linha; quem muda a largura é o CSS.
+  assert.equal(htmlProduto(p, colunas, { layout: 'duplo' }), tabela);
+
+  // Layout inexistente cai no padrão em vez de gerar HTML vazio.
+  assert.equal(htmlProduto(p, colunas, { layout: 'inventado' }), tabela);
+
+  // O nome e o preço sobrevivem em todos.
+  for (const html of [tabela, grade, vitrine]) {
+    assert.match(html, /Redmi 15C/);
+    assert.match(html, /830/);
+  }
+});
+
+test('ehDuasColunas separa os layouts pareados dos de largura inteira', () => {
+  assert.equal(ehDuasColunas('tabela'), false);
+  for (const l of ['grade', 'vitrine', 'duplo']) {
+    assert.ok(ehDuasColunas(l), `${l} deveria ser de duas colunas`);
+  }
+  assert.equal(normalizarLayout('nada'), 'tabela');
+  assert.equal(normalizarLayout(undefined), 'tabela');
+});
+
+test('nos cartões o rótulo do preço vai dentro, já que não há faixa de colunas', () => {
+  const colunas = definirColunas(catalogoFalso);
+  const grade = htmlProduto(produtoLancamento(), colunas, { layout: 'grade' });
+  assert.match(grade, /cartao__rotulo/);
+  assert.match(grade, /Dinheiro \/ Pix/);
+
+  const pagina = htmlPagina({
+    catalogo: catalogoFalso,
+    colunas,
+    blocos: [],
+    numero: 1,
+    total: 1,
+    escala: 1,
+    opcoes: { layout: 'grade' },
+  });
+  assert.match(pagina, /data-layout="grade"/);
+  assert.doesNotMatch(pagina, /class="rotulos/, 'a faixa de colunas não cabe no layout de cartão');
+});
+
+test('htmlPar preenche a vaga que sobra em vez de esticar o solitário', () => {
+  assert.match(htmlPar('<i>a</i>', '<i>b</i>'), /<div class="par"><i>a<\/i><i>b<\/i><\/div>/);
+  assert.match(htmlPar('<i>a</i>'), /par__vazio/);
 });

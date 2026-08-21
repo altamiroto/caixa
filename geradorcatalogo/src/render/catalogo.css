@@ -308,7 +308,9 @@
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
-  overflow-wrap: anywhere;
+  /* `break-word` e não `anywhere`: numa coluna estreita, `anywhere` partia
+     "Titanium" ao meio. Aqui só quebra a palavra que realmente não couber. */
+  overflow-wrap: break-word;
 }
 
 /* Sem cor declarada, a célula fica vazia — nada de pílula fantasma. */
@@ -350,6 +352,142 @@
   font-weight: 700;
   opacity: 0.72;
   letter-spacing: 0;
+}
+
+/* ------------------------------------------------------------ duas colunas */
+
+/*
+ * O par é a unidade que a paginação mede. Dois produtos lado a lado dentro de
+ * um bloco só — assim o algoritmo continua empilhando blocos numa coluna, sem
+ * saber que existem duas.
+ */
+.par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(10px * var(--escala));
+  align-items: stretch;
+}
+
+/* Seção com número ímpar de produtos: a vaga que sobra fica vazia, não esticada. */
+.par__vazio {
+  visibility: hidden;
+}
+
+.par > .linha {
+  height: 100%;
+}
+
+/* No layout `duplo` a coluna de preço cabe em menos espaço. */
+.pagina[data-layout='duplo'] .grade {
+  --col-cor: max(calc(104px * var(--escala)), 78px);
+  --col-preco: max(calc(124px * var(--escala)), 84px);
+  gap: 0 calc(7px * var(--escala));
+}
+
+.pagina[data-layout='duplo'] .linha__preco {
+  padding: calc(4px * var(--escala)) calc(7px * var(--escala));
+  font-size: max(calc(30px * var(--escala)), 17px);
+}
+
+/* ------------------------------------------------------------------ cartão */
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--escala));
+  height: 100%;
+  padding: calc(11px * var(--escala)) calc(13px * var(--escala));
+  border-radius: var(--raio);
+  border: 1px solid var(--linha-borda);
+  background: var(--linha-a);
+  color: var(--linha-tinta, var(--tinta));
+}
+
+.par:nth-child(even) .cartao {
+  background: var(--linha-b);
+}
+
+.cartao__nome {
+  font-size: var(--fonte-nome);
+  line-height: var(--altura-linha);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.cartao__cor {
+  align-self: flex-start;
+  padding: calc(3px * var(--escala)) calc(9px * var(--escala));
+  border-radius: 999px;
+  background: var(--pilula-fundo);
+  color: var(--pilula-tinta);
+  font-size: var(--fonte-cor);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Os preços empurrados para a base alinham entre cartões de alturas diferentes. */
+.cartao__precos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: calc(7px * var(--escala));
+  margin-top: auto;
+}
+
+.cartao__preco {
+  padding: calc(5px * var(--escala)) calc(9px * var(--escala));
+  border-radius: calc(10px * var(--escala) * var(--raio-mult, 1));
+  font-size: max(calc(31px * var(--escala)), 18px);
+  font-weight: 900;
+  line-height: 1.05;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cartao__preco--parcelado {
+  background: var(--preco-parcelado-fundo);
+  color: var(--preco-parcelado-tinta);
+}
+
+.cartao__preco--avista {
+  background: var(--preco-avista-fundo);
+  color: var(--preco-avista-tinta);
+}
+
+/*
+ * O rótulo dentro do cartão substitui a faixa de colunas da tabela: o cartão
+ * precisa se explicar sozinho, já que não há cabeçalho acima dele.
+ */
+.cartao__rotulo {
+  display: block;
+  font-size: max(calc(11px * var(--escala)), 8px);
+  font-weight: 800;
+  letter-spacing: calc(0.6px * var(--escala));
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+/* ----------------------------------------------------------------- vitrine */
+
+.cartao--vitrine .cartao__heroi {
+  margin-top: auto;
+  padding: calc(6px * var(--escala)) calc(10px * var(--escala));
+  border-radius: calc(12px * var(--escala) * var(--raio-mult, 1));
+  background: var(--preco-avista-fundo);
+  color: var(--preco-avista-tinta);
+  font-size: max(calc(46px * var(--escala)), 26px);
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cartao--vitrine .cartao__nota {
+  font-size: max(calc(16px * var(--escala)), 10px);
+  font-weight: 700;
+  text-align: center;
+  color: var(--linha-tinta-suave, var(--tinta-suave));
 }
 
 /* ------------------------------------------------------- alinhamento das colunas */

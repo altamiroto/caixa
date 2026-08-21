@@ -59,7 +59,19 @@ async function abrirEstudio() {
   pagina.on('console', (m) => m.type() === 'error' && erros.push(m.text()));
 
   await pagina.goto(`${HOST}/index.html`, { waitUntil: 'networkidle' });
+  await pagina.waitForSelector('#listas textarea');
   return { navegador, pagina, erros };
+}
+
+/**
+ * Preenche as caixas de lista, criando as que faltarem.
+ * As caixas são dinâmicas, então o teste não pode assumir um id fixo.
+ */
+async function preencher(pagina, textos) {
+  const lista = [].concat(textos);
+  for (let i = 1; i < lista.length; i += 1) await pagina.click('#adicionar');
+  const campos = pagina.locator('#listas textarea');
+  for (const [i, texto] of lista.entries()) await campos.nth(i).fill(texto);
 }
 
 test('estúdio gera pré-visualização e exporta PNG em 4K', async (t) => {
@@ -67,7 +79,7 @@ test('estúdio gera pré-visualização e exporta PNG em 4K', async (t) => {
   t.after(() => navegador.close());
 
   const lista = await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8');
-  await pagina.fill('#entrada', lista);
+  await preencher(pagina, lista);
   await pagina.selectOption('#tema', 'noite');
   await pagina.fill('#marca', '@sualoja');
   await pagina.click('#gerar');
@@ -139,7 +151,7 @@ test('estúdio separa mensagens coladas em catálogos distintos', async (t) => {
   t.after(() => navegador.close());
 
   const lista = await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8');
-  await pagina.fill('#entrada', lista);
+  await preencher(pagina, lista);
   await pagina.click('#gerar');
   await pagina.waitForSelector('.moldura .pagina', { timeout: 15000 });
 
@@ -153,7 +165,7 @@ test('o checkbox de tema aleatório troca a paleta a cada geração', async (t) 
   t.after(() => navegador.close());
 
   await pagina.evaluate(() => localStorage.removeItem('gc:sorteio'));
-  await pagina.fill('#entrada', await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'));
+  await preencher(pagina, await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'));
 
   // Sem o sorteio, duas gerações seguidas dão exatamente o mesmo fundo.
   await pagina.click('#gerar');
@@ -178,6 +190,155 @@ test('o checkbox de tema aleatório troca a paleta a cada geração', async (t) 
   assert.equal(new Set(fundos).size, fundos.length, `paleta repetida: ${fundos.length} gerações`);
 
   // O nome do tema sorteado precisa aparecer, senão não dá para repetir depois.
-  assert.match(await pagina.textContent('#resumo'), /tema: .+/);
+  assert.match(await pagina.textContent('#resumo'), /temas: .+/);
+  assert.deepEqual(erros, []);
+});
+
+test('layout de duas colunas pareia sem atravessar seção nem vazar da página', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'));
+  await pagina.selectOption('#layout', 'duplo');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  // Realme 10, Samsung 6, Xiaomi 26 produtos: 5 + 3 + 13 pares, nenhum vazio,
+  // porque o pareamento respeita a fronteira de seção.
+  assert.equal(await pagina.locator('.moldura .par').count(), 21);
+  assert.equal(await pagina.locator('.moldura .par__vazio').count(), 0);
+  assert.equal(await pagina.locator('.moldura .linha').count(), 42, 'produto sumiu no pareamento');
+
+  // Duas colunas têm que render mais: mesma página única, escala bem maior.
+  const escala = await pagina.$eval('.moldura .pagina', (el) =>
+    Number(getComputedStyle(el).getPropertyValue('--escala')),
+  );
+  assert.equal(await pagina.locator('.moldura .pagina').count(), 1);
+  assert.ok(escala > 0.6, `esperava escala bem acima da tabela (0.34), veio ${escala}`);
+
+  const vazamentos = await pagina.evaluate(() => {
+    const p = document.querySelector('.moldura .pagina');
+    const limite = p.getBoundingClientRect();
+    return [...p.querySelectorAll('.par, .secao')]
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.bottom > limite.bottom + 0.5 || r.top < limite.top - 0.5;
+      })
+      .map((el) => el.textContent.slice(0, 40));
+  });
+  assert.deepEqual(vazamentos, [], 'bloco fora da página');
+  assert.deepEqual(erros, []);
+});
+
+test('seção com número ímpar de produtos deixa uma vaga vazia, não um cartão largo', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  // A lista de acessórios tem uma seção só, com 28 produtos... e a de iPhones
+  // semi-novos tem 21, que é ímpar.
+  await preencher(pagina, await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8'));
+  await pagina.selectOption('#layout', 'grade');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  // 5 produtos (ímpar) + 21 produtos (ímpar) = duas vagas vazias.
+  assert.equal(await pagina.locator('.moldura .par__vazio').count(), 2);
+  assert.equal(await pagina.locator('.moldura .cartao').count(), 26);
+  assert.deepEqual(erros, []);
+});
+
+// ------------------------------------------------------------ várias listas
+
+test('várias caixas geram todos os catálogos de uma vez', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  // Começa com uma caixa só; as outras vêm do botão.
+  assert.equal(await pagina.locator('#listas textarea').count(), 1);
+
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8'),
+  ]);
+  assert.equal(await pagina.locator('#listas textarea').count(), 3);
+
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  // TVs (1) + smartphones (1) + Apple, que sozinha rende dois catálogos = 4.
+  const resumo = await pagina.textContent('#resumo');
+  assert.match(resumo, /4 catálogo\(s\)/);
+  assert.equal(await pagina.locator('.moldura .pagina').count(), 4);
+
+  // 14 + 42 + 5 + 21
+  assert.match(resumo, /82 produtos/);
+
+  // Cada prévia tem o seu botão, e existe um para baixar tudo de uma vez.
+  assert.equal(await pagina.locator('.cartao__acoes button').count(), 4);
+  assert.equal(await pagina.locator('#baixar-todas').count(), 1);
+  assert.deepEqual(erros, []);
+});
+
+test('caixa vazia é ignorada e remover uma não derruba as outras', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'),
+    '   ',
+    await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'),
+  ]);
+
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+  assert.match(await pagina.textContent('#resumo'), /2 catálogo\(s\)/);
+
+  // Remove a do meio (a vazia); as outras duas continuam.
+  await pagina.locator('.lista__remover').nth(1).click();
+  assert.equal(await pagina.locator('#listas textarea').count(), 2);
+
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+  assert.match(await pagina.textContent('#resumo'), /2 catálogo\(s\)/);
+  assert.deepEqual(erros, []);
+});
+
+test('com uma lista só o botão de remover fica escondido', async (t) => {
+  const { navegador, pagina } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  assert.equal(await pagina.locator('.lista__remover').first().isVisible(), false);
+  await pagina.click('#adicionar');
+  assert.equal(await pagina.locator('.lista__remover').first().isVisible(), true);
+
+  // Voltando a uma, some de novo — a tela nunca fica sem entrada nenhuma.
+  await pagina.locator('.lista__remover').nth(1).click();
+  assert.equal(await pagina.locator('.lista__remover').first().isVisible(), false);
+});
+
+test('listas de mesmo título não se sobrescrevem no download', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  const tvs = await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8');
+  await preencher(pagina, [tvs, tvs]);
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  assert.equal(await pagina.locator('.moldura .pagina').count(), 2);
+
+  // Os dois catálogos têm o mesmo título; o nome do arquivo precisa diferir,
+  // senão o segundo download sobrescreve o primeiro.
+  // Espera o evento de cada download, não um intervalo fixo: sob carga o
+  // tempo fixo às vezes não bastava e o teste falhava sem haver defeito.
+  const nomes = [];
+  for (const b of await pagina.locator('.cartao__acoes button').all()) {
+    const [download] = await Promise.all([pagina.waitForEvent('download'), b.click()]);
+    nomes.push(download.suggestedFilename());
+  }
+
+  assert.equal(nomes.length, 2, `esperava 2 downloads, veio ${nomes.length}`);
+  assert.notEqual(nomes[0], nomes[1], `os dois vieram como "${nomes[0]}"`);
   assert.deepEqual(erros, []);
 });

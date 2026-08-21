@@ -23,8 +23,8 @@ npm test                    # parser + estúdio ponta a ponta
 # um catálogo
 node tools/render.mjs samples/smartphones.txt --tema noite --marca "@sualoja"
 
-# escolhendo tema e destino
-node tools/render.mjs samples/apple.txt --tema rose --saida ./saida
+# vários de uma vez, cada um com o seu tema sorteado
+node tools/render.mjs samples/*.txt --tema aleatorio --saida ./saida
 ```
 
 Para o estúdio, sirva a pasta (não abra por `file://` — os módulos ES precisam
@@ -52,6 +52,10 @@ npx serve .        # ou: python3 -m http.server
 | `--fundo-imagem` | — | Foto de fundo (jpg/png/webp), embutida em base64 |
 | `--veu` | do tema | Cor/gradiente por cima da foto |
 | `--paginas-max` | `1` | Teto de páginas por catálogo |
+| `--layout` | `tabela` | `tabela`, `duplo`, `grade` ou `vitrine` |
+
+Vários arquivos de entrada podem ser passados de uma vez; cada um vira a sua
+imagem.
 | `--remover` | — | Palavras a tirar do nome, separadas por vírgula |
 | `--alinhar-nome` | `esquerda` | `esquerda`, `centro` ou `direita` |
 | `--alinhar-cor` | `centro` | idem |
@@ -59,6 +63,30 @@ npx serve .        # ou: python3 -m http.server
 | `--margens` | `padrao` | `padrao` ou `stories` (reserva a área da interface) |
 | `--margem-topo` / `--margem-lateral` / `--margem-base` | do preset | Em px, base 1080×1920 |
 | `--html` | — | Grava também o HTML de cada página |
+
+### Várias listas de uma vez
+
+Publicar quatro listas por dia não deveria custar quatro rodadas do programa.
+
+No estúdio, **uma caixa por lista**: o botão *Adicionar outra lista* cria mais
+caixas, cada uma vira uma imagem, e *Baixar todas as imagens* salva o lote. No
+terminal, basta passar vários arquivos:
+
+```bash
+node tools/render.mjs celulares.txt tvs.txt acessorios.txt --tema aleatorio
+```
+
+As duas formas de agrupar se somam: uma caixa (ou um arquivo) ainda pode conter
+várias mensagens coladas, e o parser as separa como sempre fez. A diferença é
+que a fronteira entre caixas é **explícita** — não depende de o parser adivinhar
+onde uma lista acaba e a outra começa.
+
+Com o sorteio ligado, **cada catálogo ganha o seu tema**. Cada imagem vai para
+um post diferente, e sair tudo da mesma cor anularia o motivo de sortear.
+
+Nomes de arquivo repetidos são desambiguados (`smart-tvs.png`,
+`smart-tvs-2.png`): duas listas podem ter o mesmo título, e sem isso a segunda
+sobrescreveria a primeira em silêncio.
 
 ## Como funciona
 
@@ -227,6 +255,46 @@ Inventar um rótulo que o autor não escreveu é decisão dele, não do código.
 
 - `--selo NOVO` troca a palavra por uma cápsula destacada com esse texto.
 - `--remover "LANÇAMENTO"` faz sumir de vez.
+
+### Layout do corpo
+
+Quatro arranjos para a mesma informação. Os três últimos põem **dois produtos
+por faixa**:
+
+| Layout | Desenho | Serve para |
+|---|---|---|
+| `tabela` | Uma linha por produto, largura inteira | Nome longo; observação longa |
+| `duplo` | A mesma linha, duas por faixa | Nome curto, lista grande |
+| `grade` | Cartão: nome, cor, dois preços embaixo | Nome curto, lista média |
+| `vitrine` | Cartão com o preço à vista em destaque | Lista curta, apelo comercial |
+
+**Duas colunas só compensam quando o nome é curto.** Medindo as listas reais:
+
+| Lista | Produtos | Mediana do nome | Melhor |
+|---|---|---|---|
+| Smartphones | 42 | 24 caracteres | `duplo` |
+| Apple (importados) | 5 | 19 | `vitrine` |
+| iPhones semi-novos | 21 | 19 | `tabela` (observação longa) |
+| Smart TVs | 14 | 86 | `tabela` |
+| Acessórios | 28 | 57 | `tabela` |
+
+O ganho na lista de celulares é grande: em `tabela`, 42 produtos numa página só
+cabem na escala 0.34; em `duplo`, na **0.69** — o dobro do tamanho de letra, na
+mesma página única.
+
+Nas TVs acontece o contrário. Com nome de 86 caracteres na mediana, metade da
+largura faz o texto quebrar em cinco linhas, e a página passa a render menos.
+
+#### Como isso não quebrou a paginação
+
+Os produtos são emparelhados em `montarItens`, e o par vira **um bloco só**.
+A paginação continua medindo e empilhando blocos numa coluna, sem precisar saber
+que existem duas — todo o cuidado com órfãos, continuação e escala segue valendo
+sem alteração.
+
+O pareamento não atravessa seção: o último produto de REALME nunca fica ao lado
+do primeiro da SAMSUNG. Seção com número ímpar deixa a vaga vazia em vez de
+esticar o produto solitário para a largura toda.
 
 ### Ajustes de apresentação
 
