@@ -342,3 +342,67 @@ test('listas de mesmo título não se sobrescrevem no download', async (t) => {
   assert.notEqual(nomes[0], nomes[1], `os dois vieram como "${nomes[0]}"`);
   assert.deepEqual(erros, []);
 });
+
+test('baixar várias vezes seguidas continua funcionando', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  // O relato veio do celular: depois do primeiro download, nenhum outro saía
+  // sem recarregar a página. Aqui o mesmo botão é acionado várias vezes e
+  // depois os dos outros catálogos, sem recarregar nada no meio.
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8'),
+  ]);
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  const botoes = await pagina.locator('.cartao__acoes button').all();
+  assert.equal(botoes.length, 3);
+
+  const baixar = async (botao) => {
+    const [download] = await Promise.all([
+      pagina.waitForEvent('download', { timeout: 20000 }),
+      botao.click(),
+    ]);
+    return download.suggestedFilename();
+  };
+
+  // Três vezes o mesmo botão: a partir da segunda o PNG vem do cache.
+  for (let i = 0; i < 3; i += 1) {
+    assert.match(await baixar(botoes[0]), /\.png$/, `repetição ${i + 1} falhou`);
+  }
+
+  // E os outros continuam respondendo depois disso.
+  for (const botao of botoes.slice(1)) {
+    assert.match(await baixar(botao), /\.png$/);
+  }
+
+  assert.deepEqual(erros, []);
+});
+
+test('a prévia volta ao tamanho normal mesmo se a exportação falhar', async (t) => {
+  const { navegador, pagina } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'));
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  const antes = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);
+
+  // Força a falha: sem canvas utilizável, paraPng lança.
+  await pagina.evaluate(() => {
+    HTMLCanvasElement.prototype.getContext = () => {
+      throw new Error('memória insuficiente (simulado)');
+    };
+  });
+  await pagina.locator('.cartao__acoes button').first().click();
+  await pagina.waitForFunction(() => document.querySelector('#avisos li'));
+
+  const depois = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);
+  assert.equal(depois, antes, 'a prévia ficou com a escala da exportação');
+
+  // E o erro precisa ficar visível, não sumir em silêncio.
+  assert.match(await pagina.textContent('#avisos'), /memória insuficiente/);
+});

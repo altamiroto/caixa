@@ -6,7 +6,7 @@
  */
 
 import { formatarValor } from '../parser/precos.js';
-import { varsCss } from '../themes/temas.js';
+import { varsCss, obterTema } from '../themes/temas.js';
 import { removerTermos } from './limpeza.js';
 
 export const LARGURA = 1080;
@@ -360,6 +360,9 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     : '';
 
   const alinhar = normalizarAlinhamento(opcoes.alinhar);
+  // O tratamento do título vem do tema. Seletor CSS não lê custom property,
+  // por isso viaja como atributo.
+  const cabecalho = obterTema(opcoes.tema).cabecalho ?? 'simples';
 
   return `<article class="pagina" style="${estilo}"
     data-cores="${colunas.mostrarCor ? 'sim' : 'nao'}"
@@ -368,6 +371,7 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     data-alinha-cor="${alinhar.cor}"
     data-alinha-preco="${alinhar.preco}"
     data-layout="${normalizarLayout(opcoes.layout)}"
+    data-cabecalho="${cabecalho}"
     data-pagina="${numero}">
     ${foto}
     <div class="pagina__brilho"></div>

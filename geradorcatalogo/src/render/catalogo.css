@@ -160,6 +160,32 @@
   font-weight: 600;
 }
 
+/*
+ * Tratamentos do bloco de título, escolhidos pelo tema. Nenhum altera cor de
+ * texto — só a moldura em volta —, então o contraste provado no gerador segue
+ * valendo em todos.
+ */
+.pagina[data-cabecalho='faixa'] .cabecalho {
+  margin-bottom: calc(14px * var(--escala-cabecalho));
+  padding: calc(16px * var(--escala-cabecalho)) calc(20px * var(--escala-cabecalho));
+  border-radius: var(--raio);
+  background: var(--linha-a);
+  border: 1px solid var(--linha-borda);
+}
+
+.pagina[data-cabecalho='sublinhado'] .cabecalho {
+  padding-bottom: calc(14px * var(--escala-cabecalho));
+  border-bottom: calc(3px * var(--escala-cabecalho)) solid var(--destaque);
+  margin-bottom: calc(10px * var(--escala-cabecalho));
+}
+
+.pagina[data-cabecalho='moldura'] .cabecalho {
+  margin-bottom: calc(12px * var(--escala-cabecalho));
+  padding: calc(15px * var(--escala-cabecalho)) calc(18px * var(--escala-cabecalho));
+  border-radius: var(--raio);
+  border: calc(2px * var(--escala-cabecalho)) solid var(--destaque);
+}
+
 /* ------------------------------------------------------------- colunas/grid */
 
 /*

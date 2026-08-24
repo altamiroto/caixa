@@ -404,7 +404,7 @@
         TEMA_PADRAO,
         sortearTema,
       } from './src/themes/temas.js';
-      import { paraPng, baixar, apelido } from './src/render/export.js';
+      import { paraPng, salvarImagem, podeCompartilhar, apelido } from './src/render/export.js';
 
       const $ = (id) => document.getElementById(id);
       const palco = $('palco');
@@ -726,24 +726,46 @@ R$ 965 (Dinheiro)`;
 
         const botao = document.createElement('button');
         botao.className = 'secundario';
+        const sufixo = total > 1 ? `-${String(indice + 1).padStart(2, '0')}` : '';
+        const arquivo = `${nomeBase}${sufixo}.png`;
+
+        /*
+         * O PNG fica guardado depois da primeira vez. Além de tornar o segundo
+         * toque instantâneo, é o que faz o compartilhamento funcionar no
+         * celular: o iOS só abre a folha nativa se a chamada acontecer dentro
+         * do toque, e gerar a imagem antes já consome esse tempo.
+         */
+        let pronto = null;
+
         botao.textContent = 'Baixar PNG';
         botao.addEventListener('click', async () => {
           botao.disabled = true;
-          botao.textContent = 'Gerando…';
+          const rotulo = botao.textContent;
           try {
-            const alvo = moldura.querySelector('.pagina');
-            // O preview está reduzido; a exportação usa a página em tamanho real.
-            alvo.style.transform = 'none';
-            const blob = await paraPng(alvo);
-            alvo.style.transform = '';
-            const sufixo = total > 1 ? `-${String(indice + 1).padStart(2, '0')}` : '';
-            baixar(blob, `${nomeBase}${sufixo}.png`);
-            botao.textContent = 'Baixar PNG';
+            if (!pronto) {
+              botao.textContent = 'Gerando…';
+              const alvo = moldura.querySelector('.pagina');
+              try {
+                // A prévia está reduzida; a exportação usa o tamanho real.
+                alvo.style.transform = 'none';
+                pronto = await paraPng(alvo);
+              } finally {
+                // Sem isto, uma falha deixava a prévia gigante na tela.
+                alvo.style.transform = '';
+              }
+            }
+
+            const destino = await salvarImagem(pronto, arquivo);
+            botao.textContent =
+              destino === 'compartilhado' ? 'Compartilhado' : podeCompartilhar(pronto, arquivo)
+                ? 'Salvar imagem'
+                : 'Baixar PNG';
           } catch (erro) {
-            botao.textContent = 'Falhou';
-            mostrarAvisos([{ nivel: 'erro', mensagem: erro.message }]);
+            botao.textContent = 'Falhou — toque de novo';
+            mostrarAvisos([{ nivel: 'erro', mensagem: `${arquivo}: ${erro.message}` }]);
           } finally {
             botao.disabled = false;
+            if (botao.textContent === 'Gerando…') botao.textContent = rotulo;
           }
         });
 

@@ -64,6 +64,28 @@ imagem.
 | `--margem-topo` / `--margem-lateral` / `--margem-base` | do preset | Em px, base 1080×1920 |
 | `--html` | — | Grava também o HTML de cada página |
 
+### Salvar a imagem no celular
+
+O botão de cada prévia usa a **folha de compartilhamento nativa** quando o
+aparelho tem uma (`navigator.share` com arquivo), e cai no download comum
+quando não tem. No celular isso resolve dois problemas de uma vez: dá para
+mandar direto para o WhatsApp sem passar pela pasta de downloads, e evita o
+`<a download>`, que o iOS trata de forma pouco confiável.
+
+Três cuidados que vieram de um defeito real — no celular, depois do primeiro
+download nenhum outro saía sem recarregar a página:
+
+- **O canvas é liberado na hora** (`width = height = 0`). Um PNG 2160×3840 ocupa
+  ~33 MB, e sem liberar explicitamente a segunda exportação encontrava a memória
+  ainda tomada pela primeira.
+- **O blob URL só é revogado quando o próximo é criado.** Antes havia um
+  temporizador de 1 s; no celular o download demora mais que isso, e o arquivo
+  chegava vazio.
+- **O PNG fica guardado depois da primeira vez.** Além de tornar o segundo toque
+  instantâneo, é o que faz o compartilhamento funcionar: o iOS só abre a folha
+  nativa se a chamada acontecer dentro do toque, e gerar a imagem antes já
+  consumiria esse tempo.
+
 ### Várias listas de uma vez
 
 Publicar quatro listas por dia não deveria custar quatro rodadas do programa.
@@ -174,7 +196,7 @@ O mesmo código roda no navegador e no Playwright — os dois têm DOM.
 
 ### Os temas
 
-São **121**: 17 desenhadas à mão e 104 geradas.
+São **209**: 17 desenhadas à mão e 192 geradas.
 
 | Família | Curados |
 |---|---|
@@ -200,12 +222,26 @@ exigida. Quando a tinta não pode ceder — a faixa de seção já é branca —
 inverte e é o fundo que escurece (`luminosidadeDeFundo`). Em matiz amarela ou
 verde, branco sobre o acento "bonito" não fecha 4.5, e essa é a única saída.
 
-Três eixos de variação:
+Seis eixos de variação:
 
-- **matiz** (0–360), 26 posições no círculo;
-- **família**: `escuro`, `claro`, `classico`, `vibrante`;
-- **estilo**: `capsula`, `plano`, `contorno`, `bloco` — muda o raio das
-  cápsulas, o preenchimento e a borda da linha, via `--raio-mult`.
+| Eixo | Valores | O que muda |
+|---|---|---|
+| **matiz** | 48 posições no círculo | A cor |
+| **família** | `escuro`, `claro`, `classico`, `vibrante` | O clima |
+| **estilo** | `capsula`, `plano`, `contorno`, `bloco` | Raio, preenchimento e borda da linha |
+| **geometria** | `diagonal`, `vertical`, `radial`, `malha`, `conico`, `canto` | O desenho do gradiente de fundo |
+| **textura** | `limpa`, `brilho`, `pontos`, `listras`, `grade`, `aurora` | A camada decorativa sobre o fundo |
+| **cabeçalho** | `simples`, `faixa`, `sublinhado`, `moldura` | O tratamento do bloco de título |
+
+A geometria muda **só o arranjo** das paradas de cor, nunca a luminosidade
+delas. É isso que permite variar o desenho sem refazer a conta de contraste: a
+parada mais difícil continua sendo a mesma.
+
+A textura fica com alfa baixo por construção. Ela é decorativa e fica atrás do
+conteúdo; acima de ~0.08 começaria a competir com o texto.
+
+Cada eixo anda num ciclo de tamanho diferente. Como os períodos não coincidem,
+dois temas vizinhos na lista nunca são o mesmo desenho em outra cor.
 
 #### Tema aleatório
 
@@ -219,8 +255,9 @@ sempre a 137° um do outro no círculo de cores, enquanto sortear ao acaso
 repetiria vizinhança com frequência incômoda. Família e estilo rodam em ciclos
 de tamanhos diferentes, então as 16 combinações aparecem antes de repetir.
 
-O tema sorteado aparece no resumo (`tema: Turquesa vibrante (bloco)`), e
-`--semente N` reproduz um sorteio específico.
+O sorteio varia **todos os seis eixos**, cada um com período próprio: a
+combinação exata só se repete depois de centenas de sorteios. O tema sorteado
+aparece no resumo, e `--semente N` reproduz um sorteio específico.
 
 #### A garantia de legibilidade
 
@@ -229,7 +266,7 @@ com o piso escolhido pelo tamanho real do elemento: 3.0 para preço e título, q
 são grandes, e 4.5 para selo, pílula, nome e faixa de seção. Gradientes são
 avaliados parada a parada e vale a pior.
 
-O teste cobre os 121 temas do catálogo **e** varre o gerador em 36 matizes × 4
+O teste cobre os 209 temas do catálogo **e** varre o gerador em 36 matizes × 4
 famílias × 4 estilos — 576 paletas. Isso importa porque o sorteio pode produzir
 qualquer matiz, não só as 26 da lista fixa.
 

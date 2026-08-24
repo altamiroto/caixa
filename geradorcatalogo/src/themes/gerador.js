@@ -32,6 +32,19 @@ const SUAVE = 3.4;
 export const FAMILIAS = ['escuro', 'claro', 'classico', 'vibrante'];
 export const ESTILOS = ['capsula', 'plano', 'contorno', 'bloco'];
 
+/*
+ * Geometria do fundo. Muda só *como* as paradas de cor são arranjadas, nunca
+ * a luminosidade delas — é isso que permite variar a aparência sem refazer a
+ * conta de contraste: a parada mais difícil continua a mesma.
+ */
+export const GEOMETRIAS = ['diagonal', 'vertical', 'radial', 'malha', 'conico', 'canto'];
+
+/** Camada decorativa por cima do fundo. Alfa baixo de propósito. */
+export const TEXTURAS = ['limpa', 'brilho', 'pontos', 'listras', 'grade', 'aurora'];
+
+/** Tratamento do bloco de título. */
+export const CABECALHOS = ['simples', 'faixa', 'sublinhado', 'moldura'];
+
 /** Forma da linha. Não mexe em cor — só em raio, preenchimento e borda. */
 const RECEITA_ESTILO = {
   capsula: { raio: 1.7, alfaA: 0.1, alfaB: 0.04, borda: 0.08, deltaClaro: 6 },
@@ -75,9 +88,8 @@ function receitaFamilia(familia, h, estilo) {
   const e = RECEITA_ESTILO[estilo];
 
   if (familia === 'claro') {
-    const fundo = `linear-gradient(165deg, ${hsl(h, 55, 97)} 0%, ${hsl(h, 45, 93)} 55%, ${hsl(h, 50, 96)} 100%)`;
     return {
-      fundo,
+      paradas: [hsl(h, 55, 97), hsl(h, 45, 93), hsl(h, 50, 96)],
       // A parada mais escura é a que aperta o texto escuro.
       base: hslParaRgb(h, 45, 93),
       linhaA: hsl(h, 40, 99),
@@ -85,7 +97,6 @@ function receitaFamilia(familia, h, estilo) {
       borda: `rgba(0,0,0,${(e.borda * 0.55).toFixed(3)})`,
       acento: (h + 8) % 360,
       escura: false,
-      brilho: `radial-gradient(circle at 86% 10%, ${hsl(h, 70, 60)}22, transparent 52%)`,
       veu: 'linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.84) 50%, rgba(255,255,255,.94) 100%)',
     };
   }
@@ -93,48 +104,112 @@ function receitaFamilia(familia, h, estilo) {
   if (familia === 'classico') {
     // Fundo profundo e pouco saturado, com acento metálico dourado — a
     // combinação que os temas clássicos curados já usavam.
-    const fundo = `linear-gradient(170deg, ${hsl(h, 32, 11)} 0%, ${hsl(h, 34, 18)} 50%, ${hsl(h, 30, 9)} 100%)`;
     return {
-      fundo,
+      paradas: [hsl(h, 32, 11), hsl(h, 34, 18), hsl(h, 30, 9)],
       base: hslParaRgb(h, 34, 18),
       linhaA: `rgba(255,255,255,${e.alfaA.toFixed(3)})`,
       linhaB: `rgba(255,255,255,${e.alfaB.toFixed(3)})`,
       borda: `rgba(212,175,55,${(e.borda * 1.6).toFixed(3)})`,
       acento: 43,
       escura: true,
-      brilho: `radial-gradient(circle at 78% 12%, rgba(212,175,55,.14), transparent 52%)`,
       veu: 'linear-gradient(180deg, rgba(8,8,12,.88) 0%, rgba(8,8,12,.76) 50%, rgba(8,8,12,.92) 100%)',
     };
   }
 
   if (familia === 'vibrante') {
-    const fundo = `linear-gradient(160deg, ${hsl(h, 62, 13)} 0%, ${hsl(h, 58, 22)} 50%, ${hsl(h, 65, 11)} 100%)`;
     return {
-      fundo,
+      paradas: [hsl(h, 62, 13), hsl(h, 58, 22), hsl(h, 65, 11)],
       base: hslParaRgb(h, 58, 22),
       linhaA: `rgba(255,255,255,${e.alfaA.toFixed(3)})`,
       linhaB: `rgba(255,255,255,${e.alfaB.toFixed(3)})`,
       borda: `rgba(255,255,255,${(e.borda * 1.3).toFixed(3)})`,
       acento: (h + 165) % 360,
       escura: true,
-      brilho: `radial-gradient(circle at 22% 84%, ${hsl((h + 165) % 360, 80, 55)}33, transparent 55%)`,
       veu: 'linear-gradient(180deg, rgba(6,8,16,.88) 0%, rgba(6,8,16,.76) 50%, rgba(6,8,16,.92) 100%)',
     };
   }
 
   // escuro (padrão)
-  const fundo = `linear-gradient(165deg, ${hsl(h, 44, 10)} 0%, ${hsl(h + 14, 40, 18)} 50%, ${hsl(h, 46, 8)} 100%)`;
   return {
-    fundo,
+    paradas: [hsl(h, 44, 10), hsl(h + 14, 40, 18), hsl(h, 46, 8)],
     base: hslParaRgb(h + 14, 40, 18),
     linhaA: `rgba(255,255,255,${e.alfaA.toFixed(3)})`,
     linhaB: `rgba(255,255,255,${e.alfaB.toFixed(3)})`,
     borda: `rgba(255,255,255,${e.borda.toFixed(3)})`,
     acento: (h + 22) % 360,
     escura: true,
-    brilho: `radial-gradient(circle at 80% 10%, ${hsl((h + 22) % 360, 85, 60)}2e, transparent 55%)`,
     veu: 'linear-gradient(180deg, rgba(6,10,20,.88) 0%, rgba(6,10,20,.76) 50%, rgba(6,10,20,.92) 100%)',
   };
+}
+
+/**
+ * Monta o fundo arranjando as mesmas paradas de cor de formas diferentes.
+ *
+ * As luminosidades vêm prontas da receita da família e não são tocadas aqui:
+ * a geometria muda o desenho, não o contraste.
+ */
+function montarFundo(geometria, [a, b, c]) {
+  switch (geometria) {
+    case 'vertical':
+      return `linear-gradient(180deg, ${a} 0%, ${b} 52%, ${c} 100%)`;
+    case 'radial':
+      return `radial-gradient(120% 90% at 50% 8%, ${b} 0%, ${a} 55%, ${c} 100%)`;
+    case 'malha':
+      // Dois gradientes com alfa sobre uma base sólida: o encontro deles cria
+      // uma variação que nenhum gradiente único produz.
+      return (
+        `radial-gradient(80% 60% at 12% 8%, ${b}cc 0%, transparent 60%), ` +
+        `radial-gradient(85% 65% at 88% 92%, ${a}cc 0%, transparent 62%), ${c}`
+      );
+    case 'conico':
+      return `conic-gradient(from 210deg at 30% 12%, ${a} 0deg, ${b} 140deg, ${c} 260deg, ${a} 360deg)`;
+    case 'canto':
+      return `linear-gradient(135deg, ${b} 0%, ${a} 45%, ${c} 100%)`;
+    case 'diagonal':
+    default:
+      return `linear-gradient(165deg, ${a} 0%, ${b} 50%, ${c} 100%)`;
+  }
+}
+
+/**
+ * Camada decorativa sobre o fundo.
+ *
+ * O alfa é baixo de propósito: a textura fica atrás do conteúdo e não pode
+ * mexer no contraste que o resto do gerador provou. Acima de ~0.08 ela já
+ * começa a competir com o texto.
+ */
+function montarTextura(textura, h, acento, escura) {
+  const tom = escura ? '255,255,255' : '0,0,0';
+  const forte = escura ? 0.05 : 0.035;
+  const realce = hsl(acento, escura ? 85 : 65, escura ? 60 : 45);
+
+  switch (textura) {
+    case 'pontos':
+      return (
+        `radial-gradient(rgba(${tom},${forte}) 1.2px, transparent 1.3px) 0 0/22px 22px, ` +
+        `radial-gradient(circle at 80% 8%, ${realce}22, transparent 55%)`
+      );
+    case 'listras':
+      return (
+        `repeating-linear-gradient(135deg, rgba(${tom},${forte}) 0 2px, transparent 2px 14px), ` +
+        `radial-gradient(circle at 18% 88%, ${realce}22, transparent 55%)`
+      );
+    case 'grade':
+      return (
+        `repeating-linear-gradient(0deg, rgba(${tom},${forte}) 0 1px, transparent 1px 34px), ` +
+        `repeating-linear-gradient(90deg, rgba(${tom},${forte}) 0 1px, transparent 1px 34px)`
+      );
+    case 'aurora':
+      return (
+        `radial-gradient(60% 40% at 15% 5%, ${realce}33, transparent 60%), ` +
+        `radial-gradient(55% 45% at 85% 95%, ${hsl((acento + 60) % 360, 80, 58)}2b, transparent 62%)`
+      );
+    case 'limpa':
+      return 'none';
+    case 'brilho':
+    default:
+      return `radial-gradient(circle at 80% 10%, ${realce}2e, transparent 55%)`;
+  }
 }
 
 function comoRgb(valor, base) {
@@ -166,10 +241,23 @@ function comoRgb(valor, base) {
  * @param {string} [spec.grupo]
  * @returns {import('./temas.js').Tema}
  */
-export function gerarTema({ matiz, familia = 'escuro', estilo = 'capsula', id, nome, grupo }) {
+export function gerarTema({
+  matiz,
+  familia = 'escuro',
+  estilo = 'capsula',
+  geometria = 'diagonal',
+  textura = 'brilho',
+  cabecalho = 'simples',
+  id,
+  nome,
+  grupo,
+}) {
   const h = ((Math.round(matiz) % 360) + 360) % 360;
   const fam = FAMILIAS.includes(familia) ? familia : 'escuro';
   const est = ESTILOS.includes(estilo) ? estilo : 'capsula';
+  const geo = GEOMETRIAS.includes(geometria) ? geometria : 'diagonal';
+  const tex = TEXTURAS.includes(textura) ? textura : 'brilho';
+  const cab = CABECALHOS.includes(cabecalho) ? cabecalho : 'simples';
   const r = receitaFamilia(fam, h, est);
   const acc = r.acento;
   const escura = r.escura;
@@ -225,7 +313,7 @@ export function gerarTema({ matiz, familia = 'escuro', estilo = 'capsula', id, n
   const seloFundo = hsl(seloMatiz, 62, seloL);
   const seloTinta = tintaSobre(seloMatiz, 14, 98, hslParaRgb(seloMatiz, 62, seloL), FORTE, 'claro');
 
-  const identificador = id ?? `${fam}-${h}-${est}`;
+  const identificador = id ?? `${fam}-${h}-${est}-${geo}-${tex}`;
   const rotulo = nome ?? `${nomeDaMatiz(h)} ${NOME_FAMILIA[fam]}`;
 
   return {
@@ -236,9 +324,12 @@ export function gerarTema({ matiz, familia = 'escuro', estilo = 'capsula', id, n
     matiz: h,
     familia: fam,
     estilo: est,
+    geometria: geo,
+    textura: tex,
+    cabecalho: cab,
     vars: {
-      '--fundo': r.fundo,
-      '--fundo-brilho': r.brilho,
+      '--fundo': montarFundo(geo, r.paradas),
+      '--fundo-brilho': montarTextura(tex, h, acc, escura),
       '--foto-veu': r.veu,
       '--tinta': tinta,
       '--tinta-suave': tintaSuave,
@@ -262,6 +353,7 @@ export function gerarTema({ matiz, familia = 'escuro', estilo = 'capsula', id, n
       '--selo-tinta': seloTinta,
       '--rodape-tinta': escura ? 'rgba(255,255,255,.5)' : tintaSuave,
       '--raio-mult': String(RECEITA_ESTILO[est].raio),
+      '--cabecalho-estilo': cab,
     },
   };
 }
@@ -273,13 +365,28 @@ export function gerarTema({ matiz, familia = 'escuro', estilo = 'capsula', id, n
  * cruzadas com as quatro famílias dão 104 temas. O estilo alterna para que
  * vizinhos na lista não pareçam o mesmo tema em outra cor.
  */
-export function catalogoGerado({ matizes = 26 } = {}) {
+export function catalogoGerado({ matizes = 48 } = {}) {
   const temas = [];
   for (let i = 0; i < matizes; i += 1) {
     const h = Math.round((i * 360) / matizes);
     FAMILIAS.forEach((familia, j) => {
-      const estilo = ESTILOS[(i + j) % ESTILOS.length];
-      temas.push(gerarTema({ matiz: h, familia, estilo }));
+      const n = i * FAMILIAS.length + j;
+      /*
+       * Cada eixo anda num ciclo de tamanho diferente (4, 6, 6, 4). Como os
+       * períodos não coincidem, dois temas vizinhos na lista nunca são o mesmo
+       * desenho em outra cor — que era a queixa da versão anterior, em que só
+       * a matiz mudava de verdade.
+       */
+      temas.push(
+        gerarTema({
+          matiz: h,
+          familia,
+          estilo: ESTILOS[n % ESTILOS.length],
+          geometria: GEOMETRIAS[n % GEOMETRIAS.length],
+          textura: TEXTURAS[(n + 2) % TEXTURAS.length],
+          cabecalho: CABECALHOS[n % CABECALHOS.length],
+        }),
+      );
     });
   }
   return temas;
@@ -333,12 +440,20 @@ export function sortearTema({ contador = 0, evitar = [], familias = FAMILIAS } =
 
   const familia = lista[contador % lista.length];
   const estilo = ESTILOS[Math.floor(contador / lista.length) % ESTILOS.length];
+  // Períodos diferentes para cada eixo: a combinação só se repete depois de
+  // centenas de sorteios, mesmo com poucos valores em cada eixo.
+  const geometria = GEOMETRIAS[contador % GEOMETRIAS.length];
+  const textura = TEXTURAS[(contador * 5) % TEXTURAS.length];
+  const cabecalho = CABECALHOS[(contador * 3) % CABECALHOS.length];
 
   const tema = gerarTema({
     matiz,
     familia,
     estilo,
-    id: `sorteado-${Math.round(matiz)}-${familia}-${estilo}`,
+    geometria,
+    textura,
+    cabecalho,
+    id: `sorteado-${Math.round(matiz)}-${familia}-${estilo}-${geometria}-${textura}`,
     grupo: 'Sorteado',
   });
   tema.origem = 'sorteado';
