@@ -275,8 +275,81 @@ test('várias caixas geram todos os catálogos de uma vez', async (t) => {
   assert.match(resumo, /82 produtos/);
 
   // Cada prévia tem o seu botão, e existe um para baixar tudo de uma vez.
-  assert.equal(await pagina.locator('.cartao__acoes button').count(), 4);
+  assert.equal(await pagina.locator('.previa__acoes button').count(), 4);
   assert.equal(await pagina.locator('#baixar-todas').count(), 1);
+  assert.deepEqual(erros, []);
+});
+
+test('a prévia não estica além do que ela mostra', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  /*
+   * Regressão real: a prévia se chamava `.cartao`, o mesmo nome do cartão de
+   * produto em catalogo.css, e herdava dali `height: 100%`. Cada prévia
+   * esticava até a altura do palco e abria um vão de mais de 1400px até a
+   * seguinte. Em tela estreita, onde cada uma fica na sua linha, o defeito
+   * aparecia inteiro — daí a janela de celular aqui.
+   */
+  await pagina.setViewportSize({ width: 390, height: 900 });
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/acessorios.txt'), 'utf8'),
+  ]);
+
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.previa');
+
+  const medidas = await pagina.evaluate(() => {
+    const previas = [...document.querySelectorAll('.previa')];
+    const caixas = previas.map((p) => ({
+      previa: p.getBoundingClientRect(),
+      soma:
+        p.querySelector('.moldura').getBoundingClientRect().height +
+        p.querySelector('.previa__acoes').getBoundingClientRect().height,
+    }));
+    return {
+      // Quanto cada prévia passa da altura do que ela de fato mostra.
+      sobras: caixas.map((c) => Math.round(c.previa.height - c.soma)),
+      vaos: caixas
+        .slice(1)
+        .map((c, i) => Math.round(c.previa.top - caixas[i].previa.bottom)),
+    };
+  });
+
+  // O gap de 8px entre a moldura e a linha de ações é a única folga esperada.
+  for (const sobra of medidas.sobras) assert.ok(sobra <= 10, `sobra de ${sobra}px na prévia`);
+  // E entre uma prévia e a próxima, só o gap do palco.
+  for (const vao of medidas.vaos) assert.ok(vao <= 30, `vão de ${vao}px entre prévias`);
+  assert.deepEqual(erros, []);
+});
+
+test('o botão de cada prévia salva, não compartilha', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8')]);
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.previa__acoes button');
+
+  const rotulos = await pagina.locator('.previa__acoes button').allTextContents();
+  for (const r of rotulos) assert.equal(r, 'Salvar imagem');
+
+  // Mesmo num aparelho que oferece a folha nativa, o caminho é o download.
+  await pagina.evaluate(() => {
+    window.__compartilhou = false;
+    navigator.share = async () => {
+      window.__compartilhou = true;
+    };
+    navigator.canShare = () => true;
+  });
+
+  const baixado = pagina.waitForEvent('download');
+  await pagina.locator('.previa__acoes button').first().click();
+  await baixado;
+
+  assert.equal(await pagina.evaluate(() => window.__compartilhou), false);
   assert.deepEqual(erros, []);
 });
 
@@ -333,7 +406,7 @@ test('listas de mesmo título não se sobrescrevem no download', async (t) => {
   // Espera o evento de cada download, não um intervalo fixo: sob carga o
   // tempo fixo às vezes não bastava e o teste falhava sem haver defeito.
   const nomes = [];
-  for (const b of await pagina.locator('.cartao__acoes button').all()) {
+  for (const b of await pagina.locator('.previa__acoes button').all()) {
     const [download] = await Promise.all([pagina.waitForEvent('download'), b.click()]);
     nomes.push(download.suggestedFilename());
   }
@@ -357,7 +430,7 @@ test('baixar várias vezes seguidas continua funcionando', async (t) => {
   await pagina.click('#gerar');
   await pagina.waitForSelector('.moldura .pagina');
 
-  const botoes = await pagina.locator('.cartao__acoes button').all();
+  const botoes = await pagina.locator('.previa__acoes button').all();
   assert.equal(botoes.length, 3);
 
   const baixar = async (botao) => {
@@ -397,7 +470,7 @@ test('a prévia volta ao tamanho normal mesmo se a exportação falhar', async (
       throw new Error('memória insuficiente (simulado)');
     };
   });
-  await pagina.locator('.cartao__acoes button').first().click();
+  await pagina.locator('.previa__acoes button').first().click();
   await pagina.waitForFunction(() => document.querySelector('#avisos li'));
 
   const depois = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);

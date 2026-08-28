@@ -112,41 +112,15 @@ function criarUrl(blob) {
   return url;
 }
 
-/** O aparelho consegue abrir a folha de compartilhamento com arquivo? */
-export function podeCompartilhar(blob, nome) {
-  if (typeof navigator === 'undefined' || !navigator.canShare || !navigator.share) return false;
-  try {
-    return navigator.canShare({ files: [new File([blob], nome, { type: 'image/png' })] });
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Entrega a imagem ao usuário.
+/*
+ * Salvar é sempre download direto.
  *
- * No celular, `<a download>` é pouco confiável — o iOS costuma abrir o arquivo
- * numa aba em vez de salvar, e ao voltar a página fica num estado em que o
- * próximo download não acontece. A folha de compartilhamento nativa resolve
- * isso e ainda cai melhor no uso real: dá para mandar direto para o WhatsApp
- * ou salvar em Fotos, sem passar pela pasta de downloads.
- *
- * @returns {Promise<'compartilhado'|'baixado'|'cancelado'>}
+ * Chegou a existir aqui um desvio para a folha de compartilhamento nativa
+ * (`navigator.share`), como contorno para o travamento do segundo download no
+ * celular. O travamento era de memória — canvas e blob URL segurados tempo
+ * demais, corrigidos acima — e a folha de compartilhamento só atrapalhava:
+ * botão de compartilhar num lugar onde se espera salvar.
  */
-export async function salvarImagem(blob, nome) {
-  if (podeCompartilhar(blob, nome)) {
-    try {
-      await navigator.share({ files: [new File([blob], nome, { type: 'image/png' })] });
-      return 'compartilhado';
-    } catch (erro) {
-      // Cancelar não é falha: o usuário fechou a folha de propósito.
-      if (erro?.name === 'AbortError') return 'cancelado';
-      // Qualquer outro motivo (gesto expirado, permissão) cai no download.
-    }
-  }
-  baixar(blob, nome);
-  return 'baixado';
-}
 
 /** Dispara o download de um blob com o nome informado. */
 export function baixar(blob, nome) {

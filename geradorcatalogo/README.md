@@ -66,13 +66,12 @@ imagem.
 
 ### Salvar a imagem no celular
 
-O botão de cada prévia usa a **folha de compartilhamento nativa** quando o
-aparelho tem uma (`navigator.share` com arquivo), e cai no download comum
-quando não tem. No celular isso resolve dois problemas de uma vez: dá para
-mandar direto para o WhatsApp sem passar pela pasta de downloads, e evita o
-`<a download>`, que o iOS trata de forma pouco confiável.
+*Salvar imagem* baixa o arquivo, e só isso — nada de folha de
+compartilhamento. Chegou a existir um desvio para `navigator.share` como
+contorno do defeito abaixo, mas o defeito era de memória, e a folha nativa só
+punha um botão de compartilhar onde se espera salvar.
 
-Três cuidados que vieram de um defeito real — no celular, depois do primeiro
+Três cuidados que vieram desse defeito real — no celular, depois do primeiro
 download nenhum outro saía sem recarregar a página:
 
 - **O canvas é liberado na hora** (`width = height = 0`). Um PNG 2160×3840 ocupa
@@ -81,17 +80,15 @@ download nenhum outro saía sem recarregar a página:
 - **O blob URL só é revogado quando o próximo é criado.** Antes havia um
   temporizador de 1 s; no celular o download demora mais que isso, e o arquivo
   chegava vazio.
-- **O PNG fica guardado depois da primeira vez.** Além de tornar o segundo toque
-  instantâneo, é o que faz o compartilhamento funcionar: o iOS só abre a folha
-  nativa se a chamada acontecer dentro do toque, e gerar a imagem antes já
-  consumiria esse tempo.
+- **O PNG fica guardado depois da primeira vez**, então tocar de novo salva na
+  hora, sem refazer os 33 MB.
 
 ### Várias listas de uma vez
 
 Publicar quatro listas por dia não deveria custar quatro rodadas do programa.
 
 No estúdio, **uma caixa por lista**: o botão *Adicionar outra lista* cria mais
-caixas, cada uma vira uma imagem, e *Baixar todas as imagens* salva o lote. No
+caixas, cada uma vira uma imagem, e *Salvar todas as imagens* salva o lote. No
 terminal, basta passar vários arquivos:
 
 ```bash

@@ -211,7 +211,20 @@
         gap: 24px;
         background: #08090c;
       }
-      .cartao {
+      /* A prévia tem 360px fixos; no celular a folga lateral é o que decide
+         se ela cabe na tela ou obriga a rolar de lado. */
+      @media (max-width: 860px) {
+        .palco {
+          padding: 16px 12px;
+        }
+      }
+      /*
+       * Não pode se chamar `.cartao`: esse nome é do cartão de produto em
+       * catalogo.css, que traz `height: 100%`. A prévia herdava isso, esticava
+       * até a altura do palco e abria um vão enorme entre uma imagem e a
+       * seguinte.
+       */
+      .previa {
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -228,7 +241,7 @@
         transform: scale(0.3333);
         transform-origin: top left;
       }
-      .cartao__acoes {
+      .previa__acoes {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -236,7 +249,7 @@
         font-size: 13px;
         color: var(--ui-suave);
       }
-      .cartao__acoes button {
+      .previa__acoes button {
         padding: 6px 10px;
         font-size: 13px;
       }
@@ -404,7 +417,7 @@
         TEMA_PADRAO,
         sortearTema,
       } from './src/themes/temas.js';
-      import { paraPng, salvarImagem, podeCompartilhar, apelido } from './src/render/export.js';
+      import { paraPng, baixar, apelido } from './src/render/export.js';
 
       const $ = (id) => document.getElementById(id);
       const palco = $('palco');
@@ -672,7 +685,7 @@ R$ 965 (Dinheiro)`;
 
           const nomeBase = semRepetir(apelido(catalogo.titulo));
           resultado.paginas.forEach((p, i) => {
-            palco.append(montarCartao(nomeBase, p, i, resultado.paginas.length));
+            palco.append(montarPrevia(nomeBase, p, i, resultado.paginas.length));
           });
         }
 
@@ -692,18 +705,18 @@ R$ 965 (Dinheiro)`;
 
         const botao = document.createElement('button');
         botao.id = 'baixar-todas';
-        botao.textContent = 'Baixar todas as imagens';
+        botao.textContent = 'Salvar todas as imagens';
         botao.addEventListener('click', async () => {
-          const alvos = [...palco.querySelectorAll('.cartao__acoes button')];
+          const alvos = [...palco.querySelectorAll('.previa__acoes button')];
           botao.disabled = true;
           for (const [i, alvo] of alvos.entries()) {
-            botao.textContent = `Baixando ${i + 1} de ${alvos.length}…`;
+            botao.textContent = `Salvando ${i + 1} de ${alvos.length}…`;
             alvo.click();
             // O navegador engasga com downloads em rajada; o intervalo dá
             // tempo de cada um ser aceito antes do próximo.
             await new Promise((r) => setTimeout(r, 700));
           }
-          botao.textContent = 'Baixar todas as imagens';
+          botao.textContent = 'Salvar todas as imagens';
           botao.disabled = false;
         });
 
@@ -711,16 +724,16 @@ R$ 965 (Dinheiro)`;
         return barra;
       }
 
-      function montarCartao(nomeBase, pagina, indice, total) {
-        const cartao = document.createElement('div');
-        cartao.className = 'cartao';
+      function montarPrevia(nomeBase, pagina, indice, total) {
+        const previa = document.createElement('div');
+        previa.className = 'previa';
 
         const moldura = document.createElement('div');
         moldura.className = 'moldura';
         moldura.innerHTML = pagina.html;
 
         const acoes = document.createElement('div');
-        acoes.className = 'cartao__acoes';
+        acoes.className = 'previa__acoes';
         const rotulo = document.createElement('span');
         rotulo.textContent = total > 1 ? `Página ${indice + 1} de ${total}` : 'Página única';
 
@@ -730,17 +743,14 @@ R$ 965 (Dinheiro)`;
         const arquivo = `${nomeBase}${sufixo}.png`;
 
         /*
-         * O PNG fica guardado depois da primeira vez. Além de tornar o segundo
-         * toque instantâneo, é o que faz o compartilhamento funcionar no
-         * celular: o iOS só abre a folha nativa se a chamada acontecer dentro
-         * do toque, e gerar a imagem antes já consome esse tempo.
+         * O PNG fica guardado depois da primeira vez, então tocar de novo
+         * salva na hora, sem refazer os 33 MB de canvas.
          */
         let pronto = null;
 
-        botao.textContent = 'Baixar PNG';
+        botao.textContent = 'Salvar imagem';
         botao.addEventListener('click', async () => {
           botao.disabled = true;
-          const rotulo = botao.textContent;
           try {
             if (!pronto) {
               botao.textContent = 'Gerando…';
@@ -755,23 +765,19 @@ R$ 965 (Dinheiro)`;
               }
             }
 
-            const destino = await salvarImagem(pronto, arquivo);
-            botao.textContent =
-              destino === 'compartilhado' ? 'Compartilhado' : podeCompartilhar(pronto, arquivo)
-                ? 'Salvar imagem'
-                : 'Baixar PNG';
+            baixar(pronto, arquivo);
+            botao.textContent = 'Salvar imagem';
           } catch (erro) {
             botao.textContent = 'Falhou — toque de novo';
             mostrarAvisos([{ nivel: 'erro', mensagem: `${arquivo}: ${erro.message}` }]);
           } finally {
             botao.disabled = false;
-            if (botao.textContent === 'Gerando…') botao.textContent = rotulo;
           }
         });
 
         acoes.append(rotulo, botao);
-        cartao.append(moldura, acoes);
-        return cartao;
+        previa.append(moldura, acoes);
+        return previa;
       }
 
       function mostrarAvisos(lista) {
