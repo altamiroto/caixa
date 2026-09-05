@@ -417,7 +417,7 @@
         TEMA_PADRAO,
         sortearTema,
       } from './src/themes/temas.js';
-      import { paraPng, baixar, apelido } from './src/render/export.js';
+      import { paraPng, baixar, liberarUrls, apelido } from './src/render/export.js';
 
       const $ = (id) => document.getElementById(id);
       const palco = $('palco');
@@ -630,6 +630,8 @@ R$ 965 (Dinheiro)`;
       async function gerar() {
         await fontesProntas;
         nomesUsados = new Set();
+        // As imagens antigas saem da tela agora; os blobs delas podem ir junto.
+        liberarUrls();
         palco.innerHTML = '';
         $('avisos').innerHTML = '';
         $('resumo').textContent = '';
@@ -689,13 +691,23 @@ R$ 965 (Dinheiro)`;
           });
         }
 
-        if (palco.querySelector('.moldura')) palco.prepend(montarBarra());
+        const barra = palco.querySelector('.moldura') ? montarBarra() : null;
+        if (barra) palco.prepend(barra);
 
         const usado = sorteados.length ? ` · temas: ${sorteados.join(', ')}` : '';
         $('resumo').textContent =
           `${catalogos.length} catálogo(s), ${totalProdutos} produtos, ` +
           `${totalPaginas} página(s) · 2160×3840${usado}`;
         mostrarAvisos(avisos);
+
+        /*
+         * Uma de cada vez: são ~33 MB de canvas por imagem, e o celular não
+         * aguenta quatro ao mesmo tempo. Cada prévia libera o próprio botão
+         * quando a sua imagem fica pronta, então dá para salvar a primeira
+         * enquanto as outras ainda estão saindo.
+         */
+        for (const p of palco.querySelectorAll('.previa')) await p.preparar();
+        if (barra) barra.pronta();
       }
 
       /** Barra acima das prévias, com o botão de baixar tudo de uma vez. */
@@ -705,7 +717,8 @@ R$ 965 (Dinheiro)`;
 
         const botao = document.createElement('button');
         botao.id = 'baixar-todas';
-        botao.textContent = 'Salvar todas as imagens';
+        botao.disabled = true;
+        botao.textContent = 'Preparando as imagens…';
         botao.addEventListener('click', async () => {
           const alvos = [...palco.querySelectorAll('.previa__acoes button')];
           botao.disabled = true;
@@ -721,6 +734,10 @@ R$ 965 (Dinheiro)`;
         });
 
         barra.append(botao);
+        barra.pronta = () => {
+          botao.textContent = 'Salvar todas as imagens';
+          botao.disabled = false;
+        };
         return barra;
       }
 
@@ -743,29 +760,52 @@ R$ 965 (Dinheiro)`;
         const arquivo = `${nomeBase}${sufixo}.png`;
 
         /*
-         * O PNG fica guardado depois da primeira vez, então tocar de novo
-         * salva na hora, sem refazer os 33 MB de canvas.
+         * O PNG é gerado quando a prévia aparece, não quando o botão é tocado.
+         *
+         * É o que faz o botão funcionar no celular. O navegador só aceita um
+         * download disparado de dentro do toque, e rasterizar 33 MB de canvas
+         * leva segundos: quando a imagem ficava pronta o toque já tinha
+         * expirado, e o download era engolido sem erro nenhum. Com o PNG
+         * pronto de antemão, o clique não tem nenhum `await` antes de
+         * `baixar` — o toque ainda vale.
          */
         let pronto = null;
+        let gerando = null;
 
-        botao.textContent = 'Salvar imagem';
-        botao.addEventListener('click', async () => {
-          botao.disabled = true;
-          try {
-            if (!pronto) {
-              botao.textContent = 'Gerando…';
+        function gerar() {
+          if (pronto) return Promise.resolve(pronto);
+          if (!gerando) {
+            gerando = (async () => {
               const alvo = moldura.querySelector('.pagina');
               try {
                 // A prévia está reduzida; a exportação usa o tamanho real.
                 alvo.style.transform = 'none';
                 pronto = await paraPng(alvo);
+                return pronto;
               } finally {
                 // Sem isto, uma falha deixava a prévia gigante na tela.
                 alvo.style.transform = '';
               }
-            }
+            })().catch((erro) => {
+              gerando = null; // deixa tentar de novo pelo botão
+              throw erro;
+            });
+          }
+          return gerando;
+        }
 
+        botao.disabled = true;
+        botao.textContent = 'Preparando…';
+        botao.addEventListener('click', async () => {
+          // Caminho normal: a imagem já existe, nada de espera.
+          if (pronto) {
             baixar(pronto, arquivo);
+            return;
+          }
+          botao.disabled = true;
+          botao.textContent = 'Gerando…';
+          try {
+            baixar(await gerar(), arquivo);
             botao.textContent = 'Salvar imagem';
           } catch (erro) {
             botao.textContent = 'Falhou — toque de novo';
@@ -777,6 +817,18 @@ R$ 965 (Dinheiro)`;
 
         acoes.append(rotulo, botao);
         previa.append(moldura, acoes);
+
+        previa.preparar = async () => {
+          try {
+            await gerar();
+            botao.textContent = 'Salvar imagem';
+          } catch (erro) {
+            botao.textContent = 'Falhou — toque de novo';
+            mostrarAvisos([{ nivel: 'erro', mensagem: `${arquivo}: ${erro.message}` }]);
+          } finally {
+            botao.disabled = false;
+          }
+        };
         return previa;
       }
 

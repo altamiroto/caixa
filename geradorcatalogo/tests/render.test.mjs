@@ -157,6 +157,41 @@ test('htmlProduto aplica a remoção sem tocar no modelo', () => {
   assert.equal(produto.nome, 'Smart TV 32" Philco');
 });
 
+test('o preço repetido na coluna Dinheiro não leva o parcelamento junto', () => {
+  const produto = {
+    nome: 'Fone Bluetooth M10',
+    cores: [],
+    observacao: '',
+    lancamento: false,
+    emoji: '',
+    avista: null,
+    parcelado: {
+      valor: 34.99,
+      tipo: 'parcelado',
+      parcelas: 3,
+      valorParcela: 11.66,
+      rotulo: 'cartão',
+      bruto: '',
+    },
+    bruto: [],
+    avisos: [],
+  };
+  const colunas = definirColunas(catalogoFalso);
+
+  /*
+   * Só existe preço de cartão, então ele é repetido do lado do dinheiro em vez
+   * de deixar um traço. Mas "3x 11,66" embaixo de "Dinheiro / Pix" anuncia um
+   * parcelamento que não existe — a sublinha fica só na coluna do cartão.
+   */
+  const html = htmlProduto(produto, colunas, { mostrarParcela: true });
+  const avista = html.match(/linha__preco--avista[^>]*>(.*?)<\/div>/s)?.[1] ?? '';
+  const parcelado = html.match(/linha__preco--parcelado[^>]*>(.*?)<\/div>/s)?.[1] ?? '';
+
+  assert.match(parcelado, /3x 11,66/, 'a coluna do cartão perdeu a parcela');
+  assert.match(avista, /34,99/);
+  assert.doesNotMatch(avista, /3x/, 'parcelamento anunciado na coluna do dinheiro');
+});
+
 test('remover tudo do nome não deixa a linha sem identificação', () => {
   const produto = {
     nome: 'Smart TV',

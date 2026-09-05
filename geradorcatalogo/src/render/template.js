@@ -165,8 +165,10 @@ function pecasDoProduto(produto, colunas, opcoes) {
   const nome = removerTermos(produto.nome, opcoes.remover) || produto.nome;
 
   // Produto com um preço só (fone, carregador) repete o valor nas duas colunas
-  // em vez de deixar uma delas com um traço.
+  // em vez de deixar uma delas com um traço. O parcelamento não vai junto:
+  // "3x 33,00" embaixo de "Dinheiro / Pix" diz uma coisa que não existe.
   const unico = produto.avista ?? produto.parcelado;
+  const semParcelas = unico ? { ...unico, parcelas: null, valorParcela: null } : null;
 
   // A sublinha "10x 76,00" só aparece quando o produto foge do parcelamento
   // dominante — para o resto, o cabeçalho da coluna já diz "em até 10x".
@@ -181,7 +183,7 @@ function pecasDoProduto(produto, colunas, opcoes) {
     obs,
     nome,
     cores: produto.cores.join(' / '),
-    precoDe: (tipo) => produto[tipo] ?? unico,
+    precoDe: (tipo) => produto[tipo] ?? (tipo === 'avista' ? semParcelas : unico),
     mostrarParcela,
   };
 }

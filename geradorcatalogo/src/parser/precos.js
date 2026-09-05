@@ -10,6 +10,8 @@
  *   R$ 1. 330 (Dinheiro)          -> separador de milhar com espaço no meio
  *   10 x R$ 99,99 (R$ 999,99)     -> 10 parcelas de 99,99, total 999,99
  *   10 de R$ 278,00(R$ 2.780)     -> idem
+ *   10 parcelas de R$ 67,69 (R$ 676,90) -> idem, por extenso
+ *   6 parcelas de R$ 82,99        -> idem, sem total
  *   R$ 149,99 em até 6x no cartão -> parcelado, total 149,99, até 6x
  *   R$ 99 em até 3x               -> parcelado
  *   R$ 15                         -> preço único, sem rótulo
@@ -19,7 +21,17 @@
 import { chave } from './normalize.js';
 
 const RE_VALOR = /R\$\s*([\d][\d.,\s]*?)(?=\s*(?:[()\-–—]|$|[a-zA-ZÀ-ÿ]))/g;
-const RE_PARCELAS_PREFIXO = /(\d{1,2})\s*(?:x|de)\s+R\$/i;
+
+/*
+ * "10x R$ 99,99", "10 de R$ 278,00" e "6 parcelas de R$ 82,99" são a mesma
+ * coisa escrita de três jeitos. Sem a variante por extenso, "6 parcelas de"
+ * ficava no nome do produto e o valor da parcela era lido como preço final.
+ */
+const PARCELAS_PREFIXO = String.raw`(\d{1,2})\s*(?:x|(?:parcelas?\s+)?de)\s+R\$`;
+const RE_PARCELAS_PREFIXO = new RegExp(PARCELAS_PREFIXO, 'i');
+
+/** Onde começa um preço numa linha, incluindo o "6 parcelas de" que o precede. */
+export const RE_INICIO_DE_PRECO = new RegExp(String.raw`${PARCELAS_PREFIXO}|R\$\s*\d`, 'i');
 const RE_PARCELAS_SUFIXO = /(?:em\s+)?at[ée]\s*(\d{1,2})\s*x|\((\d{1,2})\s*x/i;
 const RE_PARCELAS_SOLTO = /(\d{1,2})\s*x\b/i;
 
@@ -65,19 +77,26 @@ export function valoresEm(texto) {
 
 /** Existe alguma menção a preço aqui? Usado para classificar linhas. */
 export function pareceLinhaDePreco(texto) {
-  return /R\$\s*\d/.test(texto) || /^\s*\d{1,2}\s*(?:x|de)\s+R\$/i.test(texto);
+  return /R\$\s*\d/.test(texto) || RE_PARCELAS_PREFIXO.test(texto.trimStart());
 }
 
+/**
+ * Decide se o preço é à vista ou parcelado.
+ *
+ * `explicito` diz se a decisão veio de uma palavra escrita na linha
+ * ("Dinheiro", "Cartão", "6x") ou de um chute. Um preço solto no fim do nome
+ * é um chute; quem manda é a linha que diz "(Dinheiro/pix)".
+ */
 function detectarTipo(texto, parcelas) {
   const k = chave(texto);
   const avista = PALAVRAS_AVISTA.some((p) => k.includes(p));
   const parcelado = PALAVRAS_PARCELADO.some((p) => k.includes(p));
 
   // "Dinheiro" ganha de "cartão" só quando não há contagem de parcelas junto.
-  if (avista && !parcelas) return 'avista';
-  if (parcelado || parcelas) return 'parcelado';
-  if (avista) return 'avista';
-  return null;
+  if (avista && !parcelas) return { tipo: 'avista', explicito: true };
+  if (parcelado || parcelas) return { tipo: 'parcelado', explicito: true };
+  if (avista) return { tipo: 'avista', explicito: true };
+  return { tipo: null, explicito: false };
 }
 
 function extrairRotulo(texto) {
@@ -124,7 +143,8 @@ export function lerPreco(texto) {
     valor = valores[0].valor;
   }
 
-  const tipo = detectarTipo(texto, parcelas) ?? (parcelas ? 'parcelado' : 'avista');
+  const detectado = detectarTipo(texto, parcelas);
+  const tipo = detectado.tipo ?? (parcelas ? 'parcelado' : 'avista');
   if (tipo === 'parcelado' && parcelas && valorParcela === null) {
     valorParcela = Math.round((valor / parcelas) * 100) / 100;
   }
@@ -134,6 +154,7 @@ export function lerPreco(texto) {
     parcelas: tipo === 'parcelado' ? parcelas : null,
     valorParcela: tipo === 'parcelado' ? valorParcela : null,
     tipo,
+    explicito: detectado.explicito,
     rotulo: extrairRotulo(texto),
     bruto: texto,
   };
