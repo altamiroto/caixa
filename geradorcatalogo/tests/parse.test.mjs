@@ -50,6 +50,55 @@ test('lerPreco separa à vista de parcelado', () => {
   const p6 = lerPreco('R$  3.999 (Dinheiro88');
   assert.equal(p6.tipo, 'avista');
   assert.equal(p6.valor, 3999);
+
+  // "N parcelas de" é o mesmo que "Nx" e "N de". Sem reconhecer a forma por
+  // extenso, o valor da parcela era lido como preço final.
+  const p7 = lerPreco('10 parcelas de R$ 67,69 (R$ 676,90)');
+  assert.equal(p7.tipo, 'parcelado');
+  assert.equal(p7.parcelas, 10);
+  assert.equal(p7.valorParcela, 67.69);
+  assert.equal(p7.valor, 676.9);
+
+  // Sem o total escrito, ele sai da multiplicação.
+  const p8 = lerPreco('6 parcelas de R$ 82,99');
+  assert.equal(p8.parcelas, 6);
+  assert.equal(p8.valor, 497.94);
+});
+
+test('preço com palavra escrita ganha do preço solto', () => {
+  const catalogo = parseVarios(
+    [
+      '*LISTA (05/09/26)*',
+      '',
+      "🔈 *`Caixa de Som Mifa A90`* - Preta - R$ 345",
+      'R$ 420 (6x Cartão)',
+      'R$ 385 (Dinheiro/pix)',
+    ].join('\n'),
+  )[0];
+  const produto = catalogo.secoes[0].produtos[0];
+
+  /*
+   * A linha diz "345" solto no fim do nome e "385 (Dinheiro/pix)" duas linhas
+   * abaixo. Os dois viram preço à vista; vale o que traz a palavra escrita.
+   */
+  assert.equal(produto.avista.valor, 385);
+  assert.equal(produto.parcelado.valor, 420);
+});
+
+test('o "6 parcelas de" não fica pendurado no nome do produto', () => {
+  const catalogo = parseVarios(
+    [
+      '*LISTA (05/09/26)*',
+      '',
+      '🤖 *`Alexa Echo Dot com acesso Alexa+`* - Preta - 6 parcelas de R$ 82,99 (R$ 497,94)',
+    ].join('\n'),
+  )[0];
+  const produto = catalogo.secoes[0].produtos[0];
+
+  assert.equal(produto.nome, 'Alexa Echo Dot com acesso Alexa+');
+  assert.deepEqual(produto.cores, ['Preta']);
+  assert.equal(produto.parcelado.valor, 497.94);
+  assert.equal(produto.parcelado.valorParcela, 82.99);
 });
 
 test('ehTrechoDeCor aceita cor e rejeita especificação', () => {

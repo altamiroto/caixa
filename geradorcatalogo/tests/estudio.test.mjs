@@ -74,6 +74,24 @@ async function preencher(pagina, textos) {
   for (const [i, texto] of lista.entries()) await campos.nth(i).fill(texto);
 }
 
+/**
+ * Espera as imagens ficarem prontas.
+ *
+ * O PNG é rasterizado junto com a prévia, não no clique — é o que faz o botão
+ * funcionar no celular, onde um download só é aceito dentro do toque. Até lá o
+ * botão fica desabilitado, e clicar nele não faria nada.
+ */
+async function esperarPreparadas(pagina) {
+  await pagina.waitForSelector('.previa__acoes button');
+  await pagina.waitForFunction(
+    () =>
+      [...document.querySelectorAll('.previa__acoes button')].every((b) => !b.disabled) &&
+      !document.querySelector('#baixar-todas')?.disabled,
+    undefined,
+    { timeout: 60000 },
+  );
+}
+
 test('estúdio gera pré-visualização e exporta PNG em 4K', async (t) => {
   const { navegador, pagina, erros } = await abrirEstudio();
   t.after(() => navegador.close());
@@ -331,7 +349,7 @@ test('o botão de cada prévia salva, não compartilha', async (t) => {
 
   await preencher(pagina, [await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8')]);
   await pagina.click('#gerar');
-  await pagina.waitForSelector('.previa__acoes button');
+  await esperarPreparadas(pagina);
 
   const rotulos = await pagina.locator('.previa__acoes button').allTextContents();
   for (const r of rotulos) assert.equal(r, 'Salvar imagem');
@@ -397,7 +415,7 @@ test('listas de mesmo título não se sobrescrevem no download', async (t) => {
   const tvs = await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8');
   await preencher(pagina, [tvs, tvs]);
   await pagina.click('#gerar');
-  await pagina.waitForSelector('.moldura .pagina');
+  await esperarPreparadas(pagina);
 
   assert.equal(await pagina.locator('.moldura .pagina').count(), 2);
 
@@ -428,7 +446,7 @@ test('baixar várias vezes seguidas continua funcionando', async (t) => {
     await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8'),
   ]);
   await pagina.click('#gerar');
-  await pagina.waitForSelector('.moldura .pagina');
+  await esperarPreparadas(pagina);
 
   const botoes = await pagina.locator('.previa__acoes button').all();
   assert.equal(botoes.length, 3);
@@ -459,22 +477,27 @@ test('a prévia volta ao tamanho normal mesmo se a exportação falhar', async (
   t.after(() => navegador.close());
 
   await preencher(pagina, await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'));
-  await pagina.click('#gerar');
-  await pagina.waitForSelector('.moldura .pagina');
 
-  const antes = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);
-
-  // Força a falha: sem canvas utilizável, paraPng lança.
+  /*
+   * A sabotagem entra antes de gerar: a rasterização acontece junto com a
+   * prévia, não no clique do botão. Quebrar o canvas depois não provaria nada,
+   * porque o PNG já estaria pronto e guardado.
+   */
   await pagina.evaluate(() => {
     HTMLCanvasElement.prototype.getContext = () => {
       throw new Error('memória insuficiente (simulado)');
     };
   });
-  await pagina.locator('.previa__acoes button').first().click();
+
+  await pagina.click('#gerar');
   await pagina.waitForFunction(() => document.querySelector('#avisos li'));
 
-  const depois = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);
-  assert.equal(depois, antes, 'a prévia ficou com a escala da exportação');
+  // A exportação põe `transform: none` no elemento e precisa desfazer isso;
+  // sem o `finally` a prévia ficava do tamanho real, cobrindo a tela.
+  const inline = await pagina.$eval('.moldura .pagina', (el) => el.style.transform);
+  assert.equal(inline, '', 'a prévia ficou com a escala da exportação');
+  const escala = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);
+  assert.match(escala, /^matrix\(0\.33/, `escala inesperada: ${escala}`);
 
   // E o erro precisa ficar visível, não sumir em silêncio.
   assert.match(await pagina.textContent('#avisos'), /memória insuficiente/);

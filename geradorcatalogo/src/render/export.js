@@ -97,19 +97,29 @@ function carregarImagem(url) {
 }
 
 /*
- * URLs de blob vivos. Revogar por temporizador curto era um jogo de sorte: no
- * celular o download demora mais que o prazo, e o arquivo chegava vazio. Aqui
- * cada URL só é revogado quando o próximo é criado, então o que está em uso
- * nunca é puxado debaixo do download.
+ * URLs de blob vivos.
+ *
+ * Revogar por temporizador curto era um jogo de sorte: no celular o download
+ * demora mais que o prazo e o arquivo chegava vazio. Revogar quando o próximo
+ * era criado tinha o mesmo defeito com outra roupa — salvar a segunda imagem
+ * puxava o tapete da primeira, que ainda podia estar baixando.
+ *
+ * Agora nada é revogado enquanto as prévias estão na tela. Cada URL é só um
+ * ponteiro para um blob que já existe na memória; o custo real é o blob, e ele
+ * é liberado junto com as prévias, em `liberarUrls`.
  */
 const urlsVivos = new Set();
 
 function criarUrl(blob) {
-  for (const antigo of urlsVivos) URL.revokeObjectURL(antigo);
-  urlsVivos.clear();
   const url = URL.createObjectURL(blob);
   urlsVivos.add(url);
   return url;
+}
+
+/** Revoga tudo. Chamar ao trocar as prévias, não entre um download e outro. */
+export function liberarUrls() {
+  for (const url of urlsVivos) URL.revokeObjectURL(url);
+  urlsVivos.clear();
 }
 
 /*
