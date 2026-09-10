@@ -143,7 +143,7 @@
             font-size: 0.88rem; font-weight: 600; color: var(--text-secondary);
         }
         .mini-opcao:hover { border-color: var(--primary-color); background: rgba(76,175,80,0.07); }
-        .mini-opcao input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
+        .mini-opcao input[type="checkbox"], .mini-opcao input[type="radio"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
         .mini-opcao.ativo { border-color: var(--primary-color); background: rgba(76,175,80,0.12); color: var(--primary-color); }
         .taxa-chip {
             display: inline-flex; align-items: center; gap: 5px;
@@ -780,6 +780,35 @@
                         </label>
                     </div>
                     <div id="parcelaTaxasRow" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toggle-section">
+            <input type="checkbox" id="toggleSimulador" onchange="toggleSimulador()">
+            <label for="toggleSimulador">🔄 Simulador Rápido (valor líquido ↔ valor a cobrar)</label>
+        </div>
+        <div id="simuladorContent" class="collapsible-content">
+            <div class="section-card">
+                <div class="input-group">
+                    <label for="simValor">Valor (R$):</label>
+                    <div class="input-with-icon"><span class="input-icon">💲</span>
+                    <input type="number" id="simValor" placeholder="Ex: 500.00" step="0.01" oninput="calcularSimulador()"></div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <label class="mini-opcao ativo" id="labelSimLiquido">
+                        <input type="radio" name="simDirecao" id="simDirLiquido" value="liquido" checked onchange="calcularSimulador()"> 💰 É o que quero RECEBER líquido
+                    </label>
+                    <label class="mini-opcao" id="labelSimCobrar">
+                        <input type="radio" name="simDirecao" id="simDirCobrar" value="cobrar" onchange="calcularSimulador()"> 🧾 É o que vou COBRAR do cliente
+                    </label>
+                </div>
+                <label class="mini-opcao" id="labelSimMostrarTaxa" style="margin-bottom:12px;">
+                    <input type="checkbox" id="simMostrarTaxa" onchange="calcularSimulador()"> 📊 Mostrar a taxa de cada opção
+                </label>
+                <div id="simResultado" style="font-size:0.92rem;line-height:1.7;"></div>
+                <div class="button-row" style="margin-top:10px;">
+                    <button type="button" class="btn btn-primary" onclick="copiarSimulador()">📋 Copiar</button>
                 </div>
             </div>
         </div>
@@ -2843,6 +2872,58 @@ Capa silicone R$ 50,00
                 enviarLog('copiou_resultado');
             });
         }
+
+        // ── Simulador Rápido (valor líquido ↔ valor a cobrar) ──────────────
+        // Isolado de propósito: só lê getTaxa()/getParcelasSelecionadas()
+        // (mesmas taxas e parcelas já configuradas na ferramenta, pra bater
+        // com o resultado principal), nunca escreve em nenhum estado do
+        // calculador principal — não pode "estragar" a ferramenta de cima.
+        function toggleSimulador() {
+            const on = document.getElementById('toggleSimulador').checked;
+            document.getElementById('simuladorContent').classList.toggle('show', on);
+            if (on) calcularSimulador();
+        }
+        function _simFmt(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function _simLinhas(valor, direcaoLiquido, mostrarTaxa, htmlOuTexto) {
+            const config = getParcelasSelecionadas();
+            const parcelas = config.parcelas.length ? config.parcelas : parcelasPadrao;
+            const opcoes = [{ n: 'pix', rotulo: '💸 Pix/Dinheiro' }, ...parcelas.map(n => ({ n, rotulo: `💳 ${n}x` }))];
+            return opcoes.map(({ n, rotulo }) => {
+                const taxa = getTaxa(n);
+                const totalCobrar = direcaoLiquido ? valor / (1 - taxa) : valor;
+                const totalLiquido = direcaoLiquido ? valor : valor * (1 - taxa);
+                const taxaTxt = mostrarTaxa ? ` (taxa ${(taxa * 100).toFixed(2)}%)` : '';
+                const ehParcela = typeof n === 'number' && n > 1;
+                const desc = ehParcela
+                    ? `${n}x de R$ ${_simFmt(totalCobrar / n)} (total R$ ${_simFmt(totalCobrar)} — líquido R$ ${_simFmt(totalLiquido)})`
+                    : `cobrar R$ ${_simFmt(totalCobrar)} — líquido R$ ${_simFmt(totalLiquido)}`;
+                if (htmlOuTexto === 'html') return `<div>${rotulo}: <strong>${desc}</strong>${taxaTxt ? ' <span style="color:var(--text-secondary);font-size:0.85em;">' + taxaTxt.trim() + '</span>' : ''}</div>`;
+                return `${rotulo.replace(/^\S+\s/, '')}: ${desc}${taxaTxt}`;
+            });
+        }
+        function calcularSimulador() {
+            const valor = parseFloat(document.getElementById('simValor').value);
+            const resultadoDiv = document.getElementById('simResultado');
+            const direcaoLiquido = document.getElementById('simDirLiquido').checked;
+            document.getElementById('labelSimLiquido').classList.toggle('ativo', direcaoLiquido);
+            document.getElementById('labelSimCobrar').classList.toggle('ativo', !direcaoLiquido);
+            if (isNaN(valor) || valor <= 0) { resultadoDiv.innerHTML = ''; return; }
+            const mostrarTaxa = document.getElementById('simMostrarTaxa').checked;
+            resultadoDiv.innerHTML = _simLinhas(valor, direcaoLiquido, mostrarTaxa, 'html').join('');
+        }
+        function copiarSimulador() {
+            const valor = parseFloat(document.getElementById('simValor').value);
+            if (isNaN(valor) || valor <= 0) { showToast('⚠️ Digite um valor primeiro'); return; }
+            const direcaoLiquido = document.getElementById('simDirLiquido').checked;
+            const mostrarTaxa = document.getElementById('simMostrarTaxa').checked;
+            const cabecalho = direcaoLiquido ? `Simulação — recebendo R$ ${_simFmt(valor)} líquido:` : `Simulação — cobrando R$ ${_simFmt(valor)}:`;
+            const texto = [cabecalho, ..._simLinhas(valor, direcaoLiquido, mostrarTaxa, 'texto')].join('\n');
+            navigator.clipboard.writeText(texto).then(() => {
+                showToast('✅ Simulação copiada!');
+                enviarLog('copiou_simulador');
+            });
+        }
+
         function limparCampos() {
             if (!confirm('⚠️ Deseja realmente limpar todos os campos?')) return;
             valorBaseInput.value = ''; parcelaEspecificaInput.value = '';
