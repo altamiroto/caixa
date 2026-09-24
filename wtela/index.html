@@ -88,9 +88,10 @@
         }
         .painel-titulo { font-size: .95rem; margin-bottom: 10px; }
 
+        /* Teto por campo: numa tela ultrawide, 1fr esticava um select até 1.100px. */
         .control-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(190px, 380px));
             gap: 10px;
             margin-bottom: 10px;
         }
@@ -158,7 +159,7 @@
         .opcoes-marcas { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 
         .dicas { margin-top: 10px; font-size: .82rem; color: var(--muted); }
-        .dicas summary { cursor: pointer; font-weight: 600; color: var(--text); }
+        .dicas summary { cursor: pointer; font-weight: 600; color: var(--text); width: fit-content; }
         .dicas ul { margin: 6px 0 0 18px; display: grid; gap: 3px; }
         .dicas code {
             font-family: var(--mono);
@@ -214,13 +215,15 @@
         .ranking-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .ranking-topo h2 { font-size: .95rem; }
         .ranking-nota { font-size: .75rem; color: var(--muted); margin: 2px 0 8px; }
+        /* Em grade: em tela larga os itens viram cartões lado a lado em vez de
+           faixas da largura da tela com o preço perdido num canto. */
         .ranking-lista {
             list-style: none;
-            max-height: 340px;
+            max-height: 360px;
             overflow: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+            gap: 6px;
         }
         .rank-item {
             display: grid;
@@ -236,6 +239,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
+            height: 100%;
         }
         .rank-item:hover { border-color: var(--primary); }
         li:first-child .rank-item { border-color: var(--primary); }
@@ -339,6 +343,7 @@
         /* ------------------------------------------------------------ histórico */
         .acoes .control-group { margin-bottom: 10px; }
         #historicoSelect { margin-top: 10px; }
+        .acoes .control-group, #historicoSelect { max-width: 760px; margin-inline: auto; }
         .nota { font-size: .76rem; color: var(--muted); margin-top: 10px; text-align: center; }
 
         /* ------------------------------------------------------------ IA */
@@ -366,7 +371,7 @@
         .advanced-header::-webkit-details-marker { display: none; }
         .toggle-icon { font-size: 18px; transition: transform .3s; }
         details[open] > .advanced-header .toggle-icon { transform: rotate(180deg); }
-        .advanced-content { padding: 15px; }
+        .advanced-content { padding: 15px; max-width: 1200px; margin-inline: auto; }
         .advanced-content > .control-group { margin-bottom: 10px; }
         .linha-inline { display: flex; gap: 6px; }
         .linha-inline select { flex: 1; min-width: 0; }
@@ -469,6 +474,7 @@
             /* Abaixo de 16px o iOS dá zoom em todo campo que recebe foco. */
             input[type="text"], input[type="number"], input[type="password"], input[type="url"],
             select, textarea, .cartao-nome, .cartao-texto, .ai-prompt-area { font-size: 16px !important; }
+            .control-row { grid-template-columns: 1fr; }
             .busca-campos { grid-template-columns: 1fr; gap: 6px; }
             /* A barra fica presa no topo: cada linha a menos é tela a mais para a lista. */
             .barra-busca { padding: 8px 10px; }
