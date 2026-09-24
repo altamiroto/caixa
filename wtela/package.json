@@ -1,0 +1,13 @@
+{
+  "name": "wtela",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Comparador de listas de fornecedores",
+  "scripts": {
+    "test": "node tests/pagina.test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
