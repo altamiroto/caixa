@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gerador de Catálogos</title>
+    <link rel="stylesheet" href="src/render/fonte.css" />
+    <link rel="stylesheet" href="src/render/catalogo.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ui-fundo: #0f1116;
+        --ui-painel: #171a21;
+        --ui-borda: #272c37;
+        --ui-tinta: #e8ecf4;
+        --ui-suave: #98a2b6;
+        --ui-acento: #3b82f6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        display: grid;
+        grid-template-columns: minmax(340px, 400px) 1fr;
+        height: 100vh;
+        background: var(--ui-fundo);
+        color: var(--ui-tinta);
+        font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      @media (max-width: 860px) {
+        body {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+      }
+
+      .painel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid var(--ui-borda);
+        background: var(--ui-painel);
+      }
+      .painel h1 {
+        margin: 0;
+        font-size: 19px;
+        letter-spacing: -0.2px;
+      }
+      .painel p.ajuda {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--ui-suave);
+      }
+      textarea,
+      input,
+      select {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid var(--ui-borda);
+        border-radius: 8px;
+        background: #0d0f14;
+        color: var(--ui-tinta);
+        font: inherit;
+      }
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+        font: 13px/1.45 ui-monospace, monospace;
+      }
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: 2px solid var(--ui-acento);
+        outline-offset: 1px;
+      }
+      .dupla {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .lista {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .lista textarea {
+        min-height: 150px;
+        padding-right: 40px;
+      }
+      .lista__cabeca {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: var(--ui-suave);
+      }
+      .lista__remover {
+        padding: 2px 9px;
+        border-color: transparent;
+        background: transparent;
+        color: var(--ui-suave);
+        font-size: 16px;
+        line-height: 1;
+      }
+      .lista__remover:hover {
+        color: #f87171;
+      }
+      /* Com uma lista só, remover deixaria a tela sem entrada nenhuma. */
+      .listas--unica .lista__remover {
+        display: none;
+      }
+      .palco__barra {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: -6px;
+      }
+      .marcadores {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .marcadores label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--ui-tinta);
+      }
+      .marcadores input {
+        width: auto;
+        accent-color: var(--ui-acento);
+      }
+      .tripla {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+      button {
+        padding: 10px 14px;
+        border: 1px solid var(--ui-borda);
+        border-radius: 8px;
+        background: var(--ui-acento);
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.secundario {
+        background: #232838;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .avisos {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 13px;
+      }
+      .avisos li {
+        padding: 7px 10px;
+        border-left: 3px solid;
+        border-radius: 0 6px 6px 0;
+        background: #0d0f14;
+      }
+      .avisos li[data-nivel='erro'] {
+        border-color: #ef4444;
+      }
+      .avisos li[data-nivel='atencao'] {
+        border-color: #f59e0b;
+      }
+      .avisos li[data-nivel='info'] {
+        border-color: #475569;
+        color: var(--ui-suave);
+      }
+      .resumo {
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+
+      /* --------------------------------------------------------- pré-visualização */
+      .palco {
+        padding: 24px;
+        overflow: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 24px;
+        background: #08090c;
+      }
+      /* A prévia tem 360px fixos; no celular a folga lateral é o que decide
+         se ela cabe na tela ou obriga a rolar de lado. */
+      @media (max-width: 860px) {
+        .palco {
+          padding: 16px 12px;
+        }
+      }
+      /*
+       * Não pode se chamar `.cartao`: esse nome é do cartão de produto em
+       * catalogo.css, que traz `height: 100%`. A prévia herdava isso, esticava
+       * até a altura do palco e abria um vão enorme entre uma imagem e a
+       * seguinte.
+       */
+      .previa {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      /* A página é sempre 1080x1920; encolhemos só para caber na tela. */
+      .moldura {
+        width: 360px;
+        height: 640px;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+      }
+      .moldura .pagina {
+        transform: scale(0.3333);
+        transform-origin: top left;
+      }
+      .previa__acoes {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+      .previa__acoes button {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+      .vazio {
+        margin: auto;
+        max-width: 340px;
+        text-align: center;
+        color: var(--ui-suave);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="painel">
+      <div>
+        <h1>Gerador de Catálogos</h1>
+        <p class="ajuda">
+          Cole a lista como você manda no WhatsApp. Várias mensagens de uma vez viram
+          catálogos separados.
+        </p>
+      </div>
+
+      <div>
+        <label>Listas de produtos</label>
+        <div id="listas"></div>
+        <button type="button" class="secundario" id="adicionar">+ Adicionar outra lista</button>
+        <p class="ajuda">
+          Uma caixa por lista. Cada uma vira uma imagem, e todas saem de uma vez.
+          Dentro de uma caixa, mensagens coladas também viram catálogos separados.
+        </p>
+      </div>
+
+      <div class="dupla">
+        <div>
+          <label for="tema">Tema</label>
+          <select id="tema"></select>
+        </div>
+        <div>
+          <label for="exemplo">Carregar exemplo</label>
+          <select id="exemplo">
+            <option value="">—</option>
+            <option value="smartphones.txt">Smartphones</option>
+            <option value="apple.txt">Apple</option>
+            <option value="tvs.txt">Smart TVs</option>
+            <option value="acessorios.txt">Acessórios</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="titulo">Título</label>
+        <input id="titulo" placeholder="usa o da lista" />
+      </div>
+
+      <div class="dupla">
+        <div>
+          <label for="sobretitulo">Linha de cima</label>
+          <input id="sobretitulo" value="Lista de produtos" />
+        </div>
+        <div>
+          <label for="marca">Assinatura</label>
+          <input id="marca" placeholder="@sualoja" />
+        </div>
+      </div>
+
+      <div class="dupla">
+        <div>
+          <label for="data">Data</label>
+          <input id="data" placeholder="usa a da lista" />
+        </div>
+        <div>
+          <label for="selo">Selo de lançamento</label>
+          <input id="selo" placeholder="sai como você escreveu" />
+        </div>
+      </div>
+
+      <div class="marcadores">
+        <label><input type="checkbox" id="mostrar-data" checked /> Mostrar data</label>
+        <label><input type="checkbox" id="mostrar-subtitulo" checked /> Mostrar linha de marcas</label>
+      </div>
+
+      <div class="marcadores">
+        <label><input type="checkbox" id="tema-aleatorio" /> Tema aleatório a cada geração</label>
+        <p class="ajuda" id="sorteio-info">
+          Sorteia uma paleta inédita, sempre distante em cor das últimas usadas.
+          Ignora o tema escolhido acima.
+        </p>
+      </div>
+
+      <div>
+        <label for="layout">Layout do corpo</label>
+        <select id="layout">
+          <option value="tabela">Tabela — uma linha por produto</option>
+          <option value="duplo">Duplo — duas linhas por faixa</option>
+          <option value="grade">Grade — cartão, dois por faixa</option>
+          <option value="vitrine">Vitrine — cartão com preço em destaque</option>
+        </select>
+        <p class="ajuda">
+          Duas colunas rendem mais quando o nome é curto. Em lista de TV, com nome
+          longo, o texto quebra demais e a página cabe menos.
+        </p>
+      </div>
+
+      <div>
+        <label for="remover">Remover palavras do nome</label>
+        <input id="remover" placeholder="Smart TV, LANÇAMENTO" />
+        <p class="ajuda">
+          Separadas por vírgula. Serve para tirar o que se repete em toda linha e o
+          título já diz.
+        </p>
+      </div>
+
+      <div>
+        <label>Alinhamento das colunas</label>
+        <div class="tripla">
+          <select id="al-nome" aria-label="Alinhamento do nome"></select>
+          <select id="al-cor" aria-label="Alinhamento da cor"></select>
+          <select id="al-preco" aria-label="Alinhamento do preço"></select>
+        </div>
+        <p class="ajuda">
+          Nome · Cor · Preço. Com nomes curtos, alinhar o nome à direita encosta
+          ele nos preços.
+        </p>
+      </div>
+
+      <div>
+        <label for="margens">Margem das bordas</label>
+        <select id="margens">
+          <option value="padrao">Padrão — 56 px</option>
+          <option value="stories">Stories — reserva topo e base</option>
+        </select>
+        <p class="ajuda">
+          No Stories, a interface do app cobre o topo e a base da imagem. O preset
+          reserva essa área para o catálogo não sair cortado.
+        </p>
+      </div>
+
+      <div>
+        <label for="fundo">Cor de fundo (opcional)</label>
+        <input id="fundo" placeholder="#101820  ou  linear-gradient(...)" />
+      </div>
+
+      <div>
+        <label for="foto">Foto de fundo (opcional)</label>
+        <input id="foto" type="file" accept="image/*" />
+        <p class="ajuda">
+          Compõe o fundo da página inteira. O tema aplica um véu por cima para o
+          texto continuar legível.
+        </p>
+      </div>
+
+      <button id="gerar">Gerar catálogo</button>
+      <p class="resumo" id="resumo"></p>
+      <ul class="avisos" id="avisos"></ul>
+    </section>
+
+    <main class="palco" id="palco">
+      <p class="vazio">Cole uma lista à esquerda e clique em <strong>Gerar catálogo</strong>.</p>
+    </main>
+
+    <script type="module">
+      import { parseVarios } from './src/parser/parse.js';
+      import { paginar } from './src/layout/paginate.js';
+      import {
+        temasPorGrupo,
+        TEMA_PADRAO,
+        sortearTema,
+      } from './src/themes/temas.js';
+      import { paraPng, baixar, liberarUrls, apelido } from './src/render/export.js';
+
+      const $ = (id) => document.getElementById(id);
+      const palco = $('palco');
+
+      // A paginação mede texto no DOM: medir com a fonte de reserva daria
+      // altura errada. Tudo que gera catálogo espera por esta promessa.
+      const fontesProntas = Promise.all([
+        document.fonts.load('900 62px Inter'),
+        document.fonts.load('700 25px Inter'),
+      ]).then(() => document.fonts.ready);
+
+      // 17 temas numa lista corrida confundem; o agrupamento vem do próprio módulo.
+      for (const { grupo, temas } of temasPorGrupo()) {
+        const bloco = document.createElement('optgroup');
+        bloco.label = grupo;
+        for (const t of temas) {
+          bloco.append(new Option(t.nome, t.id, t.id === TEMA_PADRAO, t.id === TEMA_PADRAO));
+        }
+        $('tema').append(bloco);
+      }
+
+      const ALINHAMENTOS = [
+        ['esquerda', 'Esquerda'],
+        ['centro', 'Centro'],
+        ['direita', 'Direita'],
+      ];
+      for (const [campo, padrao] of [['al-nome', 'esquerda'], ['al-cor', 'centro'], ['al-preco', 'centro']]) {
+        for (const [valor, rotulo] of ALINHAMENTOS) {
+          $(campo).append(new Option(rotulo, valor, valor === padrao, valor === padrao));
+        }
+      }
+
+      /* ------------------------------------------------- as caixas de lista */
+
+      const PLACEHOLDER = `📢 *SMARTPHONES (07/08/26)*
+
+📱 *Realme C71 4/128gb* - Branco
+R$ 1.089 (10x)
+R$ 965 (Dinheiro)`;
+
+      /** Todas as caixas, na ordem em que aparecem. */
+      function caixas() {
+        return [...$('listas').querySelectorAll('textarea')];
+      }
+
+      /** Renumera os rótulos e esconde o "remover" quando só resta uma caixa. */
+      function arrumarListas() {
+        const blocos = [...$('listas').children];
+        blocos.forEach((bloco, i) => {
+          bloco.querySelector('.lista__numero').textContent = `Lista ${i + 1}`;
+        });
+        $('listas').classList.toggle('listas--unica', blocos.length <= 1);
+      }
+
+      function adicionarLista(texto = '', focar = false) {
+        const bloco = document.createElement('div');
+        bloco.className = 'lista';
+
+        const cabeca = document.createElement('div');
+        cabeca.className = 'lista__cabeca';
+        const numero = document.createElement('span');
+        numero.className = 'lista__numero';
+        const remover = document.createElement('button');
+        remover.type = 'button';
+        remover.className = 'lista__remover';
+        remover.title = 'Remover esta lista';
+        remover.textContent = '×';
+        remover.addEventListener('click', () => {
+          bloco.remove();
+          arrumarListas();
+        });
+        cabeca.append(numero, remover);
+
+        const campo = document.createElement('textarea');
+        campo.spellcheck = false;
+        campo.placeholder = PLACEHOLDER;
+        campo.value = texto;
+
+        bloco.append(cabeca, campo);
+        $('listas').append(bloco);
+        arrumarListas();
+        if (focar) campo.focus();
+        return campo;
+      }
+
+      adicionarLista();
+      $('adicionar').addEventListener('click', () => adicionarLista('', true));
+
+      // O exemplo entra na primeira caixa vazia, ou numa nova — assim carregar
+      // um exemplo não apaga o que já foi colado.
+      $('exemplo').addEventListener('change', async (e) => {
+        if (!e.target.value) return;
+        const r = await fetch(`./samples/${e.target.value}`);
+        const texto = await r.text();
+        const vaga = caixas().find((c) => !c.value.trim());
+        if (vaga) vaga.value = texto;
+        else adicionarLista(texto);
+        gerar();
+      });
+
+      $('gerar').addEventListener('click', gerar);
+
+      // Com o sorteio ligado, escolher tema na lista não teria efeito.
+      $('tema-aleatorio').addEventListener('change', (e) => {
+        $('tema').disabled = e.target.checked;
+        gerar();
+      });
+
+      // A foto fica em memória como data URI: o SVG da exportação não consegue
+      // buscar arquivo externo, então ela precisa estar embutida.
+      let fotoDeFundo;
+
+      $('foto').addEventListener('change', (e) => {
+        const arquivo = e.target.files?.[0];
+        if (!arquivo) {
+          fotoDeFundo = undefined;
+          gerar();
+          return;
+        }
+        const leitor = new FileReader();
+        leitor.onload = () => {
+          fotoDeFundo = leitor.result;
+          gerar();
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+
+      /*
+       * Memória do sorteio. O contador guardado é o que faz a cor do dia seguinte
+       * nascer longe da de hoje: sem ele, cada recarga voltaria à mesma paleta.
+       */
+      const CHAVE_SORTEIO = 'gc:sorteio';
+
+      function lerSorteio() {
+        try {
+          const bruto = localStorage.getItem(CHAVE_SORTEIO);
+          const dados = bruto ? JSON.parse(bruto) : null;
+          if (dados && Number.isFinite(dados.contador)) return dados;
+        } catch {
+          // localStorage bloqueado (aba anônima, permissão): segue sem memória.
+        }
+        return { contador: 0, matizes: [] };
+      }
+
+      function gravarSorteio(dados) {
+        try {
+          localStorage.setItem(CHAVE_SORTEIO, JSON.stringify(dados));
+        } catch {
+          // Sem memória o sorteio ainda funciona; só perde a distância histórica.
+        }
+      }
+
+      /** Sorteia, registra e devolve o id do tema a usar nesta geração. */
+      function temaSorteado() {
+        const estado = lerSorteio();
+        const tema = sortearTema({
+          contador: estado.contador,
+          evitar: estado.matizes.slice(-6),
+        });
+        gravarSorteio({
+          contador: estado.contador + 1,
+          matizes: [...estado.matizes, tema.matiz].slice(-6),
+        });
+        return tema;
+      }
+
+      function opcoesAtuais() {
+        return {
+          tema: $('tema').value,
+          marca: $('marca').value.trim(),
+          sobretitulo: $('sobretitulo').value,
+          titulo: $('titulo').value.trim() || undefined,
+          data: $('data').value.trim() || undefined,
+          mostrarData: $('mostrar-data').checked,
+          mostrarSubtitulo: $('mostrar-subtitulo').checked,
+          selo: $('selo').value.trim() || undefined,
+          fundo: $('fundo').value.trim() || undefined,
+          fundoImagem: fotoDeFundo,
+          layout: $('layout').value,
+          remover: $('remover').value,
+          alinhar: {
+            nome: $('al-nome').value,
+            cor: $('al-cor').value,
+            preco: $('al-preco').value,
+          },
+          margens: { preset: $('margens').value },
+        };
+      }
+
+      /*
+       * Nomes de arquivo já usados nesta geração. Duas listas podem ter o mesmo
+       * título, e sem isso o segundo download sobrescreveria o primeiro.
+       */
+      let nomesUsados = new Set();
+
+      function semRepetir(base) {
+        if (!nomesUsados.has(base)) {
+          nomesUsados.add(base);
+          return base;
+        }
+        for (let n = 2; ; n += 1) {
+          const tentativa = `${base}-${n}`;
+          if (!nomesUsados.has(tentativa)) {
+            nomesUsados.add(tentativa);
+            return tentativa;
+          }
+        }
+      }
+
+      async function gerar() {
+        await fontesProntas;
+        nomesUsados = new Set();
+        // As imagens antigas saem da tela agora; os blobs delas podem ir junto.
+        liberarUrls();
+        palco.innerHTML = '';
+        $('avisos').innerHTML = '';
+        $('resumo').textContent = '';
+
+        const avisos = [];
+        const catalogos = [];
+
+        // Cada caixa é lida em separado: a fronteira entre listas é explícita,
+        // sem depender de o parser adivinhar onde uma acaba e a outra começa.
+        caixas().forEach((campo, i) => {
+          const texto = campo.value.trim();
+          if (!texto) return;
+          try {
+            catalogos.push(...parseVarios(texto));
+          } catch (erro) {
+            avisos.push({ nivel: 'erro', mensagem: `Lista ${i + 1}: ${erro.message}` });
+          }
+        });
+
+        if (!catalogos.length) {
+          palco.innerHTML = '<p class="vazio">Nada reconhecido nas listas.</p>';
+          mostrarAvisos(avisos);
+          return;
+        }
+
+        const base = opcoesAtuais();
+        const aleatorio = $('tema-aleatorio').checked;
+        const sorteados = [];
+        let totalPaginas = 0;
+        let totalProdutos = 0;
+
+        for (const catalogo of catalogos) {
+          // Com o sorteio ligado, cada catálogo ganha o seu tema: cada imagem
+          // vai para um post diferente, e sair tudo da mesma cor anularia o
+          // motivo de sortear.
+          const opcoes = { ...base };
+          if (aleatorio) {
+            const tema = temaSorteado();
+            opcoes.tema = tema;
+            sorteados.push(tema.nome);
+          }
+
+          let resultado;
+          try {
+            resultado = paginar({ documento: document, janela: window, catalogo, opcoes });
+          } catch (erro) {
+            avisos.push({ nivel: 'erro', mensagem: `${catalogo.titulo}: ${erro.message}` });
+            continue;
+          }
+          totalPaginas += resultado.paginas.length;
+          totalProdutos += catalogo.resumo.totalProdutos;
+          avisos.push(...catalogo.avisos);
+
+          const nomeBase = semRepetir(apelido(catalogo.titulo));
+          resultado.paginas.forEach((p, i) => {
+            palco.append(montarPrevia(nomeBase, p, i, resultado.paginas.length));
+          });
+        }
+
+        const barra = palco.querySelector('.moldura') ? montarBarra() : null;
+        if (barra) palco.prepend(barra);
+
+        const usado = sorteados.length ? ` · temas: ${sorteados.join(', ')}` : '';
+        $('resumo').textContent =
+          `${catalogos.length} catálogo(s), ${totalProdutos} produtos, ` +
+          `${totalPaginas} página(s) · 2160×3840${usado}`;
+        mostrarAvisos(avisos);
+
+        /*
+         * Uma de cada vez: são ~33 MB de canvas por imagem, e o celular não
+         * aguenta quatro ao mesmo tempo. Cada prévia libera o próprio botão
+         * quando a sua imagem fica pronta, então dá para salvar a primeira
+         * enquanto as outras ainda estão saindo.
+         */
+        for (const p of palco.querySelectorAll('.previa')) await p.preparar();
+        if (barra) barra.pronta();
+      }
+
+      /** Barra acima das prévias, com o botão de baixar tudo de uma vez. */
+      function montarBarra() {
+        const barra = document.createElement('div');
+        barra.className = 'palco__barra';
+
+        const botao = document.createElement('button');
+        botao.id = 'baixar-todas';
+        botao.disabled = true;
+        botao.textContent = 'Preparando as imagens…';
+        botao.addEventListener('click', async () => {
+          const alvos = [...palco.querySelectorAll('.previa__acoes button')];
+          botao.disabled = true;
+          for (const [i, alvo] of alvos.entries()) {
+            botao.textContent = `Salvando ${i + 1} de ${alvos.length}…`;
+            alvo.click();
+            // O navegador engasga com downloads em rajada; o intervalo dá
+            // tempo de cada um ser aceito antes do próximo.
+            await new Promise((r) => setTimeout(r, 700));
+          }
+          botao.textContent = 'Salvar todas as imagens';
+          botao.disabled = false;
+        });
+
+        barra.append(botao);
+        barra.pronta = () => {
+          botao.textContent = 'Salvar todas as imagens';
+          botao.disabled = false;
+        };
+        return barra;
+      }
+
+      function montarPrevia(nomeBase, pagina, indice, total) {
+        const previa = document.createElement('div');
+        previa.className = 'previa';
+
+        const moldura = document.createElement('div');
+        moldura.className = 'moldura';
+        moldura.innerHTML = pagina.html;
+
+        const acoes = document.createElement('div');
+        acoes.className = 'previa__acoes';
+        const rotulo = document.createElement('span');
+        rotulo.textContent = total > 1 ? `Página ${indice + 1} de ${total}` : 'Página única';
+
+        const botao = document.createElement('button');
+        botao.className = 'secundario';
+        const sufixo = total > 1 ? `-${String(indice + 1).padStart(2, '0')}` : '';
+        const arquivo = `${nomeBase}${sufixo}.png`;
+
+        /*
+         * O PNG é gerado quando a prévia aparece, não quando o botão é tocado.
+         *
+         * É o que faz o botão funcionar no celular. O navegador só aceita um
+         * download disparado de dentro do toque, e rasterizar 33 MB de canvas
+         * leva segundos: quando a imagem ficava pronta o toque já tinha
+         * expirado, e o download era engolido sem erro nenhum. Com o PNG
+         * pronto de antemão, o clique não tem nenhum `await` antes de
+         * `baixar` — o toque ainda vale.
+         */
+        let pronto = null;
+        let gerando = null;
+
+        function gerar() {
+          if (pronto) return Promise.resolve(pronto);
+          if (!gerando) {
+            gerando = (async () => {
+              const alvo = moldura.querySelector('.pagina');
+              try {
+                // A prévia está reduzida; a exportação usa o tamanho real.
+                alvo.style.transform = 'none';
+                pronto = await paraPng(alvo);
+                return pronto;
+              } finally {
+                // Sem isto, uma falha deixava a prévia gigante na tela.
+                alvo.style.transform = '';
+              }
+            })().catch((erro) => {
+              gerando = null; // deixa tentar de novo pelo botão
+              throw erro;
+            });
+          }
+          return gerando;
+        }
+
+        botao.disabled = true;
+        botao.textContent = 'Preparando…';
+        botao.addEventListener('click', async () => {
+          // Caminho normal: a imagem já existe, nada de espera.
+          if (pronto) {
+            baixar(pronto, arquivo);
+            return;
+          }
+          botao.disabled = true;
+          botao.textContent = 'Gerando…';
+          try {
+            baixar(await gerar(), arquivo);
+            botao.textContent = 'Salvar imagem';
+          } catch (erro) {
+            botao.textContent = 'Falhou — toque de novo';
+            mostrarAvisos([{ nivel: 'erro', mensagem: `${arquivo}: ${erro.message}` }]);
+          } finally {
+            botao.disabled = false;
+          }
+        });
+
+        acoes.append(rotulo, botao);
+        previa.append(moldura, acoes);
+
+        previa.preparar = async () => {
+          try {
+            await gerar();
+            botao.textContent = 'Salvar imagem';
+          } catch (erro) {
+            botao.textContent = 'Falhou — toque de novo';
+            mostrarAvisos([{ nivel: 'erro', mensagem: `${arquivo}: ${erro.message}` }]);
+          } finally {
+            botao.disabled = false;
+          }
+        };
+        return previa;
+      }
+
+      function mostrarAvisos(lista) {
+        const ul = $('avisos');
+        const relevantes = lista.filter((a) => a.nivel !== 'info');
+        for (const a of relevantes.slice(0, 25)) {
+          const li = document.createElement('li');
+          li.dataset.nivel = a.nivel;
+          li.textContent = a.linha ? `Linha ${a.linha}: ${a.mensagem}` : a.mensagem;
+          ul.append(li);
+        }
+      }
+    </script>
+  </body>
+</html>

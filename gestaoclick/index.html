@@ -1269,6 +1269,142 @@
       color: #888;
     }
 
+    .ia-cand-badge-aprendido {
+      font-size: 10px;
+      font-weight: 700;
+      color: #7c3aed;
+      background: rgba(124, 58, 237, .12);
+      padding: 1px 6px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .ia-cand-esquecer {
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px;
+      opacity: .6;
+    }
+
+    .ia-cand-esquecer:hover {
+      opacity: 1;
+    }
+
+    .ia-cand-excluir {
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px;
+      opacity: .35;
+    }
+
+    .ia-cand-excluir:hover {
+      opacity: 1;
+    }
+
+    .ia-cand-confirmar {
+      flex-shrink: 0;
+      background: #eafaf1;
+      border: 1px solid #a8e6c1;
+      color: #1e8e5a;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .ia-cand-confirmar:hover:not(:disabled) {
+      background: #1e8e5a;
+      color: #fff;
+    }
+
+    .ia-cand-confirmar:disabled {
+      cursor: default;
+    }
+
+    .ia-debug-pre {
+      background: #1a1a1a;
+      color: #d4d4d4;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 8px 10px;
+      border-radius: 6px;
+      max-height: 220px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .ia-aprendizado-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 9px;
+      padding: 8px 10px;
+      background: #f9f9f9;
+    }
+
+    .ia-aprendizado-item .info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .ia-aprendizado-item .rotulo {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a1a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ia-aprendizado-item .rotulo-chave {
+      font-weight: 400;
+      font-style: italic;
+      color: #888;
+    }
+
+    .ia-aprendizado-item .alvo {
+      font-size: 11px;
+      color: #6b6b6b;
+      white-space: normal;
+      line-height: 1.4;
+    }
+
+    .ia-aprendizado-item .alvo.ok {
+      color: #1e8e5a;
+    }
+
+    .ia-aprendizado-item .alvo.excl {
+      color: #c0392b;
+    }
+
+    .ia-aprendizado-item .btn-esquecer {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      color: #c0392b;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 4px 9px;
+    }
+
+    .ia-aprendizado-item .btn-esquecer:hover {
+      background: #fef2f2;
+    }
+
     .ia-btn-trocar {
       background: #f0f0f0;
       color: #6b6b6b;
@@ -1389,8 +1525,7 @@
       gap: 10px;
     }
 
-    .ia-btn-processar,
-    .ia-btn-balanco {
+    .ia-btn-processar {
       flex: 1;
       padding: 12px;
       border: none;
@@ -1403,23 +1538,11 @@
       justify-content: center;
       gap: 8px;
       transition: all 0.2s;
-    }
-
-    .ia-btn-processar {
       background: var(--accent-color);
     }
 
     .ia-btn-processar:hover {
       opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .ia-btn-balanco {
-      background: #2ecc71;
-    }
-
-    .ia-btn-balanco:hover {
-      background: #27ae60;
       transform: translateY(-1px);
     }
 
@@ -1460,8 +1583,6 @@
       align-items: center;
       gap: 6px;
     }
-    .ia-btn-balanco { background: #2ecc71; }
-    .ia-btn-balanco:hover { background: #27ae60; transform: translateY(-1px); }
     .ia-btn-mover { background: #3498db; flex: 1; padding: 12px; border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
     .ia-btn-mover:hover { background: #2980b9; transform: translateY(-1px); }
   </style>
@@ -1564,7 +1685,10 @@
     <div id="ia-lote-modal">
       <div class="ia-lh">
         <h2>🤖 Busca em Lote por IA</h2>
-        <button class="ia-btn-fechar" id="ia-lote-fechar-topo">✕</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="ia-btn-restaurar" id="ia-ver-aprendizados">🧠 Aprendizados (<span id="ia-aprendizado-count">0</span>)</button>
+          <button class="ia-btn-fechar" id="ia-lote-fechar-topo">✕</button>
+        </div>
       </div>
       <div class="ia-lb" id="ia-passo1">
         <div>
@@ -1574,22 +1698,26 @@
         <div>
           <div class="ia-prompt-row">
             <span class="ia-label" style="margin-bottom:0;">Prompt da IA</span>
-            <button class="ia-btn-restaurar" id="ia-restaurar">↺ Restaurar</button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <select id="ia-provider" class="ia-select" style="font-size:11px; padding:5px 8px;" title="Qual IA processa a lista">
+                <option value="groq">🟢 Groq (padrão)</option>
+                <option value="deepseek">🧪 DeepSeek (teste)</option>
+              </select>
+              <button class="ia-btn-restaurar" id="ia-restaurar">↺ Restaurar</button>
+            </div>
           </div>
           <textarea class="ia-prompt-ta" id="ia-prompt"></textarea>
         </div>
         <div id="ia-erro" class="ia-erro"></div>
         <div class="ia-balanco-ctrl">
           <div class="ia-field-group">
-            <span class="ia-label">Grupo para Balanço</span>
+            <span class="ia-label">Grupo (opcional — compara a lista com o estoque do grupo)</span>
             <select id="ia-grupo-ref" class="ia-select">
-              <option value="">Carregando grupos...</option>
+              <option value="">Não comparar com nenhum grupo</option>
             </select>
           </div>
           <div class="ia-actions-row">
             <button class="ia-btn-processar" id="ia-processar" style="flex:1;">🤖 Consultar Lista →</button>
-            <button class="ia-btn-balanco" id="ia-balanco" style="flex:1;">⚖️ Balanço</button>
-            <button class="ia-btn-mover" id="ia-mover-grupo">📦 Mover p/ Grupo</button>
           </div>
         </div>
       </div>
@@ -1598,12 +1726,46 @@
           <div class="ia-prog-inner" id="ia-prog"></div>
         </div>
         <div class="ia-res-status" id="ia-status">Processando…</div>
+        <!-- DEBUG TEMPORÁRIO: mostra tokens + requisição/resposta bruta da IA
+             pra investigar consumo de tokens anormal. Remover depois. -->
+        <details id="ia-debug-box" style="display:none; border:1px dashed #f39c12; border-radius:8px; padding:8px 10px; background:#fffbeb; margin-bottom:4px;">
+          <summary style="cursor:pointer; font-size:12px; font-weight:700; color:#8a6d00;">🐞 Debug da IA (temporário) — clique pra abrir</summary>
+          <div id="ia-debug-conteudo" style="margin-top:8px;"></div>
+        </details>
+        <details id="ia-debug-balanco-box" style="display:none; border:1px dashed #7c3aed; border-radius:8px; padding:8px 10px; background:#f5f0ff; margin-bottom:4px;">
+          <summary style="cursor:pointer; font-size:12px; font-weight:700; color:#5b21b6;">🔍 Debug da conciliação (temporário) — clique pra abrir</summary>
+          <div id="ia-debug-balanco-conteudo" style="margin-top:8px;"></div>
+        </details>
         <div id="ia-balanco-res" class="ia-balanco-results" style="display:none;"></div>
         <div class="ia-res-grid" id="ia-grid"></div>
+      </div>
+      <div class="ia-lb" id="ia-passo-aprendizado" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span class="ia-label" style="margin-bottom:0;">Produtos que o sistema já aprendeu a reconhecer</span>
+          <button class="ia-btn-restaurar" id="ia-aprendizado-limpar">🗑️ Limpar tudo</button>
+        </div>
+        <div style="font-size:11px; color:#6b6b6b;">Toda vez que você escolhe manualmente qual produto do sistema corresponde a um item da lista, essa escolha fica salva e passa a ser usada automaticamente nas próximas buscas do mesmo modelo NA MESMA COR — mesmo que preço, parcelamento ou a ordem das palavras mudem. Cores diferentes do mesmo modelo são aprendidas separadamente, porque geralmente são estoques diferentes.</div>
+
+        <div style="border:1px dashed #e0e0e0; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+          <span class="ia-label" style="margin-bottom:0;">🔗 Sincronização entre dispositivos (Google Sheets)</span>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="ia-sheet-url" class="ia-dd-search" style="flex:1;"
+              placeholder="Cole aqui a URL do Web App (.../exec)" value="">
+            <button class="ia-btn-restaurar" id="ia-sheet-url-salvar">💾 Salvar</button>
+          </div>
+          <div id="ia-sync-status" style="font-size:11px; color:#6b6b6b;">📵 Sem sincronização — aprendizado salvo só neste aparelho.</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="ia-btn-restaurar" id="ia-sync-agora">🔄 Sincronizar agora</button>
+            <button class="ia-btn-restaurar" id="ia-sync-enviar-locais">⬆️ Enviar aprendizados deste aparelho</button>
+          </div>
+        </div>
+
+        <div class="ia-res-grid" id="ia-aprendizado-lista" style="max-height:40vh;"></div>
       </div>
       <div class="ia-lote-footer">
         <button class="ia-btn-fechar" id="ia-fechar-rodape">← Fechar</button>
         <span id="ia-resumo" style="font-size:12px;color:#6b6b6b;flex:1;text-align:center;"></span>
+        <button class="ia-btn-mover" id="ia-mover-grupo" style="flex:none;">📋 Copiar Divergências</button>
         <button class="ia-btn-add-todos" id="ia-add-todos">🛒 Adicionar todos com estoque</button>
       </div>
     </div>
@@ -1675,6 +1837,7 @@
   <script>
     const lojaIdJeta = "361408";
     let resultadosBuscaLoteGlobal = [];
+    let _ultimasSobrasBalanco = [];
     let todosProdutos = [];
     let produtosFiltrados = [];
     let carrinho = {};
@@ -2138,8 +2301,49 @@
     // ════════════════════════
     // BUSCA EM LOTE POR IA
     // ════════════════════════
-    const IA_PROMPT_KEY = 'jeta_ia_lote_v3';
-    const IA_PROMPT_DEFAULT = "Você é um assistente especializado em processar listas de produtos.\nAnalise a lista bruta e retorne um array de objetos JSON.\nPara cada produto encontrado, extraia:\n- \"original\": a linha original completa exatamente como o usuário colou (com cor, preço, etc).\n- \"busca\": o nome limpo do produto (remova preço, cor e marketing, mantendo apenas marca, modelo, memória e conectividade).\n\nRetorne APENAS JSON válido, sem markdown.\n\nExemplo de saída:\n[\n  {\"original\": \"Motorola Moto G15 256gb 4G - Bege - 650\", \"busca\": \"Motorola Moto G15 256gb 4G\"},\n  {\"original\": \"Realme Note 60 4/256gb Verde\", \"busca\": \"Realme Note 60 4/256gb\"}\n]";
+    // v4: tira a instrução de "um objeto por cor" (isso inflava MUITO a
+    // saída — dezenas de objetos JSON completos repetidos). Agora a IA só
+    // identifica as cores da linha (array "cores") e o JavaScript
+    // (expandirCoresDaLista) multiplica em cards separados, de graça.
+    // v5: pede pra IA manter o código/referência do modelo em "busca" —
+    // sem isso, produtos diferentes da mesma marca/tamanho (ex.: duas TVs
+    // 40" de modelos distintos) viravam a mesma busca genérica, o que
+    // atrapalha tanto a deduplicação quanto a busca real no catálogo.
+    const IA_PROMPT_KEY = 'jeta_ia_lote_v7';
+    const IA_PROMPT_DEFAULT = `Você processa listas de produtos eletrônicos (catálogos de preço do WhatsApp ou listas de estoque físico) e devolve um array JSON.
+
+IGNORE linhas que são só: quantidade solta ("6", "6\t+"), título/cabeçalho de seção (*SAMSUNG*, 📢 Lista Exclusiva), data solta, preço isolado, saudação ou aviso sem produto.
+
+CORRIJA typos óbvios antes de gerar "busca": XAIOM/XAOMI/XAIOMI → Xiaomi, ZUL → Azul, "1286GB" → "128GB".
+
+Para cada produto real, extraia:
+- "original": a linha como veio, limpa (sem emoji, sem *marcação*, sem crase).
+- "busca": nome padronizado para busca — marca + modelo + memória no formato "8/256gb" ou "256gb" (quando houver) + conectividade (4G/5G, só se mencionada) + polegadas para TVs (ex.: 43"). IMPORTANTE: sempre mantenha o CÓDIGO/REFERÊNCIA do produto quando existir (ex.: 43UA7500PSA, 40S5400A, U8100F, Pro/Max/Plus/Ultra/FE) — é isso que diferencia produtos parecidos da mesma marca e tamanho/memória; nunca resuma pra um nome genérico. NUNCA inclua cor, preço, bateria, condição ou specs de marketing (HDR, Alexa, Gaming Hub, Xbox Cloud Gaming etc).
+- "cores": array com as cores mencionadas, normalizadas em português — uma string por cor. Mapeie: Black/Midnight/Grafite/Space Gray→Preto, White/Starlight→Branco, Silver/Prata→Prata, Blue/Pacific→Azul, Green→Verde, Purple/Violeta→Roxo, Pink/Rose→Rosa, Gold→Dourado, Red→Vermelho, Gray/Grey/Natural/Desert→Cinza. IMPORTANTE: "Titanium"/"Titânio" NUNCA vira Cinza — mantenha como "Titanium" (é uma cor própria; produtos reais têm SKU "Titanium" separado do SKU "Cinza", tratar como sinônimo esconde produto errado).
+  Regra de separação: só quebre em cores DIFERENTES quando houver separador explícito entre elas ("/", "|", ",") — ex.: "Preto/Branco", "Preto | Verde", "Preto/Azul/Titanium" (aqui SIM são 3 cores: ["Preto","Azul","Titanium"], nunca esqueça nenhuma, é erro grave sumir com a do meio/fim). Quando NÃO há separador — duas ou mais palavras de cor grudadas formando um nome comercial composto, tipo "Titanium Prata", "Titânio Prata", "Space Gray", "Phantom Black", "Rose Gold" — isso é UMA cor só, mantenha as palavras juntas como uma única string no array (ex.: "S25 Ultra - Titanium Prata" → cores:["Titanium Prata"], NUNCA ["Titanium","Prata"] — quebrar em duas cores diferentes faz a busca falhar porque não existe produto separado "Titanium" nem produto separado "Prata", só existe o composto).
+  Se não houver cor identificável, use [].
+
+Se a MESMA linha (produto idêntico, mesmo código/modelo) aparecer repetida em seções diferentes (ex.: varejo e atacado), inclua apenas uma vez — priorize a ocorrência com mais informação. Produtos parecidos mas com código/modelo diferente NÃO são duplicata — mantenha os dois.
+
+Retorne APENAS o array JSON válido, sem markdown, sem texto antes ou depois.
+
+Exemplo de entrada:
+📱 Redmi Note 14 Pro 5G 8/256GB - Preto - R$ 1.785
+📱 Samsung Galaxy A36 5G 8/256gb - Preto/Branco
+XAIOM Redmi Note 15 8/256GB azul
+6\t+
+📺 Smart TV 40" TCL Full HD LED 40S5400A Android - R$ 1390
+📺 Smart TV 40" TCL Full HD QLED 40S5K Google TV - R$ 1300
+
+Exemplo de saída:
+[
+  {"original":"Redmi Note 14 Pro 5G 8/256GB","busca":"Redmi Note 14 Pro 5G 8/256gb","cores":["Preto"]},
+  {"original":"Samsung Galaxy A36 5G 8/256gb","busca":"Samsung Galaxy A36 5G 8/256gb","cores":["Preto","Branco"]},
+  {"original":"Redmi Note 15 8/256GB","busca":"Xiaomi Redmi Note 15 8/256gb","cores":["Azul"]},
+  {"original":"Smart TV 40\" TCL Full HD LED 40S5400A Android","busca":"TCL 40S5400A 40\"","cores":[]},
+  {"original":"Smart TV 40\" TCL Full HD QLED 40S5K Google TV","busca":"TCL 40S5K 40\"","cores":[]}
+]
+(repare que as duas TVs TCL de 40" têm buscas DIFERENTES — 40S5400A e 40S5K são modelos distintos, mesmo com marca e tamanho iguais)`;
 
     let _iaResultados = [];
 
@@ -2150,6 +2354,311 @@
     let _prodCacheTs = 0;
     const CACHE_TTL = 5 * 60 * 1000;
     let _abaAtiva = "TODOS";
+
+    // ════════════════════════
+    // APRENDIZADO DE VÍNCULOS (correspondência lista ↔ produto)
+    //
+    // Guardado localmente (localStorage) como uma cópia rápida/offline, e
+    // opcionalmente sincronizado com uma planilha do Google Sheets (via um
+    // Apps Script — ver gestaoclick/apps-script/Aprendizados.gs) para que o
+    // aprendizado feito num dispositivo valha nos outros também.
+    //
+    // Nunca é enviado para o sistema da loja — serve só para melhorar as
+    // buscas seguintes deste painel.
+    // ════════════════════════
+    const ALIAS_KEY = 'jeta_aliases_v1';
+    const ALIAS_PENDENTES_KEY = 'jeta_aliases_pendentes_v1';
+    const SHEET_URL_KEY = 'jeta_sheet_url_v1';
+
+    // URL padrão do backend (Google Apps Script) que guarda os vínculos
+    // aprendidos. Já vem configurada para todos os dispositivos — não
+    // precisa colar em lugar nenhum. Só é sobrescrita se alguém salvar uma
+    // URL diferente manualmente no painel "🧠 Aprendizados".
+    const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzZMptQSTJYROyynSdlEPOqHQ4oF68EncnPMp4IfhImQsxXEPAzxhvQky03by3JqQlj/exec';
+
+    let _sheetUrl = localStorage.getItem(SHEET_URL_KEY) || DEFAULT_SHEET_URL;
+    let _sincronizando = false;
+    let _ultimaSincronizacao = null;
+
+    // Chave estável: usa os mesmos tokens de modelo já extraídos pelo motor
+    // de busca (marca/modelo/memória), ignorando preço, parcelamento e
+    // "ruído" de marketing — assim o aprendizado continua valendo mesmo
+    // quando o texto da lista do dia muda um pouco. A cor é adicionada de
+    // volta como parte da chave (ver extrairCorParaChave), porque cores
+    // diferentes do mesmo modelo costumam ser produtos/estoques diferentes
+    // no sistema — sem isso, ensinar numa cor aplicaria errado o estoque
+    // de outra cor do mesmo modelo.
+    // Mapa de sinônimo → cor CANÔNICA. Sem isso, "Preto" (de um card) e
+    // "Preta"/"Black"/"Midnight" (do nome do produto no catálogo) geravam
+    // chaves DIFERENTES mesmo sendo a mesma cor — quebrando tanto o
+    // aprendizado quanto o filtro de candidatos por cor.
+    const CORES_CANONICAS = {
+      preto: 'preto', preta: 'preto', black: 'preto', midnight: 'preto', grafite: 'preto', graphite: 'preto', 'space gray': 'preto',
+      branco: 'branco', branca: 'branco', white: 'branco', starlight: 'branco', estelar: 'branco',
+      prata: 'prata', silver: 'prata',
+      azul: 'azul', blue: 'azul', pacific: 'azul', sierra: 'azul',
+      verde: 'verde', green: 'verde', alpine: 'verde',
+      roxo: 'roxo', roxa: 'roxo', purple: 'roxo', violeta: 'roxo',
+      rosa: 'rosa', pink: 'rosa', rose: 'rosa',
+      dourado: 'dourado', dourada: 'dourado', gold: 'dourado', golden: 'dourado',
+      vermelho: 'vermelho', vermelha: 'vermelho', red: 'vermelho',
+      cinza: 'cinza', gray: 'cinza', grey: 'cinza', natural: 'cinza', desert: 'cinza', aurora: 'cinza',
+      // "Titanium"/"Titânio" NÃO é sinônimo automático de Cinza — em vários
+      // produtos reais são SKUs DIFERENTES (ex.: "... TITANIUM COLOR" e
+      // "... CINZA" cadastrados separadamente, com estoques diferentes).
+      // Tratar como cor própria evita casar um pelo outro sem o usuário
+      // pedir; se ele quiser considerar equivalentes, isso é uma decisão
+      // dele via aprendizado (ensinar o vínculo manualmente), não algo
+      // que o sistema decide sozinho.
+      titanium: 'titanium', titanio: 'titanium',
+      bege: 'bege', creme: 'bege',
+      amarelo: 'amarelo', amarela: 'amarelo',
+      marrom: 'marrom',
+      laranja: 'laranja',
+      vinho: 'vinho',
+      transparente: 'transparente'
+    };
+    const CORES_PARA_CHAVE = Object.keys(CORES_CANONICAS).sort(function (a, b) { return b.length - a.length; });
+
+    function extrairCorParaChave(label) {
+      const n = normStr(label);
+      const achadas = CORES_PARA_CHAVE.filter(c => new RegExp('\\b' + c + '\\b').test(n)).map(c => CORES_CANONICAS[c]);
+      return [...new Set(achadas)].sort().join('+');
+    }
+
+    // "labelBusca" é o texto usado pra achar candidatos (o campo "busca" que
+    // a IA gera de propósito SEM cor, pra buscar mais largo no catálogo).
+    // "labelOriginal" é a linha da lista como o usuário colou, COM cor — é
+    // dela que a cor da chave é extraída. Sem separar os dois, duas cores
+    // do mesmo modelo geram a mesma chave (o "busca" delas é idêntico) e
+    // ensinar/excluir numa cor afetaria a outra por engano.
+    function chaveAprendizado(labelBusca, labelOriginal) {
+      labelBusca = (labelBusca || '').trim();
+      if (!labelBusca) return '';
+      const toks = tokensModelo(labelBusca);
+      const base = toks.length ? toks.slice().sort().join('|') : normStr(labelBusca);
+      const fonteCor = (labelOriginal || '').trim() || labelBusca;
+      const cor = extrairCorParaChave(fonteCor);
+      return cor ? base + '::' + cor : base;
+    }
+
+    function carregarAliases() {
+      try { return JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}'); }
+      catch (e) { return {}; }
+    }
+
+    function salvarAliasMap(map) {
+      localStorage.setItem(ALIAS_KEY, JSON.stringify(map));
+      atualizarContadorAprendizado();
+    }
+
+    function carregarPendentes() {
+      try { return JSON.parse(localStorage.getItem(ALIAS_PENDENTES_KEY) || '[]'); }
+      catch (e) { return []; }
+    }
+
+    function salvarPendentes(lista) {
+      localStorage.setItem(ALIAS_PENDENTES_KEY, JSON.stringify(lista));
+    }
+
+    // Envia uma alteração (set/delete/clear) para a planilha, em segundo
+    // plano. Se não houver planilha configurada, ou a rede falhar, a
+    // alteração fica na fila de pendentes e é reenviada na próxima
+    // sincronização — assim nada se perde mesmo offline.
+    async function _enviarAoSheet(payload) {
+      if (!_sheetUrl) return;
+      try {
+        await fetch(_sheetUrl, {
+          method: 'POST',
+          // Content-Type text/plain de propósito: evita o preflight CORS
+          // que o Apps Script não responde bem. O corpo continua sendo JSON.
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        const pendentes = carregarPendentes();
+        pendentes.push(payload);
+        salvarPendentes(pendentes);
+      }
+    }
+
+    // Reenvia tudo que ficou pendente (ex.: feito offline) para a planilha.
+    async function _flushPendentes() {
+      if (!_sheetUrl) return;
+      const pendentes = carregarPendentes();
+      if (!pendentes.length) return;
+      salvarPendentes([]);
+      for (const payload of pendentes) {
+        await _enviarAoSheet(payload);
+      }
+    }
+
+    // Busca a planilha inteira e substitui a cópia local. Chamado ao abrir
+    // o painel e manualmente pelo botão "Sincronizar agora".
+    let _syncFalhou = false;
+
+    // A nuvem (planilha) é a fonte de verdade — o localStorage é só um
+    // fallback para quando a rede estiver indisponível. Por isso esta
+    // função é aguardada (await) antes de qualquer casamento de produtos
+    // (Consultar Lista / Balanço), garantindo que a busca use o que está
+    // na planilha agora, e não uma cópia antiga deste aparelho.
+    async function sincronizarAliasesRemoto(manual) {
+      if (!_sheetUrl) { _syncFalhou = false; atualizarStatusSincronizacao(); return; }
+      if (_sincronizando) {
+        while (_sincronizando) await new Promise(r => setTimeout(r, 50));
+        return;
+      }
+      _sincronizando = true;
+      atualizarStatusSincronizacao('⏳ Buscando aprendizado atualizado na nuvem…');
+      try {
+        await _flushPendentes();
+        const r = await fetch(_sheetUrl + (_sheetUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
+        const d = await r.json();
+        if (d && d.ok && d.aliases) {
+          localStorage.setItem(ALIAS_KEY, JSON.stringify(d.aliases));
+          _ultimaSincronizacao = new Date();
+          _syncFalhou = false;
+          atualizarContadorAprendizado();
+          renderizarAprendizados();
+        } else {
+          _syncFalhou = true;
+        }
+        atualizarStatusSincronizacao();
+      } catch (e) {
+        _syncFalhou = true;
+        atualizarStatusSincronizacao(manual
+          ? '⚠️ Falha ao sincronizar — verifique a URL/conexão.'
+          : '⚠️ Sem conexão com a nuvem agora — usando a última cópia conhecida.');
+      } finally {
+        _sincronizando = false;
+      }
+    }
+
+    function atualizarStatusSincronizacao(mensagemForcada) {
+      const el2 = document.getElementById('ia-sync-status');
+      if (!el2) return;
+      if (mensagemForcada) { el2.textContent = mensagemForcada; return; }
+      if (!_sheetUrl) { el2.textContent = '📵 Sem sincronização — aprendizado salvo só neste aparelho.'; return; }
+      if (_syncFalhou) { el2.textContent = '⚠️ Sem conexão com a nuvem agora — usando a última cópia conhecida (pode estar desatualizada).'; return; }
+      el2.textContent = _ultimaSincronizacao
+        ? '✅ Atualizado com a nuvem às ' + _ultimaSincronizacao.toLocaleTimeString('pt-BR')
+        : '🔗 Planilha configurada — sincronizando…';
+    }
+
+    // Registra que o item da lista corresponde ao produto do sistema
+    // `produto`. labelOriginal (com cor) é o que decide a chave; labelBusca
+    // é só o texto mostrado como "exemplo" quando não há original.
+    // Atualiza a cópia local na hora (feedback imediato) e propaga para a
+    // planilha compartilhada em segundo plano.
+    function ensinarAlias(labelBusca, labelOriginal, produto) {
+      const key = chaveAprendizado(labelBusca, labelOriginal);
+      if (!key || !produto || !produto.id) return;
+      const map = carregarAliases();
+      const atual = map[key] || {};
+      const excluidosAtuais = Array.isArray(atual.excluidos) ? atual.excluidos : [];
+      const entrada = {
+        id: produto.id,
+        nome: produto.nome,
+        exemplo: (labelOriginal || labelBusca || '').trim(),
+        aprendidoEm: new Date().toISOString(),
+        // preserva exclusões já feitas para essa chave (ex.: "nunca sugira X")
+        excluidos: excluidosAtuais.filter(x => String(x) !== String(produto.id))
+      };
+      map[key] = entrada;
+      salvarAliasMap(map);
+      _enviarAoSheet(Object.assign({ action: 'set', key: key }, entrada));
+    }
+
+    // Marca um candidato específico como "nunca sugira de novo para esta
+    // busca" — diferente de ensinar (que aponta o certo), isso é uma
+    // exclusão negativa: útil quando várias cores/variantes do mesmo
+    // modelo aparecem juntas como candidatas e algumas nunca deveriam
+    // valer pra essa busca específica. Recebe a CHAVE já calculada (não um
+    // texto bruto), do mesmo jeito que esquecerAlias.
+    function excluirCandidato(key, produtoId) {
+      if (!key || !produtoId) return;
+      const map = carregarAliases();
+      const atual = map[key] || {};
+      const excluidos = Array.isArray(atual.excluidos) ? atual.excluidos.slice() : [];
+      const idStr = String(produtoId);
+      if (!excluidos.includes(idStr)) excluidos.push(idStr);
+
+      // Contradição: se esse mesmo produto era o "correto" confirmado
+      // (ensinado) para essa chave, excluir precisa desfazer a confirmação
+      // — não faz sentido um produto ser ao mesmo tempo "sempre sugerir" e
+      // "nunca sugerir". Sem isso, buscarVinculosDoItem tirava o produto
+      // da lista pelo filtro de excluídos e depois o readicionava pelo
+      // caminho de promoção do aprendizado, ignorando a exclusão.
+      const eraOProdutoConfirmado = atual.id && String(atual.id) === idStr;
+      const entrada = {
+        id: eraOProdutoConfirmado ? '' : (atual.id || ''),
+        nome: eraOProdutoConfirmado ? '' : (atual.nome || ''),
+        exemplo: atual.exemplo || '',
+        aprendidoEm: atual.aprendidoEm || new Date().toISOString(),
+        excluidos: excluidos
+      };
+      map[key] = entrada;
+      salvarAliasMap(map);
+      _enviarAoSheet(Object.assign({ action: 'set', key: key }, entrada));
+    }
+
+    function esquecerAlias(key) {
+      const map = carregarAliases();
+      delete map[key];
+      salvarAliasMap(map);
+      renderizarAprendizados();
+      _enviarAoSheet({ action: 'delete', key: key });
+    }
+
+    function buscarAlias(labelBusca, labelOriginal) {
+      const key = chaveAprendizado(labelBusca, labelOriginal);
+      if (!key) return null;
+      const map = carregarAliases();
+      return map[key] || null;
+    }
+
+    // Palavras de marca que a IA às vezes inclui, às vezes não, pro MESMO
+    // produto (ex.: "Xiaomi Note 15" numa rodada, "Xiaomi Redmi Note 15" na
+    // seguinte; "Samsung A17" vs "Samsung Galaxy A17"). Isso fragmenta a
+    // chave de aprendizado em duas diferentes pro mesmo produto real, e o
+    // vínculo já ensinado "some" só porque o texto de hoje variou.
+    const TOKENS_MARCA_FLEXIVEIS = new Set(['redmi', 'galaxy', 'xiaomi', 'samsung', 'apple', 'moto', 'motorola']);
+
+    // Remove as palavras de marca flexíveis e devolve o restante ordenado —
+    // é o "núcleo" que realmente distingue um produto (modelo, memória,
+    // conectividade, sufixo Pro/Max/Ultra etc.), sem o ruído da IA variar
+    // se escreveu "Redmi"/"Galaxy" ou não.
+    function nucleoChave(baseTokensStr) {
+      return (baseTokensStr || '').split('|').filter(t => t && !TOKENS_MARCA_FLEXIVEIS.has(t)).sort().join('|');
+    }
+
+    // Como buscarAlias, mas se não achar a chave exata, procura por outra
+    // chave com a MESMA cor e o MESMO núcleo (só a marca variando) antes de
+    // desistir. Isso é o que faz um vínculo confirmado continuar valendo
+    // mesmo quando a IA reformula a busca de um jeito ligeiramente
+    // diferente na próxima consulta.
+    function buscarAliasTolerante(labelBusca, labelOriginal) {
+      const key = chaveAprendizado(labelBusca, labelOriginal);
+      if (!key) return null;
+      const map = carregarAliases();
+      if (map[key]) return map[key];
+
+      const [baseAtual, corAtual] = key.split('::');
+      const nucleoAtual = nucleoChave(baseAtual);
+      if (!nucleoAtual) return null;
+
+      for (const k in map) {
+        const [baseK, corK] = k.split('::');
+        if ((corK || '') !== (corAtual || '')) continue; // cor sempre exata, nunca aproxima
+        if (nucleoChave(baseK) === nucleoAtual) return map[k];
+      }
+      return null;
+    }
+
+    function atualizarContadorAprendizado() {
+      const el2 = document.getElementById('ia-aprendizado-count');
+      if (el2) el2.textContent = Object.keys(carregarAliases()).length;
+    }
 
     async function carregarGrupos() {
       const url = `${API_HOST}/api/proxy?rota=grupos_produtos&loja_id=${lojaIdJeta}`;
@@ -2167,7 +2676,7 @@
     function popularSelectGruposIA() {
       const sel = document.getElementById('ia-grupo-ref');
       if (!sel) return;
-      sel.innerHTML = '<option value="">-- Selecione o Grupo --</option>' +
+      sel.innerHTML = '<option value="">Não comparar com nenhum grupo</option>' +
         _listaGrupos.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
     }
 
@@ -2336,35 +2845,56 @@
       const loja = lojaIdJeta;
       const delay = ms => new Promise(r => setTimeout(r, ms));
 
-      const url1 = new URL(base);
-      url1.searchParams.set('loja_id', loja);
-      url1.searchParams.set('limite', '100');
-      url1.searchParams.set('pagina', '1');
-      const r1 = await fetch(url1.toString());
-      if (!r1.ok) throw new Error('HTTP ' + r1.status);
-      const d1 = await r1.json();
-      if (d1.code !== 200) throw new Error('API retornou código ' + d1.code);
+      // Busca uma página com retentativas (falha de rede/instabilidade
+      // pontual da API não pode virar "página sumida" silenciosa — já
+      // aconteceu de verdade: uma página cortada tirava produtos reais
+      // (com estoque, às vezes até com aprendizado salvo) da busca inteira
+      // sem nenhum aviso, parecendo aleatório e difícil de reproduzir.
+      async function buscarPagina(p, tentativas) {
+        for (let t = 0; t < (tentativas || 3); t++) {
+          try {
+            const url = new URL(base);
+            url.searchParams.set('loja_id', loja);
+            url.searchParams.set('limite', '100');
+            url.searchParams.set('pagina', p);
+            const r = await fetch(url.toString());
+            if (r.ok) {
+              const d = await r.json();
+              if (d.code === 200) return d;
+            }
+          } catch (e) { /* tenta de novo abaixo */ }
+          if (t < (tentativas || 3) - 1) await delay(800 * (t + 1));
+        }
+        return null;
+      }
+
+      const d1 = await buscarPagina(1);
+      if (!d1) throw new Error('Não foi possível carregar o catálogo de produtos (falha na página 1, mesmo após tentar de novo).');
 
       const totalPaginas = d1.meta?.total_paginas || 1;
       let todos = [...(d1.data || [])];
+      let paginasComFalha = 0;
 
       if (onProgress) onProgress(1, totalPaginas, todos.length);
 
       for (let p = 2; p <= totalPaginas; p++) {
-        const url = new URL(base);
-        url.searchParams.set('loja_id', loja);
-        url.searchParams.set('limite', '100');
-        url.searchParams.set('pagina', p);
-        try {
-          const r = await fetch(url.toString());
-          if (r.ok) {
-            const d = await r.json();
-            if (d.code === 200 && d.data) todos = todos.concat(d.data);
-          }
-        } catch (e) { /* ignora página com falha */ }
+        const d = await buscarPagina(p);
+        if (d && d.data) todos = todos.concat(d.data);
+        else paginasComFalha++;
 
         if (onProgress) onProgress(p, totalPaginas, todos.length);
         if ((p - 1) % 3 === 0) await delay(1100);
+      }
+
+      if (paginasComFalha > 0) {
+        // NUNCA guarda um catálogo incompleto como se fosse o completo —
+        // isso já causou produtos reais sumirem da busca e do relatório de
+        // sobras sem aviso nenhum. Melhor falhar alto e visível (o usuário
+        // vê o erro e pode tentar de novo) do que continuar calado com
+        // dados faltando.
+        _prodCache = [];
+        _prodCacheTs = 0;
+        throw new Error('Catálogo carregado incompleto: ' + paginasComFalha + ' de ' + totalPaginas + ' página(s) falharam mesmo após tentar de novo. Tente processar de novo — se persistir, pode ser instabilidade temporária na API da loja.');
       }
 
       _prodCache = todos;
@@ -2497,9 +3027,13 @@
     }
 
     async function buscarVinculosDoItem(item) {
+      const label = item.label || item.sysname || '';
+      const labelOriginal = item.original || label;
+      const alias = buscarAliasTolerante(label, labelOriginal);
+
       let candidatos = [];
       if (_prodCache.length) {
-        const queries = gerarQueries(item.label || item.sysname || '');
+        const queries = gerarQueries(label);
         for (const q of queries) {
           buscarNoCacheLocal(q).forEach(p => {
             if (!candidatos.find(c => c.id === p.id)) candidatos.push(p);
@@ -2514,7 +3048,7 @@
           ).forEach(p => { if (!candidatos.find(c => c.id === p.id)) candidatos.push(p); });
         }
       } else {
-        const queries = gerarQueries(item.label || item.sysname || '');
+        const queries = gerarQueries(label);
         for (const q of queries) {
           try {
             const d = await apiGet({ nome: q });
@@ -2524,24 +3058,93 @@
           if (candidatos.length >= 10) break;
         }
       }
-      if (!candidatos.length) return [];
-      const label = item.label || item.sysname || '';
-      const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
-      const threshold = ehTV ? 0.20 : 0.55;
-      return candidatos
-        .filter(p => !ehAcessorio(p.nome))
-        .filter(p => filtroTecnico(label, p.nome))
-        .map(p => ({ p, score: scoreNome(label, p.nome) }))
-        .filter(({ score }) => score >= threshold)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
-        .map(({ p }) => ({
-          id: p.id, nome: p.nome,
-          sku: p.codigo_interno || p.codigo_barra || '',
-          estoque: Number(p.estoque ?? 0),
-          grupo_id: p.grupo_id,
-          nome_grupo: p.grupo_nome || p.grupo || '',
-        }));
+
+      let resultado = [];
+      if (candidatos.length) {
+        const ehTV = /\bsmart\s*tv\b|\btelevision\b|\bipad\b|\btablet\b/i.test(label);
+        const threshold = ehTV ? 0.20 : 0.55;
+        resultado = candidatos
+          .filter(p => !ehAcessorio(p.nome))
+          .filter(p => filtroTecnico(label, p.nome))
+          .map(p => ({ p, score: scoreNome(label, p.nome) }))
+          .filter(({ score }) => score >= threshold)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 8)
+          .map(({ p }) => ({
+            id: p.id, nome: p.nome,
+            sku: p.codigo_interno || p.codigo_barra || '',
+            estoque: Number(p.estoque ?? 0),
+            grupo_id: p.grupo_id,
+            nome_grupo: p.grupo_nome || p.grupo || '',
+            aprendido: false,
+          }));
+      }
+
+      // Filtra candidatos pela cor já identificada (labelOriginal já vem com
+      // a cor específica dessa linha, ver expandirCoresDaLista). Isso é o
+      // que reduz "sempre aparece mais de um candidato" — antes a busca
+      // ignorava cor completamente e mostrava toda a família de cores do
+      // modelo. Só filtra quando dá pra identificar a cor tanto na busca
+      // quanto em pelo menos um candidato; senão mantém a lista cheia
+      // (fallback seguro — melhor mostrar demais do que esconder o certo).
+      const corAlvo = extrairCorParaChave(labelOriginal);
+      // Fica true quando a cor pedida bateu com pelo menos um candidato de
+      // verdade. Quando fica false (cor pedida, mas nenhum candidato tem
+      // essa cor reconhecível no nome — nome do produto sem cor no texto,
+      // grafia diferente etc.), o filtro "falha aberto" e mantém a lista
+      // cheia — só que aí o 1º colocado pode ser a cor ERRADA por pura
+      // coincidência de score. corConfirmada avisa o chamador pra não
+      // confiar cegamente nesse 1º colocado pra fins de conciliação
+      // (balanço/sobras), só pra exibir candidatos mesmo.
+      let corConfirmada = !corAlvo; // sem cor pedida, não há o que confirmar/negar
+      if (corAlvo && resultado.length > 1) {
+        const filtradoPorCor = resultado.filter(r => extrairCorParaChave(r.nome) === corAlvo);
+        if (filtradoPorCor.length) { resultado = filtradoPorCor; corConfirmada = true; }
+      } else if (corAlvo && resultado.length === 1) {
+        corConfirmada = extrairCorParaChave(resultado[0].nome) === corAlvo;
+      }
+
+      // Candidatos marcados como "nunca sugira" para esta busca (🚫) nunca
+      // aparecem, mesmo que o motor de similaridade (ou o filtro de cor
+      // acima) ache que combinam.
+      const excluidos = (alias && Array.isArray(alias.excluidos)) ? alias.excluidos.map(String) : [];
+      if (excluidos.length) {
+        resultado = resultado.filter(r => !excluidos.includes(String(r.id)));
+      }
+
+      // Se já ensinamos qual produto corresponde a este texto, ele entra
+      // como primeira opção (destacado), sem depender do score/cor da
+      // busca. Nunca promove um produto que também esteja na lista de
+      // excluídos — evita reintroduzir pela promoção o que acabou de ser
+      // removido pelo filtro acima (ex.: excluir o mesmo produto que
+      // estava confirmado como correto).
+      if (alias && alias.id && !excluidos.includes(String(alias.id))) {
+        const jaNoResultado = resultado.find(r => String(r.id) === String(alias.id));
+        if (jaNoResultado) {
+          jaNoResultado.aprendido = true;
+          resultado = [jaNoResultado, ...resultado.filter(r => r !== jaNoResultado)];
+        } else {
+          const prodAprendido = _prodCache.find(p => String(p.id) === String(alias.id))
+            || candidatos.find(p => String(p.id) === String(alias.id));
+          if (prodAprendido) {
+            resultado = [{
+              id: prodAprendido.id, nome: prodAprendido.nome,
+              sku: prodAprendido.codigo_interno || prodAprendido.codigo_barra || '',
+              estoque: Number(prodAprendido.estoque ?? 0),
+              grupo_id: prodAprendido.grupo_id,
+              nome_grupo: prodAprendido.grupo_nome || prodAprendido.grupo || '',
+              aprendido: true,
+            }, ...resultado];
+          }
+        }
+      }
+
+      // Sinaliza pro chamador (a) se o 1º colocado é confiável pra fins de
+      // conciliação — confirmado por cor OU explicitamente ensinado (humano
+      // sempre vence a heurística) — e (b) qual é, pra não precisar
+      // recalcular. Um vínculo aprendido no topo é sempre confiável.
+      resultado.corConfirmada = corConfirmada || (resultado.length > 0 && resultado[0].aprendido === true);
+      return resultado;
     }
 
     // NOVA FUNÇÃO PARA BUSCA DINÂMICA DENTRO DO CARD DO MODAL DA IA
@@ -2575,20 +3178,45 @@
         return `<div class="ia-cand-row">
                   <span class="ia-cand-nome" title="${p.nome}">${p.nome}</span>
                   <span class="ia-cand-est ${ok ? 'ok' : 'zero'}">${ok ? '✓ ' : '⚠ '} ${est}</span>
-                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}" 
-                          data-pid="${p.id}" 
-                          data-pnome="${encodeURIComponent(p.nome)}" 
-                          data-pest="${est}" 
+                  <button class="ia-cand-confirmar ia-confirmar-dinamico" data-pid="${p.id}" data-pnome="${encodeURIComponent(p.nome)}" title="Confirmar que este é o produto certo (não adiciona ao carrinho — funciona mesmo sem estoque)">✓</button>
+                  <button class="ia-cand-btn ${ok ? 'add ia-add-vinc-dinamico' : 'dis'}"
+                          data-pid="${p.id}"
+                          data-pnome="${encodeURIComponent(p.nome)}"
+                          data-pest="${est}"
+                          title="Adicionar ao carrinho"
                           ${!ok ? 'disabled' : ''}>+</button>
                 </div>`;
       }).join('');
 
+      function ensinarDaBuscaDinamica(pid, nome) {
+        const item0 = _iaResultados[idx];
+        const buscaTxt = item0 ? (item0.busca || item0.nome || q) : q;
+        const originalTxt = item0 ? (item0.nome || item0.busca || q) : q;
+        ensinarAlias(buscaTxt, originalTxt, { id: pid, nome: nome });
+      }
+
       resDiv.querySelectorAll('.ia-add-vinc-dinamico').forEach(b => {
         b.addEventListener('click', function () {
-          adicionarAoCarrinho({ id: this.dataset.pid, nome: decodeURIComponent(this.dataset.pnome), estoque: parseInt(this.dataset.pest) });
-          this.textContent = '✓';
-          this.className = 'ia-cand-btn dis';
-          this.disabled = true;
+          const nome = decodeURIComponent(this.dataset.pnome);
+          adicionarAoCarrinho({ id: this.dataset.pid, nome: nome, estoque: parseInt(this.dataset.pest) });
+          ensinarDaBuscaDinamica(this.dataset.pid, nome);
+          mostrarToast('🧠 Aprendido: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '"');
+          resDiv.querySelectorAll('button').forEach(bb => { bb.disabled = true; bb.style.opacity = '.5'; });
+          this.textContent = '✓ adicionado';
+        });
+      });
+
+      // Confirma o vínculo SEM depender de estoque > 0 — antes só dava pra
+      // ensinar clicando em "+", que fica desabilitado quando o produto
+      // está zerado, tornando impossível confirmar um candidato sem
+      // estoque (mesmo quando ele é, de fato, o produto certo).
+      resDiv.querySelectorAll('.ia-confirmar-dinamico').forEach(b => {
+        b.addEventListener('click', function () {
+          const nome = decodeURIComponent(this.dataset.pnome);
+          ensinarDaBuscaDinamica(this.dataset.pid, nome);
+          mostrarToast('🧠 Confirmado: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '" (não adicionado ao carrinho)');
+          resDiv.querySelectorAll('.ia-confirmar-dinamico').forEach(bb => { bb.disabled = true; bb.style.opacity = '.5'; });
+          this.textContent = '✓✓';
         });
       });
     }
@@ -2601,6 +3229,14 @@
       localStorage.setItem(IA_PROMPT_KEY, this.value);
     });
 
+    // Provedor de IA: Groq é o padrão; DeepSeek fica disponível só pra
+    // quem quiser testar/comparar. A escolha fica salva no navegador.
+    const IA_PROVIDER_KEY = 'jeta_ia_provider_v1';
+    document.getElementById('ia-provider').value = localStorage.getItem(IA_PROVIDER_KEY) || 'groq';
+    document.getElementById('ia-provider').addEventListener('change', function () {
+      localStorage.setItem(IA_PROVIDER_KEY, this.value);
+    });
+
     document.getElementById('ia-restaurar').addEventListener('click', function () {
       document.getElementById('ia-prompt').value = IA_PROMPT_DEFAULT;
       localStorage.setItem(IA_PROMPT_KEY, IA_PROMPT_DEFAULT);
@@ -2610,11 +3246,137 @@
     document.getElementById('btn-abrir-ia-lote').addEventListener('click', function () {
       document.getElementById('ia-passo1').style.display = 'flex';
       document.getElementById('ia-passo2').style.display = 'none';
+      document.getElementById('ia-passo-aprendizado').style.display = 'none';
       document.getElementById('ia-erro').style.display = 'none';
       document.getElementById('ia-add-todos').style.display = 'none';
+      document.getElementById('ia-mover-grupo').style.display = 'none';
       document.getElementById('ia-resumo').textContent = '';
       document.getElementById('ia-lote-overlay').classList.add('open');
       setTimeout(function () { document.getElementById('ia-raw').focus(); }, 80);
+      if (_sheetUrl) sincronizarAliasesRemoto(); // atualiza com o que outros dispositivos ensinaram
+    });
+
+    // Reconstrói um texto legível a partir da CHAVE (marca/modelo/memória +
+    // cor), usado quando não há "exemplo" salvo — é o caso dos vínculos
+    // criados só por exclusão (🚫), que nunca tiveram um texto de busca
+    // guardado junto.
+    function formatarChaveLegivel(key) {
+      if (!key) return '(busca vazia)';
+      const partes = key.split('::');
+      const tokens = (partes[0] || '').split('|').filter(Boolean);
+      const texto = tokens.join(' ').toUpperCase() || '(modelo não identificado)';
+      if (!partes[1]) return texto;
+      const cores = partes[1].split('+').map(function (c) { return c.charAt(0).toUpperCase() + c.slice(1); }).join('/');
+      return texto + ' · ' + cores;
+    }
+
+    // Busca o nome do produto no catálogo já carregado, pra não mostrar só
+    // um ID cru na tela. Se o catálogo ainda não carregou ou o produto não
+    // existe mais, mostra o ID mesmo (ainda dá pra "Esquecer" o vínculo).
+    function nomeProdutoPorId(id) {
+      const p = _prodCache.find(function (p) { return String(p.id) === String(id); });
+      return p ? p.nome : ('produto #' + id);
+    }
+
+    function renderizarAprendizados() {
+      const map = carregarAliases();
+      const entradas = Object.entries(map).sort((a, b) => (b[1].aprendidoEm || '').localeCompare(a[1].aprendidoEm || ''));
+      const lista = document.getElementById('ia-aprendizado-lista');
+      atualizarContadorAprendizado();
+      if (!entradas.length) {
+        lista.innerHTML = '<div class="status-msg">Nenhum vínculo aprendido ainda. Use "➕ Buscar outro produto" ou os botões "+" / "🚫" nos candidatos da Busca em Lote — a escolha fica salva aqui.</div>';
+        return;
+      }
+      lista.innerHTML = entradas.map(function ([key, v]) {
+        const temExemplo = v.exemplo && v.exemplo.trim();
+        const rotulo = temExemplo ? v.exemplo : formatarChaveLegivel(key);
+        const rotuloHtml = temExemplo
+          ? rotulo
+          : rotulo + ' <span class="rotulo-chave">(busca sem exemplo salvo)</span>';
+
+        const temCerto = v.id && v.nome;
+        const excluidos = Array.isArray(v.excluidos) ? v.excluidos.filter(Boolean) : [];
+
+        let linhas = '';
+        if (temCerto) {
+          linhas += '<span class="alvo ok">✅ Sempre sugerir automaticamente: <b>' + v.nome + '</b></span>';
+        }
+        if (excluidos.length) {
+          const nomesExcl = excluidos.map(nomeProdutoPorId).join(', ');
+          linhas += '<span class="alvo excl">🚫 Nunca sugerir: ' + nomesExcl + '</span>';
+        }
+        if (!temCerto && !excluidos.length) {
+          linhas += '<span class="alvo">(sem regra ativa — pode esquecer)</span>';
+        }
+
+        return '<div class="ia-aprendizado-item">' +
+          '<div class="info">' +
+          '<span class="rotulo" title="' + rotulo + '">' + rotuloHtml + '</span>' +
+          linhas +
+          '</div>' +
+          '<button class="btn-esquecer" data-key="' + encodeURIComponent(key) + '">🗑️ Esquecer tudo</button>' +
+          '</div>';
+      }).join('');
+      lista.querySelectorAll('.btn-esquecer').forEach(function (b) {
+        b.addEventListener('click', function () { esquecerAlias(decodeURIComponent(this.dataset.key)); });
+      });
+    }
+
+    document.getElementById('ia-ver-aprendizados').addEventListener('click', async function () {
+      document.getElementById('ia-passo1').style.display = 'none';
+      document.getElementById('ia-passo2').style.display = 'none';
+      document.getElementById('ia-passo-aprendizado').style.display = 'flex';
+      document.getElementById('ia-sheet-url').value = _sheetUrl;
+      document.getElementById('ia-aprendizado-lista').innerHTML = '<div class="status-msg">⏳ Buscando na nuvem…</div>';
+      atualizarStatusSincronizacao();
+      await sincronizarAliasesRemoto();
+      renderizarAprendizados();
+    });
+
+    document.getElementById('ia-aprendizado-limpar').addEventListener('click', function () {
+      if (!confirm('Apagar todos os vínculos aprendidos (em todos os dispositivos sincronizados)?')) return;
+      localStorage.setItem(ALIAS_KEY, '{}');
+      atualizarContadorAprendizado();
+      renderizarAprendizados();
+      _enviarAoSheet({ action: 'clear' });
+      mostrarToast('🗑️ Aprendizado limpo');
+    });
+
+    document.getElementById('ia-sheet-url-salvar').addEventListener('click', function () {
+      const url = document.getElementById('ia-sheet-url').value.trim();
+      _sheetUrl = url;
+      localStorage.setItem(SHEET_URL_KEY, url);
+      atualizarStatusSincronizacao();
+      if (url) {
+        mostrarToast('🔗 Planilha conectada — sincronizando…');
+        sincronizarAliasesRemoto(true);
+      } else {
+        mostrarToast('📵 Sincronização desativada — usando só este aparelho.');
+      }
+    });
+
+    document.getElementById('ia-sync-agora').addEventListener('click', function () {
+      if (!_sheetUrl) { mostrarToast('⚠️ Configure a URL da planilha primeiro.'); return; }
+      sincronizarAliasesRemoto(true);
+    });
+
+    document.getElementById('ia-sync-enviar-locais').addEventListener('click', async function () {
+      if (!_sheetUrl) { mostrarToast('⚠️ Configure a URL da planilha primeiro.'); return; }
+      const map = carregarAliases();
+      const entradas = Object.entries(map);
+      if (!entradas.length) { mostrarToast('Nada para enviar — nenhum aprendizado local.'); return; }
+      if (!confirm(`Enviar ${entradas.length} vínculo(s) deste aparelho para a planilha?`)) return;
+      const btn = this;
+      btn.disabled = true;
+      let enviados = 0;
+      for (const [key, v] of entradas) {
+        atualizarStatusSincronizacao('⬆️ Enviando ' + (enviados + 1) + '/' + entradas.length + '…');
+        await _enviarAoSheet(Object.assign({ action: 'set', key: key }, v));
+        enviados++;
+      }
+      btn.disabled = false;
+      mostrarToast('✅ ' + enviados + ' vínculo(s) enviados para a planilha');
+      sincronizarAliasesRemoto();
     });
 
     function fecharIaLote() {
@@ -2626,19 +3388,214 @@
       if (e.target === this) fecharIaLote();
     });
 
-    async function chamarGroq(system, user) {
+    // DEBUG TEMPORÁRIO — guarda a última requisição/resposta da IA (com
+    // contagem de tokens) pra investigar consumo anormal. Remover depois
+    // (junto com o bloco #ia-debug-box no HTML e renderizarDebugIA abaixo).
+    let _debugIA = null;
+    let _debugBalanco = null;
+
+    // DEBUG TEMPORÁRIO — mostra, pra cada linha da lista, quais candidatos
+    // o motor de busca achou e qual foi contado como "resolvido" (topId),
+    // mais a lista COMPLETA de produtos do grupo com estoque > 0 pra dar
+    // pra achar (Ctrl+F) um produto específico e ver exatamente onde ele
+    // apareceu (ou não apareceu) durante a conciliação.
+    function renderizarDebugBalanco() {
+      const box = document.getElementById('ia-debug-balanco-box');
+      const conteudo = document.getElementById('ia-debug-balanco-conteudo');
+      if (!box || !conteudo || !_debugBalanco) return;
+
+      const linhasTraco = _debugBalanco.tracoConciliacao.map(function (t) {
+        const candStr = t.candidatos.map(function (c) {
+          return '    ' + (c.aprendido ? '🧠 ' : '') + c.nome + ' (id=' + c.id + ', estoque=' + c.estoque + ')';
+        }).join('\n');
+        return t.original + '  [cor alvo: ' + (t.corAlvo || '(nenhuma)') + ', cor confirmada: ' + t.corConfirmada + ']\n' +
+          '  → resolvido: ' + (t.topId ? (t.topNome + ' (id=' + t.topId + ')') : '(NENHUM — não contou pra conciliação)') + '\n' +
+          (candStr || '    (nenhum candidato encontrado)');
+      }).join('\n\n');
+
+      const listaGrupo = _debugBalanco.produtosNoGrupo
+        .filter(function (p) { return p.estoque > 0; })
+        .map(function (p) { return p.nome + '  (id=' + p.id + ', estoque=' + p.estoque + ')' + (_debugBalanco.idsListados.includes(p.id) ? '  ✅ contado na lista' : '  ⚠️ NÃO contado'); })
+        .join('\n');
+
+      conteudo.innerHTML =
+        '<div style="font-size:11px;color:#888;margin-bottom:6px;">Grupo: ' + _debugBalanco.grupoId + ' · ' + _debugBalanco.totalProdutosNoGrupo + ' produtos no grupo · use Ctrl+F do navegador pra achar um produto específico.</div>' +
+        '<div class="ia-label" style="margin-bottom:2px;">Rastro por linha da lista:</div>' +
+        '<pre class="ia-debug-pre">' + linhasTraco.replace(/</g, '&lt;') + '</pre>' +
+        '<div class="ia-label" style="margin:8px 0 2px;">Todos os produtos COM ESTOQUE neste grupo (✅ = contado como presente na lista, ⚠️ = não contado → deveria estar em "sobras"):</div>' +
+        '<pre class="ia-debug-pre">' + listaGrupo.replace(/</g, '&lt;') + '</pre>';
+      box.style.display = 'block';
+    }
+
+    function renderizarDebugIA() {
+      const box = document.getElementById('ia-debug-box');
+      const conteudo = document.getElementById('ia-debug-conteudo');
+      if (!box || !conteudo || !_debugIA) return;
+
+      const u = _debugIA.usage;
+      const resumoTokens = u
+        ? '🤖 Provedor: <b>' + _debugIA.provider + '</b><br>🔢 Entrada: <b>' + (u.prompt_tokens ?? '?') + '</b>' +
+          ' &nbsp;·&nbsp; Saída: <b>' + (u.completion_tokens ?? '?') + '</b>' +
+          ' &nbsp;·&nbsp; Total: <b>' + (u.total_tokens ?? '?') + '</b>' +
+          (u.completion_tokens_details ? '<br><span style="color:#888;">detalhes de saída: ' + JSON.stringify(u.completion_tokens_details) + '</span>' : '') +
+          (u.prompt_tokens_details ? '<br><span style="color:#888;">detalhes de entrada: ' + JSON.stringify(u.prompt_tokens_details) + '</span>' : '')
+        : '⚠️ A resposta não trouxe "usage" (contagem de tokens) — veja a resposta bruta abaixo.';
+
+      conteudo.innerHTML =
+        '<div style="font-size:12px; margin-bottom:8px;">' + resumoTokens +
+        '<br>⏱️ ' + _debugIA.duracaoMs + 'ms &nbsp;·&nbsp; ' + _debugIA.horario + '</div>' +
+        '<div class="ia-label" style="margin-bottom:2px;">Requisição enviada (raw):</div>' +
+        '<pre class="ia-debug-pre">' + JSON.stringify(_debugIA.requisicao, null, 2).replace(/</g, '&lt;') + '</pre>' +
+        '<div class="ia-label" style="margin:8px 0 2px;">Resposta recebida (raw):</div>' +
+        '<pre class="ia-debug-pre">' + JSON.stringify(_debugIA.resposta, null, 2).replace(/</g, '&lt;') + '</pre>';
+      box.style.display = 'block';
+    }
+
+    // Rede de segurança determinística — NÃO depende da IA acertar. Já
+    // aconteceu de verdade: a IA recebe uma linha "Preto/Azul/Titanium" e
+    // devolve cores:["Preto","Azul"], comendo o Titanium sem avisar — o
+    // produto correspondente simplesmente nunca entra na conciliação,
+    // porque nenhuma linha "cor: titanium" chega a ser gerada. Isso pode
+    // acontecer com qualquer cor, não só titanium, e com qualquer provider.
+    // Aqui comparamos a lista de cores que a IA devolveu para cada item
+    // contra a linha ORIGINAL que o usuário colou (achada por sobreposição
+    // de tokens do modelo, não pela ordem) e devolvemos qualquer cor
+    // conhecida que apareça no texto bruto e não esteja no array da IA.
+    function recuperarCoresPerdidas(itensBrutos, rawTexto) {
+      const linhas = (rawTexto || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      if (!linhas.length) return itensBrutos;
+      const linhasTokens = linhas.map(function (l) { return { linha: l, tokens: new Set(tokensModelo(l)) }; });
+
+      itensBrutos.forEach(function (item) {
+        if (typeof item !== 'object' || !item) return;
+        const busca = item.busca || item.original || '';
+        const tokensItem = tokensModelo(busca);
+        if (!tokensItem.length) return;
+
+        // Acha a linha bruta que mais se parece com este item (maior
+        // fração dos tokens do modelo presentes na linha) — exige uma
+        // sobreposição alta pra evitar associar o item à linha errada.
+        let melhor = null, melhorScore = 0;
+        linhasTokens.forEach(function (lt) {
+          const inter = tokensItem.filter(function (t) { return lt.tokens.has(t); }).length;
+          const score = inter / tokensItem.length;
+          if (score > melhorScore) { melhorScore = score; melhor = lt.linha; }
+        });
+        if (!melhor || melhorScore < 0.6) return;
+
+        // Varre cada cor que a IA já devolveu procurando TODAS as cores
+        // canônicas contidas nela — não só um match exato. Isso é o que
+        // faz nomes compostos ("Titanium Prata") contarem como já cobrindo
+        // "titanium" E "prata", em vez de serem tratados como uma cor
+        // desconhecida e gerar uma re-inclusão duplicada e errada delas
+        // separadas.
+        const jaTem = new Set();
+        (Array.isArray(item.cores) ? item.cores : []).forEach(function (c) {
+          const nc = normStr(c);
+          CORES_PARA_CHAVE.forEach(function (k) {
+            if (new RegExp('\\b' + k + '\\b').test(nc)) jaTem.add(CORES_CANONICAS[k]);
+          });
+        });
+        const nLinha = normStr(melhor);
+        CORES_PARA_CHAVE.forEach(function (c) {
+          if (!new RegExp('\\b' + c + '\\b').test(nLinha)) return;
+          const canon = CORES_CANONICAS[c];
+          if (jaTem.has(canon)) return;
+          jaTem.add(canon);
+          if (!Array.isArray(item.cores)) item.cores = [];
+          item.cores.push(canon.charAt(0).toUpperCase() + canon.slice(1));
+        });
+      });
+      return itensBrutos;
+    }
+
+    // Recebe o array cru que a IA devolveu (um objeto por LINHA da lista,
+    // com "cores": [...]) e multiplica em uma entrada por cor — trabalho
+    // mecânico que não precisa de IA nenhuma, é de graça e instantâneo.
+    // Também descarta duplicatas (mesma busca + mesma cor).
+    function expandirCoresDaLista(itens) {
+      const vistos = new Set();
+      const expandido = [];
+      itens.forEach(function (itemRaw) {
+        if (typeof itemRaw === 'string') {
+          const chave = itemRaw.trim().toLowerCase();
+          if (chave && !vistos.has(chave)) { vistos.add(chave); expandido.push({ original: itemRaw, busca: itemRaw }); }
+          return;
+        }
+        const busca = itemRaw.busca || itemRaw.original || 'Produto';
+        const originalBase = itemRaw.original || busca;
+        let cores = Array.isArray(itemRaw.cores) ? itemRaw.cores.filter(Boolean)
+          : (itemRaw.cor ? [itemRaw.cor] : []); // "cor" (string) = compatibilidade com prompts antigos/customizados
+        if (!cores.length) cores = [null];
+
+        cores.forEach(function (cor) {
+          const original = cor ? (busca + ' - ' + cor) : originalBase;
+          // Dedup pela linha ORIGINAL, não pela "busca". A IA às vezes
+          // simplifica demais a busca (ex.: duas TVs 40" de modelos
+          // diferentes viram a mesma busca genérica) — usar "busca" aqui
+          // fazia produtos DIFERENTES serem descartados como se fossem o
+          // mesmo. A linha original é o que de fato distingue duas
+          // ocorrências repetidas do mesmo produto (varejo/atacado).
+          const chave = (originalBase + '::' + (cor || '')).toLowerCase();
+          if (vistos.has(chave)) return;
+          vistos.add(chave);
+          expandido.push({ original: original, busca: busca });
+        });
+      });
+      return expandido;
+    }
+
+    // Endpoint continua em /api/groq (não mexe), mas agora aceita "provider"
+    // pra escolher o modelo por trás — Groq é o padrão, DeepSeek é opção de
+    // teste selecionável no dropdown ao lado do prompt.
+    async function chamarIA(system, user) {
+      const provider = document.getElementById('ia-provider').value || 'groq';
+      const corpoRequisicao = { systemPrompt: system, messages: user, provider: provider };
+      const inicio = Date.now();
+
       const resp = await fetch('https://caixa-kal3.vercel.app/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt: system, messages: user })
+        body: JSON.stringify(corpoRequisicao)
       });
-      if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
-      const d = await resp.json();
-      if (d.choices && d.choices[0] && d.choices[0].message)
-        return d.choices[0].message.content.trim();
-      throw new Error('Resposta inesperada do Groq');
+
+      const textoResp = await resp.text();
+      let d = null;
+      try { d = JSON.parse(textoResp); } catch (e) { /* resposta não era JSON válido */ }
+
+      _debugIA = {
+        horario: new Date().toLocaleTimeString('pt-BR'),
+        duracaoMs: Date.now() - inicio,
+        provider: provider,
+        modelo: (d && d.model) ? d.model : null,
+        requisicao: corpoRequisicao,
+        resposta: d !== null ? d : textoResp,
+        usage: (d && d.usage) ? d.usage : null
+      };
+      renderizarDebugIA();
+
+      if (!resp.ok) {
+        if (d && Array.isArray(d.tentativas) && d.tentativas.length) {
+          const resumo = d.tentativas.map(function (t) { return t.modelo + ': ' + t.motivo; }).join(' | ');
+          throw new Error('IA (' + provider + ') — todos os modelos falharam: ' + resumo);
+        }
+        const msgErro = (d && (d.error?.message || d.error)) || ('HTTP ' + resp.status);
+        const brutoDet = d && d.details ? (typeof d.details === 'string' ? d.details : JSON.stringify(d.details)) : '';
+        throw new Error('IA (' + provider + ') ' + msgErro + (brutoDet ? ' — ' + brutoDet.slice(0, 300) : ''));
+      }
+      const conteudo = (d && d.choices && d.choices[0] && d.choices[0].message) ? d.choices[0].message.content : null;
+      const modeloUsado = (d && d.model) ? ' (modelo ' + d.model + ')' : '';
+      if (!conteudo || !conteudo.trim())
+        throw new Error('IA (' + provider + ')' + modeloUsado + ' retornou resposta vazia. Tente novamente.');
+      return conteudo.trim();
     }
 
+    // "Consultar Lista" e "Balanço" eram duas funções quase idênticas (as
+    // duas limpam a lista com IA e casam cada item com buscarVinculosDoItem)
+    // — a única diferença real do Balanço era comparar o resultado com um
+    // grupo. Por isso viraram um fluxo só: se um grupo estiver selecionado,
+    // a comparação (fora do grupo / sobras) aparece junto dos mesmos cards,
+    // sem duplicar a busca nem perder a possibilidade de corrigir/ensinar.
     document.getElementById('ia-processar').addEventListener('click', async function () {
       const raw = document.getElementById('ia-raw').value.trim();
       if (!raw) {
@@ -2647,6 +3604,13 @@
         return;
       }
       document.getElementById('ia-erro').style.display = 'none';
+      document.getElementById('ia-mover-grupo').style.display = 'none';
+      document.getElementById('ia-balanco-res').style.display = 'none';
+      document.getElementById('ia-debug-balanco-box').style.display = 'none';
+      _debugBalanco = null;
+      resultadosBuscaLoteGlobal = [];
+      _ultimasSobrasBalanco = [];
+      const grupoId = document.getElementById('ia-grupo-ref').value;
       const btn = this;
       btn.disabled = true; btn.textContent = '⏳ Processando…';
 
@@ -2654,12 +3618,20 @@
         const prompt = document.getElementById('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
         localStorage.setItem(IA_PROMPT_KEY, prompt);
 
-        const resposta = await chamarGroq(
+        const resposta = await chamarIA(
           'Você retorna apenas JSON válido, sem markdown, sem explicações.',
           prompt + '\n\nLista:\n' + raw
         );
-        const itens = JSON.parse(resposta.replace(/```json|```/g, '').trim());
-        if (!Array.isArray(itens) || !itens.length) throw new Error('IA não retornou lista válida.');
+        let itensBrutos;
+        try {
+          itensBrutos = JSON.parse(resposta.replace(/```json|```/g, '').trim());
+        } catch (e) {
+          throw new Error('A IA não devolveu um JSON válido. Resposta: "' + resposta.slice(0, 400) + '"');
+        }
+        if (!Array.isArray(itensBrutos) || !itensBrutos.length) throw new Error('IA não retornou lista válida.');
+        recuperarCoresPerdidas(itensBrutos, raw);
+        const itens = expandirCoresDaLista(itensBrutos);
+        if (!itens.length) throw new Error('Nenhum produto identificado na lista.');
 
         document.getElementById('ia-passo1').style.display = 'none';
         document.getElementById('ia-passo2').style.display = 'flex';
@@ -2670,6 +3642,10 @@
         grid.innerHTML = '';
         _iaResultados = [];
 
+        status.textContent = '🔗 Atualizando aprendizado com a nuvem…';
+        prog.style.width = '2%';
+        await sincronizarAliasesRemoto();
+
         status.textContent = 'Baixando catálogo de produtos…';
         prog.style.width = '5%';
         await carregarCacheProdutos(function (pag, total) {
@@ -2677,18 +3653,26 @@
           status.textContent = 'Catálogo: ' + pag + '/' + total + '…';
         });
 
+        // O grupo é só um filtro sobre o catálogo que já foi carregado
+        // acima — não dispara nenhuma requisição nova.
+        const produtosNoGrupo = grupoId ? await carregarProdutosDoGrupo(grupoId) : [];
+
         var comEst = 0, semEst = 0, naoAch = 0;
+        const idsListados = new Set();
+        const tracoConciliacao = []; // DEBUG TEMPORÁRIO — ver renderizarDebugBalanco
 
         for (var i = 0; i < itens.length; i++) {
+          // itens já vem normalizado por expandirCoresDaLista: {original, busca}
           let itemRaw = itens[i];
-          let nomeOriginal = typeof itemRaw === 'string' ? itemRaw : (itemRaw.original || itemRaw.busca || "Produto");
-          let nomeBusca = typeof itemRaw === 'string' ? itemRaw : (itemRaw.busca || itemRaw.original || "Produto");
+          let nomeOriginal = itemRaw.original || itemRaw.busca || "Produto";
+          let nomeBusca = itemRaw.busca || itemRaw.original || "Produto";
 
           status.textContent = '(' + (i + 1) + '/' + itens.length + ') ' + nomeOriginal.substring(0, 45) + '…';
           prog.style.width = (40 + Math.round(((i + 1) / itens.length) * 60)) + '%';
 
-          const vinculos = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
+          const vinculos = await buscarVinculosDoItem({ label: nomeBusca, original: nomeOriginal, sysname: '', sku: '', prodId: null });
           const card = document.createElement('div');
+          card.id = 'ia-card-' + i;
 
           let baseHtml = '';
 
@@ -2700,12 +3684,43 @@
             (nomeOriginal !== nomeBusca ? '<span style="font-size:10px; color:#888;">Buscando: ' + nomeBusca + '</span>' : '') +
             '</div>';
 
+          // Só conta como "resolvido" pra fins de conciliação (sobra/fora
+          // do grupo/relatório de divergências) quando a cor foi confirmada
+          // ou o produto foi ensinado manualmente. Sem isso, um candidato
+          // ambíguo (cor não identificável em nenhuma opção) podia virar o
+          // "1º colocado" só por coincidência de score e ser contado como
+          // certo — fazendo um produto de verdade sumir do relatório de
+          // sobras. O card continua mostrando os candidatos pra escolha
+          // manual de qualquer forma (isso não depende de "top").
+          const top = (vinculos && vinculos.length && vinculos.corConfirmada) ? vinculos[0] : null;
+
+          if (grupoId) {
+            tracoConciliacao.push({
+              original: nomeOriginal, busca: nomeBusca,
+              corAlvo: extrairCorParaChave(nomeOriginal),
+              qtdCandidatos: vinculos ? vinculos.length : 0,
+              corConfirmada: !!(vinculos && vinculos.corConfirmada),
+              candidatos: (vinculos || []).map(v => ({ id: v.id, nome: v.nome, estoque: v.estoque, aprendido: !!v.aprendido })),
+              topId: top ? top.id : null, topNome: top ? top.nome : null
+            });
+          }
+
+          const foraDoGrupo = !!(grupoId && top && String(top.grupo_id) !== String(grupoId));
+          const foraBadgeHtml = '<span id="ia-fora-badge-' + i + '" title="Este produto está cadastrado em outro grupo" ' +
+            'style="background:#e74c3c;color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;margin-top:2px;' + (foraDoGrupo ? '' : 'display:none;') + '">' +
+            '🚩 ' + (top ? (top.nome_grupo || 'outro grupo') : '') + '</span>';
+
+          if (grupoId) {
+            resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: top, foraDoGrupo: foraDoGrupo });
+            if (top) idsListados.add(top.id);
+          }
+
           if (!vinculos || !vinculos.length) {
             baseHtml =
               '<div class="ia-card-head" style="align-items:flex-start;">' +
               infoHtml +
               '<span class="ia-badge nf" style="margin-top:2px;">N/A</span>' +
-              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔍 Buscar API</button>' +
+              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">➕ Buscar e adicionar produto</button>' +
               '</div>' +
               '<div style="font-size:12px;color:#c0392b;">Não encontrado no sistema</div>';
             naoAch++;
@@ -2714,23 +3729,34 @@
             const temEst = total > 0;
             if (temEst) comEst++; else semEst++;
 
+            var chaveItem = encodeURIComponent(chaveAprendizado(nomeBusca, nomeOriginal));
             var candidatos = '';
             vinculos.forEach(function (v) {
+              var dadosComuns = ' data-idx="' + i + '" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '" data-grupoid="' + (v.grupo_id != null ? v.grupo_id : '') + '" data-nomegrupo="' + encodeURIComponent(v.nome_grupo || '') + '"';
               candidatos +=
                 '<div class="ia-cand-row">' +
+                (v.aprendido
+                  ? '<span class="ia-cand-badge-aprendido" title="Vínculo ensinado anteriormente">🧠</span>' +
+                    '<button class="ia-cand-esquecer" data-key="' + chaveItem + '" title="Este vínculo está errado? Clique para esquecer.">🗑️</button>'
+                  : '') +
                 '<span class="ia-cand-nome" title="' + v.nome + '">' + v.nome + '</span>' +
                 '<span class="ia-cand-est ' + (v.estoque > 0 ? 'ok' : 'zero') + '">' + (v.estoque > 0 ? '✓ ' : '⚠ ') + v.estoque + '</span>' +
+                '<button class="ia-cand-confirmar ia-confirmar-vinc"' + dadosComuns + ' title="Confirmar que este é o produto certo (não adiciona ao carrinho — funciona mesmo sem estoque)">✓</button>' +
                 (v.estoque > 0
-                  ? '<button class="ia-cand-btn add ia-add-vinc" data-pid="' + v.id + '" data-pnome="' + encodeURIComponent(v.nome) + '" data-pest="' + v.estoque + '">+</button>'
-                  : '<button class="ia-cand-btn dis" disabled>+</button>') +
+                  ? '<button class="ia-cand-btn add ia-add-vinc"' + dadosComuns + ' title="Adicionar ao carrinho">+</button>'
+                  : '<button class="ia-cand-btn dis" disabled title="Sem estoque — use o ✓ pra confirmar sem adicionar ao carrinho">+</button>') +
+                '<button class="ia-cand-excluir" data-key="' + chaveItem + '" data-pid="' + v.id + '" title="Não é esse produto — nunca sugerir de novo para esta busca">🚫</button>' +
                 '</div>';
             });
 
             baseHtml =
               '<div class="ia-card-head" style="align-items:flex-start;">' +
               infoHtml +
-              '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '" style="margin-top:2px;">' + (temEst ? '✓ ' : '⚠ ') + total + '</span>' +
-              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">🔄 Trocar</button>' +
+              '<div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">' +
+              '<span class="ia-badge ' + (temEst ? 'ok' : 'zero') + '">' + (temEst ? '✓ ' : '⚠ ') + total + '</span>' +
+              (grupoId ? foraBadgeHtml : '') +
+              '</div>' +
+              '<button class="ia-btn-trocar ia-toggle-search" data-idx="' + i + '" style="margin-top:2px;">➕ Buscar outro produto</button>' +
               '</div>' +
               candidatos;
           }
@@ -2738,7 +3764,8 @@
           // Adiciona a área oculta de busca em todos os cards
           baseHtml +=
             '<div class="ia-dd-area" id="ia-dd-area-' + i + '">' +
-            '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto na API..." value="' + nomeBusca + '">' +
+            '<div style="font-size:10px;color:#888;">Digite parte do nome, busque no catálogo completo e clique "+" para adicionar esse produto como candidato desta linha (a escolha já fica ensinada):</div>' +
+            '<input type="text" class="ia-dd-search" id="ia-dd-search-' + i + '" placeholder="Buscar produto no catálogo..." value="' + nomeBusca + '">' +
             '<div class="ia-dd-results" id="ia-dd-res-' + i + '"></div>' +
             '</div>';
 
@@ -2746,13 +3773,83 @@
           card.innerHTML = baseHtml;
 
           grid.appendChild(card);
-          _iaResultados.push({ nome: nomeOriginal, vinculos: vinculos || [] });
+          _iaResultados.push({ nome: nomeOriginal, busca: nomeBusca, vinculos: vinculos || [] });
+        }
+
+        // Compartilhado entre "+" (adiciona ao carrinho) e "✓" (só
+        // confirma): ensina o vínculo e, se houver grupo selecionado,
+        // corrige a divergência mostrada nesse card (produto certo
+        // substitui o palpite automático usado no relatório/Copiar
+        // Divergências).
+        function ensinarECorrigirDivergencia(botao) {
+          const nome = decodeURIComponent(botao.dataset.pnome);
+          const idx = botao.dataset.idx;
+          const idxItem = _iaResultados[idx];
+          const buscaTxt = idxItem ? (idxItem.busca || idxItem.nome || nome) : nome;
+          const originalTxt = idxItem ? (idxItem.nome || idxItem.busca || nome) : nome;
+          ensinarAlias(buscaTxt, originalTxt, { id: botao.dataset.pid, nome: nome });
+
+          if (grupoId && resultadosBuscaLoteGlobal[idx]) {
+            const nomeGrupoEscolhido = decodeURIComponent(botao.dataset.nomegrupo || '');
+            const foraAgora = String(botao.dataset.grupoid || '') !== String(grupoId);
+            resultadosBuscaLoteGlobal[idx].vinculo = {
+              id: botao.dataset.pid, nome: nome, estoque: parseInt(botao.dataset.pest),
+              grupo_id: botao.dataset.grupoid || '', nome_grupo: nomeGrupoEscolhido
+            };
+            resultadosBuscaLoteGlobal[idx].foraDoGrupo = foraAgora;
+            const badge = document.getElementById('ia-fora-badge-' + idx);
+            if (badge) {
+              badge.style.display = foraAgora ? '' : 'none';
+              badge.textContent = '🚩 ' + (nomeGrupoEscolhido || 'outro grupo');
+            }
+          }
+          return nome;
         }
 
         grid.querySelectorAll('.ia-add-vinc').forEach(function (b) {
           b.addEventListener('click', function () {
             adicionarAoCarrinho({ id: b.dataset.pid, nome: decodeURIComponent(b.dataset.pnome), estoque: parseInt(b.dataset.pest) });
+            ensinarECorrigirDivergencia(b);
             b.textContent = '✓'; b.className = 'ia-cand-btn dis'; b.disabled = true;
+            const linha = b.closest('.ia-cand-row');
+            const confirmar = linha && linha.querySelector('.ia-confirmar-vinc');
+            if (confirmar) { confirmar.disabled = true; confirmar.style.opacity = '.5'; confirmar.textContent = '✓✓'; }
+          });
+        });
+
+        // ✓ Confirmar: ensina o vínculo SEM depender de estoque > 0. Antes
+        // só dava pra ensinar clicando em "+", que fica desabilitado com
+        // estoque zerado — tornando impossível confirmar candidato sem
+        // estoque, mesmo quando ele é, de fato, o produto certo.
+        grid.querySelectorAll('.ia-confirmar-vinc').forEach(function (b) {
+          b.addEventListener('click', function () {
+            const nome = ensinarECorrigirDivergencia(b);
+            mostrarToast('🧠 Confirmado: "' + (nome.length > 30 ? nome.substring(0, 30) + '…' : nome) + '" (não adicionado ao carrinho)');
+            b.disabled = true; b.style.opacity = '.5'; b.textContent = '✓✓';
+          });
+        });
+
+        // Botão 🗑️ ao lado do selo 🧠: desfaz o vínculo aprendido ali mesmo,
+        // sem precisar abrir o painel "Aprendizados" separado.
+        grid.querySelectorAll('.ia-cand-esquecer').forEach(function (b) {
+          b.addEventListener('click', function () {
+            esquecerAlias(decodeURIComponent(this.dataset.key));
+            mostrarToast('🗑️ Vínculo esquecido. Use "➕ Buscar outro produto" para ensinar o produto correto.');
+            const linha = this.closest('.ia-cand-row');
+            linha.style.opacity = '0.4';
+            this.disabled = true;
+          });
+        });
+
+        // 🚫 em qualquer candidato: nunca mais sugerir esse produto para
+        // esta mesma busca (cor/modelo errado aparecendo junto dos certos).
+        grid.querySelectorAll('.ia-cand-excluir').forEach(function (b) {
+          b.addEventListener('click', function () {
+            excluirCandidato(decodeURIComponent(this.dataset.key), this.dataset.pid);
+            mostrarToast('🚫 Não vai mais sugerir esse produto para essa busca.');
+            const linha = this.closest('.ia-cand-row');
+            linha.style.opacity = '0.3';
+            linha.querySelectorAll('button').forEach(function (bb) { bb.disabled = true; });
           });
         });
 
@@ -2778,10 +3875,40 @@
           });
         });
 
+        let resumoTxt = '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+
+        if (grupoId) {
+          const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
+          _ultimasSobrasBalanco = sobras;
+          document.getElementById('ia-mover-grupo').style.display = 'flex';
+          const resDiv = document.getElementById('ia-balanco-res');
+          resDiv.style.display = 'block';
+          resDiv.innerHTML = sobras.length
+            ? '<h4>⚠️ Itens em estoque NESTE GRUPO que não aparecem na sua lista (' + sobras.length + '):</h4>' +
+              sobras.map(p => '<div class="ia-balanco-item"><span>' + p.nome.substring(0, 45) + '</span><span class="ia-balanco-badge">' + p.estoque + ' em estoque</span></div>').join('')
+            : '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
+          resumoTxt += '  •  🔀 ' + resultadosBuscaLoteGlobal.filter(r => r.foraDoGrupo).length + ' fora do grupo  •  📦 ' + sobras.length + ' sobrando no grupo';
+
+          // DEBUG TEMPORÁRIO — rastro completo da conciliação: pra cada
+          // linha da lista, quais candidatos apareceram e qual foi
+          // "resolvido" (topId); mais a lista inteira de produtos do grupo
+          // (produtosNoGrupo) com id/nome/estoque, pra buscar diretamente
+          // (Ctrl+F) um produto específico e ver se ele apareceu como
+          // candidato de alguma linha ou não apareceu em lugar nenhum.
+          _debugBalanco = {
+            grupoId: grupoId,
+            totalProdutosNoGrupo: produtosNoGrupo.length,
+            produtosNoGrupo: produtosNoGrupo.map(function (p) { return { id: p.id, nome: p.nome, estoque: Number(p.estoque || 0) }; }),
+            idsListados: [...idsListados],
+            tracoConciliacao: tracoConciliacao,
+            sobras: sobras.map(function (p) { return { id: p.id, nome: p.nome, estoque: p.estoque }; })
+          };
+          renderizarDebugBalanco();
+        }
+
         status.textContent = 'Concluído!';
         prog.style.width = '100%';
-        document.getElementById('ia-resumo').textContent =
-          '✅ ' + comEst + ' c/ estoque  ⚠️ ' + semEst + ' zerado  ❌ ' + naoAch + ' não encontrado';
+        document.getElementById('ia-resumo').textContent = resumoTxt;
         if (comEst > 0) document.getElementById('ia-add-todos').style.display = 'block';
 
       } catch (err) {
@@ -2805,185 +3932,70 @@
     });
 
     // --- RECONCILIAÇÃO / BALANÇO DE ESTOQUE ---
+    // Não faz uma 2ª busca paginada própria pro grupo (chegou a ter uma,
+    // foi removida): o grupo é sempre um SUBCONJUNTO do catálogo completo
+    // que carregarCacheProdutos já baixa (com paginação completa) pra
+    // busca/match. Duas rodadas de paginação em sequência (grupo inteiro +
+    // catálogo inteiro) dobravam o número de requisições à API da loja,
+    // aumentando o risco de alguma página ser cortada por limite de taxa e
+    // o _prodCache ficar incompleto — o que fazia produtos DE VERDADE
+    // (com ou sem aprendizado salvo) sumirem da busca inteira, não só do
+    // Balanço. Reaproveitar o mesmo cache elimina essa 2ª rodada de vez.
     async function carregarProdutosDoGrupo(grupoId) {
       if (!grupoId) return _prodCache;
-      const url = `${API_HOST}/api/produtos?loja_id=${lojaIdJeta}&grupo_id=${grupoId}&limite=500`;
-      try {
-        const r = await fetch(url);
-        const d = await r.json();
-        return (d.code === 200 && d.data) ? d.data : [];
-      } catch (e) { return []; }
+      await carregarCacheProdutos();
+      return _prodCache.filter(function (p) { return String(p.grupo_id) === String(grupoId); });
     }
 
-    async function realizarBalanco() {
-      const raw = el('ia-raw').value.trim();
-      const grupoId = el('ia-grupo-ref').value;
-      if (!raw) { mostrarToast('⚠ Cole a lista primeiro'); return; }
-      if (!grupoId) { mostrarToast('⚠ Selecione um grupo para o balanço'); return; }
+    // Este painel é apenas de CONFERÊNCIA: ele nunca grava nada no sistema
+    // da loja. Esta função só monta um relatório de texto (divergências
+    // entre a lista e o grupo) para você copiar e resolver manualmente
+    // onde preferir (no próprio sistema, por exemplo).
+    function copiarDivergenciasGrupo() {
+      const grupoNome = el('ia-grupo-ref').selectedOptions[0]?.textContent || 'grupo selecionado';
+      const foraDoGrupo = resultadosBuscaLoteGlobal.filter(r => r.vinculo && r.foraDoGrupo);
+      const naoEncontrados = resultadosBuscaLoteGlobal.filter(r => !r.vinculo);
 
-      el('ia-passo1').style.display = 'none';
-      el('ia-passo2').style.display = 'flex';
-      el('ia-status').innerHTML = '⚖️ Realizando Balanço...';
-      el('ia-balanco-res').style.display = 'none';
-      el('ia-grid').innerHTML = '';
-      el('ia-add-todos').style.display = 'none';
-
-      try {
-        const prompt = el('ia-prompt').value.trim() || IA_PROMPT_DEFAULT;
-        const respText = await chamarGroq('Você retorna apenas JSON válido, sem markdown, sem explicações.', prompt + '\n\nLista:\n' + raw);
-        
-        let itensListados;
-        try {
-          itensListados = JSON.parse(respText.replace(/```json|```/g, '').trim());
-        } catch (e) {
-          console.error('Erro de parse JSON da IA:', respText, e);
-          el('ia-status').innerHTML = '❌ Resposta da IA com formato inválido. Tente novamente.';
-          el('ia-balanco').disabled = false;
-          return;
-        }
-
-        if (!Array.isArray(itensListados) || !itensListados.length) {
-          el('ia-status').innerHTML = '❌ Não foi possível identificar itens na lista.';
-          return;
-        }
-
-        const produtosNoGrupo = await carregarProdutosDoGrupo(grupoId);
-        const idsListados = new Set();
-        resultadosBuscaLoteGlobal = [];
-        
-        el('ia-status').innerHTML = `🔍 Cruzando ${itensListados.length} itens com ${produtosNoGrupo.length} do grupo...`;
-
-        for (let i = 0; i < itensListados.length; i++) {
-          const item = itensListados[i];
-          const nomeOriginal = typeof item === 'string' ? item : (item.original || item.busca || "Produto");
-          const nomeBusca = typeof item === 'string' ? item : (item.busca || item.original);
-          
-          el('ia-prog').style.width = ((i + 1) / itensListados.length * 100) + '%';
-          const vs = await buscarVinculosDoItem({ label: nomeBusca, sysname: '', sku: '', prodId: null });
-          
-          if (vs && vs.length > 0) {
-            const v = vs[0];
-            idsListados.add(v.id);
-            const foraDoGrupo = String(v.grupo_id) !== String(grupoId);
-            resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: v, foraDoGrupo });
-          } else {
-            resultadosBuscaLoteGlobal.push({ original: nomeOriginal, vinculo: null });
-          }
-        }
-
-        const sobras = produtosNoGrupo.filter(p => Number(p.estoque || 0) > 0 && !idsListados.has(p.id));
-        el('ia-status').innerHTML = '✅ Balanço Concluído';
-        el('ia-mover-grupo').style.display = 'flex';
-
-        if (sobras.length > 0) {
-          el('ia-balanco-res').style.display = 'block';
-          el('ia-balanco-res').innerHTML = `<h4>⚠️ Itens em Estoque NESTE GRUPO não mencionados na lista:</h4>` +
-            sobras.map(p => `<div class="ia-balanco-item"><span>${p.nome.substring(0, 45)}...</span><span class="ia-balanco-badge">${p.estoque} em estoque</span></div>`).join('');
-        } else {
-          el('ia-balanco-res').style.display = 'block';
-          el('ia-balanco-res').innerHTML = '<h4>✅ Tudo OK! Todos os itens com estoque deste grupo constam na sua lista.</h4>';
-        }
-
-        el('ia-grid').innerHTML = resultadosBuscaLoteGlobal.map((res, idx) => `
-          <div class="ia-res-card" style="background:#fff; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid ${res.foraDoGrupo ? '#e74c3c' : '#eee'};">
-            <div style="font-weight:700; font-size:12px; margin-bottom:2px; display:flex; align-items:center; gap:8px;">
-              ${res.original}
-              ${res.foraDoGrupo ? '<span title="Este produto pertence a OUTRO grupo" style="background:#e74c3c; color:#fff; font-size:9px; padding:1px 5px; border-radius:4px;">🚩 OUTRO GRUPO</span>' : ''}
-            </div>
-            ${res.vinculo ? `
-              <div class="ia-cand-row" style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:6px; border-radius:6px;">
-                <span style="flex:1; font-size:11px;">${res.vinculo.nome}</span>
-                <span class="ia-cand-est ok" style="font-size:11px;">✓ ${res.vinculo.estoque}</span>
-                <button class="ia-cand-btn add" onclick="adicionarAoCarrinho({id:'${res.vinculo.id}', nome:'${res.vinculo.nome}', estoque:${res.vinculo.estoque}})">+</button>
-              </div>
-              ${res.foraDoGrupo ? `<div style="font-size:10px; color:#c0392b; margin-top:4px;">Grupo Atual: <b>${res.vinculo.nome_grupo || 'Não definido'}</b></div>` : ''}
-            ` : `<div style="font-size:11px; color:#e74c3c;">Não vinculado automaticamente.</div>`}
-          </div>
-        `).join('');
-
-      } catch (err) {
-        console.error(err);
-        el('ia-status').innerHTML = '❌ Erro ao realizar balanço';
-      }
-      el('ia-balanco').disabled = false;
-    }
-
-    async function moverProdutosParaGrupo() {
-      const grupoId = el('ia-grupo-ref').value;
-      const vinculados = resultadosBuscaLoteGlobal.filter(r => r.vinculo);
-      if (!vinculados.length) { mostrarToast('⚠️ Nenhum produto vinculado para mover.'); return; }
-      if (!confirm(`Deseja mover ${vinculados.length} produtos para este grupo?`)) return;
-
-      el('ia-mover-grupo').disabled = true;
-      el('ia-prog').style.width = '0%';
-      let sucessos = 0;
-
-      for (let i = 0; i < vinculados.length; i++) {
-        const item = vinculados[i];
-        el('ia-status').innerHTML = `📦 Movendo (${i + 1}/${vinculados.length}): ${item.vinculo.nome.substring(0, 30)}...`;
-        el('ia-prog').style.width = ((i + 1) / vinculados.length * 100) + '%';
-
-        try {
-          let produtoParaUpdate = null;
-          
-          // 1. Tenta buscar como Produto
-          const resGetP = await fetch(`${API_HOST}/api/proxy?rota=produtos/${item.vinculo.id}&loja_id=${lojaIdJeta}`);
-          const dataGetP = await resGetP.json();
-          
-          if (dataGetP.code === 200) {
-            produtoParaUpdate = dataGetP.data;
-          } else {
-            // 2. Se falhar, tenta buscar como Serviço
-            const resGetS = await fetch(`${API_HOST}/api/proxy?rota=servicos/${item.vinculo.id}&loja_id=${lojaIdJeta}`);
-            const dataGetS = await resGetS.json();
-            if (dataGetS.code === 200) {
-              produtoParaUpdate = dataGetS.data;
-            }
-          }
-
-          let res;
-          if (produtoParaUpdate) {
-            // 3. Update com objeto COMPLETO (Estratégia mais segura)
-            produtoParaUpdate.grupo_id = Number(grupoId);
-            res = await fetch(`${API_HOST}/api/proxy?rota=${produtoParaUpdate.id_servico ? 'servicos' : 'produtos'}/${item.vinculo.id}&loja_id=${lojaIdJeta}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(produtoParaUpdate)
-            });
-          } else {
-            // 4. Fallback: Se não conseguir buscar dados, tenta update parcial 
-            res = await fetch(`${API_HOST}/api/proxy?rota=produtos/${item.vinculo.id}&loja_id=${lojaIdJeta}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ grupo_id: Number(grupoId) })
-            });
-          }
-
-          if (res.ok) {
-            sucessos++;
-          } else {
-            const errData = await res.json().catch(() => ({}));
-            console.error('Falha ao mover:', item.vinculo.nome, errData);
-          }
-        } catch (e) { 
-          console.error('Erro de rede ao mover:', item.vinculo.nome, e); 
-        }
-
-        if (i > 0 && i % 3 === 0) await new Promise(r => setTimeout(r, 800)); // Evita rate limit
+      if (!foraDoGrupo.length && !naoEncontrados.length && !_ultimasSobrasBalanco.length) {
+        mostrarToast('✅ Nenhuma divergência para copiar — tudo bate.');
+        return;
       }
 
-      el('ia-status').innerHTML = `✅ Concluído: ${sucessos} movidos com sucesso!`;
-      el('ia-mover-grupo').disabled = false;
-      mostrarToast(`📦 ${sucessos} produtos movidos.`);
+      const linhas = [`📋 DIVERGÊNCIAS — grupo "${grupoNome}" — ${new Date().toLocaleDateString('pt-BR')}`, ''];
+
+      if (foraDoGrupo.length) {
+        linhas.push(`🔀 Itens da lista cadastrados em OUTRO grupo (${foraDoGrupo.length}):`);
+        foraDoGrupo.forEach(r => linhas.push(`  • ${r.vinculo.nome} — está em "${r.vinculo.nome_grupo || 'não definido'}"`));
+        linhas.push('');
+      }
+
+      if (naoEncontrados.length) {
+        linhas.push(`❌ Itens da lista NÃO encontrados no sistema (${naoEncontrados.length}):`);
+        naoEncontrados.forEach(r => linhas.push(`  • ${r.original}`));
+        linhas.push('');
+      }
+
+      if (_ultimasSobrasBalanco.length) {
+        linhas.push(`⚠️ Itens com estoque neste grupo que NÃO aparecem na lista (${_ultimasSobrasBalanco.length}):`);
+        _ultimasSobrasBalanco.forEach(p => linhas.push(`  • ${p.nome} — ${p.estoque} un.`));
+      }
+
+      const texto = linhas.join('\n');
+      navigator.clipboard.writeText(texto).then(() => {
+        mostrarToast('📋 Divergências copiadas — cole no WhatsApp ou onde precisar.');
+      }).catch(() => {
+        mostrarToast('⚠️ Não foi possível copiar automaticamente.');
+      });
     }
 
-    el('ia-balanco').addEventListener('click', () => { el('ia-balanco').disabled = true; realizarBalanco(); });
-    el('ia-mover-grupo').addEventListener('click', moverProdutosParaGrupo);
+    el('ia-mover-grupo').addEventListener('click', copiarDivergenciasGrupo);
 
     // Inicialização imediata dos grupos e cache silencioso
     window.addEventListener('DOMContentLoaded', () => {
       carregarGrupos();
-      carregarCacheProdutos(); // Carrega em background para a IA e busca inteligente
+      carregarCacheProdutos().catch(function () { /* tentativa em background — falha aqui só significa que o próximo uso real vai tentar de novo (e aí sim mostrar erro) */ }); // Carrega em background para a IA e busca inteligente
+      atualizarContadorAprendizado();
+      if (_sheetUrl) sincronizarAliasesRemoto(); // puxa aprendizados de outros dispositivos
     });
   </script>
 </body>

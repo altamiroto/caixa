@@ -143,8 +143,35 @@
             font-size: 0.88rem; font-weight: 600; color: var(--text-secondary);
         }
         .mini-opcao:hover { border-color: var(--primary-color); background: rgba(76,175,80,0.07); }
-        .mini-opcao input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
+        .mini-opcao input[type="checkbox"], .mini-opcao input[type="radio"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
         .mini-opcao.ativo { border-color: var(--primary-color); background: rgba(76,175,80,0.12); color: var(--primary-color); }
+        .sim-toggle {
+            display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;
+            padding: 6px 12px; border-radius: 20px; margin: 4px 0 15px;
+            font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+            background: var(--bg-primary); border: 1px solid var(--border-color);
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .sim-toggle:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .sim-toggle.aberto { color: var(--primary-color); border-color: var(--primary-color); background: rgba(76,175,80,0.08); }
+        .sim-toggle-arrow { display: inline-block; font-size: 0.7em; transition: transform 0.2s ease; }
+        .sim-toggle.aberto .sim-toggle-arrow { transform: rotate(90deg); }
+        .sim-toggle-sub { font-weight: 400; opacity: 0.8; }
+        .sim-card { padding: 14px; }
+        .sim-table-wrap { max-height: 320px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+        .sim-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .sim-table th {
+            position: sticky; top: 0; background: var(--bg-primary); color: var(--text-secondary);
+            text-align: right; padding: 6px 8px; font-weight: 700; border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .sim-table th:first-child, .sim-table td:first-child { text-align: left; }
+        .sim-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--border-color); white-space: nowrap; color: var(--text-primary); }
+        .sim-table tr:last-child td { border-bottom: none; }
+        .sim-table tbody tr:nth-child(even) td { background: rgba(128,128,128,0.06); }
+        .sim-table td.sim-liquido { color: var(--primary-color); font-weight: 700; }
+        .sim-taxa-inline { display: block; color: var(--text-secondary); font-size: 0.85em; font-weight: 400; }
+        .sim-vazio { color: var(--text-secondary); font-size: 0.85rem; padding: 10px 2px; }
         .taxa-chip {
             display: inline-flex; align-items: center; gap: 5px;
             background: var(--bg-primary); border: 2px solid var(--border-color);
@@ -780,6 +807,35 @@
                         </label>
                     </div>
                     <div id="parcelaTaxasRow" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sim-toggle" id="simToggle" onclick="toggleSimulador()">
+            <span class="sim-toggle-arrow" id="simToggleArrow">▸</span>
+            <span>🔄 Simulador rápido <span class="sim-toggle-sub">(líquido ↔ cobrar)</span></span>
+        </div>
+        <div id="simuladorContent" class="collapsible-content">
+            <div class="section-card sim-card">
+                <div class="input-group">
+                    <label for="simValor">Valor (R$):</label>
+                    <div class="input-with-icon"><span class="input-icon">💲</span>
+                    <input type="number" id="simValor" placeholder="Ex: 500.00" step="0.01" oninput="calcularSimulador()"></div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                    <label class="mini-opcao ativo" id="labelSimLiquido">
+                        <input type="radio" name="simDirecao" id="simDirLiquido" value="liquido" checked onchange="calcularSimulador()"> 💰 Quero RECEBER líquido
+                    </label>
+                    <label class="mini-opcao" id="labelSimCobrar">
+                        <input type="radio" name="simDirecao" id="simDirCobrar" value="cobrar" onchange="calcularSimulador()"> 🧾 Vou COBRAR do cliente
+                    </label>
+                </div>
+                <label class="mini-opcao" id="labelSimMostrarTaxa" style="margin-bottom:10px;">
+                    <input type="checkbox" id="simMostrarTaxa" onchange="calcularSimulador()"> 📊 Mostrar taxa
+                </label>
+                <div id="simResultado"></div>
+                <div class="button-row" style="margin-top:10px;">
+                    <button type="button" class="btn btn-primary" onclick="copiarSimulador()">📋 Copiar</button>
                 </div>
             </div>
         </div>
@@ -2843,6 +2899,78 @@ Capa silicone R$ 50,00
                 enviarLog('copiou_resultado');
             });
         }
+
+        // ── Simulador Rápido (valor líquido ↔ valor a cobrar) ──────────────
+        // Isolado de propósito: só LÊ getTaxa() (mesmas taxas configuradas
+        // na ferramenta/perfil, pra bater com o cálculo principal), nunca
+        // escreve em nenhum estado do calculador principal — não pode
+        // "estragar" a ferramenta de cima. Mostra TODAS as formas (Pix,
+        // Débito, 1x a 18x) sempre, independente do que está selecionado
+        // na seção "Parcelas" ou em "Opções Avançadas" ali em cima.
+        let _simAberto = false;
+        function toggleSimulador() {
+            _simAberto = !_simAberto;
+            document.getElementById('simuladorContent').classList.toggle('show', _simAberto);
+            document.getElementById('simToggle').classList.toggle('aberto', _simAberto);
+            if (_simAberto) calcularSimulador();
+        }
+        function _simFmt(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function _simTodasFormas() {
+            const formas = [{ n: 'pix', rotulo: 'Pix/Dinheiro' }, { n: 'debito', rotulo: 'Débito' }];
+            for (let n = 1; n <= 18; n++) formas.push({ n, rotulo: n + 'x' });
+            return formas;
+        }
+        function _simCalcular(valor, direcaoLiquido, n) {
+            const taxa = getTaxa(n);
+            const totalCobrar = direcaoLiquido ? valor / (1 - taxa) : valor;
+            const totalLiquido = direcaoLiquido ? valor : valor * (1 - taxa);
+            return { taxa, totalCobrar, totalLiquido };
+        }
+        function calcularSimulador() {
+            const valor = parseFloat(document.getElementById('simValor').value);
+            const resultadoDiv = document.getElementById('simResultado');
+            const direcaoLiquido = document.getElementById('simDirLiquido').checked;
+            document.getElementById('labelSimLiquido').classList.toggle('ativo', direcaoLiquido);
+            document.getElementById('labelSimCobrar').classList.toggle('ativo', !direcaoLiquido);
+            if (isNaN(valor) || valor <= 0) { resultadoDiv.innerHTML = '<div class="sim-vazio">Digite um valor acima para simular.</div>'; return; }
+            const mostrarTaxa = document.getElementById('simMostrarTaxa').checked;
+            // Taxa vai como anotação pequena dentro da célula "Cobrar" (não
+            // como coluna extra) — com 4 colunas fixas, a tabela sempre cabe
+            // na largura do card, sem precisar de scroll horizontal.
+            const linhas = _simTodasFormas().map(({ n, rotulo }) => {
+                const { taxa, totalCobrar, totalLiquido } = _simCalcular(valor, direcaoLiquido, n);
+                const ehParcela = typeof n === 'number' && n > 1;
+                const parcelaTd = ehParcela ? `<td>R$ ${_simFmt(totalCobrar / n)}</td>` : `<td>—</td>`;
+                const taxaTxt = mostrarTaxa ? `<span class="sim-taxa-inline">${(taxa * 100).toFixed(2)}%</span>` : '';
+                return `<tr><td>${rotulo}</td>${parcelaTd}<td>R$ ${_simFmt(totalCobrar)}${taxaTxt}</td><td class="sim-liquido">R$ ${_simFmt(totalLiquido)}</td></tr>`;
+            }).join('');
+            resultadoDiv.innerHTML = `<div class="sim-table-wrap"><table class="sim-table">
+                <thead><tr><th>Forma</th><th>Parcela</th><th>Cobrar</th><th>Líquido</th></tr></thead>
+                <tbody>${linhas}</tbody>
+            </table></div>`;
+        }
+        function copiarSimulador() {
+            const valor = parseFloat(document.getElementById('simValor').value);
+            if (isNaN(valor) || valor <= 0) { showToast('⚠️ Digite um valor primeiro'); return; }
+            const direcaoLiquido = document.getElementById('simDirLiquido').checked;
+            const mostrarTaxa = document.getElementById('simMostrarTaxa').checked;
+            const cabecalho = direcaoLiquido ? `💰 Simulação — recebendo R$ ${_simFmt(valor)} líquido:` : `🧾 Simulação — cobrando R$ ${_simFmt(valor)}:`;
+            const linhas = _simTodasFormas().map(({ n, rotulo }) => {
+                const { taxa, totalCobrar, totalLiquido } = _simCalcular(valor, direcaoLiquido, n);
+                const ehParcela = typeof n === 'number' && n > 1;
+                const taxaTxt = mostrarTaxa ? ` (taxa ${(taxa * 100).toFixed(2)}%)` : '';
+                const desc = ehParcela
+                    ? `${n}x de R$ ${_simFmt(totalCobrar / n)} — total R$ ${_simFmt(totalCobrar)} — líquido R$ ${_simFmt(totalLiquido)}`
+                    : `cobrar R$ ${_simFmt(totalCobrar)} — líquido R$ ${_simFmt(totalLiquido)}`;
+                return `${rotulo}: ${desc}${taxaTxt}`;
+            });
+            const texto = [cabecalho, ...linhas].join('\n');
+            navigator.clipboard.writeText(texto).then(() => {
+                showToast('✅ Simulação copiada!');
+                enviarLog('copiou_simulador');
+            });
+        }
+
         function limparCampos() {
             if (!confirm('⚠️ Deseja realmente limpar todos os campos?')) return;
             valorBaseInput.value = ''; parcelaEspecificaInput.value = '';

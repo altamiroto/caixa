@@ -3,350 +3,481 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>Comparador de Listas de Fornecedores</title>
     <style>
         :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #2196F3;
-            --accent-color: #ff9800;
-            --danger-color: #f44336;
-            --bg-primary: #f4f4f4;
-            --bg-secondary: #fff;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --border-color: #ccc;
-            --shadow: 0 2px 5px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 12px rgba(0,0,0,0.2);
+            --primary: #43a047;
+            --primary-strong: #2e7d32;
+            --secondary: #1e88e5;
+            --secondary-strong: #1565c0;
+            --danger: #d32f2f;
+            --bg: #eef0f3;
+            --surface: #ffffff;
+            --surface-2: #f4f5f7;
+            --text: #22252b;
+            --muted: #5f6673;
+            --border: #d5d9e0;
+            --result-bg: #eaf3fe;
+            --result-border: #9cc7f3;
+            --hl-main: #ffe45c;
+            --hl-sub: #80deea;
+            --hl-text: #1b1b1b;
+            --shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04);
+            --shadow-hover: 0 6px 18px rgba(0, 0, 0, .12);
+            --radius: 10px;
+            --mono: ui-monospace, 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #66bb6a;
+                --primary-strong: #81c784;
+                --secondary: #4ba3f0;
+                --secondary-strong: #90caf9;
+                --danger: #ef6b6b;
+                --bg: #0f1115;
+                --surface: #181b22;
+                --surface-2: #20242d;
+                --text: #e6e8ee;
+                --muted: #a0a8b6;
+                --border: #2e3440;
+                --result-bg: #132235;
+                --result-border: #2d5580;
+                --shadow: 0 1px 3px rgba(0, 0, 0, .5);
+                --shadow-hover: 0 6px 18px rgba(0, 0, 0, .6);
+            }
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Sem isto, qualquer regra com display vence o atributo hidden. */
+        [hidden] { display: none !important; }
+        html { -webkit-text-size-adjust: 100%; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, #e0e0e0 100%);
-            color: var(--text-primary);
-            padding: 15px;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 14px;
+            line-height: 1.45;
+        }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px;
+            overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 15px;
-            background: var(--bg-secondary);
-            padding: 15px;
-            border-radius: 8px;
+            margin-bottom: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: var(--radius);
             box-shadow: var(--shadow);
         }
+        h1 { color: var(--primary); margin-bottom: 4px; font-size: 1.45rem; }
+        .header p { color: var(--muted); font-size: .85rem; }
 
-        h1 { color: var(--primary-color); margin-bottom: 5px; font-size: 1.5rem; }
-        .header p { color: var(--text-secondary); font-size: 0.85rem; }
-
-        .controls {
-            background: var(--bg-secondary);
-            padding: 12px 15px;
-            border-radius: 8px;
+        .painel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: var(--radius);
             box-shadow: var(--shadow);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
+        .painel-titulo { font-size: .95rem; margin-bottom: 10px; }
 
         .control-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .control-group { display: flex; flex-direction: column; }
-        .control-group label { font-weight: 600; margin-bottom: 5px; color: var(--text-primary); font-size: 0.8rem; }
-
-        .supplier-count-row {
-            display: flex;
-            align-items: flex-end;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
             gap: 10px;
             margin-bottom: 10px;
         }
-        .supplier-count-row .control-group { flex: 0 0 180px; }
-        .supplier-count-row .btn { height: 36px; padding: 0 16px; font-size: 13px; flex-shrink: 0; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .control-group label { font-weight: 600; font-size: .8rem; }
+        .control-group label small { font-weight: 400; color: var(--muted); }
 
-        input[type="text"],
-        input[type="number"],
-        select {
+        input[type="text"], input[type="number"], input[type="password"], input[type="url"],
+        select, textarea {
             width: 100%;
             padding: 8px 10px;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
+            font: inherit;
             font-size: 14px;
-            transition: all 0.3s ease;
-            background: var(--bg-secondary);
-        }
-
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
-        }
-
-        .container { display: grid; gap: 12px; margin-bottom: 15px; }
-
-        .text-area-wrapper {
-            background: var(--bg-secondary);
-            padding: 10px;
+            color: var(--text);
+            background: var(--surface);
+            border: 1.5px solid var(--border);
             border-radius: 8px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            transition: border-color .2s, box-shadow .2s;
         }
-
-        .text-area-wrapper:hover { box-shadow: var(--shadow-hover); }
-
-        .supplier-header { margin-bottom: 8px; }
-        .supplier-header input {
-            font-weight: 600;
-            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
-            font-size: 13px;
-            padding: 6px 8px;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 8px;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 12px;
-            resize: vertical;
-            font-family: 'Courier New', monospace;
-            transition: all 0.3s ease;
-            line-height: 1.4;
-        }
-
-        textarea:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 160, 71, .18);
         }
 
-        .filtered-output {
-            width: 100%;
-            min-height: 100px;
-            padding: 8px;
-            border: 2px solid var(--secondary-color);
-            border-radius: 6px;
-            background: #e3f2fd;
-            margin-top: 8px;
-            overflow: auto;
-            white-space: pre-wrap;
-            display: none;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            line-height: 1.4;
-        }
-
-        .highlight { background-color: #ffeb3b; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
-        .highlight-sub { background-color: #80deea; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
-
-        .search-legend { font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; display: none; }
-        .search-legend.show { display: block; }
-        .search-legend span { display: inline-block; margin-right: 12px; }
-        .legend-color { display: inline-block; width: 18px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+        .supplier-count-row { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+        .supplier-count-row .control-group { flex: 0 0 130px; }
 
         .btn {
-            padding: 10px 18px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-        }
-
-        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
-        .btn:active { transform: translateY(0); }
-        .btn-primary { background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%); color: white; }
-        .btn-secondary { background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%); color: white; }
-        .btn-accent { background: linear-gradient(135deg, var(--accent-color) 0%, #f57c00 100%); color: white; }
-        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-primary); }
-        .btn:disabled { background: #cccccc; cursor: not-allowed; transform: none; }
-
-        .action-buttons {
-            background: var(--bg-secondary);
-            padding: 12px 15px;
+            min-height: 40px;
+            padding: 8px 16px;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            border: 1.5px solid transparent;
             border-radius: 8px;
-            box-shadow: var(--shadow);
-            margin-bottom: 15px;
-            text-align: center;
+            cursor: pointer;
+            transition: transform .15s, box-shadow .15s;
+            touch-action: manipulation;
         }
-
-        .action-buttons .control-group { margin-bottom: 10px; }
-
+        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-hover); }
+        .btn:active { transform: none; }
+        .btn-primary { background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%); }
+        .btn-secondary { background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); }
+        .btn-outline { background: transparent; border-color: var(--border); color: var(--text); }
+        .btn-perigo { color: var(--danger); }
+        .btn-sm { min-height: 36px; padding: 4px 12px; font-size: 13px; }
+        .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
         .button-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
-        #historicoSelect { margin-top: 8px; display: none; }
-
-        .advanced-section {
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            margin-bottom: 15px;
-            overflow: hidden;
-        }
-
-        .advanced-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
-            color: white;
-            padding: 12px 15px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .advanced-header:hover { background: linear-gradient(135deg, #45a049 0%, var(--primary-color) 100%); }
-
-        .toggle-icon { font-size: 18px; transition: transform 0.3s; }
-        .toggle-icon.rotated { transform: rotate(180deg); }
-        .advanced-content { padding: 15px; display: none; }
-        .advanced-content.active { display: block; }
-
-        .api-info {
-            background: #e3f2fd;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            border-left: 4px solid var(--secondary-color);
-        }
-
-        .ai-prompt-area {
-            width: 100%;
-            min-height: 150px;
-            padding: 10px;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 12px;
-            resize: vertical;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 12px;
-        }
-
-        .ai-result {
-            margin-top: 15px;
-            padding: 12px;
-            background: #f9f9f9;
-            border: 2px solid var(--primary-color);
-            border-radius: 6px;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
-            display: none;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-        }
-
-        .ai-result.show { display: block; }
-
-        .loading { display: none; color: var(--primary-color); font-weight: bold; margin-top: 8px; text-align: center; font-size: 13px; }
-        .loading.show { display: block; }
-
-        .fab {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--secondary-color) 0%, #1976D2 100%);
-            color: white;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(33,150,243,0.4);
-            transition: all 0.3s ease;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(33,150,243,0.6); }
-        .fab:active { transform: scale(0.95); }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 1.3rem; }
-            .header p { font-size: 0.8rem; }
-            .control-row { grid-template-columns: 1fr; }
-            .container { grid-template-columns: 1fr !important; }
-            textarea { min-height: 150px; font-size: 16px; }
-            .button-group { flex-direction: column; }
-            .btn { width: 100%; padding: 14px 18px; }
-            .filtered-output { font-size: 12px; }
-            .ai-prompt-area { min-height: 130px; }
-            .supplier-count-row { flex-wrap: wrap; }
-            .supplier-count-row .control-group { flex: 1 1 120px; }
-        }
-
-        @media (min-width: 769px) {
-            .container.grid-1  { grid-template-columns: repeat(1, 1fr); }
-            .container.grid-2  { grid-template-columns: repeat(2, 1fr); }
-            .container.grid-3  { grid-template-columns: repeat(3, 1fr); }
-            .container.grid-4  { grid-template-columns: repeat(4, 1fr); }
-            .container.grid-5  { grid-template-columns: repeat(5, 1fr); }
-            .container.grid-6  { grid-template-columns: repeat(6, 1fr); }
-            .container.grid-7  { grid-template-columns: repeat(7, 1fr); }
-            .container.grid-many { grid-template-columns: repeat(8, 1fr); }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .text-area-wrapper { animation: slideIn 0.3s ease; }
-
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--text-primary);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            box-shadow: var(--shadow-hover);
-            z-index: 9999;
-            display: none;
-            animation: slideIn 0.3s ease;
-            font-size: 14px;
-        }
-
-        .toast.show { display: block; }
-        .toast.success { background: var(--primary-color); }
-        .toast.error { background: var(--danger-color); }
-
-        /* Checkbox row */
         .checkbox-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 8px;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
+            margin-top: 6px;
+            font-size: .84rem;
         }
-        .checkbox-row input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+        .checkbox-row input { width: 17px; height: 17px; flex-shrink: 0; cursor: pointer; accent-color: var(--primary); }
+        .checkbox-row label { cursor: pointer; }
+        .opcoes-marcas { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+
+        .dicas { margin-top: 10px; font-size: .82rem; color: var(--muted); }
+        .dicas summary { cursor: pointer; font-weight: 600; color: var(--text); }
+        .dicas ul { margin: 6px 0 0 18px; display: grid; gap: 3px; }
+        .dicas code {
+            font-family: var(--mono);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0 4px;
+            color: var(--text);
+        }
+
+        /* ------------------------------------------------------------ busca fixa */
+        .barra-busca {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .busca-campos { display: grid; grid-template-columns: 3fr 2fr; gap: 8px; }
+        .campo-com-limpar { position: relative; }
+        .campo-com-limpar input { padding-left: 34px; padding-right: 36px; }
+        .campo-icone {
+            position: absolute; left: 10px; top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 14px;
+        }
+        .limpar-campo {
+            position: absolute; right: 3px; top: 50%;
+            transform: translateY(-50%);
+            width: 32px; height: 32px;
+            border: 0; border-radius: 50%;
+            background: transparent;
+            color: var(--muted);
+            font-size: 22px;
+            line-height: 1;
             cursor: pointer;
-            accent-color: var(--primary-color);
         }
-        .checkbox-row label { cursor: pointer; font-weight: 500; margin-bottom: 0; }
+        .limpar-campo:hover { background: var(--surface-2); color: var(--text); }
+        .busca-status { font-size: .8rem; color: var(--muted); margin-top: 6px; min-height: 1.15em; }
+        .search-legend { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+        .search-legend span { display: inline-block; margin-right: 12px; }
+        .legend-color {
+            display: inline-block; width: 18px; height: 10px;
+            border-radius: 3px; margin-right: 4px; vertical-align: middle;
+        }
+
+        /* ------------------------------------------------------------ ranking */
+        .ranking-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .ranking-topo h2 { font-size: .95rem; }
+        .ranking-nota { font-size: .75rem; color: var(--muted); margin: 2px 0 8px; }
+        .ranking-lista {
+            list-style: none;
+            max-height: 340px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .rank-item {
+            display: grid;
+            grid-template-columns: auto auto 1fr;
+            gap: 2px 10px;
+            align-items: baseline;
+            width: 100%;
+            padding: 7px 10px;
+            text-align: left;
+            font: inherit;
+            color: var(--text);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .rank-item:hover { border-color: var(--primary); }
+        li:first-child .rank-item { border-color: var(--primary); }
+        .rank-pos { font-size: 12px; font-weight: 700; color: var(--muted); }
+        .rank-preco { font-weight: 800; color: var(--primary-strong); white-space: nowrap; }
+        .rank-forn { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+        .rank-produto { grid-column: 2 / -1; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+        .rank-vazio { font-size: .84rem; color: var(--muted); }
+
+        /* ------------------------------------------------------------ fornecedores */
+        .container {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+        }
+        @media (min-width: 769px) {
+            .container[data-colunas="1"] { grid-template-columns: minmax(0, 1fr); }
+            .container[data-colunas="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .container[data-colunas="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .container[data-colunas="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .container[data-colunas="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+            .container[data-colunas="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        }
+
+        .cartao-forn {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+            padding: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            animation: entrar .25s ease;
+        }
+        .cartao-forn.destaque { animation: piscar 1.4s ease; }
+        .cartao-topo { display: flex; align-items: center; gap: 6px; }
+        .cartao-nome {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 8px !important;
+            font-weight: 600;
+            font-size: 13px !important;
+            background: var(--surface-2) !important;
+        }
+        .badge {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--secondary-strong);
+            background: var(--result-bg);
+            border: 1px solid var(--result-border);
+            border-radius: 999px;
+        }
+        .badge.zero { color: var(--danger); border-color: var(--danger); background: transparent; }
+        .cartao-acoes { display: flex; flex-shrink: 0; }
+        .icone {
+            width: 32px; height: 32px;
+            border: 0; border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .icone:hover { background: var(--surface-2); color: var(--text); }
+        .cartao-texto {
+            min-height: 150px;
+            resize: vertical;
+            font-family: var(--mono) !important;
+            font-size: 12px !important;
+            line-height: 1.4;
+        }
+        .cartao-rodape { font-size: 11px; color: var(--muted); }
+        body.busca-ativa.esconder-listas .cartao-texto,
+        body.busca-ativa.esconder-listas .cartao-rodape { display: none; }
+
+        .resultado {
+            max-height: 480px;
+            overflow: auto;
+            padding: 8px;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.45;
+            background: var(--result-bg);
+            border: 1.5px solid var(--result-border);
+            border-radius: 8px;
+        }
+        .resultado > div { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.45em; }
+        .resultado .sep { text-align: center; color: var(--muted); letter-spacing: 4px; font-size: 10px; min-height: 0; }
+        .resultado .vazio { color: var(--danger); font-family: inherit; }
+        mark { background: var(--hl-main); color: var(--hl-text); font-weight: 700; padding: 0 2px; border-radius: 3px; }
+        mark.sub { background: var(--hl-sub); }
+
+        /* ------------------------------------------------------------ histórico */
+        .acoes .control-group { margin-bottom: 10px; }
+        #historicoSelect { margin-top: 10px; }
+        .nota { font-size: .76rem; color: var(--muted); margin-top: 10px; text-align: center; }
+
+        /* ------------------------------------------------------------ IA */
+        .advanced-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 70px;
+            overflow: hidden;
+        }
+        .advanced-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #fff;
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            cursor: pointer;
+            user-select: none;
+            list-style: none;
+        }
+        .advanced-header::-webkit-details-marker { display: none; }
+        .toggle-icon { font-size: 18px; transition: transform .3s; }
+        details[open] > .advanced-header .toggle-icon { transform: rotate(180deg); }
+        .advanced-content { padding: 15px; }
+        .advanced-content > .control-group { margin-bottom: 10px; }
+        .linha-inline { display: flex; gap: 6px; }
+        .linha-inline select { flex: 1; min-width: 0; }
+
+        .api-info {
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            background: var(--result-bg);
+            border-left: 4px solid var(--secondary);
+            border-radius: 6px;
+        }
+        .ai-estimativa { font-size: .78rem; color: var(--muted); margin: 6px 0 10px; }
+        .ai-prompt-area { min-height: 150px; resize: vertical; font-family: var(--mono) !important; font-size: 12px !important; }
+
+        .loading { color: var(--primary); font-weight: 700; margin-top: 10px; text-align: center; font-size: 13px; }
+        .ai-resultado { margin-top: 14px; }
+        .ai-resultado-topo {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; flex-wrap: wrap; margin-bottom: 6px;
+            font-size: .78rem; color: var(--muted);
+        }
+        .ai-resultado-topo .button-group { justify-content: flex-end; }
+        .ai-result {
+            max-height: 520px;
+            overflow-y: auto;
+            padding: 12px;
+            font-size: 13px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            background: var(--surface-2);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+        }
+        .ai-result.erro { border-color: var(--danger); font-family: var(--mono); }
+        .ai-result .md-h { display: inline-block; font-size: 1.05em; margin-top: 4px; }
+        .ai-result code { font-family: var(--mono); background: var(--surface); padding: 0 3px; border-radius: 3px; }
+
+        /* ------------------------------------------------------------ extras */
+        .fab {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            z-index: 1000;
+            width: 52px;
+            height: 52px;
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.35rem;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, .4);
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 82px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            max-width: calc(100vw - 32px);
+            padding: 10px 16px;
+            font-size: 14px;
+            color: #fff;
+            background: #333;
+            border-radius: 8px;
+            box-shadow: var(--shadow-hover);
+        }
+        .toast.show { display: flex; }
+        .toast.sucesso { background: #2e7d32; }
+        .toast.erro { background: #c62828; }
+        .toast-acao {
+            flex-shrink: 0;
+            padding: 4px 10px;
+            font: inherit;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(255, 255, 255, .18);
+            border: 1px solid rgba(255, 255, 255, .5);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        @keyframes entrar {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes piscar {
+            0%, 100% { box-shadow: var(--shadow); }
+            30% { box-shadow: 0 0 0 4px var(--hl-main); }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.2rem; }
+            /* Abaixo de 16px o iOS dá zoom em todo campo que recebe foco. */
+            input[type="text"], input[type="number"], input[type="password"], input[type="url"],
+            select, textarea, .cartao-nome, .cartao-texto, .ai-prompt-area { font-size: 16px !important; }
+            .busca-campos { grid-template-columns: 1fr; gap: 6px; }
+            /* A barra fica presa no topo: cada linha a menos é tela a mais para a lista. */
+            .barra-busca { padding: 8px 10px; }
+            .busca-status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+            .supplier-count-row .control-group { flex: 1 1 100%; }
+            .supplier-count-row .btn { flex: 1 1 auto; }
+            .button-group .btn { flex: 1 1 100%; }
+            .ai-resultado-topo .button-group .btn { flex: 1 1 auto; }
+            .resultado { font-size: 13px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -356,150 +487,191 @@
         <p>Compare preços de múltiplos fornecedores com facilidade</p>
     </div>
 
-    <div class="controls">
+    <!-- Quantidade de fornecedores -->
+    <section class="painel">
         <div class="supplier-count-row">
             <div class="control-group">
-                <label for="numFornecedores">📱 Número de Fornecedores:</label>
-                <input type="number" id="numFornecedores" value="4" min="1" max="999" step="1">
+                <label for="numFornecedores">📱 Fornecedores</label>
+                <input type="number" id="numFornecedores" min="1" max="200" step="1" inputmode="numeric">
             </div>
-            <button class="btn btn-primary" onclick="aplicarQuantidade()">✔ Aplicar</button>
-            <button class="btn btn-outline" onclick="adicionarFornecedor()">➕ Adicionar</button>
-            <button class="btn btn-outline" onclick="removerFornecedor()">➖ Remover</button>
+            <button type="button" class="btn btn-primary" id="aplicarBtn">✔ Aplicar</button>
+            <button type="button" class="btn btn-outline" id="adicionarBtn">➕ Adicionar</button>
+            <button type="button" class="btn btn-outline" id="removerBtn">➖ Remover último</button>
+            <button type="button" class="btn btn-outline btn-perigo" id="limparTudoBtn">🗑️ Limpar tudo</button>
         </div>
+    </section>
 
+    <!-- Opções de busca -->
+    <section class="painel">
         <div class="control-row">
             <div class="control-group">
-                <label for="supplierFilterInput">🏢 Filtrar tela por fornecedor:</label>
-                <input type="text" id="supplierFilterInput" placeholder="Ex: Nome da loja...">
+                <label for="supplierFilterInput">🏢 Mostrar só os fornecedores</label>
+                <input type="text" id="supplierFilterInput" placeholder="Ex: loja a, loja b" autocomplete="off">
             </div>
             <div class="control-group">
-                <label for="contextLines">📝 Linhas de contexto na busca:</label>
-                <input type="number" id="contextLines" value="7" min="0" max="10">
+                <label for="contextLines">📝 Linhas de contexto</label>
+                <input type="number" id="contextLines" value="7" min="0" max="30" inputmode="numeric">
+            </div>
+            <div class="control-group">
+                <label for="colunasSelect">🧱 Colunas</label>
+                <select id="colunasSelect">
+                    <option value="auto">Automático</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                </select>
             </div>
         </div>
 
-        <div class="control-group">
-            <label for="searchInput">🔍 Buscar produto:</label>
-            <input type="text" id="searchInput" placeholder="Digite o nome do produto...">
-        </div>
-
-        <div class="control-group">
-            <label for="subSearchInput">🔎 Refinar busca (sub-busca):</label>
-            <input type="text" id="subSearchInput" placeholder="Ex: 256gb, vermelho, 1kg...">
-            <div class="search-legend" id="searchLegend">
-                <span><span class="legend-color" style="background-color: #ffeb3b;"></span>Busca principal</span>
-                <span><span class="legend-color" style="background-color: #80deea;"></span>Sub-busca</span>
+        <div class="opcoes-marcas">
+            <div class="checkbox-row">
+                <input type="checkbox" id="showNoResult">
+                <label for="showNoResult">👁️ Mostrar fornecedores sem resultado</label>
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="esconderListas">
+                <label for="esconderListas">🙈 Esconder a lista completa durante a busca</label>
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="mostrarRanking" checked>
+                <label for="mostrarRanking">🏆 Ranking de preços</label>
             </div>
         </div>
 
-        <div class="checkbox-row">
-            <input type="checkbox" id="showNoResult">
-            <label for="showNoResult">👁️ Mostrar fornecedores sem resultado</label>
+        <details class="dicas">
+            <summary>💡 Como buscar</summary>
+            <ul>
+                <li><code>iphone 15 128</code> — linhas com todas as palavras, em qualquer ordem</li>
+                <li><code>iphone 15, galaxy s24</code> — a vírgula busca um <strong>ou</strong> outro</li>
+                <li><code>"15 pro max"</code> — entre aspas, a frase exata</li>
+                <li><code>iphone -pro</code> — o sinal de menos exclui a palavra</li>
+                <li><code>128gb</code> também encontra <code>128 GB</code>; acentos e letras estilizadas são ignorados</li>
+                <li>O <strong>refinar</strong> procura no próprio produto: a linha encontrada e as de baixo (cor, capacidade, voltagem…), até a linha em branco ou o próximo produto</li>
+                <li>Atalhos: <code>/</code> vai para a busca, <code>Esc</code> limpa o campo</li>
+            </ul>
+        </details>
+    </section>
+
+    <!-- Busca: fica presa no topo ao rolar -->
+    <section class="barra-busca" id="barraBusca">
+        <div class="busca-campos">
+            <div class="campo-com-limpar">
+                <label for="searchInput" class="sr-only">Buscar produto</label>
+                <span class="campo-icone" aria-hidden="true">🔍</span>
+                <input type="text" id="searchInput" placeholder="Buscar produto… (ex: iphone 15 128)"
+                       autocomplete="off" enterkeyhint="search" spellcheck="false">
+                <button type="button" class="limpar-campo" data-limpa="searchInput" aria-label="Limpar busca" hidden>×</button>
+            </div>
+            <div class="campo-com-limpar">
+                <label for="subSearchInput" class="sr-only">Refinar busca</label>
+                <span class="campo-icone" aria-hidden="true">🔎</span>
+                <input type="text" id="subSearchInput" placeholder="Refinar: 256gb, preto, 1kg…"
+                       autocomplete="off" enterkeyhint="search" spellcheck="false">
+                <button type="button" class="limpar-campo" data-limpa="subSearchInput" aria-label="Limpar refinamento" hidden>×</button>
+            </div>
         </div>
-    </div>
+        <div class="busca-status" id="buscaStatus" aria-live="polite"></div>
+        <div class="search-legend" id="searchLegend" hidden>
+            <span><span class="legend-color" style="background: var(--hl-main);"></span>Busca principal</span>
+            <span><span class="legend-color" style="background: var(--hl-sub);"></span>Refinamento</span>
+        </div>
+    </section>
 
-    <div id="container-listas" class="container"></div>
+    <!-- Ranking de preços da busca atual -->
+    <section class="painel" id="ranking" hidden>
+        <div class="ranking-topo">
+            <h2>🏆 Menores preços encontrados</h2>
+            <button type="button" class="btn btn-outline btn-sm" id="copiarRankingBtn">📋 Copiar</button>
+        </div>
+        <p class="ranking-nota">Valores lidos automaticamente das linhas encontradas — toque num item para ver a lista e confira antes de fechar negócio.</p>
+        <ol class="ranking-lista" id="rankingLista"></ol>
+    </section>
 
-    <div class="action-buttons">
+    <main id="container-listas" class="container" data-colunas="auto"></main>
+
+    <!-- Histórico e arquivos -->
+    <section class="painel acoes">
+        <h2 class="painel-titulo">💾 Salvar e recuperar</h2>
         <div class="control-group">
-            <label for="tagInput">🏷️ Título para o Histórico:</label>
+            <label for="tagInput">🏷️ Título para o histórico</label>
             <input type="text" id="tagInput" placeholder="Ex: Compras da semana 12/01/2026">
         </div>
-
         <div class="button-group">
-            <button class="btn btn-primary" onclick="salvarDados()">💾 Salvar Dados</button>
-            <button class="btn btn-secondary" onclick="carregarHistorico()">📜 Ver Histórico</button>
+            <button type="button" class="btn btn-primary" id="salvarBtn">☁️ Salvar no histórico</button>
+            <button type="button" class="btn btn-secondary" id="historicoBtn">📜 Ver histórico</button>
+            <button type="button" class="btn btn-outline" id="exportarBtn">⬇️ Exportar arquivo</button>
+            <button type="button" class="btn btn-outline" id="importarBtn">⬆️ Importar arquivo</button>
+            <input type="file" id="importarArquivo" accept=".json,.txt,application/json,text/plain" multiple hidden>
         </div>
-
-        <select id="historicoSelect" onchange="aplicarHistorico()">
+        <select id="historicoSelect" hidden>
             <option value="">Selecione um histórico...</option>
         </select>
-    </div>
+        <p class="nota">As listas também ficam guardadas neste aparelho: recarregar ou fechar a página não apaga nada.
+            Importar aceita o arquivo exportado ou vários <code>.txt</code> (cada um vira um fornecedor).</p>
+    </section>
 
-    <!-- Seção de IA -->
-    <div class="advanced-section">
-        <div class="advanced-header" onclick="toggleAdvanced()">
-            <span>🤖 Análise com IA Google Gemini (Gratuito)</span>
-            <span class="toggle-icon" id="toggleIcon">▼</span>
-        </div>
-        <div class="advanced-content" id="advancedContent">
-
-            <div class="control-row" style="margin-bottom: 12px;">
+    <!-- IA -->
+    <details class="advanced-section" id="secaoIA">
+        <summary class="advanced-header">
+            <span>🤖 Análise com IA</span>
+            <span class="toggle-icon" aria-hidden="true">▾</span>
+        </summary>
+        <div class="advanced-content">
+            <div class="control-row">
                 <div class="control-group">
-                    <label for="aiModelSelect">🤖 Provedor de IA:</label>
-                    <select id="aiModelSelect" onchange="onModelChange()">
+                    <label for="aiModelSelect">🤖 Provedor de IA</label>
+                    <select id="aiModelSelect">
                         <option value="gemini_default">Gemini via proxy (padrão — sem token)</option>
                         <option value="gemini_direct">Gemini direto (Google AI Studio)</option>
                         <option value="openrouter">OpenRouter</option>
                         <option value="openai">OpenAI (ChatGPT)</option>
-                        <option value="custom">Outro (URL personalizada)</option>
+                        <option value="custom">Outro (URL compatível com OpenAI)</option>
                     </select>
                 </div>
-                <div class="control-group" id="tokenGroup" style="display:none;">
-                    <label for="aiToken">🔑 Token de acesso:</label>
-                    <input type="password" id="aiToken" placeholder="Cole seu token aqui..."
-                           oninput="saveToken()" autocomplete="current-password">
+                <div class="control-group" id="tokenGroup" hidden>
+                    <label for="aiToken">🔑 Token de acesso</label>
+                    <input type="password" id="aiToken" placeholder="Cole seu token aqui..." autocomplete="off" spellcheck="false">
                 </div>
             </div>
 
-            <div class="control-group" id="proxyModelGroup" style="display:none; margin-bottom:12px;">
-                <label for="proxyModelName" style="display:block;">🧠 Modelo Proxy:</label>
-                <span style="font-size:11px; color:#666; margin-bottom:4px; display:inline-block;">Digite o nome do modelo (ex: gemini-3-flash) ou escolha na lista</span>
-                <input type="text" id="proxyModelName" list="proxyModelListOptions" placeholder="Padrão atual: gemini-3-flash-preview" oninput="saveToken()">
-                <datalist id="proxyModelListOptions">
-                    <option value="gemini-3-flash-preview">
-                    <option value="gemini-3.1-flash-preview">
-                    <option value="gemini-2.5-flash-preview-04-17">
-                    <option value="gemini-2.5-pro-preview-03-25">
-                    <option value="gemini-2.0-flash">
-                    <option value="gemini-2.0-flash-lite">
-                    <option value="gemini-1.5-pro">
-                    <option value="gemini-1.5-flash">
-                </datalist>
-                <button class="btn btn-outline" style="margin-top:6px; font-size:12px; min-height:32px; padding: 4px 12px;" onclick="listModels()">🔄 Atualizar lista pelo Proxy (requer proxy atualizado)</button>
+            <div class="control-group" id="customUrlGroup" hidden>
+                <label for="aiCustomUrl">🌐 URL da API</label>
+                <input type="url" id="aiCustomUrl" placeholder="https://.../v1/chat/completions" spellcheck="false">
             </div>
 
-            <div class="control-group" id="geminiModelGroup" style="display:none; margin-bottom:12px;">
-                <label for="geminiModelSelect">🧠 Modelo Gemini:</label>
-                <select id="geminiModelSelect" onchange="saveToken()">
-                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (padrão)</option>
-                    <option value="gemini-3.1-flash-preview">Gemini 3.1 Flash</option>
-                    <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash Preview</option>
-                    <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro Preview</option>
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                    <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (1M ctx)</option>
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                </select>
-                <button class="btn btn-outline" style="margin-top:6px; font-size:12px; min-height:32px; padding: 4px 12px;" onclick="listModels()">🔄 Atualizar lista da API</button>
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="aiModelo">🧠 Modelo</label>
+                    <input type="text" id="aiModelo" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="control-group">
+                    <label for="aiModeloLista">📃 Escolher da lista</label>
+                    <div class="linha-inline">
+                        <select id="aiModeloLista"></select>
+                        <button type="button" class="btn btn-outline btn-sm" id="listModelsBtn"
+                                title="Buscar no provedor a lista atual de modelos">🔄 Atualizar</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="control-group" id="modelNameGroup" style="display:none; margin-bottom:12px;">
-                <label for="aiModelName">🧠 Modelo OpenRouter:</label>
-                <input type="text" id="aiModelName" placeholder="Ex: meta-llama/llama-3.3-70b-instruct:free" oninput="saveToken()">
-                <select id="aiModelList" style="margin-top:6px;" onchange="document.getElementById('aiModelName').value = this.value; saveToken();">
-                    <option value="">⏳ Clique em "Listar Modelos" para carregar...</option>
-                </select>
-            </div>
-
-            <div class="control-group" id="customUrlGroup" style="display:none; margin-bottom:12px;">
-                <label for="aiCustomUrl">🌐 URL da API:</label>
-                <input type="text" id="aiCustomUrl" placeholder="https://..." oninput="saveToken()">
-            </div>
-
-            <div class="api-info" id="apiInfoBox">
-                <strong>ℹ️ Análise Inteligente:</strong><br>
-                Modelo: Gemini 2.5 Flash via proxy — sem necessidade de token<br>
-                Analise automaticamente os melhores preços entre todos os fornecedores
-            </div>
+            <div class="api-info" id="apiInfoBox"></div>
 
             <div class="control-group">
-                <label for="productSearchAI">🔍 Produto(s) para buscar (separados por vírgula):</label>
+                <label for="productSearchAI">🔍 Produto(s) para buscar <small>(separados por vírgula — vazio usa o que está na busca)</small></label>
                 <input type="text" id="productSearchAI" placeholder="Ex: Arroz, Feijão, Óleo de soja">
             </div>
 
+            <div class="checkbox-row">
+                <input type="checkbox" id="aiSoTrechos">
+                <label for="aiSoTrechos">✂️ Enviar só os trechos encontrados pela busca (mais rápido e gasta menos)</label>
+            </div>
+            <p class="ai-estimativa" id="aiEstimativa"></p>
+
             <div class="control-group">
-                <label for="aiPrompt">✏️ Prompt personalizado para IA:</label>
+                <label for="aiPrompt">✏️ Prompt personalizado para IA <small>(<code>{PRODUTOS}</code> vira a lista de produtos; fica salvo neste aparelho)</small></label>
                 <textarea id="aiPrompt" class="ai-prompt-area">Você é um assistente especializado em análise de preços de produtos.
 Analise as listas de fornecedores fornecidas e identifique os MELHORES PREÇOS para os seguintes produtos: {PRODUTOS}
 
@@ -540,823 +712,1477 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             </div>
 
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="listModels()" id="listModelsBtn">
-                    🔍 Listar Modelos Disponíveis
-                </button>
-                <button class="btn btn-primary" onclick="analyzeWithAI()" id="analyzeBtn">
-                    🚀 Analisar com IA
-                </button>
-                <button class="btn btn-accent" onclick="resetPrompt()">
-                    🔄 Restaurar Prompt Padrão
-                </button>
+                <button type="button" class="btn btn-primary" id="analyzeBtn">🚀 Analisar com IA</button>
+                <button type="button" class="btn btn-outline" id="resetPromptBtn">🔄 Restaurar prompt padrão</button>
             </div>
 
-            <div class="loading" id="loadingIndicator">⏳ Analisando os melhores preços...</div>
-            <div class="ai-result" id="aiResult"></div>
-        </div>
-    </div>
+            <div class="loading" id="loadingIndicator" hidden></div>
 
-    <!-- FAB -->
-    <button class="fab" onclick="scrollToTop()" title="Voltar ao topo">↑</button>
-    <div class="toast" id="toast"></div>
+            <div class="ai-resultado" id="aiResultadoBox" hidden>
+                <div class="ai-resultado-topo">
+                    <span id="aiResultadoInfo"></span>
+                    <div class="button-group">
+                        <button type="button" class="btn btn-outline btn-sm" id="copiarIABtn">📋 Copiar</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="copiarIAWhatsBtn">💬 Copiar p/ WhatsApp</button>
+                    </div>
+                </div>
+                <div class="ai-result" id="aiResult"></div>
+            </div>
+        </div>
+    </details>
+
+    <button type="button" class="fab" id="topoBtn" title="Voltar ao topo" aria-label="Voltar ao topo">↑</button>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
-        const container = document.getElementById('container-listas');
-        const numFornecedoresInput = document.getElementById('numFornecedores');
-        const searchInput = document.getElementById('searchInput');
-        const subSearchInput = document.getElementById('subSearchInput');
-        const contextLinesInput = document.getElementById('contextLines');
-        const DEFAULT_PROMPT = document.getElementById('aiPrompt').value;
+    'use strict';
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec";
+    // ================================================================
+    // CONFIGURAÇÃO
+    // ================================================================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6h1z-B1CaL29FIYl3R6yHP5Nqx9IXK3GhBBTHn5AKqR666GrlaMog70GnXi8qh3GjhA/exec';
+    const PROXY_URL = 'https://caixa-kal3.vercel.app/api/gemini';
 
-        // ============================================================
-        // NORMALIZAÇÃO UNICODE ROBUSTA
-        // ============================================================
-        const unicodeMap = (() => {
-            const map = {};
-            const ranges = [
-                [0x1D400,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D41A,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D434,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D44E,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D468,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D482,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D49C,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D4B6,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D4D0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D4EA,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D504,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D51E,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D538,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D552,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D56C,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D586,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D5A0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D5BA,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D5D4,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D5EE,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D608,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D622,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D63C,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D656,'abcdefghijklmnopqrstuvwxyz'],
-                [0x1D670,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0x1D68A,'abcdefghijklmnopqrstuvwxyz'],
-                [0xFF21,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],[0xFF41,'abcdefghijklmnopqrstuvwxyz'],
-            ];
-            ranges.forEach(([start, chars]) => {
-                for (let i = 0; i < chars.length; i++) map[start + i] = chars[i];
-            });
-            [0x1D7CE,0x1D7D8,0x1D7E2,0x1D7EC,0x1D7F6].forEach(start => {
-                for (let i = 0; i <= 9; i++) map[start + i] = String(i);
-            });
-            for (let i = 0; i <= 9; i++) map[0xFF10 + i] = String(i);
-            return map;
-        })();
+    const CHAVE_RASCUNHO = 'wtela:rascunho';
+    const CHAVE_PREFS = 'wtela:prefs';
+    const CHAVE_PROMPT = 'wtela:prompt';
+    const FORNECEDORES_PADRAO = 4;
+    const MAX_FORNECEDORES = 200;
 
-        function normalizeForSearch(str) {
-            if (!str) return '';
-            let result = '';
-            for (let i = 0; i < str.length; i++) {
-                const cp = str.codePointAt(i);
-                if (cp > 0xFFFF) i++;
-                result += (unicodeMap[cp] !== undefined) ? unicodeMap[cp] : str[i];
-            }
-            return result.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-        }
+    const $ = (id) => document.getElementById(id);
+    const container = $('container-listas');
+    const campoBusca = $('searchInput');
+    const campoSubBusca = $('subSearchInput');
+    const campoContexto = $('contextLines');
+    const campoFiltroFornecedor = $('supplierFilterInput');
+    const campoQuantidade = $('numFornecedores');
+    const DEFAULT_PROMPT = $('aiPrompt').value;
 
-        function escapeHtml(str) {
-            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
-
-        function findOrigRanges(origLine, normLine, normTerm) {
-            const ranges = [];
-            if (!normTerm) return ranges;
-            const tLen = normTerm.length;
-            let pos = 0;
-            while (true) {
-                const idx = normLine.indexOf(normTerm, pos);
-                if (idx === -1) break;
-                const origStart = normToOrig(origLine, normLine, idx);
-                const origEnd   = normToOrig(origLine, normLine, idx + tLen);
-                if (origStart !== -1 && origEnd !== -1) {
-                    ranges.push([origStart, origEnd]);
-                }
-                pos = idx + tLen;
-            }
-            return ranges;
-        }
-
-        function normToOrig(orig, norm, normPos) {
-            if (orig.length === norm.length) return Math.min(normPos, orig.length);
-            let ni = 0, oi = 0;
-            while (oi < orig.length && ni < normPos) {
-                const cp = orig.codePointAt(oi);
-                const charOrig = cp > 0xFFFF ? orig.slice(oi, oi + 2) : orig[oi];
-                const charNorm = normalizeForSearch(charOrig);
-                ni += charNorm.length;
-                oi += charOrig.length;
-            }
-            return oi;
-        }
-
-        function applyHighlight(origLine, mainRanges, subRanges) {
-            const marks = new Uint8Array(origLine.length);
-            for (const [s, e] of mainRanges) for (let i = s; i < e; i++) marks[i] = 1;
-            for (const [s, e] of subRanges)  for (let i = s; i < e; i++) marks[i] = 2;
-
-            let html = '', i = 0;
-            while (i < origLine.length) {
-                const mark = marks[i];
-                let j = i;
-                while (j < origLine.length && marks[j] === mark) j++;
-                const chunk = escapeHtml(origLine.slice(i, j));
-                if      (mark === 1) html += `<span class="highlight">${chunk}</span>`;
-                else if (mark === 2) html += `<span class="highlight" style="background-color:#80deea;">${chunk}</span>`;
-                else html += chunk;
-                i = j;
-            }
-            return html;
-        }
-
-        function highlightLine(origLine, normLine, normMain, normSub) {
-            const mainRanges = findOrigRanges(origLine, normLine, normMain);
-            const subRanges  = normSub ? findOrigRanges(origLine, normLine, normSub) : [];
-            return applyHighlight(origLine, mainRanges, subRanges);
-        }
-
-        // Toast
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast show ${type}`;
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-
-        function toggleAdvanced() {
-            document.getElementById('advancedContent').classList.toggle('active');
-            document.getElementById('toggleIcon').classList.toggle('rotated');
-        }
-
-        function resetPrompt() {
-            document.getElementById('aiPrompt').value = DEFAULT_PROMPT;
-            showToast('✅ Prompt restaurado para o padrão');
-        }
-
-        function getGridClass(n) {
-            if (n <= 7) return `grid-${n}`;
-            return 'grid-many';
-        }
-
-        const removedCache = {};
-
-        function criarBloco(index, dadosIniciais) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'text-area-wrapper';
-
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'supplier-header';
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = dadosIniciais?.name ?? `Fornecedor ${index}`;
-            input.placeholder = `Nome do fornecedor ${index}`;
-
-            const textarea = document.createElement('textarea');
-            textarea.id = `fornecedor${index}`;
-            const textoInicial = dadosIniciais?.text ?? '';
-            textarea.dataset.originalContent = textoInicial;
-            textarea.value = textoInicial;
-            textarea.placeholder = `Cole a lista do fornecedor ${index} aqui...\n\nEx:\nArroz 5kg - R$ 25,00\nFeijão 1kg - R$ 8,50\nÓleo 900ml - R$ 7,20`;
-
-            const resultDiv = document.createElement('div');
-            resultDiv.id = `resultado${index}`;
-            resultDiv.className = 'filtered-output';
-            resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-
-            headerDiv.appendChild(input);
-            wrapper.appendChild(headerDiv);
-            wrapper.appendChild(textarea);
-            wrapper.appendChild(resultDiv);
-
-            input.addEventListener('input', applyFilter);
-
-            textarea.addEventListener('input', (e) => {
-                e.target.dataset.originalContent = e.target.value;
-                delete lineCache[e.target.id];
-                applyFilter();
-            });
-
-            return wrapper;
-        }
-
-        function aplicarQuantidade() {
-            let n = parseInt(numFornecedoresInput.value) || 1;
-            n = Math.max(1, n);
-            numFornecedoresInput.value = n;
-            setNumFornecedores(n);
-        }
-
-        function adicionarFornecedor() {
-            const atual = container.children.length;
-            const novo = atual + 1;
-            numFornecedoresInput.value = novo;
-            container.className = 'container ' + getGridClass(novo);
-            container.appendChild(criarBloco(novo, removedCache[novo] || null));
-            applyFilter();
-        }
-
-        function removerFornecedor() {
-            if (container.children.length <= 1) { showToast('⚠️ Mínimo de 1 fornecedor', 'error'); return; }
-            const ultimo = container.lastChild;
-            const idx = container.children.length;
-            const ta   = ultimo.querySelector('textarea');
-            const inp  = ultimo.querySelector('.supplier-header input[type=text]');
-            removedCache[idx] = {
-                name: inp?.value || `Fornecedor ${idx}`,
-                text: ta?.value || ''
-            };
-            container.removeChild(ultimo);
-            const novo = container.children.length;
-            numFornecedoresInput.value = novo;
-            container.className = 'container ' + getGridClass(novo);
-            showToast(`↩ Fornecedor ${idx} guardado — clique ➕ para restaurar`);
-            applyFilter();
-        }
-
-        function setNumFornecedores(n) {
-            const atual = container.children.length;
-            if (n > atual) {
-                for (let i = atual + 1; i <= n; i++) {
-                    container.appendChild(criarBloco(i, removedCache[i] || null));
-                }
-            } else if (n < atual) {
-                for (let i = atual; i > n; i--) {
-                    const ultimo = container.lastChild;
-                    const ta  = ultimo.querySelector('textarea');
-                    const inp = ultimo.querySelector('.supplier-header input[type=text]');
-                    if (ta?.value || (inp?.value && inp.value !== `Fornecedor ${i}`)) {
-                        removedCache[i] = { name: inp?.value || `Fornecedor ${i}`, text: ta?.value || '' };
-                    }
-                    container.removeChild(ultimo);
-                }
-            }
-            container.className = 'container ' + getGridClass(n);
-            applyFilter();
-        }
-
-        const lineCache = {};
-
-        function getLinesCache(textarea) {
-            const content = textarea.dataset.originalContent || textarea.value;
-            const cached  = lineCache[textarea.id];
-            if (cached && cached.content === content) return cached;
-            const lines     = content.split('\n');
-            const normLines = lines.map(l => normalizeForSearch(l));
-            lineCache[textarea.id] = { content, lines, normLines };
-            return lineCache[textarea.id];
-        }
-
-        let filterTimer = null;
-
-        function applyFilter() {
-            clearTimeout(filterTimer);
-            filterTimer = setTimeout(_doFilter, 120);
-        }
-
-        function _doFilter() {
-            const searchTerm    = searchInput.value.trim();
-            const subSearchTerm = subSearchInput.value.trim();
-            const contextLines  = Math.max(0, parseInt(contextLinesInput.value) || 0);
-            const normSearch    = normalizeForSearch(searchTerm);
-            const normSubSearch = normalizeForSearch(subSearchTerm);
-
-            const supplierFilterTerm = document.getElementById('supplierFilterInput')?.value.trim() || '';
-            const normSupplierFilter = normalizeForSearch(supplierFilterTerm);
-
-            // --- NOVO: lê o checkbox ---
-            const showNoResult = document.getElementById('showNoResult').checked;
-
-            document.getElementById('searchLegend')
-                .classList.toggle('show', normSearch.length > 0 && normSubSearch.length > 0);
-
-            const textareas = container.querySelectorAll('textarea');
-
-            textareas.forEach(textarea => {
-                const wrapper = textarea.closest('.text-area-wrapper');
-                const titleInput = wrapper.querySelector('.supplier-header input[type="text"]');
-                const normTitle = normalizeForSearch(titleInput?.value || '');
-
-                if (normSupplierFilter && !normTitle.includes(normSupplierFilter)) {
-                    wrapper.style.display = 'none';
-                    return;
-                } else {
-                    wrapper.style.display = '';
-                }
-
-                const idx       = textarea.id.replace('fornecedor', '');
-                const resultDiv = document.getElementById(`resultado${idx}`);
-
-                if (normSearch.length === 0) {
-                    // Sem busca ativa: mostra tudo normalmente
-                    wrapper.style.display = '';
-                    resultDiv.style.display = 'none';
-                    resultDiv.innerHTML = 'Resultado da busca aparece aqui.';
-                    return;
-                }
-
-                const { lines, normLines } = getLinesCache(textarea);
-
-                const filteredHtml = [];
-                const lineAdded    = new Array(lines.length).fill(false);
-
-                for (let index = 0; index < lines.length; index++) {
-                    if (!normLines[index].includes(normSearch)) continue;
-
-                    const start = Math.max(0, index - contextLines);
-                    const end   = Math.min(lines.length - 1, index + contextLines);
-
-                    if (normSubSearch) {
-                        let blocoNorm = '';
-                        for (let k = start; k <= end; k++) blocoNorm += normLines[k] + ' ';
-                        if (!blocoNorm.includes(normSubSearch)) continue;
-                    }
-
-                    for (let i = start; i <= end; i++) {
-                        if (lineAdded[i]) continue;
-                        filteredHtml.push(highlightLine(lines[i], normLines[i], normSearch, normSubSearch));
-                        lineAdded[i] = true;
-                    }
-                }
-
-                const hasResult = filteredHtml.length > 0;
-
-                // --- NOVO: oculta o wrapper se não há resultado e checkbox desmarcado ---
-                if (!hasResult && !showNoResult) {
-                    wrapper.style.display = 'none';
-                    return;
-                }
-
-                wrapper.style.display = '';
-                resultDiv.style.display = 'block';
-
-                if (!hasResult) {
-                    const subText = normSubSearch ? ` com "${subSearchInput.value}"` : '';
-                    resultDiv.innerHTML = `<span style="color:var(--danger-color);">❌ Nenhum resultado para "${searchInput.value}"${subText}</span>`;
-                } else {
-                    resultDiv.innerHTML = filteredHtml.join('<br>');
-                }
-            });
-        }
-
-        // ============================================================
-        // PERSISTÊNCIA
-        // ============================================================
-
-        function coletarDados() {
-            const textareas = container.querySelectorAll('textarea');
-            const inputs    = container.querySelectorAll('.supplier-header input[type=text]');
-            const suppliers = [];
-            for (let i = 0; i < textareas.length; i++) {
-                suppliers.push({
-                    name: inputs[i]?.value || `Fornecedor ${i + 1}`,
-                    text: textareas[i]?.value || ''
-                });
-            }
-            return suppliers;
-        }
-
-        async function salvarDados() {
-            const tag       = document.getElementById('tagInput').value || '';
-            const suppliers = coletarDados();
-
-            const params = new URLSearchParams();
-            params.append('tag', tag);
-            params.append('suppliers', JSON.stringify(suppliers));
-
+    /*
+     * localStorage pode lançar (aba anônima, cota cheia, bloqueio do
+     * navegador). Tudo que é gravado aqui é conveniência: a página tem que
+     * funcionar igual sem ele.
+     */
+    const armazenamento = {
+        lerTexto(chave, padrao = '') {
+            try { return localStorage.getItem(chave) ?? padrao; } catch { return padrao; }
+        },
+        gravarTexto(chave, valor) {
+            try { localStorage.setItem(chave, valor); return true; } catch { return false; }
+        },
+        remover(chave) {
+            try { localStorage.removeItem(chave); } catch { /* sem armazenamento */ }
+        },
+        ler(chave, padrao) {
             try {
-                showToast('⏳ Salvando dados...');
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: params
-                });
-                const text = await res.text();
-                let json;
-                try { json = JSON.parse(text); } catch(e) { throw new Error('Resposta inválida: ' + text.slice(0, 200)); }
-                if (json.status === 'success') {
-                    showToast('✅ Dados salvos com sucesso!');
-                    document.getElementById('tagInput').value = '';
+                const bruto = localStorage.getItem(chave);
+                return bruto === null ? padrao : JSON.parse(bruto);
+            } catch { return padrao; }
+        },
+        gravar(chave, valor) {
+            try { localStorage.setItem(chave, JSON.stringify(valor)); return true; } catch { return false; }
+        },
+    };
+
+    // ================================================================
+    // UTILIDADES
+    // ================================================================
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, (c) => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
+    }
+
+    function limitar(n, min, max) { return Math.min(max, Math.max(min, n)); }
+
+    function adiar(fn, ms) {
+        let t = null;
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    const formatoReal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatarReal = (v) => formatoReal.format(v);
+
+    let temporizadorAviso = null;
+    function mostrarAviso(mensagem, tipo = 'sucesso', acao = null) {
+        const toast = $('toast');
+        toast.textContent = mensagem;
+        toast.className = `toast show ${tipo}`;
+        if (acao) {
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'toast-acao';
+            botao.textContent = acao.rotulo;
+            botao.addEventListener('click', () => {
+                toast.classList.remove('show');
+                acao.executar();
+            }, { once: true });
+            toast.append(botao);
+        }
+        clearTimeout(temporizadorAviso);
+        temporizadorAviso = setTimeout(() => toast.classList.remove('show'), acao ? 7000 : 3200);
+    }
+
+    async function copiarTexto(texto) {
+        try {
+            await navigator.clipboard.writeText(texto);
+            return true;
+        } catch {
+            // Sem permissão ou sem HTTPS: o caminho antigo ainda funciona.
+            const area = document.createElement('textarea');
+            area.value = texto;
+            area.setAttribute('readonly', '');
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.append(area);
+            area.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch { ok = false; }
+            area.remove();
+            return ok;
+        }
+    }
+
+    // ================================================================
+    // NORMALIZAÇÃO UNICODE
+    // Listas de WhatsApp usam letras "estilizadas" (𝐀𝐁𝐂, ＡＢＣ) que o
+    // navegador não trata como A, B, C. Aqui elas viram letras comuns, e
+    // acentos e caixa são ignorados.
+    // ================================================================
+    const unicodeMap = (() => {
+        const map = {};
+        const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const abc = 'abcdefghijklmnopqrstuvwxyz';
+        const inicios = [
+            0x1D400, 0x1D434, 0x1D468, 0x1D49C, 0x1D4D0, 0x1D504, 0x1D538,
+            0x1D56C, 0x1D5A0, 0x1D5D4, 0x1D608, 0x1D63C, 0x1D670,
+        ];
+        for (const inicio of inicios) {
+            for (let i = 0; i < 26; i++) {
+                map[inicio + i] = ABC[i];
+                map[inicio + 26 + i] = abc[i];
+            }
+        }
+        for (let i = 0; i < 26; i++) {
+            map[0xFF21 + i] = ABC[i];
+            map[0xFF41 + i] = abc[i];
+        }
+        for (const inicio of [0x1D7CE, 0x1D7D8, 0x1D7E2, 0x1D7EC, 0x1D7F6, 0xFF10]) {
+            for (let i = 0; i <= 9; i++) map[inicio + i] = String(i);
+        }
+        return map;
+    })();
+
+    /**
+     * Normaliza e devolve também o mapa posição-normalizada → posição-original,
+     * que é o que permite destacar o trecho certo no texto original.
+     */
+    function normalizarComMapa(str) {
+        let norm = '';
+        const mapa = [];
+        for (let i = 0; i < str.length;) {
+            const cp = str.codePointAt(i);
+            const tamanho = cp > 0xFFFF ? 2 : 1;
+            let pedaco;
+            if (cp < 128) {
+                pedaco = cp >= 65 && cp <= 90 ? String.fromCharCode(cp + 32) : str[i];
+            } else {
+                const trocado = unicodeMap[cp];
+                pedaco = (trocado !== undefined ? trocado : str.slice(i, i + tamanho))
+                    .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+            }
+            for (let k = 0; k < pedaco.length; k++) mapa.push(i);
+            norm += pedaco;
+            i += tamanho;
+        }
+        mapa.push(str.length);
+        return { norm, mapa };
+    }
+
+    function normalizeForSearch(str) {
+        return str ? normalizarComMapa(str).norm : '';
+    }
+
+    // ================================================================
+    // BUSCA
+    // ================================================================
+    function escaparRegex(c) { return c.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&'); }
+
+    /**
+     * Termo → regex sobre o texto normalizado. Entre letra e número aceita um
+     * espaço opcional: "128gb" acha "128 GB" e "s24" acha "S 24".
+     *
+     * Número não casa dentro de outro número: "15" não acha "150W", "1.150"
+     * nem "15,99". Sem isso, "iphone 15" trazia qualquer iPhone com um 15 na
+     * linha.
+     */
+    function termoParaRegex(termo) {
+        let fonte = '';
+        for (let i = 0; i < termo.length; i++) {
+            const c = termo[i];
+            if (/\s/.test(c)) {
+                if (!fonte.endsWith('\\s+')) fonte += '\\s+';
+                continue;
+            }
+            const a = termo[i - 1];
+            if (a && ((/\d/.test(a) && /[a-z]/.test(c)) || (/[a-z]/.test(a) && /\d/.test(c)))) fonte += ' ?';
+            fonte += escaparRegex(c);
+        }
+        if (/^\d/.test(termo)) fonte = `(?<!\\d|\\d[.,])${fonte}`;
+        if (/\d$/.test(termo)) fonte = `${fonte}(?!\\d|[.,]\\d)`;
+        return new RegExp(fonte, 'g');
+    }
+
+    /**
+     * "iphone 15, galaxy -ultra" → [{inclui:[iphone,15]}, {inclui:[galaxy], exclui:[ultra]}]
+     * Vírgula separa alternativas; dentro de cada uma, todas as palavras
+     * precisam aparecer; "aspas" juntam uma frase; -palavra exclui.
+     */
+    function interpretarBusca(texto) {
+        const grupos = [];
+        for (const parte of String(texto || '').split(',')) {
+            const inclui = [];
+            const exclui = [];
+            const re = /(-?)"([^"]*)"?|(\S+)/g;
+            let m;
+            while ((m = re.exec(parte)) !== null) {
+                let negativo;
+                let bruto;
+                if (m[2] !== undefined) {
+                    negativo = m[1] === '-';
+                    bruto = m[2];
                 } else {
-                    throw new Error(JSON.stringify(json));
+                    negativo = m[3].length > 1 && m[3][0] === '-';
+                    bruto = negativo ? m[3].slice(1) : m[3];
                 }
-            } catch (err) {
-                showToast('❌ Erro ao salvar: ' + err.message, 'error');
+                const norm = normalizeForSearch(bruto).trim();
+                if (!norm || /^[-–—]+$/.test(norm)) continue;
+                (negativo ? exclui : inclui).push(termoParaRegex(norm));
+            }
+            // Só exclusões mostrariam a lista inteira; não é uma busca.
+            if (inclui.length) grupos.push({ inclui, exclui });
+        }
+        return grupos;
+    }
+
+    function testar(re, texto) { re.lastIndex = 0; return re.test(texto); }
+
+    function casaConsulta(norm, grupos) {
+        return grupos.some((g) => g.inclui.every((r) => testar(r, norm)) && !g.exclui.some((r) => testar(r, norm)));
+    }
+
+    const termosDe = (grupos) => grupos.flatMap((g) => g.inclui);
+
+    function faixasDe(norm, mapa, regexes) {
+        const faixas = [];
+        for (const re of regexes) {
+            re.lastIndex = 0;
+            let m;
+            while ((m = re.exec(norm)) !== null) {
+                if (!m[0].length) { re.lastIndex++; continue; }
+                faixas.push([mapa[m.index], mapa[m.index + m[0].length]]);
             }
         }
+        return faixas;
+    }
 
-        async function carregarHistorico() {
+    function destacarLinha(linha, termosPrincipais, termosSub) {
+        const { norm, mapa } = normalizarComMapa(linha);
+        const marcas = new Uint8Array(linha.length);
+        for (const [s, e] of faixasDe(norm, mapa, termosPrincipais)) marcas.fill(1, s, e);
+        for (const [s, e] of faixasDe(norm, mapa, termosSub)) marcas.fill(2, s, e);
+
+        let html = '';
+        for (let i = 0; i < linha.length;) {
+            const marca = marcas[i];
+            let j = i;
+            while (j < linha.length && marcas[j] === marca) j++;
+            const pedaco = escapeHtml(linha.slice(i, j));
+            if (marca === 1) html += `<mark>${pedaco}</mark>`;
+            else if (marca === 2) html += `<mark class="sub">${pedaco}</mark>`;
+            else html += pedaco;
+            i = j;
+        }
+        return html;
+    }
+
+    /** Tira a marcação do WhatsApp para mostrar a linha limpa no ranking. */
+    function linhaLimpa(linha, max = 140) {
+        const limpa = linha.replace(/^\s*>\s?/, '').replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
+        return limpa.length > max ? `${limpa.slice(0, max - 1)}…` : limpa;
+    }
+
+    // ================================================================
+    // PREÇOS
+    // Heurística, não parser: lê "R$ 1.234,56", "$ 99", "💰 450" e números no
+    // formato de dinheiro ("1.234,56", ou "4.350" no fim da linha). Parcela
+    // ("10x R$ 99") vira o total; o resto é ignorado.
+    // ================================================================
+    const RE_MOEDA = /(?:r\s?\$|\$|💰|💵)\s*(\d{1,3}(?:\.\s?\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)/gu;
+    const RE_DECIMAL = /(?<![\w.,])(\d{1,3}(?:\.\d{3})*,\d{2})(?!\d|\p{L})/gu;
+    const RE_MILHAR = /(?<![\w.,])(\d{1,3}(?:\.\d{3})+)(?!,\d)(?=\s*$|\s*[^\p{L}\p{N}\s])/gu;
+    const RE_PARCELA_ANTES = /(\d{1,2})\s*(?:x|vezes|parcelas?)\s*(?:de\s*)?$|(\d{1,2})\s+de\s*$/;
+    const PALAVRAS_DE_PRECO = /\b(?:cartao|credito|debito|dinheiro|pix|a vista|avista|vista|especie|parcelas?|parcelado|vezes|em|ate|no|na|de|do|da|por|so|apenas|sem|juros|total|valor|preco|boleto|ou|e|x|cash|promocao|promo|oferta|cada|und|un|unidade|unidades|reais)\b/g;
+    const JANELA_PRECO = 6;
+
+    function paraNumero(bruto) {
+        let s = String(bruto).replace(/\s/g, '');
+        if (s.includes(',')) {
+            s = s.replace(/\./g, '').replace(',', '.');
+        } else if (s.includes('.')) {
+            const partes = s.split('.');
+            const ultima = partes[partes.length - 1];
+            s = ultima.length === 3 ? partes.join('') : `${partes.slice(0, -1).join('')}.${ultima}`;
+        }
+        const n = Number.parseFloat(s);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    /** Valores de uma linha normalizada. `temPreco` vale mesmo se só houver parcela ilegível. */
+    function precosNaLinha(norm) {
+        const valores = [];
+        let temMoeda = false;
+        RE_MOEDA.lastIndex = 0;
+        let m;
+        while ((m = RE_MOEDA.exec(norm)) !== null) {
+            temMoeda = true;
+            const v = paraNumero(m[1]);
+            if (v === null || v < 1) continue;
+            const parcela = norm.slice(0, m.index).match(RE_PARCELA_ANTES);
+            if (parcela) {
+                const n = Number(parcela[1] ?? parcela[2]);
+                if (n > 1) valores.push(Math.round(v * n * 100) / 100);
+                continue;
+            }
+            valores.push(v);
+        }
+        // Com R$ na linha, só ele vale: número solto ali costuma ser capacidade ou modelo.
+        if (!temMoeda) {
+            for (const re of [RE_DECIMAL, RE_MILHAR]) {
+                re.lastIndex = 0;
+                while ((m = re.exec(norm)) !== null) {
+                    const v = paraNumero(m[1]);
+                    if (v !== null && v >= 1) valores.push(v);
+                }
+            }
+        }
+        return { valores, temPreco: temMoeda || valores.length > 0 };
+    }
+
+    /** A linha tem texto de sobra além do preço? Então é outro produto. */
+    function pareceOutroProduto(norm) {
+        const resto = norm
+            .replace(RE_MOEDA, ' ').replace(RE_DECIMAL, ' ').replace(RE_MILHAR, ' ')
+            .replace(PALAVRAS_DE_PRECO, ' ')
+            .replace(/[^a-z]/g, '');
+        return resto.length >= 4;
+    }
+
+    /**
+     * Até onde vai o produto de uma ocorrência, e quanto ele custa.
+     *
+     * Se a própria linha tem preço, o produto é só ela (lista de um produto
+     * por linha). Senão, segue pelas linhas de baixo — cor, preço no cartão,
+     * preço no pix — e para numa linha em branco, em outra ocorrência da
+     * busca, numa linha sem preço depois dos preços, ou numa linha que já é
+     * outro produto ("Feijão 1kg - R$ 8,50" logo abaixo de "Arroz 5kg").
+     */
+    function blocoDaOcorrencia(normLines, i, consulta, limite) {
+        const proprio = precosNaLinha(normLines[i]);
+        if (proprio.temPreco) return { fim: i, valores: proprio.valores, linhasPreco: [i] };
+
+        const valores = [];
+        const linhasPreco = [];
+        let fim = i;
+        for (let k = i + 1; k < normLines.length && k <= i + limite; k++) {
+            const n = normLines[k];
+            if (!n.trim()) break;
+            const p = precosNaLinha(n);
+            if (!p.temPreco) {
+                if (linhasPreco.length || casaConsulta(n, consulta)) break;
+                fim = k; // cor, observação: ainda é deste produto
+                continue;
+            }
+            if (pareceOutroProduto(n)) break;
+            valores.push(...p.valores);
+            linhasPreco.push(k);
+            fim = k;
+        }
+        return { fim, valores, linhasPreco };
+    }
+
+    // ================================================================
+    // FORNECEDORES (estado)
+    // ================================================================
+    let fornecedores = [];
+    let proximoId = 1;
+    let ultimoDesfazer = null;
+    const cacheLinhas = new Map();
+    const trechosPorFornecedor = new Map();
+    let ultimoRanking = [];
+
+    function novoFornecedor(dados = {}) {
+        const id = proximoId++;
+        return {
+            id,
+            nome: dados.nome ?? `Fornecedor ${fornecedores.length + 1}`,
+            texto: dados.texto ?? '',
+        };
+    }
+
+    function linhasDe(f) {
+        const cache = cacheLinhas.get(f.id);
+        if (cache && cache.texto === f.texto) return cache;
+        const lines = f.texto.split('\n');
+        const novo = { texto: f.texto, lines, normLines: lines.map(normalizeForSearch) };
+        cacheLinhas.set(f.id, novo);
+        return novo;
+    }
+
+    const temConteudo = (f) => f.texto.trim().length > 0;
+
+    function contarLinhas(texto) {
+        let n = 0;
+        for (const l of texto.split('\n')) if (l.trim()) n++;
+        return n;
+    }
+
+    function criarCartao(f) {
+        const cartao = document.createElement('article');
+        cartao.className = 'cartao-forn';
+        cartao.dataset.id = f.id;
+        cartao.innerHTML = `
+            <div class="cartao-topo">
+                <input type="text" class="cartao-nome" aria-label="Nome do fornecedor" autocomplete="off">
+                <span class="badge" hidden></span>
+                <div class="cartao-acoes">
+                    <button type="button" class="icone" data-acao="colar" title="Colar da área de transferência" aria-label="Colar">📋</button>
+                    <button type="button" class="icone" data-acao="limpar" title="Limpar a lista" aria-label="Limpar">🧹</button>
+                    <button type="button" class="icone" data-acao="remover" title="Remover fornecedor" aria-label="Remover">✕</button>
+                </div>
+            </div>
+            <textarea class="cartao-texto" spellcheck="false"></textarea>
+            <div class="cartao-rodape"></div>
+            <div class="resultado" hidden></div>`;
+        const nome = cartao.querySelector('.cartao-nome');
+        nome.value = f.nome;
+        nome.placeholder = 'Nome do fornecedor';
+        const texto = cartao.querySelector('.cartao-texto');
+        texto.value = f.texto;
+        texto.placeholder = 'Cole a lista do fornecedor aqui...\n\nEx:\nArroz 5kg - R$ 25,00\nFeijão 1kg - R$ 8,50\nÓleo 900ml - R$ 7,20';
+        atualizarRodape(cartao, f);
+        return cartao;
+    }
+
+    function atualizarRodape(cartao, f) {
+        const n = contarLinhas(f.texto);
+        cartao.querySelector('.cartao-rodape').textContent = n ? `${n} linha${n > 1 ? 's' : ''}` : 'vazia';
+    }
+
+    const cartaoDe = (id) => container.querySelector(`.cartao-forn[data-id="${id}"]`);
+    const fornecedorDe = (el) => fornecedores.find((f) => f.id === Number(el.closest('.cartao-forn')?.dataset.id));
+
+    function renderizarCartoes() {
+        container.replaceChildren(...fornecedores.map(criarCartao));
+        campoQuantidade.value = fornecedores.length;
+        for (const id of [...cacheLinhas.keys()]) {
+            if (!fornecedores.some((f) => f.id === id)) cacheLinhas.delete(id);
+        }
+        executarFiltro();
+        salvarRascunho();
+    }
+
+    /** Guarda como desfazer a última operação destrutiva e avisa. */
+    function oferecerDesfazer(mensagem, restaurar) {
+        ultimoDesfazer = restaurar;
+        mostrarAviso(mensagem, 'info', {
+            rotulo: 'Desfazer',
+            executar: () => {
+                if (ultimoDesfazer !== restaurar) return;
+                ultimoDesfazer = null;
+                restaurar();
+                renderizarCartoes();
+                mostrarAviso('↩ Restaurado');
+            },
+        });
+    }
+
+    function removerPorIndices(indices, mensagem) {
+        const retirados = indices.map((i) => fornecedores[i]).filter(Boolean);
+        if (!retirados.length) return;
+        // Os objetos são os mesmos: o que for editado nos outros cartões
+        // enquanto o aviso está na tela sobrevive ao desfazer.
+        const antes = fornecedores.slice();
+        fornecedores = fornecedores.filter((f) => !retirados.includes(f));
+        if (!fornecedores.length) fornecedores.push(novoFornecedor());
+        renderizarCartoes();
+        if (retirados.some((f) => temConteudo(f) || !/^Fornecedor \d+$/.test(f.nome))) {
+            oferecerDesfazer(mensagem, () => { fornecedores = antes; });
+        }
+    }
+
+    function aplicarQuantidade() {
+        const n = limitar(parseInt(campoQuantidade.value, 10) || 1, 1, MAX_FORNECEDORES);
+        if (n > fornecedores.length) {
+            while (fornecedores.length < n) fornecedores.push(novoFornecedor());
+            renderizarCartoes();
+        } else if (n < fornecedores.length) {
+            const indices = [];
+            for (let i = n; i < fornecedores.length; i++) indices.push(i);
+            removerPorIndices(indices, `➖ ${indices.length} fornecedor(es) removido(s)`);
+        } else {
+            campoQuantidade.value = n;
+        }
+    }
+
+    function adicionarFornecedor() {
+        if (fornecedores.length >= MAX_FORNECEDORES) return;
+        const f = novoFornecedor();
+        fornecedores.push(f);
+        renderizarCartoes();
+        const cartao = cartaoDe(f.id);
+        cartao?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cartao?.querySelector('.cartao-texto').focus({ preventScroll: true });
+    }
+
+    function removerUltimo() {
+        if (fornecedores.length <= 1) { mostrarAviso('⚠️ Mínimo de 1 fornecedor', 'erro'); return; }
+        const f = fornecedores[fornecedores.length - 1];
+        removerPorIndices([fornecedores.length - 1], `➖ "${f.nome}" removido`);
+    }
+
+    function limparTudo() {
+        if (!fornecedores.some(temConteudo)) { mostrarAviso('Nada para limpar', 'info'); return; }
+        const antes = fornecedores.map((f) => ({ ...f }));
+        fornecedores = fornecedores.map((f) => ({ ...f, texto: '' }));
+        renderizarCartoes();
+        oferecerDesfazer('🗑️ Listas apagadas (os nomes ficaram)', () => { fornecedores = antes; });
+    }
+
+    async function acaoDoCartao(acao, f) {
+        if (acao === 'remover') {
+            if (fornecedores.length <= 1) { mostrarAviso('⚠️ Mínimo de 1 fornecedor', 'erro'); return; }
+            removerPorIndices([fornecedores.indexOf(f)], `✕ "${f.nome}" removido`);
+            return;
+        }
+        if (acao === 'limpar') {
+            if (!temConteudo(f)) return;
+            const anterior = f.texto;
+            f.texto = '';
+            renderizarCartoes();
+            oferecerDesfazer(`🧹 Lista de "${f.nome}" apagada`, () => { f.texto = anterior; });
+            return;
+        }
+        if (acao === 'colar') {
+            let colado = '';
             try {
-                showToast('⏳ Carregando histórico...');
-                const res = await fetch(SCRIPT_URL);
-                if (!res.ok) throw new Error('Erro HTTP: ' + res.status);
-                const data = await res.json();
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    showToast('⚠️ Nenhum registro encontrado', 'error');
-                    return;
-                }
-
-                const selectHistorico = document.getElementById('historicoSelect');
-                selectHistorico.innerHTML = '<option value="">Selecione um histórico...</option>';
-                const dataInvertida = [...data].reverse();
-                dataInvertida.forEach((item, index) => {
-                    const opt = document.createElement('option');
-                    const dataLocal = new Date(item.date).toLocaleString('pt-BR');
-                    const tagText   = item.tag ? ` (${item.tag})` : '';
-                    let count = '';
-                    try {
-                        const s = JSON.parse(item.suppliers);
-                        count = ` [${s.length} forn.]`;
-                    } catch(e) {}
-                    opt.value = index;
-                    opt.textContent = `${index + 1} - ${dataLocal}${tagText}${count}`;
-                    selectHistorico.appendChild(opt);
-                });
-
-                selectHistorico.style.display = 'block';
-                selectHistorico.dataset.registros = JSON.stringify(dataInvertida);
-                showToast('✅ Histórico carregado!');
-            } catch (err) {
-                showToast('❌ Erro ao carregar histórico: ' + err.message, 'error');
-            }
-        }
-
-        function aplicarHistorico() {
-            const selectHistorico = document.getElementById('historicoSelect');
-            const index = parseInt(selectHistorico.value);
-            if (isNaN(index)) return;
-
-            const data     = JSON.parse(selectHistorico.dataset.registros);
-            const registro = data[index];
-
-            let suppliers = [];
-            try { suppliers = JSON.parse(registro.suppliers); } catch(e) {}
-
-            if (suppliers.length === 0) {
-                showToast('⚠️ Registro sem fornecedores', 'error');
+                colado = await navigator.clipboard.readText();
+            } catch {
+                mostrarAviso('Sem acesso à área de transferência — toque na caixa e cole', 'erro');
                 return;
             }
+            if (!colado.trim()) { mostrarAviso('A área de transferência está vazia', 'erro'); return; }
+            const anterior = f.texto;
+            f.texto = colado;
+            renderizarCartoes();
+            if (anterior.trim()) oferecerDesfazer(`📋 Lista de "${f.nome}" substituída`, () => { f.texto = anterior; });
+            else mostrarAviso(`📋 Colado em "${f.nome}"`);
+        }
+    }
 
-            numFornecedoresInput.value = suppliers.length;
-            Object.keys(removedCache).forEach(k => delete removedCache[k]);
-            setNumFornecedores(suppliers.length);
+    // ================================================================
+    // FILTRO, RESULTADOS E RANKING
+    // ================================================================
+    const agendarFiltro = adiar(executarFiltro, 140);
 
-            setTimeout(() => {
-                const textareas = container.querySelectorAll('textarea');
-                const inputs    = container.querySelectorAll('.supplier-header input[type=text]');
-                const tagInput  = document.getElementById('tagInput');
+    function executarFiltro() {
+        const consulta = interpretarBusca(campoBusca.value);
+        const sub = interpretarBusca(campoSubBusca.value);
+        const filtroNome = interpretarBusca(campoFiltroFornecedor.value);
+        const contexto = limitar(parseInt(campoContexto.value, 10) || 0, 0, 30);
+        const mostrarSemResultado = $('showNoResult').checked;
+        const buscaAtiva = consulta.length > 0;
+        const termosPrincipais = termosDe(consulta);
+        const termosSub = termosDe(sub);
 
-                if (tagInput) tagInput.value = registro.tag || '';
+        document.body.classList.toggle('busca-ativa', buscaAtiva);
+        $('searchLegend').hidden = !(buscaAtiva && sub.length);
+        trechosPorFornecedor.clear();
 
-                suppliers.forEach((s, i) => {
-                    if (inputs[i])    inputs[i].value = s.name || '';
-                    if (textareas[i]) {
-                        textareas[i].value = s.text || '';
-                        textareas[i].dataset.originalContent = textareas[i].value;
+        let ocorrenciasTotal = 0;
+        let comResultado = 0;
+        let visiveis = 0;
+        const ranking = [];
+        const vistos = new Set();
+
+        for (const f of fornecedores) {
+            const cartao = cartaoDe(f.id);
+            if (!cartao) continue;
+            const badge = cartao.querySelector('.badge');
+            const resultado = cartao.querySelector('.resultado');
+
+            if (filtroNome.length && !casaConsulta(normalizeForSearch(f.nome), filtroNome)) {
+                cartao.hidden = true;
+                continue;
+            }
+            if (!buscaAtiva) {
+                cartao.hidden = false;
+                badge.hidden = true;
+                resultado.hidden = true;
+                resultado.replaceChildren();
+                visiveis++;
+                continue;
+            }
+
+            const { lines, normLines } = linhasDe(f);
+            const ocorrencias = [];
+            for (let i = 0; i < lines.length; i++) {
+                if (!casaConsulta(normLines[i], consulta)) continue;
+                // O refinamento olha só o produto desta ocorrência. Olhar a
+                // janela de contexto inteira pegava a cor do produto vizinho.
+                if (sub.length) {
+                    const { fim } = blocoDaOcorrencia(normLines, i, consulta, contexto);
+                    if (!casaConsulta(normLines.slice(i, fim + 1).join('\n'), sub)) continue;
+                }
+                const ini = Math.max(0, i - contexto);
+                const fim = Math.min(lines.length - 1, i + contexto);
+                ocorrencias.push({ i, ini, fim });
+            }
+
+            if (!ocorrencias.length && !mostrarSemResultado) {
+                cartao.hidden = true;
+                continue;
+            }
+            cartao.hidden = false;
+            visiveis++;
+            badge.hidden = false;
+            badge.classList.toggle('zero', !ocorrencias.length);
+            badge.textContent = ocorrencias.length
+                ? `${ocorrencias.length} ocorrência${ocorrencias.length > 1 ? 's' : ''}`
+                : '0';
+            resultado.hidden = false;
+
+            if (!ocorrencias.length) {
+                const refinamento = campoSubBusca.value.trim() ? ` com "${campoSubBusca.value.trim()}"` : '';
+                resultado.innerHTML = `<div class="vazio">❌ Nenhum resultado para "${escapeHtml(campoBusca.value.trim())}"${escapeHtml(refinamento)}</div>`;
+                continue;
+            }
+
+            ocorrenciasTotal += ocorrencias.length;
+            comResultado++;
+
+            // Linhas a mostrar, na ordem, com "⋯" entre trechos que não se tocam.
+            const partesHtml = [];
+            const partesTexto = [];
+            let ultima = -2;
+            for (const { ini, fim } of ocorrencias) {
+                for (let k = Math.max(ini, ultima + 1); k <= fim; k++) {
+                    if (ultima >= 0 && k > ultima + 1) {
+                        partesHtml.push('<div class="sep">⋯</div>');
+                        partesTexto.push('…');
                     }
-                });
+                    partesHtml.push(`<div>${destacarLinha(lines[k], termosPrincipais, termosSub) || '&nbsp;'}</div>`);
+                    partesTexto.push(lines[k]);
+                    ultima = k;
+                }
+            }
+            resultado.innerHTML = partesHtml.join('');
+            trechosPorFornecedor.set(f.id, partesTexto.join('\n'));
 
-                showToast(`✅ Registro carregado com ${suppliers.length} fornecedor(es)!`);
-                applyFilter();
-            }, 100);
+            for (const { i } of ocorrencias) {
+                const { valores, linhasPreco } = blocoDaOcorrencia(normLines, i, consulta, JANELA_PRECO);
+                if (!valores.length) continue;
+                const valor = Math.min(...valores);
+                const chave = `${f.id}:${linhasPreco.join(',')}:${valor}`;
+                if (vistos.has(chave)) continue;
+                vistos.add(chave);
+                const outros = [...new Set(valores)].filter((v) => v !== valor).sort((a, b) => a - b);
+                ranking.push({
+                    id: f.id,
+                    fornecedor: f.nome || 'Sem nome',
+                    produto: linhaLimpa(lines[i]),
+                    valor,
+                    outros,
+                });
+            }
         }
 
-        // ============================================================
-        // IA
-        // ============================================================
+        ranking.sort((a, b) => a.valor - b.valor || a.fornecedor.localeCompare(b.fornecedor, 'pt-BR'));
+        ultimoRanking = ranking;
+        renderizarRanking(buscaAtiva);
+        atualizarStatus({ buscaAtiva, ocorrenciasTotal, comResultado, visiveis, precos: ranking.length });
+        if ($('secaoIA').open) atualizarEstimativaIA();
+    }
 
-        const API_INFO_TEXTS = {
-            gemini_default: 'Modelo: Gemini 2.5 Flash via proxy — sem necessidade de token',
-            gemini_direct:  'Modelo: Gemini direto pelo Google AI Studio — insira seu token e escolha o modelo',
-            openrouter:     'Modelo: OpenRouter — insira seu token e clique em "Listar Modelos" para escolher',
-            openai:         'Modelo: OpenAI ChatGPT — insira seu token da API da OpenAI',
-            custom:         'Modelo: URL personalizada — informe a URL e o token se necessário'
+    function atualizarStatus({ buscaAtiva, ocorrenciasTotal, comResultado, visiveis, precos }) {
+        const total = fornecedores.length;
+        const preenchidos = fornecedores.filter(temConteudo).length;
+        let texto;
+        if (!buscaAtiva) {
+            texto = `${preenchidos} de ${total} fornecedor${total > 1 ? 'es' : ''} com lista`;
+            if (visiveis < total) texto += ` · mostrando ${visiveis}`;
+        } else if (!ocorrenciasTotal) {
+            texto = '❌ Nada encontrado — tente menos palavras ou confira a grafia';
+        } else {
+            texto = `${ocorrenciasTotal} ocorrência${ocorrenciasTotal > 1 ? 's' : ''} em ${comResultado} de ${total} fornecedor${total > 1 ? 'es' : ''}`;
+            if (precos) texto += ` · ${precos} com preço`;
+        }
+        $('buscaStatus').textContent = texto;
+    }
+
+    function renderizarRanking(buscaAtiva) {
+        const painel = $('ranking');
+        const lista = $('rankingLista');
+        if (!buscaAtiva || !$('mostrarRanking').checked) {
+            painel.hidden = true;
+            return;
+        }
+        painel.hidden = false;
+        $('copiarRankingBtn').hidden = !ultimoRanking.length;
+        if (!ultimoRanking.length) {
+            lista.innerHTML = '<li class="rank-vazio">Nenhum preço reconhecido nas linhas encontradas. O ranking lê valores com R$ ou no formato 1.234,56.</li>';
+            return;
+        }
+        lista.innerHTML = ultimoRanking.slice(0, 100).map((r, n) => `
+            <li><button type="button" class="rank-item" data-id="${r.id}">
+                <span class="rank-pos">${n + 1}º</span>
+                <span class="rank-preco">${escapeHtml(formatarReal(r.valor))}</span>
+                <span class="rank-forn">${escapeHtml(r.fornecedor)}</span>
+                <span class="rank-produto">${escapeHtml(r.produto)}${r.outros.length ? ` · também ${r.outros.map((v) => escapeHtml(formatarReal(v))).join(', ')}` : ''}</span>
+            </button></li>`).join('');
+    }
+
+    function textoDoRanking() {
+        const linhas = [`🔎 *${campoBusca.value.trim()}*${campoSubBusca.value.trim() ? ` + ${campoSubBusca.value.trim()}` : ''}`, ''];
+        ultimoRanking.slice(0, 30).forEach((r, n) => {
+            linhas.push(`${n + 1}. *${formatarReal(r.valor)}* — ${r.fornecedor}`);
+            linhas.push(`   ${r.produto}`);
+        });
+        return linhas.join('\n');
+    }
+
+    function irParaFornecedor(id) {
+        const cartao = cartaoDe(id);
+        if (!cartao) return;
+        cartao.hidden = false;
+        const altura = $('barraBusca').getBoundingClientRect().height;
+        const y = cartao.getBoundingClientRect().top + window.scrollY - altura - 12;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        cartao.classList.remove('destaque');
+        void cartao.offsetWidth;
+        cartao.classList.add('destaque');
+    }
+
+    // ================================================================
+    // RASCUNHO E PREFERÊNCIAS (neste aparelho)
+    // ================================================================
+    let avisouFalhaRascunho = false;
+    const salvarRascunho = adiar(() => {
+        const ok = armazenamento.gravar(CHAVE_RASCUNHO, {
+            versao: 1,
+            tag: $('tagInput').value,
+            fornecedores: fornecedores.map(({ nome, texto }) => ({ nome, texto })),
+        });
+        if (!ok && !avisouFalhaRascunho) {
+            avisouFalhaRascunho = true;
+            mostrarAviso('⚠️ Este navegador não deixou guardar as listas — use "Salvar no histórico"', 'erro');
+        }
+    }, 400);
+
+    function carregarRascunho() {
+        const r = armazenamento.ler(CHAVE_RASCUNHO, null);
+        const lista = Array.isArray(r?.fornecedores) ? r.fornecedores : [];
+        fornecedores = [];
+        for (const item of lista) {
+            fornecedores.push(novoFornecedor({ nome: String(item?.nome ?? ''), texto: String(item?.texto ?? '') }));
+        }
+        while (fornecedores.length < 1 || (!lista.length && fornecedores.length < FORNECEDORES_PADRAO)) {
+            fornecedores.push(novoFornecedor());
+        }
+        if (typeof r?.tag === 'string') $('tagInput').value = r.tag;
+    }
+
+    function salvarPrefs() {
+        armazenamento.gravar(CHAVE_PREFS, {
+            contexto: campoContexto.value,
+            mostrarSemResultado: $('showNoResult').checked,
+            esconderListas: $('esconderListas').checked,
+            mostrarRanking: $('mostrarRanking').checked,
+            colunas: $('colunasSelect').value,
+            aiSoTrechos: $('aiSoTrechos').checked,
+        });
+    }
+
+    function carregarPrefs() {
+        const p = armazenamento.ler(CHAVE_PREFS, {});
+        if (p.contexto !== undefined) campoContexto.value = p.contexto;
+        if (typeof p.mostrarSemResultado === 'boolean') $('showNoResult').checked = p.mostrarSemResultado;
+        if (typeof p.esconderListas === 'boolean') $('esconderListas').checked = p.esconderListas;
+        if (typeof p.mostrarRanking === 'boolean') $('mostrarRanking').checked = p.mostrarRanking;
+        if (typeof p.aiSoTrechos === 'boolean') $('aiSoTrechos').checked = p.aiSoTrechos;
+        if (p.colunas) $('colunasSelect').value = p.colunas;
+        aplicarPrefsVisuais();
+    }
+
+    function aplicarPrefsVisuais() {
+        container.dataset.colunas = $('colunasSelect').value || 'auto';
+        document.body.classList.toggle('esconder-listas', $('esconderListas').checked);
+    }
+
+    // ================================================================
+    // ARQUIVO (exportar / importar)
+    // ================================================================
+    function exportarArquivo() {
+        const dados = {
+            app: 'comparador-fornecedores',
+            versao: 1,
+            exportadoEm: new Date().toISOString(),
+            tag: $('tagInput').value,
+            fornecedores: fornecedores.map(({ nome, texto }) => ({ nome, texto })),
         };
+        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fornecedores-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        mostrarAviso('⬇️ Arquivo exportado');
+    }
 
-        function onModelChange() {
-            const model = document.getElementById('aiModelSelect').value;
-            const tokenGroup      = document.getElementById('tokenGroup');
-            const customUrlGroup  = document.getElementById('customUrlGroup');
-            const modelNameGroup  = document.getElementById('modelNameGroup');
-            const geminiModelGroup= document.getElementById('geminiModelGroup');
-            const proxyModelGroup= document.getElementById('proxyModelGroup');
-            const apiInfoBox      = document.getElementById('apiInfoBox');
+    /** Aceita o arquivo exportado, o formato do histórico ou uma lista pura. */
+    function fornecedoresDoJson(dados) {
+        // O histórico da planilha guarda a lista como texto JSON.
+        if (typeof dados === 'string') return fornecedoresDoJson(JSON.parse(dados));
+        const lista = Array.isArray(dados) ? dados : dados?.fornecedores ?? dados?.suppliers;
+        if (typeof lista === 'string') return fornecedoresDoJson(JSON.parse(lista));
+        if (!Array.isArray(lista)) throw new Error('formato não reconhecido');
+        return lista.map((s) => ({ nome: String(s?.nome ?? s?.name ?? ''), texto: String(s?.texto ?? s?.text ?? '') }));
+    }
 
-            tokenGroup.style.display       = (model === 'gemini_default') ? 'none' : 'flex';
-            customUrlGroup.style.display   = (model === 'custom')         ? 'block' : 'none';
-            modelNameGroup.style.display   = (model === 'openrouter')     ? 'block' : 'none';
-            geminiModelGroup.style.display = (model === 'gemini_direct')  ? 'block' : 'none';
-            if(proxyModelGroup) proxyModelGroup.style.display = (model === 'gemini_default') ? 'block' : 'none';
-
-            if (apiInfoBox) {
-                apiInfoBox.innerHTML = `<strong>ℹ️ Análise Inteligente:</strong><br>${API_INFO_TEXTS[model] || ''}<br>Analise automaticamente os melhores preços entre todos os fornecedores`;
+    async function importarArquivos(arquivos) {
+        const deJson = [];
+        const deTxt = [];
+        let tag = null;
+        for (const arquivo of arquivos) {
+            const conteudo = await arquivo.text();
+            if (/\.json$/i.test(arquivo.name) || arquivo.type === 'application/json') {
+                try {
+                    const dados = JSON.parse(conteudo);
+                    deJson.push(...fornecedoresDoJson(dados));
+                    if (typeof dados?.tag === 'string') tag = dados.tag;
+                } catch (erro) {
+                    mostrarAviso(`❌ ${arquivo.name}: ${erro.message}`, 'erro');
+                    return;
+                }
+            } else {
+                deTxt.push({ nome: arquivo.name.replace(/\.[^.]+$/, ''), texto: conteudo });
             }
-            saveToken();
         }
+        const novos = [...deJson, ...deTxt];
+        if (!novos.length) return;
 
-        function saveToken() {
-            const model    = document.getElementById('aiModelSelect').value;
-            const token    = document.getElementById('aiToken').value;
-            const url      = document.getElementById('aiCustomUrl')?.value || '';
-            const modelName= document.getElementById('aiModelName')?.value || '';
-            const geminiM  = document.getElementById('geminiModelSelect')?.value || '';
-            localStorage.setItem('ai_model', model);
-            localStorage.setItem('ai_token_' + model, token);
-            if (model === 'custom')        localStorage.setItem('ai_custom_url', url);
-            if (model === 'openrouter')    localStorage.setItem('ai_openrouter_model', modelName);
-            if (model === 'gemini_direct') localStorage.setItem('ai_gemini_model', geminiM);
-            if (model === 'gemini_default') localStorage.setItem('ai_proxy_model', document.getElementById('proxyModelName')?.value || '');
+        const antes = fornecedores.map((f) => ({ ...f }));
+        const substituir = deJson.length > 0 && fornecedores.some(temConteudo)
+            ? confirm('Substituir as listas atuais pelas do arquivo?\n\nOK = substituir · Cancelar = adicionar ao final')
+            : deJson.length > 0;
+
+        if (substituir) {
+            fornecedores = [];
+        } else {
+            // Caixas vazias são reaproveitadas antes de criar novas.
+            fornecedores = fornecedores.filter(temConteudo);
         }
+        for (const n of novos) fornecedores.push(novoFornecedor(n));
+        if (!fornecedores.length) fornecedores.push(novoFornecedor());
+        if (tag !== null && substituir) $('tagInput').value = tag;
+        renderizarCartoes();
+        oferecerDesfazer(`⬆️ ${novos.length} fornecedor(es) importado(s)`, () => { fornecedores = antes; });
+    }
 
-        function loadSavedModel() {
-            const saved = localStorage.getItem('ai_model') || 'gemini_default';
-            document.getElementById('aiModelSelect').value = saved;
-            const token = localStorage.getItem('ai_token_' + saved) || '';
-            document.getElementById('aiToken').value = token;
+    // ================================================================
+    // HISTÓRICO (planilha via Apps Script)
+    // ================================================================
+    let registrosHistorico = [];
 
-            const customUrl = localStorage.getItem('ai_custom_url') || '';
-            if (document.getElementById('aiCustomUrl')) document.getElementById('aiCustomUrl').value = customUrl;
+    async function salvarDados() {
+        const suppliers = fornecedores.map(({ nome, texto }) => ({ name: nome, text: texto }));
+        if (!suppliers.some((s) => s.text.trim())) { mostrarAviso('⚠️ Nenhuma lista para salvar', 'erro'); return; }
 
-            const orModel = localStorage.getItem('ai_openrouter_model') || '';
-            if (document.getElementById('aiModelName')) document.getElementById('aiModelName').value = orModel;
+        const params = new URLSearchParams();
+        params.append('tag', $('tagInput').value || '');
+        params.append('suppliers', JSON.stringify(suppliers));
 
-            const proxyModel = localStorage.getItem('ai_proxy_model') || 'gemini-3-flash-preview';
-            if (document.getElementById('proxyModelName')) document.getElementById('proxyModelName').value = proxyModel;
-
-            const geminiModel = localStorage.getItem('ai_gemini_model') || '';
-            if (geminiModel && document.getElementById('geminiModelSelect')) {
-                document.getElementById('geminiModelSelect').value = geminiModel;
-            }
-            onModelChange();
+        const botao = $('salvarBtn');
+        botao.disabled = true;
+        try {
+            mostrarAviso('⏳ Salvando dados...', 'info');
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
+            const texto = await res.text();
+            let json;
+            try { json = JSON.parse(texto); } catch { throw new Error('Resposta inválida: ' + texto.slice(0, 200)); }
+            if (json.status !== 'success') throw new Error(JSON.stringify(json));
+            mostrarAviso('✅ Dados salvos no histórico!');
+            $('tagInput').value = '';
+            salvarRascunho();
+        } catch (erro) {
+            mostrarAviso('❌ Erro ao salvar: ' + erro.message, 'erro');
+        } finally {
+            botao.disabled = false;
         }
+    }
 
-        function getAIConfig() {
-            const model = document.getElementById('aiModelSelect').value;
-            const token = document.getElementById('aiToken').value.trim();
+    async function carregarHistorico() {
+        const botao = $('historicoBtn');
+        botao.disabled = true;
+        try {
+            mostrarAviso('⏳ Carregando histórico...', 'info');
+            const res = await fetch(SCRIPT_URL);
+            if (!res.ok) throw new Error('Erro HTTP: ' + res.status);
+            const data = await res.json();
+            if (!Array.isArray(data) || !data.length) { mostrarAviso('⚠️ Nenhum registro encontrado', 'erro'); return; }
 
-            if (model === 'gemini_default') {
-                const proxyModel = document.getElementById('proxyModelName')?.value.trim();
-                return {
-                    url: "https://caixa-kal3.vercel.app/api/gemini",
-                    headers: { "Content-Type": "application/json" },
-                    type: 'gemini',
-                    model: proxyModel || 'gemini-3-flash-preview'
-                };
-            }
-            if (model === 'gemini_direct') {
-                if (!token) throw new Error('Token do Google AI Studio não informado. Acesse ai.google.dev para obter.');
-                const geminiModel = document.getElementById('geminiModelSelect').value || 'gemini-2.5-flash-preview-04-17';
-                return {
-                    url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${token}`,
-                    headers: { "Content-Type": "application/json" },
-                    type: 'gemini_direct',
-                    model: geminiModel
-                };
-            }
-            if (model === 'openrouter') {
-                if (!token) throw new Error('Token do OpenRouter não informado.');
-                const modelName = document.getElementById('aiModelName').value.trim();
-                if (!modelName) throw new Error('Selecione um modelo do OpenRouter (clique em "Listar Modelos" primeiro).');
-                return {
-                    url: "https://openrouter.ai/api/v1/chat/completions",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + token,
-                        "HTTP-Referer": window.location.href,
-                        "X-Title": "Comparador de Fornecedores"
-                    },
-                    type: 'openai',
-                    model: modelName
-                };
-            }
-            if (model === 'openai') {
-                if (!token) throw new Error('Token da OpenAI não informado.');
-                return {
-                    url: "https://api.openai.com/v1/chat/completions",
-                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-                    type: 'openai',
-                    model: 'gpt-4o-mini'
-                };
-            }
-            if (model === 'custom') {
-                const customUrl = document.getElementById('aiCustomUrl').value.trim();
-                if (!customUrl) throw new Error('URL da API personalizada não informada.');
-                const h = { "Content-Type": "application/json" };
-                if (token) h["Authorization"] = "Bearer " + token;
-                return { url: customUrl, headers: h, type: 'openai' };
-            }
-            throw new Error('Provedor desconhecido.');
+            registrosHistorico = [...data].reverse();
+            const select = $('historicoSelect');
+            select.innerHTML = '<option value="">Selecione um histórico...</option>';
+            registrosHistorico.forEach((item, index) => {
+                const opt = document.createElement('option');
+                const quando = new Date(item.date);
+                const dataLocal = Number.isNaN(quando.getTime()) ? String(item.date ?? '') : quando.toLocaleString('pt-BR');
+                let contagem = '';
+                try { contagem = ` [${JSON.parse(item.suppliers).length} forn.]`; } catch { /* registro antigo */ }
+                opt.value = index;
+                opt.textContent = `${index + 1} - ${dataLocal}${item.tag ? ` (${item.tag})` : ''}${contagem}`;
+                select.append(opt);
+            });
+            select.hidden = false;
+            select.focus();
+            mostrarAviso(`✅ ${registrosHistorico.length} registro(s) no histórico`);
+        } catch (erro) {
+            mostrarAviso('❌ Erro ao carregar histórico: ' + erro.message, 'erro');
+        } finally {
+            botao.disabled = false;
         }
+    }
 
-        function buildRequestBody(cfg, systemPrompt, userMessage) {
-            if (cfg.type === 'gemini_direct') {
-                return JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPrompt }] },
-                    contents: [{ role: "user", parts: [{ text: userMessage }] }],
-                    generationConfig: { maxOutputTokens: 8192 }
-                });
-            }
-            if (cfg.type === 'openai') {
-                return JSON.stringify({
-                    ...(cfg.model ? { model: cfg.model } : {}),
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userMessage }
-                    ]
-                });
-            }
+    function aplicarHistorico() {
+        const select = $('historicoSelect');
+        const registro = registrosHistorico[parseInt(select.value, 10)];
+        if (!registro) return;
+
+        let suppliers = [];
+        try { suppliers = fornecedoresDoJson(registro.suppliers); } catch { /* vazio */ }
+        if (!suppliers.length) { mostrarAviso('⚠️ Registro sem fornecedores', 'erro'); return; }
+
+        if (fornecedores.some(temConteudo) &&
+            !confirm(`Carregar "${registro.tag || 'registro'}" (${suppliers.length} fornecedores) no lugar das listas atuais?`)) {
+            select.value = '';
+            return;
+        }
+        const antes = fornecedores.map((f) => ({ ...f }));
+        const tagAntes = $('tagInput').value;
+        fornecedores = [];
+        for (const s of suppliers) fornecedores.push(novoFornecedor(s));
+        $('tagInput').value = registro.tag || '';
+        renderizarCartoes();
+        oferecerDesfazer(`✅ Registro carregado com ${suppliers.length} fornecedor(es)`, () => {
+            fornecedores = antes;
+            $('tagInput').value = tagAntes;
+        });
+    }
+
+    // ================================================================
+    // IA
+    // ================================================================
+    const SUGESTOES_GEMINI = [
+        'gemini-3-flash-preview', 'gemini-3.1-flash-preview', 'gemini-2.5-flash-preview-04-17',
+        'gemini-2.5-pro-preview-03-25', 'gemini-2.0-flash', 'gemini-2.0-flash-lite',
+        'gemini-1.5-pro', 'gemini-1.5-flash',
+    ];
+
+    // As chaves ai_* são as mesmas da versão anterior: tokens e modelos já
+    // salvos continuam valendo.
+    const PROVEDORES = {
+        gemini_default: {
+            chaveModelo: 'ai_proxy_model', modeloPadrao: 'gemini-3-flash-preview',
+            sugestoes: SUGESTOES_GEMINI, token: false,
+            info: 'Gemini pelo proxy do projeto — não precisa de token.',
+        },
+        gemini_direct: {
+            chaveModelo: 'ai_gemini_model', modeloPadrao: 'gemini-3-flash-preview',
+            sugestoes: SUGESTOES_GEMINI, token: true,
+            info: 'Gemini direto no Google AI Studio (ai.google.dev) com o seu token.',
+        },
+        openrouter: {
+            chaveModelo: 'ai_openrouter_model', modeloPadrao: '',
+            sugestoes: [], token: true, exigeModelo: true,
+            info: 'OpenRouter — informe o token e toque em "Atualizar" para ver os modelos (🆓 = gratuitos).',
+        },
+        openai: {
+            chaveModelo: 'ai_openai_model', modeloPadrao: 'gpt-4o-mini',
+            sugestoes: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1'], token: true,
+            info: 'OpenAI (ChatGPT) com o seu token da API.',
+        },
+        custom: {
+            chaveModelo: 'ai_custom_model', modeloPadrao: '',
+            sugestoes: [], token: true,
+            info: 'Qualquer API no formato da OpenAI (/chat/completions). O token é opcional.',
+        },
+    };
+
+    const provedorAtual = () => $('aiModelSelect').value;
+
+    function preencherListaModelos(opcoes, rotuloVazio = '— escolher —') {
+        const select = $('aiModeloLista');
+        select.replaceChildren(new Option(rotuloVazio, ''));
+        for (const o of opcoes) {
+            const valor = typeof o === 'string' ? o : o.valor;
+            const rotulo = typeof o === 'string' ? o : o.rotulo;
+            select.append(new Option(rotulo, valor));
+        }
+        select.value = '';
+    }
+
+    function atualizarInfoIA() {
+        const p = PROVEDORES[provedorAtual()];
+        const modelo = $('aiModelo').value.trim() || p.modeloPadrao || '(escolha um modelo)';
+        $('apiInfoBox').innerHTML = `<strong>ℹ️ Análise inteligente</strong><br>${escapeHtml(p.info)}<br>Modelo: <code>${escapeHtml(modelo)}</code>`;
+    }
+
+    /**
+     * Troca de provedor carrega o token e o modelo DELE. A versão anterior
+     * gravava o token do provedor antigo na vaga do novo ao trocar.
+     */
+    function onModelChange() {
+        const id = provedorAtual();
+        const p = PROVEDORES[id];
+        armazenamento.gravarTexto('ai_model', id);
+        $('tokenGroup').hidden = !p.token;
+        $('customUrlGroup').hidden = id !== 'custom';
+        $('aiToken').value = armazenamento.lerTexto('ai_token_' + id);
+        $('aiModelo').value = armazenamento.lerTexto(p.chaveModelo) || p.modeloPadrao;
+        $('aiModelo').placeholder = p.modeloPadrao ? `Padrão: ${p.modeloPadrao}` : 'Nome do modelo';
+        $('aiCustomUrl').value = armazenamento.lerTexto('ai_custom_url');
+        preencherListaModelos(p.sugestoes, p.sugestoes.length ? '— escolher —' : '— toque em Atualizar —');
+        atualizarInfoIA();
+    }
+
+    function salvarConfigIA() {
+        const id = provedorAtual();
+        armazenamento.gravarTexto('ai_token_' + id, $('aiToken').value.trim());
+        armazenamento.gravarTexto(PROVEDORES[id].chaveModelo, $('aiModelo').value.trim());
+        if (id === 'custom') armazenamento.gravarTexto('ai_custom_url', $('aiCustomUrl').value.trim());
+        atualizarInfoIA();
+    }
+
+    function configIA() {
+        const id = provedorAtual();
+        const p = PROVEDORES[id];
+        const token = $('aiToken').value.trim();
+        const modelo = $('aiModelo').value.trim() || p.modeloPadrao;
+        if (p.token && id !== 'custom' && !token) throw new Error('Informe o token de acesso deste provedor.');
+        if (p.exigeModelo && !modelo) throw new Error('Escolha um modelo (toque em "Atualizar" para listar).');
+
+        if (id === 'gemini_default') {
+            return { url: PROXY_URL, headers: { 'Content-Type': 'application/json' }, tipo: 'proxy', modelo };
+        }
+        if (id === 'gemini_direct') {
+            // Token no cabeçalho, não na URL: URL vai para histórico e logs.
+            return {
+                url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelo)}:generateContent`,
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': token },
+                tipo: 'gemini',
+                modelo,
+            };
+        }
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = 'Bearer ' + token;
+        if (id === 'openrouter') {
+            headers['HTTP-Referer'] = location.href;
+            headers['X-Title'] = 'Comparador de Fornecedores';
+            return { url: 'https://openrouter.ai/api/v1/chat/completions', headers, tipo: 'openai', modelo };
+        }
+        if (id === 'openai') {
+            return { url: 'https://api.openai.com/v1/chat/completions', headers, tipo: 'openai', modelo };
+        }
+        const url = $('aiCustomUrl').value.trim();
+        if (!url) throw new Error('Informe a URL da API personalizada.');
+        return { url, headers, tipo: 'openai', modelo };
+    }
+
+    function corpoRequisicao(cfg, sistema, mensagem) {
+        if (cfg.tipo === 'gemini') {
             return JSON.stringify({
-                ...(cfg.model ? { model: cfg.model } : {}),
-                systemPrompt,
-                messages: userMessage
+                system_instruction: { parts: [{ text: sistema }] },
+                contents: [{ role: 'user', parts: [{ text: mensagem }] }],
+                generationConfig: { maxOutputTokens: 8192 },
             });
         }
-
-        function parseAIResponse(data, type) {
-            if (type === 'gemini_direct') {
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
-            }
-            return data.choices?.[0]?.message?.content
-                || data.candidates?.[0]?.content?.parts?.[0]?.text
-                || null;
+        if (cfg.tipo === 'openai') {
+            return JSON.stringify({
+                ...(cfg.modelo ? { model: cfg.modelo } : {}),
+                messages: [{ role: 'system', content: sistema }, { role: 'user', content: mensagem }],
+            });
         }
+        return JSON.stringify({ ...(cfg.modelo ? { model: cfg.modelo } : {}), systemPrompt: sistema, messages: mensagem });
+    }
 
-        async function listModels() {
-            const resultDiv = document.getElementById('aiResult');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const btn = document.getElementById('listModelsBtn');
-            loadingIndicator.classList.add('show');
-            btn.disabled = true;
-            resultDiv.classList.remove('show');
-            try {
-                const selectedProvider = document.getElementById('aiModelSelect').value;
+    /** O proxy devolve { error: "Erro na API Gemini", details } — o motivo real está em details. */
+    function mensagemDeErro(data, status) {
+        const partes = [];
+        const e = data?.error;
+        if (typeof e === 'string') partes.push(e);
+        else if (e?.message) partes.push(e.message);
+        const detalhe = data?.details?.error?.message ?? (typeof data?.details === 'string' ? data.details : '');
+        if (detalhe) partes.push(detalhe);
+        if (typeof data?.message === 'string' && !partes.includes(data.message)) partes.push(data.message);
+        return `HTTP ${status}${partes.length ? ' — ' + partes.join(' · ') : ''}`;
+    }
 
-                if (selectedProvider === 'openrouter') {
-                    const token = document.getElementById('aiToken').value.trim();
-                    if (!token) throw new Error('Token do OpenRouter não informado.');
-                    const res = await fetch("https://openrouter.ai/api/v1/models", {
-                        headers: { "Authorization": "Bearer " + token }
-                    });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error?.message || "Erro na API OpenRouter");
-                    const modelos = data.data
-                        .filter(m => m.id.endsWith(':free') || (m.context_length >= 100000))
-                        .sort((a, b) => (b.context_length || 0) - (a.context_length || 0));
-                    const select = document.getElementById('aiModelList');
-                    select.innerHTML = '<option value="">Selecione um modelo...</option>';
-                    modelos.forEach(m => {
-                        const opt = document.createElement('option');
-                        opt.value = m.id;
-                        const ctx = m.context_length ? ` [${(m.context_length/1000).toFixed(0)}k ctx]` : '';
-                        const free = m.id.endsWith(':free') ? ' 🆓' : '';
-                        opt.textContent = `${m.id}${ctx}${free}`;
-                        select.appendChild(opt);
-                    });
-                    resultDiv.textContent = `✅ ${modelos.length} modelos carregados (contexto ≥ 100k ou gratuitos 🆓). Selecione um acima.`;
-                    resultDiv.classList.add('show');
-                    showToast(`✅ ${modelos.length} modelos carregados!`);
-                    return;
-                }
+    function lerResposta(data) {
+        const escolha = data?.choices?.[0];
+        const candidato = data?.candidates?.[0];
+        const texto = escolha?.message?.content
+            ?? (candidato?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || '').join('');
+        const motivo = escolha?.finishReason ?? escolha?.finish_reason ?? candidato?.finishReason ?? null;
+        return { texto: String(texto || '').trim(), motivo };
+    }
 
-                if (selectedProvider === 'gemini_direct') {
-                    const token = document.getElementById('aiToken').value.trim();
-                    if (!token) throw new Error('Token do Google AI Studio não informado.');
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${token}`);
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error?.message || "Erro na API Gemini");
-                    const modelos = (data.models || []).filter(m => m.name.includes('gemini'));
-                    const select = document.getElementById('aiModelList');
-                    select.innerHTML = '<option value="">Selecione um modelo...</option>';
-                    modelos.forEach(m => {
-                        const opt = document.createElement('option');
-                        opt.value = m.name.replace('models/', '');
-                        const ctx = m.inputTokenLimit ? ` [${(m.inputTokenLimit/1000).toFixed(0)}k ctx]` : '';
-                        opt.textContent = `${m.displayName || m.name}${ctx}`;
-                        select.appendChild(opt);
-                    });
-                    resultDiv.textContent = `✅ ${modelos.length} modelos Gemini encontrados. Selecione um acima.`;
-                    resultDiv.classList.add('show');
-                    showToast(`✅ ${modelos.length} modelos Gemini carregados!`);
-                    return;
-                }
-
-                if (selectedProvider === 'gemini_default') {
-                    const cfg = getAIConfig();
-                    const res = await fetch(cfg.url);
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error || "Erro no Proxy");
-
-                    const modelos = (data.models || []).filter(m => m.name.includes('gemini'));
-                    if (modelos.length === 0) throw new Error("O proxy não devolveu nenhum modelo (atualize o código do seu proxy no Vercel!)");
-
-                    const datalist = document.getElementById('proxyModelListOptions');
-                    datalist.innerHTML = '';
-                    modelos.forEach(m => {
-                        const opt = document.createElement('option');
-                        opt.value = m.name.replace('models/', '');
-                        datalist.appendChild(opt);
-                    });
-
-                    resultDiv.textContent = `✅ ${modelos.length} modelos listados do Proxy com sucesso! (Disponíveis em "Modelo Proxy")`;
-                    resultDiv.classList.add('show');
-                    showToast(`✅ ${modelos.length} modelos carregados do Proxy!`);
-                    return;
-                }
-
-                const cfg = getAIConfig();
-                const response = await fetch(cfg.url, {
-                    method: "POST",
-                    headers: cfg.headers,
-                    body: buildRequestBody(cfg, "Liste os modelos disponíveis.", "Quais modelos estão disponíveis?")
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error?.message || data.error || "Erro na API");
-                resultDiv.textContent = parseAIResponse(data, cfg.type) || "⚠️ Resposta inesperada.";
-                resultDiv.classList.add('show');
-                showToast('✅ Modelos listados');
-            } catch (error) {
-                resultDiv.textContent = `❌ Erro:\n${error.message}`;
-                resultDiv.classList.add('show');
-                showToast('❌ Erro', 'error');
-            } finally {
-                loadingIndicator.classList.remove('show');
-                btn.disabled = false;
-            }
+    async function lerJson(res) {
+        const bruto = await res.text();
+        try {
+            return JSON.parse(bruto);
+        } catch {
+            throw new Error(`Resposta não é JSON (HTTP ${res.status}): ${bruto.slice(0, 200)}`);
         }
+    }
 
-        async function analyzeWithAI() {
-            const productInput    = document.getElementById('productSearchAI').value.trim();
-            const promptTemplate  = document.getElementById('aiPrompt').value;
-            const resultDiv       = document.getElementById('aiResult');
-            const loadingIndicator= document.getElementById('loadingIndicator');
-            const analyzeBtn      = document.getElementById('analyzeBtn');
-
-            if (!productInput) { showToast('⚠️ Digite ao menos um produto', 'error'); return; }
-
-            const textareas = container.querySelectorAll('textarea');
-            const inputs    = container.querySelectorAll('.supplier-header input[type=text]');
-            let supplierData = '';
-            for (let i = 0; i < textareas.length; i++) {
-                const name = inputs[i]?.value || `Fornecedor ${i+1}`;
-                const list = textareas[i]?.value || '';
-                if (list.trim()) supplierData += `\n\n=== ${name} ===\n${list}`;
-            }
-            if (!supplierData.trim()) { showToast('⚠️ Nenhuma lista encontrada', 'error'); return; }
-
-            const finalPrompt = promptTemplate.replace('{PRODUTOS}', productInput) + '\n\nLISTAS DE FORNECEDORES:' + supplierData;
-            loadingIndicator.classList.add('show');
-            analyzeBtn.disabled = true;
-            resultDiv.classList.remove('show');
-
-            try {
-                const cfg = getAIConfig();
-                const response = await fetch(cfg.url, {
-                    method: "POST",
-                    headers: cfg.headers,
-                    body: buildRequestBody(cfg,
-                        "Você é um analista de preços e deve seguir estritamente o formato solicitado.",
-                        finalPrompt)
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error?.message || data.error || "Erro na API");
-                const content = parseAIResponse(data, cfg.type);
-                if (content) {
-                    resultDiv.textContent = content;
-                    resultDiv.classList.add('show');
-                    showToast('✅ Análise concluída!');
-                    setTimeout(() => resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-                } else {
-                    throw new Error('Resposta em formato inesperado.');
+    async function listarModelos() {
+        const id = provedorAtual();
+        const botao = $('listModelsBtn');
+        botao.disabled = true;
+        try {
+            const token = $('aiToken').value.trim();
+            let opcoes = [];
+            if (id === 'gemini_default' || id === 'gemini_direct') {
+                if (id === 'gemini_direct' && !token) throw new Error('Informe o token do Google AI Studio.');
+                const res = id === 'gemini_default'
+                    ? await fetch(PROXY_URL)
+                    : await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers: { 'x-goog-api-key': token } });
+                const data = await lerJson(res);
+                if (!res.ok) throw new Error(mensagemDeErro(data, res.status));
+                opcoes = (data.models || [])
+                    .filter((m) => m.name?.includes('gemini') && (!m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent')))
+                    .map((m) => {
+                        const valor = m.name.replace(/^models\//, '');
+                        const ctx = m.inputTokenLimit ? ` [${Math.round(m.inputTokenLimit / 1000)}k]` : '';
+                        return { valor, rotulo: `${m.displayName || valor}${ctx}` };
+                    });
+                if (!opcoes.length) throw new Error('Nenhum modelo devolvido (o proxy no Vercel está atualizado?).');
+            } else if (id === 'openrouter') {
+                const res = await fetch('https://openrouter.ai/api/v1/models', token ? { headers: { Authorization: 'Bearer ' + token } } : {});
+                const data = await lerJson(res);
+                if (!res.ok) throw new Error(mensagemDeErro(data, res.status));
+                opcoes = (data.data || [])
+                    .filter((m) => m.id.endsWith(':free') || (m.context_length || 0) >= 100000)
+                    .sort((a, b) => (b.id.endsWith(':free') - a.id.endsWith(':free')) || (b.context_length || 0) - (a.context_length || 0))
+                    .map((m) => ({
+                        valor: m.id,
+                        rotulo: `${m.id.endsWith(':free') ? '🆓 ' : ''}${m.id}${m.context_length ? ` [${Math.round(m.context_length / 1000)}k]` : ''}`,
+                    }));
+            } else {
+                let url = 'https://api.openai.com/v1/models';
+                if (id === 'custom') {
+                    const base = $('aiCustomUrl').value.trim();
+                    if (!base) throw new Error('Informe a URL da API.');
+                    url = base.replace(/\/chat\/completions\/?$/, '') + '/models';
                 }
-            } catch (error) {
-                resultDiv.textContent = `❌ Erro:\n${error.message}`;
-                resultDiv.classList.add('show');
-                showToast('❌ Erro na análise', 'error');
-            } finally {
-                loadingIndicator.classList.remove('show');
-                analyzeBtn.disabled = false;
+                if (!token && id === 'openai') throw new Error('Informe o token da OpenAI.');
+                const res = await fetch(url, token ? { headers: { Authorization: 'Bearer ' + token } } : {});
+                const data = await lerJson(res);
+                if (!res.ok) throw new Error(mensagemDeErro(data, res.status));
+                opcoes = (data.data || []).map((m) => m.id)
+                    .filter((m) => id !== 'openai' || /^(gpt|o\d|chatgpt)/.test(m))
+                    .sort();
             }
+            preencherListaModelos(opcoes, `— ${opcoes.length} modelos —`);
+            mostrarAviso(`✅ ${opcoes.length} modelos carregados`);
+        } catch (erro) {
+            mostrarAviso('❌ ' + erro.message, 'erro');
+        } finally {
+            botao.disabled = false;
         }
+    }
 
-        // ============================================================
-        // INICIALIZAÇÃO
-        // ============================================================
-        setNumFornecedores(4);
-        loadSavedModel();
+    /** O que vai para a IA: listas inteiras ou só os trechos da busca atual. */
+    function montarDadosIA() {
+        const soTrechos = $('aiSoTrechos').checked && trechosPorFornecedor.size > 0;
+        let texto = '';
+        let quantos = 0;
+        for (const f of fornecedores) {
+            const conteudo = soTrechos ? trechosPorFornecedor.get(f.id) : f.texto;
+            if (!conteudo || !conteudo.trim()) continue;
+            texto += `\n\n=== ${f.nome || 'Fornecedor'} ===\n${conteudo}`;
+            quantos++;
+        }
+        return { texto, quantos, soTrechos };
+    }
 
-        searchInput.addEventListener('input', applyFilter);
-        subSearchInput.addEventListener('input', applyFilter);
-        contextLinesInput.addEventListener('change', applyFilter);
-        document.getElementById('supplierFilterInput')?.addEventListener('input', applyFilter);
-        document.getElementById('showNoResult').addEventListener('change', applyFilter);
+    function atualizarEstimativaIA() {
+        const { texto, quantos, soTrechos } = montarDadosIA();
+        const prompt = $('aiPrompt').value.length;
+        // ~4 caracteres por token é a média do português nos modelos atuais.
+        const tokens = Math.round((texto.length + prompt) / 4);
+        const alvo = $('aiEstimativa');
+        if (!quantos) {
+            alvo.textContent = 'Nenhuma lista preenchida ainda.';
+            return;
+        }
+        const origem = soTrechos ? 'trechos da busca' : ($('aiSoTrechos').checked ? 'listas inteiras (faça uma busca para enviar só os trechos)' : 'listas inteiras');
+        alvo.textContent = `Vai enviar ${quantos} fornecedor${quantos > 1 ? 'es' : ''} (${origem}) · ≈ ${tokens.toLocaleString('pt-BR')} tokens`;
+    }
 
-        numFornecedoresInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') aplicarQuantidade();
+    /** Markdown mínimo e seguro: escapa tudo e só então aplica negrito e títulos. */
+    function markdownSimples(texto) {
+        return escapeHtml(texto)
+            .replace(/^#{1,6}\s+(.+)$/gm, '<strong class="md-h">$1</strong>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    }
+
+    function paraWhatsApp(texto) {
+        return texto
+            .replace(/^#{1,6}\s+(.+)$/gm, '*$1*')
+            .replace(/\*\*(.+?)\*\*/g, '*$1*')
+            .replace(/^(\s*)[-*]\s+/gm, '$1• ')
+            .replace(/\*{2,}/g, '*');
+    }
+
+    let analiseEmAndamento = null;
+    let ultimoResultadoIA = '';
+
+    function mostrarResultadoIA(texto, { erro = false, info = '' } = {}) {
+        const caixa = $('aiResult');
+        caixa.classList.toggle('erro', erro);
+        if (erro) caixa.textContent = texto;
+        else caixa.innerHTML = markdownSimples(texto);
+        $('aiResultadoInfo').textContent = info;
+        $('copiarIABtn').hidden = erro;
+        $('copiarIAWhatsBtn').hidden = erro;
+        $('aiResultadoBox').hidden = false;
+    }
+
+    async function analisarComIA() {
+        if (analiseEmAndamento) {
+            analiseEmAndamento.abort();
+            return;
+        }
+        const produtos = $('productSearchAI').value.trim() || campoBusca.value.trim();
+        if (!produtos) { mostrarAviso('⚠️ Digite ao menos um produto (ou faça uma busca)', 'erro'); return; }
+
+        const { texto: dados, quantos } = montarDadosIA();
+        if (!quantos) { mostrarAviso('⚠️ Nenhuma lista encontrada', 'erro'); return; }
+
+        let cfg;
+        try { cfg = configIA(); } catch (erro) { mostrarAviso('⚠️ ' + erro.message, 'erro'); return; }
+
+        const modelo = $('aiPrompt').value;
+        const instrucoes = modelo.includes('{PRODUTOS}')
+            ? modelo.replaceAll('{PRODUTOS}', produtos)
+            : `Produtos buscados: ${produtos}\n\n${modelo}`;
+        const mensagem = `${instrucoes}\n\nLISTAS DE FORNECEDORES:${dados}`;
+
+        const botao = $('analyzeBtn');
+        const carregando = $('loadingIndicator');
+        const controle = new AbortController();
+        analiseEmAndamento = controle;
+        botao.textContent = '⏹ Cancelar análise';
+        botao.classList.replace('btn-primary', 'btn-outline');
+        $('aiResultadoBox').hidden = true;
+        carregando.hidden = false;
+        const inicio = Date.now();
+        const relogio = setInterval(() => {
+            carregando.textContent = `⏳ Analisando os melhores preços… ${Math.round((Date.now() - inicio) / 1000)}s`;
+        }, 500);
+        carregando.textContent = '⏳ Analisando os melhores preços…';
+
+        try {
+            const res = await fetch(cfg.url, {
+                method: 'POST',
+                headers: cfg.headers,
+                body: corpoRequisicao(cfg, 'Você é um analista de preços e deve seguir estritamente o formato solicitado.', mensagem),
+                signal: controle.signal,
+            });
+            const data = await lerJson(res);
+            if (!res.ok) throw new Error(mensagemDeErro(data, res.status));
+            const { texto, motivo } = lerResposta(data);
+            if (!texto) throw new Error(`A IA não devolveu texto${motivo ? ` (motivo: ${motivo})` : ''}.`);
+
+            ultimoResultadoIA = texto;
+            const segundos = Math.round((Date.now() - inicio) / 1000);
+            const cortado = /max_tokens|length/i.test(motivo || '') ? ' · ⚠️ resposta cortada pelo limite de tamanho' : '';
+            mostrarResultadoIA(texto, { info: `${cfg.modelo || 'modelo padrão'} · ${segundos}s${cortado}` });
+            mostrarAviso('✅ Análise concluída!');
+            setTimeout(() => $('aiResultadoBox').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        } catch (erro) {
+            if (erro.name === 'AbortError') {
+                mostrarAviso('Análise cancelada', 'info');
+            } else {
+                mostrarResultadoIA(`❌ Erro:\n${erro.message}`, { erro: true });
+                mostrarAviso('❌ Erro na análise', 'erro');
+            }
+        } finally {
+            clearInterval(relogio);
+            analiseEmAndamento = null;
+            carregando.hidden = true;
+            botao.textContent = '🚀 Analisar com IA';
+            botao.classList.replace('btn-outline', 'btn-primary');
+        }
+    }
+
+    const salvarPrompt = adiar(() => {
+        const atual = $('aiPrompt').value;
+        // Igual ao padrão não é guardado: assim uma melhoria futura no padrão chega aqui.
+        if (atual === DEFAULT_PROMPT) armazenamento.remover(CHAVE_PROMPT);
+        else armazenamento.gravarTexto(CHAVE_PROMPT, atual);
+    }, 500);
+
+    function resetPrompt() {
+        $('aiPrompt').value = DEFAULT_PROMPT;
+        armazenamento.remover(CHAVE_PROMPT);
+        atualizarEstimativaIA();
+        mostrarAviso('✅ Prompt restaurado para o padrão');
+    }
+
+    // ================================================================
+    // EVENTOS
+    // ================================================================
+    function ligarEventos() {
+        $('aplicarBtn').addEventListener('click', aplicarQuantidade);
+        $('adicionarBtn').addEventListener('click', adicionarFornecedor);
+        $('removerBtn').addEventListener('click', removerUltimo);
+        $('limparTudoBtn').addEventListener('click', limparTudo);
+        campoQuantidade.addEventListener('keydown', (e) => { if (e.key === 'Enter') aplicarQuantidade(); });
+
+        container.addEventListener('input', (e) => {
+            const f = fornecedorDe(e.target);
+            if (!f) return;
+            if (e.target.classList.contains('cartao-nome')) f.nome = e.target.value;
+            if (e.target.classList.contains('cartao-texto')) {
+                f.texto = e.target.value;
+                atualizarRodape(e.target.closest('.cartao-forn'), f);
+            }
+            agendarFiltro();
+            salvarRascunho();
+        });
+        container.addEventListener('click', (e) => {
+            const botao = e.target.closest('[data-acao]');
+            const f = botao && fornecedorDe(botao);
+            if (f) acaoDoCartao(botao.dataset.acao, f);
         });
 
-        window.addEventListener('resize', () => {
-            const n = container.children.length;
-            container.className = 'container ' + getGridClass(n);
+        for (const campo of [campoBusca, campoSubBusca, campoFiltroFornecedor]) {
+            campo.addEventListener('input', () => {
+                const limpar = document.querySelector(`[data-limpa="${campo.id}"]`);
+                if (limpar) limpar.hidden = !campo.value;
+                agendarFiltro();
+            });
+        }
+        for (const campo of [campoBusca, campoSubBusca]) {
+            campo.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && campo.value) {
+                    e.preventDefault();
+                    campo.value = '';
+                    campo.dispatchEvent(new Event('input'));
+                }
+                if (e.key === 'Enter') campo.blur();
+            });
+        }
+        document.querySelectorAll('[data-limpa]').forEach((botao) => {
+            botao.addEventListener('click', () => {
+                const campo = $(botao.dataset.limpa);
+                campo.value = '';
+                campo.dispatchEvent(new Event('input'));
+                campo.focus();
+            });
         });
+
+        campoContexto.addEventListener('input', () => { agendarFiltro(); salvarPrefs(); });
+        for (const id of ['showNoResult', 'mostrarRanking']) {
+            $(id).addEventListener('change', () => { executarFiltro(); salvarPrefs(); });
+        }
+        $('esconderListas').addEventListener('change', () => { aplicarPrefsVisuais(); salvarPrefs(); });
+        $('colunasSelect').addEventListener('change', () => { aplicarPrefsVisuais(); salvarPrefs(); });
+
+        $('rankingLista').addEventListener('click', (e) => {
+            const item = e.target.closest('.rank-item');
+            if (item) irParaFornecedor(Number(item.dataset.id));
+        });
+        $('copiarRankingBtn').addEventListener('click', async () => {
+            const ok = await copiarTexto(textoDoRanking());
+            mostrarAviso(ok ? '📋 Ranking copiado — pronto para colar no WhatsApp' : '❌ Não foi possível copiar', ok ? 'sucesso' : 'erro');
+        });
+
+        $('tagInput').addEventListener('input', salvarRascunho);
+        $('salvarBtn').addEventListener('click', salvarDados);
+        $('historicoBtn').addEventListener('click', carregarHistorico);
+        $('historicoSelect').addEventListener('change', aplicarHistorico);
+        $('exportarBtn').addEventListener('click', exportarArquivo);
+        $('importarBtn').addEventListener('click', () => $('importarArquivo').click());
+        $('importarArquivo').addEventListener('change', async (e) => {
+            const arquivos = [...e.target.files];
+            e.target.value = '';
+            if (arquivos.length) await importarArquivos(arquivos);
+        });
+
+        $('aiModelSelect').addEventListener('change', onModelChange);
+        for (const id of ['aiToken', 'aiModelo', 'aiCustomUrl']) $(id).addEventListener('input', salvarConfigIA);
+        $('aiModeloLista').addEventListener('change', (e) => {
+            if (!e.target.value) return;
+            $('aiModelo').value = e.target.value;
+            salvarConfigIA();
+        });
+        $('listModelsBtn').addEventListener('click', listarModelos);
+        $('analyzeBtn').addEventListener('click', analisarComIA);
+        $('resetPromptBtn').addEventListener('click', resetPrompt);
+        $('aiPrompt').addEventListener('input', () => { salvarPrompt(); atualizarEstimativaIA(); });
+        $('aiSoTrechos').addEventListener('change', () => { atualizarEstimativaIA(); salvarPrefs(); });
+        $('secaoIA').addEventListener('toggle', () => { if ($('secaoIA').open) atualizarEstimativaIA(); });
+        $('copiarIABtn').addEventListener('click', async () => {
+            mostrarAviso(await copiarTexto(ultimoResultadoIA) ? '📋 Resultado copiado' : '❌ Não foi possível copiar');
+        });
+        $('copiarIAWhatsBtn').addEventListener('click', async () => {
+            mostrarAviso(await copiarTexto(paraWhatsApp(ultimoResultadoIA)) ? '💬 Copiado no formato do WhatsApp' : '❌ Não foi possível copiar');
+        });
+
+        $('topoBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // "/" leva à busca de qualquer lugar da página, menos de dentro de um campo.
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+            e.preventDefault();
+            campoBusca.focus();
+            campoBusca.select();
+        });
+    }
+
+    // ================================================================
+    // INICIALIZAÇÃO
+    // ================================================================
+    const promptSalvo = armazenamento.lerTexto(CHAVE_PROMPT, '');
+    if (promptSalvo) $('aiPrompt').value = promptSalvo;
+
+    const provedorSalvo = armazenamento.lerTexto('ai_model', 'gemini_default');
+    $('aiModelSelect').value = PROVEDORES[provedorSalvo] ? provedorSalvo : 'gemini_default';
+
+    carregarPrefs();
+    carregarRascunho();
+    ligarEventos();
+    onModelChange();
+    renderizarCartoes();
     </script>
 </body>
 </html>

@@ -1,10 +1,19 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,access-token,secret-access-token');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Este painel é apenas consultivo: nenhuma escrita no sistema é permitida.
+  if (req.method !== 'GET') {
+    return res.status(405).json({
+      code: 405,
+      status: 'error',
+      data: { mensagem: 'Este proxy é somente leitura (GET). Método não permitido: ' + req.method }
+    });
   }
 
   const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
@@ -38,7 +47,7 @@ export default async function handler(req, res) {
 
   try {
     const fetchOptions = {
-      method: req.method,
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'access-token': ACCESS_TOKEN,
@@ -46,15 +55,10 @@ export default async function handler(req, res) {
       },
     };
 
-    // Propaga loja_id para o cabeçalho caso a API exija (alguns endpoints PUT/POST)
+    // Propaga loja_id para o cabeçalho caso a API exija
     if (params.loja_id) {
       fetchOptions.headers['loja_id'] = params.loja_id;
       fetchOptions.headers['loja-id'] = params.loja_id; // Variação com hífen por segurança
-    }
-
-    if (req.method !== 'GET' && req.body) {
-      // Em Vercel, req.body já é um objeto se o content-type for JSON
-      fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
     const resposta = await fetch(urlApi.toString(), fetchOptions);
@@ -68,7 +72,7 @@ export default async function handler(req, res) {
         code: resposta.status,
         status: 'error',
         data: erroObj,
-        debug: { url: urlApi.toString(), method: req.method }
+        debug: { url: urlApi.toString(), method: 'GET' }
       });
     }
 
