@@ -171,6 +171,15 @@ await caso('leitura de preços em linhas reais', async () => {
       cabo: p('Cabo 1,50m'),
       bolsa: p('Galaxy S24 Ultra 512gb 💰 6.200'),
       typo: p('R$ 1. 330 (Dinheiro)'),
+      // Fornecedor que usa vírgula como separador de milhar.
+      virgulaMilhar: p('iPhone 15 128gb - R$ 4,350'),
+      virgulaMilharCentavos: p('R$ 1,234,56'),
+      formatoAmericano: p('R$ 1,234.56'),
+      centavos: p('R$ 99,90'),
+      centavosPonto: p('R$ 99.90'),
+      virgulaMilharSolta: p('Xiaomi Note 13 - 1,150'),
+      virgulaMilharParcela: p('10x R$ 1,299'),
+      telaSolta: p('Redmi Note 13 6,67" 256gb - 1.899'),
     };
   });
   assert.deepEqual(r.moeda, [4350]);
@@ -186,6 +195,14 @@ await caso('leitura de preços em linhas reais', async () => {
   assert.deepEqual(r.cabo, [], '1,50m não é preço');
   assert.deepEqual(r.bolsa, [6200]);
   assert.deepEqual(r.typo, [1330]);
+  assert.deepEqual(r.virgulaMilhar, [4350], 'R$ 4,350 é quatro mil, não quatro reais');
+  assert.deepEqual(r.virgulaMilharCentavos, [1234.56]);
+  assert.deepEqual(r.formatoAmericano, [1234.56]);
+  assert.deepEqual(r.centavos, [99.9]);
+  assert.deepEqual(r.centavosPonto, [99.9]);
+  assert.deepEqual(r.virgulaMilharSolta, [1150]);
+  assert.deepEqual(r.virgulaMilharParcela, [12990]);
+  assert.deepEqual(r.telaSolta, [1899], '6,67" é a tela, não o preço');
   await ctx.close();
 });
 
@@ -497,6 +514,40 @@ await caso('exportar e importar arquivo', async () => {
   ]);
   await pagina.waitForTimeout(300);
   assert.deepEqual(await pagina.locator('.cartao-nome').evaluateAll((els) => els.map((e) => e.value)), ['Loja Centro', 'Apple Import', 'Distribuidora Z']);
+  await ctx.close();
+});
+
+await caso('colunas: uma por fornecedor no automático, até 12, e escolha manual', async () => {
+  const { pagina, erros, ctx } = await abrir({ largura: 1600 });
+  const colunas = () => pagina.evaluate(() => getComputedStyle(document.getElementById('container-listas')).gridTemplateColumns.split(' ').length);
+
+  await preencher(pagina, Array.from({ length: 5 }, (_, i) => [`F${i + 1}`, `item ${i} - R$ 10`]));
+  assert.equal(await colunas(), 5, '5 fornecedores lado a lado');
+
+  await pagina.fill('#numFornecedores', '14');
+  await pagina.click('#aplicarBtn');
+  assert.equal(await colunas(), 12, 'teto de 12');
+
+  // Na busca, os que somem liberam espaço.
+  await buscar(pagina, 'item 1, item 2');
+  assert.equal(await colunas(), 2);
+  await buscar(pagina, '');
+
+  await pagina.selectOption('#colunasSelect', '3');
+  assert.equal(await colunas(), 3);
+  await pagina.selectOption('#colunasSelect', '12');
+  assert.equal(await colunas(), 12);
+
+  // Com 12 colunas o cabeçalho do cartão cabe sem estourar a largura.
+  const estouro = await pagina.evaluate(() => [...document.querySelectorAll('.cartao-forn')]
+    .some((c) => c.scrollWidth > c.clientWidth + 1));
+  assert.equal(estouro, false, 'conteúdo do cartão vazando');
+  await pagina.screenshot({ path: `${SAIDA}/wtela-12-colunas.png` });
+
+  // No celular continua uma coluna só.
+  await pagina.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await colunas(), 1);
+  assert.deepEqual(erros, []);
   await ctx.close();
 });
 
