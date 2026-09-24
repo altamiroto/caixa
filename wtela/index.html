@@ -182,7 +182,8 @@
             padding: 10px 12px;
             margin-bottom: 12px;
         }
-        .busca-campos { display: grid; grid-template-columns: 3fr 2fr; gap: 8px; }
+        /* Campo não acompanha a tela: numa ultrawide a busca chegava a 1.900px. */
+        .busca-campos { display: grid; grid-template-columns: 3fr 2fr; gap: 8px; max-width: 1000px; }
         .campo-com-limpar { position: relative; }
         .campo-com-limpar input { padding-left: 34px; padding-right: 36px; }
         .campo-icone {

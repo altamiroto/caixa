@@ -551,15 +551,15 @@ await caso('colunas: uma por fornecedor no automático, até 12, e escolha manua
   await ctx.close();
 });
 
-await caso('tela ultrawide: botões e seletores não esticam', async () => {
+await caso('tela ultrawide: campos, botões e seletores não esticam', async () => {
   const { pagina, erros, ctx } = await abrir({ largura: 3440 });
   await preencher(pagina, [['Apple Import', apple], ['Loja Centro', LOJA_SIMPLES]]);
   await buscar(pagina, 'iphone 15');
   await pagina.click('#secaoIA summary');
   const largos = await pagina.evaluate(() => [...document.querySelectorAll('button, select, input[type=text], input[type=number], textarea.ai-prompt-area')]
-    .filter((e) => e.offsetParent && !e.closest('.barra-busca, .cartao-forn'))
+    .filter((e) => e.offsetParent && !e.closest('.cartao-forn'))
     .map((e) => ({ el: e.id || e.className, w: Math.round(e.getBoundingClientRect().width) }))
-    .filter((x) => x.w > 1300));
+    .filter((x) => x.w > 1200));
   assert.deepEqual(largos, [], JSON.stringify(largos));
   // O ranking vira grade: vários itens na mesma linha.
   const topos = await pagina.locator('.rank-item').evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
