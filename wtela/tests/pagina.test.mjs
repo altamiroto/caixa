@@ -569,6 +569,49 @@ await caso('tela ultrawide: campos, botões e seletores não esticam', async () 
   await ctx.close();
 });
 
+await caso('resultado longo: "Ver tudo" expande sem rolagem, e a opção geral expande todos', async () => {
+  const { pagina, erros, ctx } = await abrir({ largura: 1400 });
+  await preencher(pagina, [['Apple Import', apple], ['Loja Centro', LOJA_SIMPLES]]);
+  await buscar(pagina, 'iphone');
+
+  const apple1 = pagina.locator('.cartao-forn').nth(0);
+  const loja = pagina.locator('.cartao-forn').nth(1);
+  const altura = (c) => c.locator('.resultado').evaluate((e) => [e.clientHeight, e.scrollHeight]);
+
+  // A Apple passa da caixa: tem botão, e rola por dentro.
+  assert.equal(await apple1.locator('.expandir').isVisible(), true);
+  assert.match(await apple1.locator('.expandir').textContent(), /Ver tudo \(\d+ linhas\)/);
+  let [visivel, total] = await altura(apple1);
+  assert.ok(total > visivel, 'deveria rolar por dentro antes de expandir');
+  // A Loja Centro cabe: sem botão.
+  assert.equal(await loja.locator('.expandir').isVisible(), false);
+
+  await apple1.locator('.expandir').click();
+  [visivel, total] = await altura(apple1);
+  assert.equal(visivel, total, 'expandido não rola por dentro');
+  assert.match(await apple1.locator('.expandir').textContent(), /Recolher/);
+
+  // Continua expandido ao refinar a busca.
+  await buscar(pagina, 'iphone', 'pro');
+  [visivel, total] = await altura(apple1);
+  assert.equal(visivel, total);
+
+  await apple1.locator('.expandir').click();
+  [visivel, total] = await altura(apple1);
+  assert.ok(total > visivel, 'recolhido volta a rolar por dentro');
+
+  // Opção geral: todos inteiros, sem botão, e fica guardada.
+  await pagina.check('#resultadosInteiros');
+  [visivel, total] = await altura(apple1);
+  assert.equal(visivel, total);
+  assert.equal(await apple1.locator('.expandir').isVisible(), false);
+  await pagina.reload();
+  await pagina.waitForSelector('.cartao-forn');
+  assert.equal(await pagina.isChecked('#resultadosInteiros'), true);
+  assert.deepEqual(erros, []);
+  await ctx.close();
+});
+
 await caso('celular: sem rolagem lateral, busca presa no topo', async () => {
   const ctx = await navegador.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const { pagina, erros } = await abrir({ contexto: ctx });

@@ -335,6 +335,21 @@
             border: 1.5px solid var(--result-border);
             border-radius: 8px;
         }
+        /* Expandido (por cartão ou pela opção geral): a caixa cresce com o conteúdo e a página rola, não a caixa. */
+        .resultado.expandido { max-height: none; overflow: visible; }
+        .expandir {
+            width: 100%;
+            padding: 6px 10px;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-strong);
+            background: var(--result-bg);
+            border: 1.5px dashed var(--result-border);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .expandir:hover { border-style: solid; }
         .resultado > div { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.45em; }
         .resultado .sep { text-align: center; color: var(--muted); letter-spacing: 4px; font-size: 10px; min-height: 0; }
         .resultado .vazio { color: var(--danger); font-family: inherit; }
@@ -551,6 +566,10 @@
             <div class="checkbox-row">
                 <input type="checkbox" id="esconderListas">
                 <label for="esconderListas">🙈 Esconder a lista completa durante a busca</label>
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="resultadosInteiros">
+                <label for="resultadosInteiros">📏 Mostrar o resultado inteiro, sem rolagem</label>
             </div>
             <div class="checkbox-row">
                 <input type="checkbox" id="mostrarRanking" checked>
@@ -1150,6 +1169,9 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
     const cacheLinhas = new Map();
     const trechosPorFornecedor = new Map();
     let ultimoRanking = [];
+    const expandidos = new Set();
+    // Mesma altura do max-height de .resultado no CSS.
+    const ALTURA_RESULTADO = 480;
 
     function novoFornecedor(dados = {}) {
         const id = proximoId++;
@@ -1193,7 +1215,8 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             </div>
             <textarea class="cartao-texto" spellcheck="false"></textarea>
             <div class="cartao-rodape"></div>
-            <div class="resultado" hidden></div>`;
+            <div class="resultado" hidden></div>
+            <button type="button" class="expandir" hidden></button>`;
         const nome = cartao.querySelector('.cartao-nome');
         nome.value = f.nome;
         nome.placeholder = 'Nome do fornecedor';
@@ -1438,11 +1461,45 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
         }
 
         atualizarColunas();
+        atualizarExpandir();
         ranking.sort((a, b) => a.valor - b.valor || a.fornecedor.localeCompare(b.fornecedor, 'pt-BR'));
         ultimoRanking = ranking;
         renderizarRanking(buscaAtiva);
         atualizarStatus({ buscaAtiva, ocorrenciasTotal, comResultado, visiveis, precos: ranking.length });
         if ($('secaoIA').open) atualizarEstimativaIA();
+    }
+
+    /**
+     * Botão "Ver tudo" em cada cartão cujo resultado passa da altura da
+     * caixa — some quando cabe inteiro ou quando a opção geral já expande
+     * todos. Precisa rodar depois do resultado estar no DOM, porque mede.
+     */
+    function atualizarExpandir() {
+        const todos = $('resultadosInteiros').checked;
+        for (const cartao of container.querySelectorAll('.cartao-forn')) {
+            const resultado = cartao.querySelector('.resultado');
+            const botao = cartao.querySelector('.expandir');
+            const aberto = todos || expandidos.has(Number(cartao.dataset.id));
+            resultado.classList.toggle('expandido', aberto);
+            if (todos || cartao.hidden || resultado.hidden || resultado.scrollHeight <= ALTURA_RESULTADO + 2) {
+                botao.hidden = true;
+                continue;
+            }
+            const linhas = resultado.querySelectorAll(':scope > div:not(.sep)').length;
+            botao.hidden = false;
+            botao.textContent = aberto ? '▲ Recolher' : `▼ Ver tudo (${linhas} linhas)`;
+            botao.setAttribute('aria-expanded', String(aberto));
+        }
+    }
+
+    function alternarExpandir(cartao) {
+        const id = Number(cartao.dataset.id);
+        const abrir = !expandidos.has(id);
+        if (abrir) expandidos.add(id);
+        else expandidos.delete(id);
+        atualizarExpandir();
+        // Ao recolher uma caixa longa, a página ficaria lá embaixo, longe do cartão.
+        if (!abrir && cartao.getBoundingClientRect().top < 0) irParaFornecedor(id);
     }
 
     function atualizarStatus({ buscaAtiva, ocorrenciasTotal, comResultado, visiveis, precos }) {
@@ -1538,6 +1595,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             contexto: campoContexto.value,
             mostrarSemResultado: $('showNoResult').checked,
             esconderListas: $('esconderListas').checked,
+            resultadosInteiros: $('resultadosInteiros').checked,
             mostrarRanking: $('mostrarRanking').checked,
             colunas: $('colunasSelect').value,
             aiSoTrechos: $('aiSoTrechos').checked,
@@ -1549,6 +1607,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
         if (p.contexto !== undefined) campoContexto.value = p.contexto;
         if (typeof p.mostrarSemResultado === 'boolean') $('showNoResult').checked = p.mostrarSemResultado;
         if (typeof p.esconderListas === 'boolean') $('esconderListas').checked = p.esconderListas;
+        if (typeof p.resultadosInteiros === 'boolean') $('resultadosInteiros').checked = p.resultadosInteiros;
         if (typeof p.mostrarRanking === 'boolean') $('mostrarRanking').checked = p.mostrarRanking;
         if (typeof p.aiSoTrechos === 'boolean') $('aiSoTrechos').checked = p.aiSoTrechos;
         if (p.colunas) $('colunasSelect').value = p.colunas;
@@ -1559,6 +1618,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
         if (!$('colunasSelect').value) $('colunasSelect').value = 'auto';
         document.body.classList.toggle('esconder-listas', $('esconderListas').checked);
         atualizarColunas();
+        atualizarExpandir();
     }
 
     /**
@@ -2122,6 +2182,8 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             salvarRascunho();
         });
         container.addEventListener('click', (e) => {
+            const expandir = e.target.closest('.expandir');
+            if (expandir) { alternarExpandir(expandir.closest('.cartao-forn')); return; }
             const botao = e.target.closest('[data-acao]');
             const f = botao && fornecedorDe(botao);
             if (f) acaoDoCartao(botao.dataset.acao, f);
@@ -2158,6 +2220,7 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
             $(id).addEventListener('change', () => { executarFiltro(); salvarPrefs(); });
         }
         $('esconderListas').addEventListener('change', () => { aplicarPrefsVisuais(); salvarPrefs(); });
+        $('resultadosInteiros').addEventListener('change', () => { atualizarExpandir(); salvarPrefs(); });
         $('colunasSelect').addEventListener('change', () => { aplicarPrefsVisuais(); salvarPrefs(); });
 
         $('rankingLista').addEventListener('click', (e) => {
@@ -2200,6 +2263,9 @@ Seja objetivo, claro e preciso. Sempre priorize mostrar múltiplas opções para
         $('copiarIAWhatsBtn').addEventListener('click', async () => {
             mostrarAviso(await copiarTexto(paraWhatsApp(ultimoResultadoIA)) ? '💬 Copiado no formato do WhatsApp' : '❌ Não foi possível copiar');
         });
+
+        // Largura muda a quebra de linha, e com ela quem cabe na caixa.
+        window.addEventListener('resize', adiar(atualizarExpandir, 200));
 
         $('topoBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
