@@ -83,6 +83,23 @@ download nenhum outro saía sem recarregar a página:
 - **O PNG fica guardado depois da primeira vez**, então tocar de novo salva na
   hora, sem refazer os 33 MB.
 
+E o bloqueio de downloads em sequência do Chrome. Ele deixa passar o primeiro
+download da página; do segundo em diante, só com um toque novo desde o
+anterior — senão pergunta "baixar vários arquivos?" e, recusado ou ignorado,
+trava o site até recarregar. No Samsung S26 isso aparecia como "a primeira
+imagem baixa, as outras não". Por isso:
+
+- **No celular, "Salvar todas" é uma imagem por toque** ("Salvar a 1ª de 3",
+  "a 2ª de 3"…). No computador continua em sequência, que lá funciona.
+- **A página escuta toques**, para o Chrome do Android contar cada toque como
+  interação e zerar o bloqueio.
+- **Cada prévia tem "Abrir"**: o PNG numa aba nova, onde tocar e segurar dá
+  "Baixar imagem" — download do próprio navegador, fora de qualquer bloqueio.
+- **Gerar de novo não atropela a fila anterior**: a velha para, e a nova espera
+  a imagem em andamento, para nunca haver dois canvas de 33 MB ao mesmo tempo.
+- **As URLs antigas saem com um minuto de folga**, para não puxar o arquivo de
+  baixo de um download parado na pergunta "substituir?".
+
 ### Várias listas de uma vez
 
 Publicar quatro listas por dia não deveria custar quatro rodadas do programa.
