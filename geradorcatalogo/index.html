@@ -125,9 +125,11 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
         width: 100%;
         margin-bottom: -6px;
       }
+      .palco__dica { font-size: 12px; color: var(--ui-suave); }
       .marcadores {
         display: flex;
         flex-direction: column;
@@ -253,6 +255,13 @@
         padding: 6px 10px;
         font-size: 13px;
       }
+      .previa__acoes > span { margin-right: auto; }
+      .previa__abrir {
+        padding: 6px 4px;
+        font-size: 13px;
+        color: var(--ui-suave);
+      }
+      .previa__abrir:hover { color: var(--ui-tinta); }
       .vazio {
         margin: auto;
         max-width: 340px;
@@ -417,7 +426,7 @@
         TEMA_PADRAO,
         sortearTema,
       } from './src/themes/temas.js';
-      import { paraPng, baixar, liberarUrls, apelido } from './src/render/export.js';
+      import { paraPng, baixar, urlDe, liberarUrls, apelido } from './src/render/export.js';
 
       const $ = (id) => document.getElementById(id);
       const palco = $('palco');
@@ -627,8 +636,28 @@ R$ 965 (Dinheiro)`;
         }
       }
 
+      /*
+       * O Chrome deixa passar o primeiro download de uma página; do segundo em
+       * diante, só se houver um toque novo do usuário desde o anterior — senão
+       * pergunta "baixar vários arquivos?" e, recusado ou ignorado, bloqueia o
+       * site até recarregar. Era o relato do celular: a primeira imagem saía,
+       * a segunda não, e só recarregando voltava.
+       *
+       * Duas medidas. Este ouvinte faz o Chrome do Android enxergar cada toque
+       * como interação — sem nenhum ouvinte de toque na página, o toque pode
+       * nem chegar como evento, e o bloqueio nunca é zerado. E no celular o
+       * "Salvar todas" deixa de disparar downloads em sequência: é um por toque.
+       */
+      document.addEventListener('touchstart', () => {}, { passive: true });
+      const CELULAR = navigator.userAgentData?.mobile ?? /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      // Cada "Gerar" começa uma rodada; a fila de uma rodada velha para sozinha.
+      let rodada = 0;
+      let emAndamento = Promise.resolve(); // preparar() nunca rejeita
+
       async function gerar() {
         await fontesProntas;
+        const minhaRodada = ++rodada;
         nomesUsados = new Set();
         // As imagens antigas saem da tela agora; os blobs delas podem ir junto.
         liberarUrls();
@@ -706,8 +735,16 @@ R$ 965 (Dinheiro)`;
          * quando a sua imagem fica pronta, então dá para salvar a primeira
          * enquanto as outras ainda estão saindo.
          */
-        for (const p of palco.querySelectorAll('.previa')) await p.preparar();
-        if (barra) barra.pronta();
+        // Gerar de novo no meio da fila: a fila velha para na próxima imagem, e
+        // a nova espera a que já estava sendo gerada terminar. Sem isto o
+        // celular ficava com dois canvas de 33 MB ao mesmo tempo.
+        await emAndamento;
+        for (const p of palco.querySelectorAll('.previa')) {
+          if (minhaRodada !== rodada) return;
+          emAndamento = p.preparar();
+          await emAndamento;
+        }
+        if (barra && minhaRodada === rodada) barra.pronta();
       }
 
       /** Barra acima das prévias, com o botão de baixar tudo de uma vez. */
@@ -719,8 +756,24 @@ R$ 965 (Dinheiro)`;
         botao.id = 'baixar-todas';
         botao.disabled = true;
         botao.textContent = 'Preparando as imagens…';
+        let proxima = 0;
+        const rotuloCelular = (n) => `Salvar a ${n + 1}ª de ${palco.querySelectorAll('.previa__acoes button').length}`;
+
         botao.addEventListener('click', async () => {
           const alvos = [...palco.querySelectorAll('.previa__acoes button')];
+
+          // Celular: um download por toque. Em sequência automática o Chrome
+          // bloqueia a partir do segundo e o site fica travado até recarregar.
+          if (CELULAR && alvos.length > 1) {
+            if (proxima >= alvos.length) proxima = 0;
+            alvos[proxima].click();
+            proxima += 1;
+            botao.textContent = proxima >= alvos.length
+              ? `✓ ${alvos.length} imagens salvas — salvar de novo`
+              : rotuloCelular(proxima);
+            return;
+          }
+
           botao.disabled = true;
           for (const [i, alvo] of alvos.entries()) {
             botao.textContent = `Salvando ${i + 1} de ${alvos.length}…`;
@@ -734,8 +787,16 @@ R$ 965 (Dinheiro)`;
         });
 
         barra.append(botao);
+        const multiplas = () => palco.querySelectorAll('.previa__acoes button').length > 1;
+        if (CELULAR) {
+          const dica = document.createElement('span');
+          dica.className = 'palco__dica';
+          dica.textContent = 'No celular, uma imagem por toque — o Chrome bloqueia downloads em sequência.';
+          barra.append(dica);
+        }
         barra.pronta = () => {
-          botao.textContent = 'Salvar todas as imagens';
+          proxima = 0;
+          botao.textContent = CELULAR && multiplas() ? rotuloCelular(0) : 'Salvar todas as imagens';
           botao.disabled = false;
         };
         return barra;
@@ -805,7 +866,10 @@ R$ 965 (Dinheiro)`;
           botao.disabled = true;
           botao.textContent = 'Gerando…';
           try {
-            baixar(await gerar(), arquivo);
+            const blob = await gerar();
+            abrir.href = urlDe(blob);
+            abrir.hidden = false;
+            baixar(blob, arquivo);
             botao.textContent = 'Salvar imagem';
           } catch (erro) {
             botao.textContent = 'Falhou — toque de novo';
@@ -815,12 +879,26 @@ R$ 965 (Dinheiro)`;
           }
         });
 
-        acoes.append(rotulo, botao);
+        /*
+         * Saída garantida: abre o PNG numa aba nova. Se o navegador engolir o
+         * download por qualquer motivo, tocar e segurar a imagem ali oferece
+         * "Baixar imagem", que é um download do próprio navegador e não passa
+         * por bloqueio nenhum.
+         */
+        const abrir = document.createElement('a');
+        abrir.className = 'previa__abrir';
+        abrir.target = '_blank';
+        abrir.textContent = 'Abrir';
+        abrir.title = 'Abre a imagem numa aba nova (para salvar, toque e segure)';
+        abrir.hidden = true;
+
+        acoes.append(rotulo, abrir, botao);
         previa.append(moldura, acoes);
 
         previa.preparar = async () => {
           try {
-            await gerar();
+            abrir.href = urlDe(await gerar());
+            abrir.hidden = false;
             botao.textContent = 'Salvar imagem';
           } catch (erro) {
             botao.textContent = 'Falhou — toque de novo';

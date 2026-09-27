@@ -109,17 +109,30 @@ function carregarImagem(url) {
  * é liberado junto com as prévias, em `liberarUrls`.
  */
 const urlsVivos = new Set();
+const urlPorBlob = new WeakMap();
 
-function criarUrl(blob) {
-  const url = URL.createObjectURL(blob);
-  urlsVivos.add(url);
+/** URL do blob — sempre a mesma para o mesmo blob, em vez de uma nova a cada toque. */
+export function urlDe(blob) {
+  let url = urlPorBlob.get(blob);
+  if (!url) {
+    url = URL.createObjectURL(blob);
+    urlPorBlob.set(blob, url);
+    urlsVivos.add(url);
+  }
   return url;
 }
 
-/** Revoga tudo. Chamar ao trocar as prévias, não entre um download e outro. */
-export function liberarUrls() {
-  for (const url of urlsVivos) URL.revokeObjectURL(url);
+/**
+ * Libera as URLs das prévias que saíram da tela.
+ *
+ * Com folga de um minuto: no Android o download pode ainda estar parado na
+ * pergunta "substituir o arquivo?" quando a pessoa já gerou a lista seguinte,
+ * e revogar na hora puxaria o arquivo de baixo dele.
+ */
+export function liberarUrls(folgaMs = 60000) {
+  const velhas = [...urlsVivos];
   urlsVivos.clear();
+  setTimeout(() => velhas.forEach((url) => URL.revokeObjectURL(url)), folgaMs);
 }
 
 /*
@@ -134,7 +147,7 @@ export function liberarUrls() {
 
 /** Dispara o download de um blob com o nome informado. */
 export function baixar(blob, nome) {
-  const url = criarUrl(blob);
+  const url = urlDe(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = nome;

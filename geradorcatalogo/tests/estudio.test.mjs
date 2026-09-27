@@ -34,9 +34,15 @@ function acharChromium() {
   return undefined;
 }
 
-async function abrirEstudio() {
+const ANDROID = 'Mozilla/5.0 (Linux; Android 16; SM-S948B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36';
+
+async function abrirEstudio({ celular = false } = {}) {
   const navegador = await chromium.launch({ executablePath: acharChromium() });
-  const pagina = await navegador.newPage({ viewport: { width: 1600, height: 1000 } });
+  const pagina = celular
+    ? await (await navegador.newContext({
+        viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, userAgent: ANDROID, acceptDownloads: true,
+      })).newPage()
+    : await navegador.newPage({ viewport: { width: 1600, height: 1000 } });
 
   await pagina.route(`${HOST}/**`, async (rota) => {
     const url = new URL(rota.request().url());
@@ -501,4 +507,97 @@ test('a prévia volta ao tamanho normal mesmo se a exportação falhar', async (
 
   // E o erro precisa ficar visível, não sumir em silêncio.
   assert.match(await pagina.textContent('#avisos'), /memória insuficiente/);
+});
+
+test('celular: "Salvar todas" salva uma imagem por toque, sem sequência automática', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio({ celular: true });
+  t.after(() => navegador.close());
+
+  /*
+   * O relato: no Chrome do Android a primeira imagem baixava e as seguintes
+   * não, até recarregar. Downloads em sequência sem toque novo caem no
+   * bloqueio de "vários arquivos"; aqui cada toque dispara exatamente um.
+   */
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/acessorios.txt'), 'utf8'),
+  ]);
+  await pagina.click('#gerar');
+  await esperarPreparadas(pagina);
+
+  const barra = pagina.locator('#baixar-todas');
+  assert.equal(await barra.textContent(), 'Salvar a 1ª de 3');
+  assert.match(await pagina.textContent('.palco__dica'), /uma imagem por toque/);
+
+  const baixados = [];
+  pagina.on('download', (d) => baixados.push(d.suggestedFilename()));
+  for (let i = 0; i < 3; i += 1) {
+    await Promise.all([pagina.waitForEvent('download'), barra.click()]);
+    // Nenhum download extra sai sozinho depois do toque.
+    await pagina.waitForTimeout(900);
+    assert.equal(baixados.length, i + 1, `toque ${i + 1} gerou ${baixados.length} downloads`);
+  }
+  assert.equal(new Set(baixados).size, 3, baixados.join(', '));
+  assert.match(await barra.textContent(), /3 imagens salvas/);
+
+  // Gerar de novo na mesma tela volta a oferecer o salvamento.
+  await pagina.click('#gerar');
+  await esperarPreparadas(pagina);
+  assert.equal(await barra.textContent(), 'Salvar a 1ª de 3');
+  await Promise.all([pagina.waitForEvent('download'), pagina.locator('.previa__acoes button').first().click()]);
+  assert.deepEqual(erros, []);
+});
+
+test('cada prévia tem "Abrir", que leva ao PNG numa aba nova', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8')]);
+  await pagina.click('#gerar');
+  await esperarPreparadas(pagina);
+
+  const abrir = pagina.locator('.previa__abrir').first();
+  assert.equal(await abrir.isVisible(), true);
+  assert.equal(await abrir.getAttribute('target'), '_blank');
+  const href = await abrir.getAttribute('href');
+  assert.match(href, /^blob:/);
+  const tipo = await pagina.evaluate(async (u) => (await fetch(u)).headers.get('content-type'), href);
+  assert.equal(tipo, 'image/png');
+
+  // Salvar reaproveita a mesma URL, sem criar uma nova a cada toque.
+  await Promise.all([pagina.waitForEvent('download'), pagina.locator('.previa__acoes button').first().click()]);
+  assert.equal(await abrir.getAttribute('href'), href);
+  assert.deepEqual(erros, []);
+});
+
+test('gerar de novo no meio da preparação para a fila antiga', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/smartphones.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/apple.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/acessorios.txt'), 'utf8'),
+  ]);
+
+  // Conta quantas rasterizações acontecem ao mesmo tempo.
+  await pagina.evaluate(() => {
+    window.__simultaneas = 0;
+    window.__pico = 0;
+    const original = HTMLCanvasElement.prototype.toBlob;
+    HTMLCanvasElement.prototype.toBlob = function (cb, ...resto) {
+      window.__simultaneas += 1;
+      window.__pico = Math.max(window.__pico, window.__simultaneas);
+      return original.call(this, (b) => { window.__simultaneas -= 1; cb(b); }, ...resto);
+    };
+  });
+
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+  await pagina.click('#gerar');
+  await esperarPreparadas(pagina);
+
+  assert.equal(await pagina.evaluate(() => window.__pico), 1, 'duas imagens sendo geradas ao mesmo tempo');
+  assert.deepEqual(erros, []);
 });
