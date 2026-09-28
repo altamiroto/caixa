@@ -39,28 +39,75 @@ const PALAVRAS_AVISTA = ['dinheiro', 'pix', 'a vista', 'avista', 'especie', 'esp
 const PALAVRAS_PARCELADO = ['cartao', 'cartão', 'credito', 'crédito', 'parcelado', 'vezes'];
 
 /**
- * Converte "1.599,90", "1. 330", "2899", "99,99" em número.
+ * Converte "1.599,90", "1. 330", "2899", "99,99", "4,350" em número.
  *
- * Regra pt-BR: vírgula é decimal, ponto é milhar. Um ponto sozinho com
- * exatamente 3 dígitos depois é milhar ("1.020" = 1020), não decimal.
+ * Há fornecedor que usa vírgula como separador de milhar ("R$ 4,350"), então
+ * ponto e vírgula não decidem sozinhos. Quem decide é o último separador:
+ * centavos sempre têm duas casas, então dois dígitos depois dele são
+ * centavos e três são milhar ("1.020" = 1020, "4,350" = 4350).
  */
 export function paraNumero(bruto) {
-  let s = String(bruto).replace(/\s/g, '').replace(/[^\d.,]/g, '');
+  const s = String(bruto).replace(/\s/g, '').replace(/[^\d.,]/g, '').replace(/[.,]+$/, '');
   if (!s) return null;
 
-  const temVirgula = s.includes(',');
-  if (temVirgula) {
-    s = s.replace(/\./g, '').replace(',', '.');
-  } else {
-    const partes = s.split('.');
-    if (partes.length > 1) {
-      const ultima = partes[partes.length - 1];
-      // "1.020" / "1.599.900" -> milhar. "99.9" -> decimal solto.
-      s = ultima.length === 3 ? partes.join('') : `${partes.slice(0, -1).join('')}.${ultima}`;
-    }
+  const ultimo = Math.max(s.lastIndexOf('.'), s.lastIndexOf(','));
+  let limpo = s;
+  if (ultimo >= 0) {
+    const inteiro = s.slice(0, ultimo).replace(/[.,]/g, '');
+    const depois = s.slice(ultimo + 1);
+    limpo = depois.length >= 3 ? inteiro + depois : `${inteiro}.${depois}`;
   }
-  const n = Number.parseFloat(s);
+  const n = Number.parseFloat(limpo);
   return Number.isFinite(n) ? n : null;
+}
+
+/*
+ * Preço solto no fim da linha, sem "R$" — as listas de atacado escrevem
+ * "Moto G06 4/256gb - Verde/Bege - 755" e "Mi Band 5 - Preta - 129,99".
+ *
+ * Exige espaço de um dos lados do traço: "- 755" e "Titanium- 1970" são
+ * preço, mas "Agold CA45-6" é código de modelo.
+ */
+const RE_PRECO_SOLTO_FINAL = /(?:\s[-–—]\s*|\s*[-–—]\s)(\d{1,3}(?:[.,]\d{3})+(?:,\d{2})?|\d+(?:,\d{2})?)\s*$/;
+
+/**
+ * Procura um preço solto no fim do texto.
+ * @returns {{ preco: import('../model/schema.js').Preco, indice: number } | null}
+ */
+export function precoSoltoNoFim(texto) {
+  const m = String(texto).match(RE_PRECO_SOLTO_FINAL);
+  if (!m) return null;
+  const valor = paraNumero(m[1]);
+  if (valor === null || valor < 1) return null;
+  return {
+    indice: m.index,
+    preco: {
+      valor,
+      parcelas: null,
+      valorParcela: null,
+      tipo: 'avista',
+      // Sem palavra nenhuma dizendo se é dinheiro ou cartão.
+      explicito: false,
+      rotulo: '',
+      bruto: m[0].trim(),
+    },
+  };
+}
+
+const PALAVRAS_DE_PRECO = /\b(?:dinheiro|pix|cartao|credito|debito|a vista|avista|vista|especie|parcelas?|parcelado|vezes|em|ate|ema|no|na|de|sem|juros|total|ou|e|x)\b/g;
+
+/**
+ * A linha é só preço ("R$ 1.720 (10x Cartão)"), ou é um produto com preço
+ * ("Galaxy A07 - R$ 645")? Tira valores, números e as palavras de pagamento;
+ * se sobrar quase nada, é só preço.
+ */
+export function ehSoPreco(texto) {
+  const resto = chave(texto)
+    .replace(/r\$\s*[\d.,\s]+/g, ' ')
+    .replace(/\d+/g, ' ')
+    .replace(PALAVRAS_DE_PRECO, ' ')
+    .replace(/[^a-z]/g, '');
+  return resto.length <= 3;
 }
 
 /** Todos os valores em R$ presentes num trecho, na ordem de aparição. */

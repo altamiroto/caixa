@@ -22,6 +22,7 @@ import {
   htmlPar,
   definirColunas,
   ehDuasColunas,
+  htmlRotulos,
   normalizarLayout,
 } from '../src/render/template.js';
 
@@ -348,4 +349,22 @@ test('nos cartões o rótulo do preço vai dentro, já que não há faixa de col
 test('htmlPar preenche a vaga que sobra em vez de esticar o solitário', () => {
   assert.match(htmlPar('<i>a</i>', '<i>b</i>'), /<div class="par"><i>a<\/i><i>b<\/i><\/div>/);
   assert.match(htmlPar('<i>a</i>'), /par__vazio/);
+});
+
+test('coluna de preço sem forma de pagamento escrita se chama "Preço", não "Dinheiro / Pix"', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { parseVarios } = await import('../src/parser/parse.js');
+  const ler = (nome) => parseVarios(readFileSync(new URL(`../samples/${nome}`, import.meta.url), 'utf8'))[0];
+
+  // Atacado: um preço só, sem "dinheiro" nem "cartão" em lugar nenhum.
+  const atacado = ler('atacado-celulares.txt');
+  const faixaAtacado = htmlRotulos(atacado, definirColunas(atacado));
+  assert.match(faixaAtacado, />Preço</);
+  assert.doesNotMatch(faixaAtacado, /Dinheiro|Cartão/);
+
+  // Varejo: a lista diz "Dinheiro/pix" e tem cartão ao lado.
+  const varejo = ler('acessorios-varejo.txt');
+  const faixaVarejo = htmlRotulos(varejo, definirColunas(varejo));
+  assert.match(faixaVarejo, /Dinheiro<small>\/ Pix<\/small>/);
+  assert.match(faixaVarejo, /Cartão/);
 });

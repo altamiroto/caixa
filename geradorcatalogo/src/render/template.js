@@ -83,7 +83,28 @@ export function definirColunas(catalogo, opcoes = {}) {
   if (resumo.temParcelado) precos.push('parcelado');
   if (resumo.temAvista) precos.push('avista');
   if (!precos.length) precos.push('avista');
-  return { mostrarCor, precos, parcelasDominante: parcelasDominante(catalogo) };
+  return {
+    mostrarCor,
+    precos,
+    parcelasDominante: parcelasDominante(catalogo),
+    rotuloAvista: rotuloAvista(catalogo),
+  };
+}
+
+/**
+ * Título da coluna do preço sem parcelamento.
+ *
+ * "Dinheiro / Pix" só quando a lista diz isso em algum lugar — ou tem preço
+ * de cartão ao lado, que é o que dá sentido à distinção. Lista de atacado
+ * traz um preço só, sem palavra nenhuma ("Moto G06 - Verde - 755"): ali a
+ * coluna é só "Preço", em vez de afirmar uma forma de pagamento que o
+ * fornecedor não escreveu.
+ */
+function rotuloAvista(catalogo) {
+  const produtos = catalogo.secoes.flatMap((s) => s.produtos);
+  const dito = catalogo.resumo?.temParcelado ||
+    produtos.some((p) => p.avista && p.avista.explicito !== false);
+  return dito ? { titulo: 'Dinheiro', sub: '/ Pix', curto: 'Dinheiro / Pix' } : { titulo: 'Preço', sub: '', curto: 'Preço' };
 }
 
 /** Nº de parcelas mais frequente da lista ("10x" na maioria dos casos). */
@@ -194,7 +215,7 @@ function htmlCartao(produto, colunas, opcoes, pecas) {
     ? `<div class="cartao__cor">${escapar(pecas.cores)}</div>`
     : '';
 
-  const rotulos = { parcelado: rotuloParcelado(colunas).titulo, avista: 'Dinheiro / Pix' };
+  const rotulos = { parcelado: rotuloParcelado(colunas).titulo, avista: (colunas.rotuloAvista ?? { curto: 'Dinheiro / Pix' }).curto };
   const precos = colunas.precos
     .map((tipo) => {
       const preco = pecas.precoDe(tipo);
@@ -303,13 +324,14 @@ export function htmlCabecalho(catalogo, opcoes = {}) {
 /** Faixa com os nomes das colunas. */
 export function htmlRotulos(catalogo, colunas) {
   const parcelado = rotuloParcelado(colunas);
+  const avista = colunas.rotuloAvista ?? { titulo: 'Dinheiro', sub: '/ Pix' };
   const celulas = [`<div>Produto</div>`];
   if (colunas.mostrarCor) celulas.push(`<div class="rotulos__preco">Cor</div>`);
   for (const tipo of colunas.precos) {
     celulas.push(
       tipo === 'parcelado'
         ? `<div class="rotulos__preco">${parcelado.titulo}<small>${escapar(parcelado.sub)}</small></div>`
-        : `<div class="rotulos__preco">Dinheiro<small>/ Pix</small></div>`,
+        : `<div class="rotulos__preco">${escapar(avista.titulo)}${avista.sub ? `<small>${escapar(avista.sub)}</small>` : ''}</div>`,
     );
   }
   return `<div class="rotulos grade">${celulas.join('')}</div>`;
