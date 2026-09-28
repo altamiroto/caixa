@@ -215,3 +215,119 @@ test('entrada vazia não quebra', () => {
   assert.equal(cat.resumo.totalProdutos, 0);
   assert.deepEqual(parseVarios(''), []);
 });
+
+// ------------------------------------------------------------ listas de 28/09/2026
+
+/** Procura um produto pelo começo do nome, em qualquer seção. */
+function produto(catalogo, inicio) {
+  for (const p of iterarProdutos(catalogo)) if (p.nome.startsWith(inicio)) return p;
+  return null;
+}
+
+test('paraNumero: vírgula como milhar, centavos sempre com duas casas', () => {
+  assert.equal(paraNumero('4,350'), 4350);
+  assert.equal(paraNumero('1,234,56'), 1234.56);
+  assert.equal(paraNumero('1,234.56'), 1234.56);
+  assert.equal(paraNumero('129,99'), 129.99);
+  assert.equal(paraNumero('2.925,00'), 2925);
+  assert.equal(lerPreco('R$ 4,350').valor, 4350, 'R$ 4,350 é quatro mil');
+});
+
+test('atacado de acessórios: preço solto sem "R$" e subtítulo sem ">"', () => {
+  const [cat, ...resto] = parseVarios(amostra('atacado-acessorios.txt'));
+  assert.equal(resto.length, 0);
+  assert.equal(cat.titulo, 'Lista exclusiva p/ REVENDA/ATACADO ACESSÓRIOS e OUTROS');
+  assert.equal(cat.data, '28/09/2026');
+
+  // A linha em itálico logo abaixo do cabeçalho é o subtítulo, não um produto.
+  assert.match(cat.subtitulo, /^Tablets, .*MUITO MAIS$/);
+  assert.equal(produto(cat, 'Tablets'), null);
+
+  assert.equal(cat.resumo.totalProdutos, 38);
+  const semPreco = [...iterarProdutos(cat)].filter((p) => !p.avista && !p.parcelado);
+  assert.deepEqual(semPreco.map((p) => p.nome), [], 'todo produto tem preço');
+  assert.deepEqual(cat.avisos.filter((a) => a.nivel === 'erro'), []);
+
+  // Preço solto no fim, com e sem centavos, e o nome sem o número.
+  const tablet = produto(cat, 'Tablet Xiaomi Redmi PAD 2');
+  assert.equal(tablet.nome, 'Tablet Xiaomi Redmi PAD 2 8/256gb - Tela 11, Wifi');
+  assert.deepEqual(tablet.cores, ['Cinza']);
+  assert.equal(tablet.avista.valor, 1390);
+  assert.equal(tablet.avista.explicito, false, 'sem palavra dizendo a forma de pagamento');
+
+  assert.equal(produto(cat, 'SmartBand/Relogio Xiaomi Mi Band 5').avista.valor, 129.99);
+  assert.equal(produto(cat, 'Perfume Importado 212 Sexy').avista.valor, 179.99);
+  assert.equal(produto(cat, 'Perfume Importado 212 Sexy').nome, 'Perfume Importado 212 Sexy - 30ml');
+  assert.equal(produto(cat, 'Cabo Iphone Tipo C').avista.valor, 20);
+  assert.equal(produto(cat, 'Cabo Iphone USB Lightning').nome, 'Cabo Iphone USB Lightning c/ 1 metro - Kaidi');
+
+  const alexa = produto(cat, 'Alexa Echo Dot');
+  assert.deepEqual(alexa.cores, ['Preta', 'Azul']);
+  assert.equal(alexa.avista.valor, 378);
+
+  // Parênteses entre o nome e o preço solto.
+  assert.equal(produto(cat, 'Amazon Fire TV Stick 4k').avista.valor, 290);
+  assert.equal(produto(cat, 'Ar Condiciando Split Triple').avista.valor, 2100);
+
+  // "Agold CA45-6" é código de modelo, não preço de 6 reais.
+  assert.equal(produto(cat, 'Tomada/Carregador Turbo 25w c/ cabo Lightining').avista.valor, 35);
+  assert.match(produto(cat, 'Tomada/Carregador Turbo 25w c/ cabo Lightining').nome, /CA45-6$/);
+});
+
+test('atacado de celulares: produtos em texto puro, sem negrito nem emoji', () => {
+  const [cat] = parseVarios(amostra('atacado-celulares.txt'));
+  assert.equal(cat.titulo, 'Lista EXCLUSIVA REVENDA/ATACADO');
+  assert.equal(cat.resumo.totalProdutos, 31);
+  assert.deepEqual(cat.secoes.map((s) => [s.titulo, s.produtos.length]), [
+    ['MOTOROLA', 1], ['REALME', 5], ['SAMSUNG', 5], ['XIAOMI', 20],
+  ]);
+
+  const moto = produto(cat, 'Moto G06');
+  assert.equal(moto.nome, 'Moto G06 4/256gb');
+  assert.deepEqual(moto.cores, ['Verde', 'Bege']);
+  assert.equal(moto.avista.valor, 755);
+
+  // Traço colado na cor ou no preço.
+  const redmi = produto(cat, 'Redmi 15c 4/128gb');
+  assert.equal(redmi.nome, 'Redmi 15c 4/128gb');
+  assert.deepEqual(redmi.cores, ['Azul']);
+  const titanium = produto(cat, 'Note 15 Pro 5G 8/256gb');
+  assert.deepEqual(titanium.cores, ['Preto', 'Titanium']);
+  assert.equal(titanium.avista.valor, 1970);
+
+  // Sem cor: só o preço.
+  const semCor = produto(cat, 'Note 15 Pro 5G 8/512gb');
+  assert.deepEqual(semCor.cores, []);
+  assert.equal(semCor.avista.valor, 2150);
+
+  assert.equal(produto(cat, 'S26 Ultra').avista.valor, 5600);
+  assert.equal(produto(cat, 'POCO X8 PRO MAX').avista.valor, 3340);
+  assert.deepEqual(cat.avisos.filter((a) => a.nivel === 'erro'), []);
+});
+
+test('acessórios de varejo de 28/09: cartão e pix em todos os formatos', () => {
+  const [cat] = parseVarios(amostra('acessorios-varejo.txt'));
+  assert.equal(cat.resumo.totalProdutos, 34);
+  assert.deepEqual(cat.avisos.filter((a) => a.nivel === 'erro'), []);
+
+  const aiwa = produto(cat, 'Caixa de Som Boombox Plus AIWA');
+  assert.equal(aiwa.avista.valor, 1169);
+  assert.equal(aiwa.parcelado.valor, 1320);
+  assert.equal(aiwa.parcelado.parcelas, 10);
+
+  const lg = produto(cat, 'Ar-Condicionado LG AI');
+  assert.equal(lg.avista.valor, 2650);
+  assert.equal(lg.parcelado.valor, 2999);
+
+  const haylou = produto(cat, 'SmartWatch/Relógio Xiaomi Haylou Watch S6');
+  assert.equal(haylou.avista.valor, 179.99);
+  assert.equal(haylou.parcelado.valor, 204);
+
+  const alexa = produto(cat, 'Alexa Echo Dot');
+  assert.equal(alexa.parcelado.valor, 497.94);
+  assert.equal(alexa.parcelado.parcelas, 6);
+  assert.deepEqual(alexa.cores, ['Preta', 'Azul']);
+
+  assert.equal(produto(cat, 'Fone Bluetooth Agold').parcelado.valor, 79.99);
+  assert.equal(produto(cat, 'Cabo USB Tipo C / 1 Metro').avista.valor, 15);
+});

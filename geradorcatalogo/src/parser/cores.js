@@ -64,15 +64,18 @@ export function separarCores(trecho) {
 /**
  * Tira a cor de um texto, em qualquer posição depois do primeiro segmento.
  *
- * O texto é quebrado em " - " (traço cercado de espaço, para não estraçalhar
- * códigos como "AWS-BBS-01-B") e cada segmento a partir do segundo é testado.
+ * O texto é quebrado no traço com espaço de ao menos um lado (para não
+ * estraçalhar códigos como "AWS-BBS-01-B") e cada segmento a partir do
+ * segundo é testado.
  * Assim "JBL Boombox 3 - Preta - 180w RMS" devolve a cor do meio e mantém a
  * especificação no nome.
  *
  * @returns {{texto: string, cores: string[]}}
  */
 export function extrairCores(texto) {
-  const partes = texto.split(/\s+[-–—]\s+/);
+  // Espaço de um lado só também separa ("4/128gb -Azul", "Titanium- 1970");
+  // traço sem espaço nenhum é parte do nome ("Wi-Fi", "Ar-Condicionado").
+  const partes = texto.split(/\s+[-–—]\s*|\s*[-–—]\s+/);
   if (partes.length < 2) return { texto: texto.trim(), cores: [] };
 
   const cores = [];
