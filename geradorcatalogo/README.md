@@ -52,7 +52,10 @@ npx serve .        # ou: python3 -m http.server
 | `--fundo-imagem` | — | Foto de fundo (jpg/png/webp), embutida em base64 |
 | `--veu` | do tema | Cor/gradiente por cima da foto |
 | `--paginas-max` | `1` | Teto de páginas por catálogo |
-| `--layout` | `tabela` | `tabela`, `duplo`, `grade` ou `vitrine` |
+| `--layout` | `tabela` | `tabela`, `duplo`, `grade`, `vitrine` ou `mosaico` |
+| `--colunas` / `--linhas` | `3` / `4` | Mosaico: cartões por linha (1–6) e linhas por imagem (1–10) |
+| `--enfase` | `avista` | Mosaico: `avista` ou `cartao` — qual preço sai grande |
+| `--cartao` | `total` | Mosaico: `total` ou `parcelas` (parcelamento do produto + total embaixo) |
 
 Vários arquivos de entrada podem ser passados de uma vez; cada um vira a sua
 imagem.
@@ -63,6 +66,43 @@ imagem.
 | `--margens` | `padrao` | `padrao` ou `stories` (reserva a área da interface) |
 | `--margem-topo` / `--margem-lateral` / `--margem-base` | do preset | Em px, base 1080×1920 |
 | `--html` | — | Grava também o HTML de cada página |
+
+### Mosaico: cartões em colunas × linhas
+
+Os outros layouts encolhem a lista até caber numa imagem. O mosaico faz o
+contrário: **a grade é fixa** — você escolhe colunas e linhas (atalhos 2×3,
+2×4, 3×4, 3×5, 4×6) — e o que não cabe vai para a imagem seguinte, com o mesmo
+cabeçalho e o contador 1/3, 2/3… Só a letra se ajusta: a maior que caiba em
+todos os cartões, igual em todas as imagens. A última imagem completa as
+linhas que faltam com vagas vazias, para o cartão ter o mesmo tamanho em todas.
+
+Cada cartão traz o nome no topo, a cor, e embaixo o preço de dinheiro/pix com
+o de cartão abaixo dele:
+
+- **Preço em destaque** escolhe qual sai grande (dinheiro ou cartão); a ordem
+  não muda.
+- **Preço de cartão: "Parcelas + total"** mostra o parcelamento de cada
+  produto como está na lista — 10x, 6x, 3x — e o total embaixo, em destaque.
+- Produto com um preço só mostra só ele. Na lista de atacado, sem forma de
+  pagamento escrita, o rótulo é "Preço".
+- Seção (MOTOROLA, SAMSUNG…) abre uma linha nova com uma faixa, que não conta
+  como linha da grade.
+
+```bash
+node tools/render.mjs lista.txt --layout mosaico --colunas 3 --linhas 4 --cartao parcelas
+```
+
+### O que fica salvo no aparelho
+
+O estúdio guarda sozinho, a cada mudança, todas as configurações — tema,
+layout, colunas e linhas, destaque, margens, alinhamentos, palavras a remover,
+assinatura, cor de fundo, marcadores — e as próprias listas, como rascunho.
+Recarregar ou fechar a página não perde nada.
+
+Ficam de fora o título e a data personalizados, que valem para uma lista só e
+entrariam errados na do dia seguinte, e a foto de fundo, que o navegador não
+deixa devolver ao campo de arquivo. **Restaurar padrão** volta as configurações
+de fábrica sem apagar as listas.
 
 ### Salvar a imagem no celular
 

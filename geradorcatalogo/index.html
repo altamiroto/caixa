@@ -165,6 +165,29 @@
         font-weight: 700;
         cursor: pointer;
       }
+      [hidden] {
+        display: none !important;
+      }
+      .atalhos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .atalhos button {
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+      .atalhos button[aria-pressed='true'] {
+        outline: 2px solid var(--ui-acento);
+      }
+      .salvamento {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
       button.secundario {
         background: #232838;
       }
@@ -354,10 +377,53 @@
           <option value="duplo">Duplo — duas linhas por faixa</option>
           <option value="grade">Grade — cartão, dois por faixa</option>
           <option value="vitrine">Vitrine — cartão com preço em destaque</option>
+          <option value="mosaico">Mosaico — cartões em colunas × linhas</option>
         </select>
         <p class="ajuda">
           Duas colunas rendem mais quando o nome é curto. Em lista de TV, com nome
           longo, o texto quebra demais e a página cabe menos.
+        </p>
+      </div>
+
+      <div id="painel-mosaico" hidden>
+        <div class="dupla">
+          <div>
+            <label for="mos-colunas">Colunas</label>
+            <input id="mos-colunas" type="number" min="1" max="6" value="3" inputmode="numeric" />
+          </div>
+          <div>
+            <label for="mos-linhas">Linhas</label>
+            <input id="mos-linhas" type="number" min="1" max="10" value="4" inputmode="numeric" />
+          </div>
+        </div>
+        <div class="atalhos" id="mos-atalhos">
+          <button type="button" class="secundario" data-grade="2x3">2 × 3</button>
+          <button type="button" class="secundario" data-grade="2x4">2 × 4</button>
+          <button type="button" class="secundario" data-grade="3x4">3 × 4</button>
+          <button type="button" class="secundario" data-grade="3x5">3 × 5</button>
+          <button type="button" class="secundario" data-grade="4x6">4 × 6</button>
+        </div>
+        <p class="ajuda" id="mos-conta"></p>
+        <div class="dupla">
+          <div>
+            <label for="mos-enfase">Preço em destaque</label>
+            <select id="mos-enfase">
+              <option value="avista">Dinheiro / Pix</option>
+              <option value="cartao">Cartão</option>
+            </select>
+          </div>
+          <div>
+            <label for="mos-cartao">Preço de cartão</label>
+            <select id="mos-cartao">
+              <option value="total">Total</option>
+              <option value="parcelas">Parcelas + total</option>
+            </select>
+          </div>
+        </div>
+        <p class="ajuda">
+          Dinheiro sempre em cima, cartão embaixo — o destaque só muda qual sai
+          grande. "Parcelas + total" mostra o parcelamento de cada produto (10x,
+          6x, 3x…) e o total embaixo. Produto com um preço só mostra só ele.
         </p>
       </div>
 
@@ -407,6 +473,11 @@
           Compõe o fundo da página inteira. O tema aplica um véu por cima para o
           texto continuar legível.
         </p>
+      </div>
+
+      <div class="salvamento">
+        <p class="ajuda">Configurações e listas ficam salvas neste aparelho.</p>
+        <button type="button" class="secundario" id="restaurar">Restaurar padrão</button>
       </div>
 
       <button id="gerar">Gerar catálogo</button>
@@ -497,6 +568,7 @@ R$ 965 (Dinheiro)`;
         remover.addEventListener('click', () => {
           bloco.remove();
           arrumarListas();
+          salvarListas();
         });
         cabeca.append(numero, remover);
 
@@ -512,8 +584,134 @@ R$ 965 (Dinheiro)`;
         return campo;
       }
 
-      adicionarLista();
-      $('adicionar').addEventListener('click', () => adicionarLista('', true));
+      /* ------------------------------------------- o que fica salvo no aparelho */
+
+      /*
+       * Tudo que é configuração fica guardado: quem acerta um visual não quer
+       * refazer a cada visita. Ficam de fora título e data personalizados —
+       * valem para uma lista só e entrariam errados na do dia seguinte — e a
+       * foto de fundo, que o navegador não deixa devolver ao campo de arquivo.
+       */
+      const CHAVE_PREFERENCIAS = 'gc:preferencias';
+      const CHAVE_LISTAS = 'gc:listas';
+      const CAMPOS_SALVOS = [
+        'tema', 'sobretitulo', 'marca', 'selo', 'layout', 'remover',
+        'al-nome', 'al-cor', 'al-preco', 'margens', 'fundo',
+        'mos-colunas', 'mos-linhas', 'mos-enfase', 'mos-cartao',
+      ];
+      const MARCAS_SALVAS = ['mostrar-data', 'mostrar-subtitulo', 'tema-aleatorio'];
+
+      // Os valores de fábrica, lidos antes de qualquer restauração.
+      const PADROES = Object.fromEntries([
+        ...CAMPOS_SALVOS.map((id) => [id, $(id).value]),
+        ...MARCAS_SALVAS.map((id) => [id, $(id).checked]),
+      ]);
+
+      function lerGuardado(chave) {
+        try {
+          return JSON.parse(localStorage.getItem(chave) ?? 'null');
+        } catch {
+          return null; // armazenamento bloqueado: a página segue sem memória
+        }
+      }
+
+      function guardar(chave, valor) {
+        try {
+          localStorage.setItem(chave, JSON.stringify(valor));
+        } catch {
+          // cota cheia ou aba anônima: segue sem salvar
+        }
+      }
+
+      function aplicarConfiguracao(dados) {
+        for (const id of CAMPOS_SALVOS) {
+          if (!(id in dados)) continue;
+          const campo = $(id);
+          const valor = String(dados[id]);
+          // Opção que não existe mais (tema renomeado) fica no padrão.
+          if (campo.tagName === 'SELECT' && ![...campo.options].some((o) => o.value === valor)) continue;
+          campo.value = valor;
+        }
+        for (const id of MARCAS_SALVAS) {
+          if (typeof dados[id] === 'boolean') $(id).checked = dados[id];
+        }
+        $('tema').disabled = $('tema-aleatorio').checked;
+        atualizarPainelMosaico();
+      }
+
+      function salvarConfiguracao() {
+        guardar(CHAVE_PREFERENCIAS, Object.fromEntries([
+          ...CAMPOS_SALVOS.map((id) => [id, $(id).value]),
+          ...MARCAS_SALVAS.map((id) => [id, $(id).checked]),
+        ]));
+      }
+
+      function salvarListas() {
+        guardar(CHAVE_LISTAS, caixas().map((c) => c.value));
+      }
+
+      let temporizadorSalvar = null;
+      function agendarSalvamento() {
+        clearTimeout(temporizadorSalvar);
+        temporizadorSalvar = setTimeout(() => {
+          salvarConfiguracao();
+          salvarListas();
+        }, 300);
+      }
+
+      /* ------------------------------------------------------ painel do mosaico */
+
+      function atualizarPainelMosaico() {
+        const ativo = $('layout').value === 'mosaico';
+        $('painel-mosaico').hidden = !ativo;
+        const c = Math.min(6, Math.max(1, Number($('mos-colunas').value) || 3));
+        const l = Math.min(10, Math.max(1, Number($('mos-linhas').value) || 4));
+        $('mos-conta').textContent =
+          `${c * l} cartões por imagem. O que não couber vai para a imagem seguinte.`;
+        for (const b of $('mos-atalhos').querySelectorAll('button')) {
+          b.setAttribute('aria-pressed', String(b.dataset.grade === `${c}x${l}`));
+        }
+      }
+
+      $('mos-atalhos').addEventListener('click', (e) => {
+        const botao = e.target.closest('[data-grade]');
+        if (!botao) return;
+        const [c, l] = botao.dataset.grade.split('x');
+        $('mos-colunas').value = c;
+        $('mos-linhas').value = l;
+        atualizarPainelMosaico();
+        agendarSalvamento();
+      });
+      for (const id of ['layout', 'mos-colunas', 'mos-linhas']) {
+        $(id).addEventListener('input', atualizarPainelMosaico);
+        $(id).addEventListener('change', atualizarPainelMosaico);
+      }
+
+      // Qualquer mudança no painel ou nas listas é salva.
+      document.querySelector('.painel').addEventListener('input', agendarSalvamento);
+      document.querySelector('.painel').addEventListener('change', agendarSalvamento);
+
+      $('restaurar').addEventListener('click', () => {
+        aplicarConfiguracao(PADROES);
+        try {
+          localStorage.removeItem(CHAVE_PREFERENCIAS);
+        } catch {
+          // sem armazenamento: nada a apagar
+        }
+        if (palco.querySelector('.previa')) gerar();
+      });
+
+      aplicarConfiguracao(lerGuardado(CHAVE_PREFERENCIAS) ?? {});
+      const listasGuardadas = lerGuardado(CHAVE_LISTAS);
+      if (Array.isArray(listasGuardadas) && listasGuardadas.some((t) => String(t).trim())) {
+        for (const texto of listasGuardadas) adicionarLista(String(texto));
+      } else {
+        adicionarLista();
+      }
+      $('adicionar').addEventListener('click', () => {
+        adicionarLista('', true);
+        salvarListas();
+      });
 
       // O exemplo entra na primeira caixa vazia, ou numa nova — assim carregar
       // um exemplo não apaga o que já foi colado.
@@ -524,6 +722,7 @@ R$ 965 (Dinheiro)`;
         const vaga = caixas().find((c) => !c.value.trim());
         if (vaga) vaga.value = texto;
         else adicionarLista(texto);
+        salvarListas();
         gerar();
       });
 
@@ -613,6 +812,12 @@ R$ 965 (Dinheiro)`;
             preco: $('al-preco').value,
           },
           margens: { preset: $('margens').value },
+          mosaico: {
+            colunas: Number($('mos-colunas').value),
+            linhas: Number($('mos-linhas').value),
+            enfase: $('mos-enfase').value,
+            cartao: $('mos-cartao').value,
+          },
         };
       }
 
@@ -711,6 +916,7 @@ R$ 965 (Dinheiro)`;
             continue;
           }
           totalPaginas += resultado.paginas.length;
+          for (const mensagem of resultado.avisos ?? []) avisos.push({ nivel: 'atencao', mensagem });
           totalProdutos += catalogo.resumo.totalProdutos;
           avisos.push(...catalogo.avisos);
 
@@ -837,16 +1043,11 @@ R$ 965 (Dinheiro)`;
           if (pronto) return Promise.resolve(pronto);
           if (!gerando) {
             gerando = (async () => {
-              const alvo = moldura.querySelector('.pagina');
-              try {
-                // A prévia está reduzida; a exportação usa o tamanho real.
-                alvo.style.transform = 'none';
-                pronto = await paraPng(alvo);
-                return pronto;
-              } finally {
-                // Sem isto, uma falha deixava a prévia gigante na tela.
-                alvo.style.transform = '';
-              }
+              // paraPng trabalha numa cópia em tamanho real; a prévia na tela
+              // não é tocada. Antes ela perdia a redução durante a conversão e
+              // aparecia ampliada por um instante.
+              pronto = await paraPng(moldura.querySelector('.pagina'));
+              return pronto;
             })().catch((erro) => {
               gerando = null; // deixa tentar de novo pelo botão
               throw erro;

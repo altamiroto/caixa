@@ -498,8 +498,8 @@ test('a prévia volta ao tamanho normal mesmo se a exportação falhar', async (
   await pagina.click('#gerar');
   await pagina.waitForFunction(() => document.querySelector('#avisos li'));
 
-  // A exportação põe `transform: none` no elemento e precisa desfazer isso;
-  // sem o `finally` a prévia ficava do tamanho real, cobrindo a tela.
+  // A prévia não pode sair da falha com outra escala — a exportação trabalha
+  // numa cópia e não deve tocar nela.
   const inline = await pagina.$eval('.moldura .pagina', (el) => el.style.transform);
   assert.equal(inline, '', 'a prévia ficou com a escala da exportação');
   const escala = await pagina.$eval('.moldura .pagina', (el) => getComputedStyle(el).transform);
@@ -599,5 +599,136 @@ test('gerar de novo no meio da preparação para a fila antiga', async (t) => {
   await esperarPreparadas(pagina);
 
   assert.equal(await pagina.evaluate(() => window.__pico), 1, 'duas imagens sendo geradas ao mesmo tempo');
+  assert.deepEqual(erros, []);
+});
+
+test('mosaico: grade fixa, o que não cabe vai para a imagem seguinte, sem cartão estourado', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/acessorios-varejo.txt'), 'utf8')]);
+  await pagina.selectOption('#layout', 'mosaico');
+  assert.equal(await pagina.isVisible('#painel-mosaico'), true);
+  await pagina.click('[data-grade="3x4"]');
+  assert.match(await pagina.textContent('#mos-conta'), /12 cartões por imagem/);
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  // 34 produtos em 3×4 = 12 por imagem → 3 imagens.
+  assert.equal(await pagina.locator('.moldura .pagina').count(), 3);
+  assert.equal(await pagina.locator('.moldura .mcard:not(.mcard--vazio)').count(), 34);
+
+  const medidas = await pagina.evaluate(() => {
+    const paginas = [...document.querySelectorAll('.moldura .pagina')];
+    return paginas.map((p) => {
+      const cartoes = [...p.querySelectorAll('.mcard')];
+      const linhas = p.querySelectorAll('.mosaico__linha').length;
+      const estouro = cartoes.filter((c) => !c.classList.contains('mcard--vazio'))
+        .filter((c) => c.scrollHeight > c.clientHeight + 1 || c.scrollWidth > c.clientWidth + 1).length;
+      // offsetWidth, não getBoundingClientRect: a prévia que está virando PNG
+      // perde a redução por um instante, e o tamanho visual mudaria.
+      return { linhas, estouro, largura: cartoes[0].offsetWidth, altura: cartoes[0].offsetHeight };
+    });
+  });
+  for (const m of medidas) {
+    assert.equal(m.linhas, 4, 'quatro linhas em toda imagem, inclusive a última');
+    assert.equal(m.estouro, 0, 'cartão com texto estourado');
+  }
+  // Cartão do mesmo tamanho em todas as imagens.
+  assert.equal(new Set(medidas.map((m) => `${m.largura}x${m.altura}`)).size, 1, JSON.stringify(medidas));
+
+  // Mais linhas, menos imagens.
+  await pagina.click('[data-grade="4x6"]');
+  await pagina.click('#gerar');
+  await pagina.waitForFunction(() => document.querySelectorAll('.moldura .pagina').length === 2);
+  assert.deepEqual(erros, []);
+});
+
+test('configurações e listas ficam salvas ao recarregar, e "Restaurar padrão" volta tudo', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  const lista = await readFile(join(RAIZ, 'samples/atacado-celulares.txt'), 'utf8');
+  await preencher(pagina, [lista, 'segunda lista']);
+  await pagina.selectOption('#layout', 'mosaico');
+  await pagina.click('[data-grade="2x4"]');
+  await pagina.selectOption('#mos-enfase', 'cartao');
+  await pagina.selectOption('#mos-cartao', 'parcelas');
+  await pagina.selectOption('#tema', 'menta');
+  await pagina.fill('#marca', '@minhaloja');
+  await pagina.fill('#remover', 'LANÇAMENTO');
+  await pagina.uncheck('#mostrar-data');
+  await pagina.fill('#titulo', 'Título só de hoje');
+  await pagina.waitForTimeout(500);
+
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForSelector('#listas textarea');
+
+  assert.equal(await pagina.inputValue('#layout'), 'mosaico');
+  assert.equal(await pagina.isVisible('#painel-mosaico'), true);
+  assert.equal(await pagina.inputValue('#mos-colunas'), '2');
+  assert.equal(await pagina.inputValue('#mos-linhas'), '4');
+  assert.equal(await pagina.inputValue('#mos-enfase'), 'cartao');
+  assert.equal(await pagina.inputValue('#mos-cartao'), 'parcelas');
+  assert.equal(await pagina.inputValue('#tema'), 'menta');
+  assert.equal(await pagina.inputValue('#marca'), '@minhaloja');
+  assert.equal(await pagina.inputValue('#remover'), 'LANÇAMENTO');
+  assert.equal(await pagina.isChecked('#mostrar-data'), false);
+  // Título personalizado vale para uma lista só: não volta.
+  assert.equal(await pagina.inputValue('#titulo'), '');
+  // As listas voltam, na ordem.
+  const caixas = await pagina.locator('#listas textarea').evaluateAll((els) => els.map((e) => e.value));
+  assert.deepEqual(caixas, [lista, 'segunda lista']);
+
+  await pagina.click('#restaurar');
+  assert.equal(await pagina.inputValue('#layout'), 'tabela');
+  assert.equal(await pagina.isVisible('#painel-mosaico'), false);
+  assert.equal(await pagina.inputValue('#mos-colunas'), '3');
+  assert.equal(await pagina.inputValue('#marca'), '');
+  assert.equal(await pagina.isChecked('#mostrar-data'), true);
+  // Restaurar mexe nas configurações, não nas listas.
+  assert.equal(await pagina.locator('#listas textarea').count(), 2);
+
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForSelector('#listas textarea');
+  assert.equal(await pagina.inputValue('#layout'), 'tabela', 'o padrão restaurado também fica salvo');
+  assert.deepEqual(erros, []);
+});
+
+test('a prévia não aparece ampliada enquanto a imagem é preparada', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/acessorios-varejo.txt'), 'utf8')]);
+  await pagina.selectOption('#layout', 'mosaico');
+
+  // Registra qualquer mudança de estilo nas prévias durante a preparação.
+  await pagina.evaluate(() => {
+    window.__ampliou = 0;
+    new MutationObserver((mudancas) => {
+      for (const m of mudancas) {
+        if (m.target.classList?.contains('pagina') && m.target.closest('.moldura') && m.target.style.transform) {
+          window.__ampliou += 1;
+        }
+      }
+    }).observe(document.getElementById('palco'), { subtree: true, attributes: true, attributeFilter: ['style'] });
+  });
+
+  await pagina.click('#gerar');
+  await esperarPreparadas(pagina);
+  assert.equal(await pagina.evaluate(() => window.__ampliou), 0);
+
+  // E o PNG continua saindo em tamanho real.
+  const [download] = await Promise.all([
+    pagina.waitForEvent('download'),
+    pagina.locator('.previa__acoes button').first().click(),
+  ]);
+  const { createReadStream } = await import('node:fs');
+  const caminho = await download.path();
+  const cabecalho = await new Promise((resolve) => {
+    createReadStream(caminho, { start: 16, end: 23 }).on('data', resolve);
+  });
+  assert.equal(cabecalho.readUInt32BE(0), 2160, 'largura do PNG');
+  assert.equal(cabecalho.readUInt32BE(4), 3840, 'altura do PNG');
   assert.deepEqual(erros, []);
 });

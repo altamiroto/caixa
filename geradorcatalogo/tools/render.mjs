@@ -29,8 +29,15 @@
  *   --fundo-imagem <arquivo>  foto de fundo da página (jpg/png/webp)
  *   --veu <css>       cor/gradiente por cima da foto; o tema define um padrão
  *   --paginas-max <n> teto de páginas por catálogo            (padrão: 1)
- *   --layout <t>      tabela | grade | vitrine | duplo        (padrão: tabela)
- *                     os três últimos põem dois produtos por linha
+ *   --layout <t>      tabela | grade | vitrine | duplo | mosaico  (padrão: tabela)
+ *                     grade, vitrine e duplo põem dois produtos por linha;
+ *                     mosaico é uma grade fixa de cartões (ver abaixo)
+ *   --colunas <n>     mosaico: cartões por linha, 1 a 6       (padrão: 3)
+ *   --linhas <n>      mosaico: linhas por imagem, 1 a 10      (padrão: 4)
+ *                     o que não cabe vai para a imagem seguinte
+ *   --enfase <t>      mosaico: avista | cartao — qual preço sai grande
+ *   --cartao <t>      mosaico: total | parcelas — "parcelas" mostra o
+ *                     parcelamento de cada produto e o total embaixo
  *   --remover <lista> palavras a tirar do nome, separadas por vírgula
  *                     ex.: --remover "Smart TV,LANÇAMENTO"
  *   --alinhar-nome  <esquerda|centro|direita>  (padrão: esquerda)
@@ -84,6 +91,7 @@ function lerArgumentos(argv) {
     veu: undefined,
     paginasMax: undefined,
     layout: undefined,
+    mosaico: {},
     remover: '',
     alinhar: {},
     margens: {},
@@ -109,6 +117,10 @@ function lerArgumentos(argv) {
     else if (a === '--veu') opcoes.veu = proximo();
     else if (a === '--paginas-max') opcoes.paginasMax = Number(proximo());
     else if (a === '--layout') opcoes.layout = proximo();
+    else if (a === '--colunas') opcoes.mosaico.colunas = Number(proximo());
+    else if (a === '--linhas') opcoes.mosaico.linhas = Number(proximo());
+    else if (a === '--enfase') opcoes.mosaico.enfase = proximo();
+    else if (a === '--cartao') opcoes.mosaico.cartao = proximo();
     else if (a === '--remover') opcoes.remover = proximo();
     else if (a === '--alinhar-nome') opcoes.alinhar.nome = proximo();
     else if (a === '--alinhar-cor') opcoes.alinhar.cor = proximo();
@@ -286,6 +298,7 @@ async function main() {
     paginasMax: opcoes.paginasMax,
     veu: opcoes.veu,
     layout: opcoes.layout,
+    mosaico: opcoes.mosaico,
     remover: opcoes.remover,
     alinhar: opcoes.alinhar,
     margens: opcoes.margens,
@@ -342,6 +355,7 @@ async function main() {
         (avisos.length ? `, ${avisos.length} aviso(s)` : ''),
     );
     for (const a of avisos) console.log(`   [${a.nivel}] linha ${a.linha ?? '?'}: ${a.mensagem}`);
+    for (const m of resultado.avisos ?? []) console.log(`   [atencao] ${m}`);
   }
 
   await navegador.close();
