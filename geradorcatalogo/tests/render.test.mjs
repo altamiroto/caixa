@@ -376,9 +376,17 @@ test('coluna de preço sem forma de pagamento escrita se chama "Preço", não "D
 test('normalizarMosaico recusa valores fora da faixa em vez de aceitar calado', () => {
   assert.deepEqual(normalizarMosaico(), MOSAICO_PADRAO);
   assert.deepEqual(normalizarMosaico({ colunas: 9, linhas: 0, enfase: 'x', cartao: 'y' }), MOSAICO_PADRAO);
-  assert.deepEqual(normalizarMosaico({ colunas: '2', linhas: 5, enfase: 'cartao', cartao: 'parcelas' }), {
-    colunas: 2, linhas: 5, enfase: 'cartao', cartao: 'parcelas',
-  });
+  assert.deepEqual(normalizarMosaico({ colunas: 9, linhas: 0, disposicao: 'meio', centralizar: 'sim' }), MOSAICO_PADRAO);
+  assert.deepEqual(
+    normalizarMosaico({
+      colunas: '2', linhas: 5, enfase: 'cartao', cartao: 'parcelas',
+      total: false, disposicao: 'centro', centralizar: true, contorno: true,
+    }),
+    {
+      colunas: 2, linhas: 5, enfase: 'cartao', cartao: 'parcelas',
+      total: false, disposicao: 'centro', centralizar: true, contorno: true,
+    },
+  );
 });
 
 test('mosaico: dinheiro em cima, cartão embaixo, e o destaque troca de lado', async () => {
@@ -401,7 +409,7 @@ test('mosaico: dinheiro em cima, cartão embaixo, e o destaque troca de lado', a
   assert.ok(cartaoForte.indexOf('mcard__preco--avista') < cartaoForte.indexOf('mcard__preco--parcelado'), 'a ordem não muda');
 });
 
-test('mosaico "parcelas + total": cada produto com o próprio parcelamento', async () => {
+test('mosaico "parcelas": cada produto com o próprio parcelamento, parcela em destaque', async () => {
   const { readFileSync } = await import('node:fs');
   const { parseVarios } = await import('../src/parser/parse.js');
   const cat = parseVarios(readFileSync(new URL('../samples/acessorios-varejo.txt', import.meta.url), 'utf8'))[0];
@@ -409,16 +417,23 @@ test('mosaico "parcelas + total": cada produto com o próprio parcelamento', asy
   const achar = (inicio) => cat.secoes[0].produtos.find((p) => p.nome.startsWith(inicio));
   const op = { layout: 'mosaico', mosaico: { cartao: 'parcelas' } };
 
+  // "6x de" pequeno, separado do valor da parcela, que é o destaque. Sem cifrão.
   const alexa = htmlProduto(achar('Alexa Echo Dot'), colunas, op);
-  assert.match(alexa, /6x de 82,99/);
-  assert.match(alexa, /<small>total<\/small> 497,94/);
+  assert.match(alexa, /<span class="mcard__vezes">6x de<\/span> <span class="mcard__parcela">82,99<\/span>/);
+  assert.match(alexa, /<span class="mcard__total">Total 497,94<\/span>/);
+  assert.doesNotMatch(alexa, /R\$/);
 
   const geladeira = htmlProduto(achar('Geladeira Electrolux'), colunas, op);
-  assert.match(geladeira, /10x de 399,90/);
-  assert.match(geladeira, /<small>total<\/small> 3\.999/);
+  assert.match(geladeira, /mcard__vezes">10x de<\/span> <span class="mcard__parcela">399,90</);
+  assert.match(geladeira, /Total 3\.999/);
 
   const kabum = htmlProduto(achar('SmartWatch/Relogio KaBuM'), colunas, op);
-  assert.match(kabum, /3x de 30,00/);
+  assert.match(kabum, /mcard__vezes">3x de<\/span> <span class="mcard__parcela">30,00</);
+
+  // Sem o total: só a parcela.
+  const soParcela = htmlProduto(achar('Alexa Echo Dot'), colunas, { layout: 'mosaico', mosaico: { cartao: 'parcelas', total: false } });
+  assert.match(soParcela, /mcard__parcela">82,99/);
+  assert.doesNotMatch(soParcela, /mcard__total|497,94/);
 
   // Só cartão: o bloco do cartão vira o destaque, e não aparece dinheiro inventado.
   assert.match(alexa, /mcard__preco--parcelas mcard__preco--forte/);
@@ -451,4 +466,22 @@ test('justificado vale para o nome, não para cor e preço', () => {
     opcoes: { alinhar: { nome: 'justificado' }, layout: 'mosaico' },
   });
   assert.match(html, /data-alinha-nome="justificado"/);
+});
+
+test('mosaico: linha incompleta centralizada não ganha vagas vazias; contorno e disposição viram atributo', async () => {
+  const { htmlLinhaMosaico } = await import('../src/render/template.js');
+  const cartoes = ['<div class="mcard">a</div>'];
+  assert.equal((htmlLinhaMosaico(cartoes, 3).match(/mcard--vazio/g) || []).length, 2);
+  const centro = htmlLinhaMosaico(cartoes, 3, { centralizar: true });
+  assert.match(centro, /mosaico__linha--centro/);
+  assert.doesNotMatch(centro, /mcard--vazio/);
+  // Linha cheia não muda.
+  assert.doesNotMatch(htmlLinhaMosaico(['a', 'b', 'c'], 3, { centralizar: true }), /--centro/);
+
+  const pagina = htmlPagina({
+    catalogo: catalogoFalso, colunas: definirColunas(catalogoFalso), blocos: [], numero: 1, total: 1, escala: 1,
+    opcoes: { layout: 'mosaico', mosaico: { contorno: true, disposicao: 'centro' } },
+  });
+  assert.match(pagina, /data-mosaico-contorno="sim"/);
+  assert.match(pagina, /data-mosaico-disposicao="centro"/);
 });

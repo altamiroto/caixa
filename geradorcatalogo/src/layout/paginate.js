@@ -227,7 +227,7 @@ export const ESCALA_MAX_MOSAICO = 2.4;
  */
 function paginarMosaico({ documento, janela, catalogo, opcoes }) {
   const colunas = definirColunas(catalogo, opcoes);
-  const { colunas: C, linhas: L } = normalizarMosaico(opcoes.mosaico);
+  const { colunas: C, linhas: L, centralizar } = normalizarMosaico(opcoes.mosaico);
 
   // 1. Linhas da grade. Nunca atravessam seção.
   const entradas = [];
@@ -267,7 +267,7 @@ function paginarMosaico({ documento, janela, catalogo, opcoes }) {
         atual.faixas += 1;
       }
     }
-    atual.blocos.push(htmlLinhaMosaico(e.cartoes, C));
+    atual.blocos.push(htmlLinhaMosaico(e.cartoes, C, { centralizar }));
     atual.linhas += 1;
   }
 

@@ -429,15 +429,31 @@
             <label for="mos-cartao">Preço de cartão</label>
             <select id="mos-cartao">
               <option value="total">Total</option>
-              <option value="parcelas">Parcelas + total</option>
+              <option value="parcelas">Parcelas</option>
             </select>
           </div>
         </div>
+        <div class="marcadores">
+          <label><input type="checkbox" id="mos-total" checked /> Mostrar o total embaixo da parcela</label>
+        </div>
         <p class="ajuda">
           Dinheiro sempre em cima, cartão embaixo — o destaque só muda qual sai
-          grande. "Parcelas + total" mostra o parcelamento de cada produto (10x,
-          6x, 3x…) e o total embaixo. Produto com um preço só mostra só ele.
+          grande. "Parcelas" destaca o valor da parcela de cada produto (10x de
+          <strong>94,90</strong>) e põe o total embaixo, miúdo; desmarcado,
+          fica só a parcela. Produto com um preço só mostra só ele.
         </p>
+        <div>
+          <label for="mos-disposicao">Conteúdo do cartão</label>
+          <select id="mos-disposicao">
+            <option value="separado">Nome em cima, preço embaixo</option>
+            <option value="centro">Tudo no centro do cartão</option>
+            <option value="topo">Tudo em cima</option>
+          </select>
+        </div>
+        <div class="marcadores">
+          <label><input type="checkbox" id="mos-centralizar" /> Centralizar os cartões de linhas incompletas</label>
+          <label><input type="checkbox" id="mos-contorno" /> Contorno nos cartões</label>
+        </div>
       </div>
 
       <div>
@@ -625,9 +641,12 @@ R$ 965 (Dinheiro)`;
       const CAMPOS_SALVOS = [
         'tom', 'tema', 'sobretitulo', 'marca', 'selo', 'layout', 'remover',
         'al-nome', 'al-cor', 'al-preco', 'margens', 'fundo',
-        'mos-colunas', 'mos-linhas', 'mos-enfase', 'mos-cartao',
+        'mos-colunas', 'mos-linhas', 'mos-enfase', 'mos-cartao', 'mos-disposicao',
       ];
-      const MARCAS_SALVAS = ['mostrar-data', 'mostrar-subtitulo', 'tema-aleatorio'];
+      const MARCAS_SALVAS = [
+        'mostrar-data', 'mostrar-subtitulo', 'tema-aleatorio',
+        'mos-total', 'mos-centralizar', 'mos-contorno',
+      ];
 
       // Os valores de fábrica, lidos antes de qualquer restauração.
       const PADROES = Object.fromEntries([
@@ -694,6 +713,8 @@ R$ 965 (Dinheiro)`;
       function atualizarPainelMosaico() {
         const ativo = $('layout').value === 'mosaico';
         $('painel-mosaico').hidden = !ativo;
+        // O total embaixo só existe no modo parcelas.
+        $('mos-total').disabled = $('mos-cartao').value !== 'parcelas';
         const c = Math.min(6, Math.max(1, Number($('mos-colunas').value) || 3));
         const l = Math.min(10, Math.max(1, Number($('mos-linhas').value) || 4));
         $('mos-conta').textContent =
@@ -712,7 +733,7 @@ R$ 965 (Dinheiro)`;
         atualizarPainelMosaico();
         agendarSalvamento();
       });
-      for (const id of ['layout', 'mos-colunas', 'mos-linhas']) {
+      for (const id of ['layout', 'mos-colunas', 'mos-linhas', 'mos-cartao']) {
         $(id).addEventListener('input', atualizarPainelMosaico);
         $(id).addEventListener('change', atualizarPainelMosaico);
       }
@@ -848,6 +869,10 @@ R$ 965 (Dinheiro)`;
             linhas: Number($('mos-linhas').value),
             enfase: $('mos-enfase').value,
             cartao: $('mos-cartao').value,
+            total: $('mos-total').checked,
+            disposicao: $('mos-disposicao').value,
+            centralizar: $('mos-centralizar').checked,
+            contorno: $('mos-contorno').checked,
           },
         };
       }

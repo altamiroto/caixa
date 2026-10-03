@@ -632,32 +632,70 @@
   font-size: calc(46px * var(--escala));
 }
 
-/* Modo parcelas: a parcela do produto, e o total embaixo em destaque. */
+/*
+ * Modo parcelas: o valor da parcela é o que chama a atenção. "10x de" sai
+ * pequeno e apagado; "94,90", grande. O total vai embaixo bem miúdo,
+ * sem destaque — está lá para quem procurar.
+ */
 .mcard__parcelas {
-  font-size: calc(21px * var(--escala));
-  font-weight: 700;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25em;
   white-space: nowrap;
+}
+
+.mcard__vezes {
+  font-size: calc(17px * var(--escala));
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.mcard__parcela {
+  font-size: calc(32px * var(--escala));
+  font-weight: 900;
+}
+
+.mcard__preco--forte .mcard__vezes {
+  font-size: calc(21px * var(--escala));
+}
+
+.mcard__preco--forte .mcard__parcela {
+  font-size: calc(48px * var(--escala));
 }
 
 .mcard__total {
-  font-size: calc(28px * var(--escala));
-  font-weight: 900;
+  margin-top: calc(3px * var(--escala));
+  font-size: calc(11px * var(--escala));
+  font-weight: 600;
+  opacity: 0.65;
   white-space: nowrap;
 }
 
-.mcard__total small {
-  font-size: 0.55em;
-  font-weight: 800;
-  text-transform: uppercase;
-  opacity: 0.8;
+/* Conteúdo do cartão: separado (padrão), tudo no centro, ou tudo em cima. */
+.pagina[data-mosaico-disposicao='centro'] .mcard {
+  justify-content: center;
 }
 
-.mcard__preco--forte .mcard__parcelas {
-  font-size: calc(26px * var(--escala));
+.pagina[data-mosaico-disposicao='topo'] .mcard {
+  justify-content: flex-start;
 }
 
-.mcard__preco--forte .mcard__total {
-  font-size: calc(42px * var(--escala));
+/*
+ * Linha incompleta centralizada: flex em vez de grade, com cada cartão na
+ * largura exata de uma coluna — o cartão não cresce, só vai para o meio.
+ */
+.mosaico__linha--centro {
+  display: flex;
+  justify-content: center;
+}
+
+.mosaico__linha--centro > .mcard {
+  flex: 0 0 calc((100% - (var(--mosaico-colunas, 3) - 1) * var(--mosaico-gap)) / var(--mosaico-colunas, 3));
+}
+
+/* Contorno de destaque, na cor de destaque do tema. */
+.pagina[data-mosaico-contorno='sim'] .mcard:not(.mcard--vazio) {
+  border: calc(3px * min(var(--escala), 1.3)) solid var(--destaque);
 }
 
 /* ----------------------------------------------------------------- vitrine */

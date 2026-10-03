@@ -778,3 +778,55 @@ test('tons: a lista de temas e o sorteio seguem a escolha, e ela fica salva', as
   assert.equal(alinhamento, 'justify');
   assert.deepEqual(erros, []);
 });
+
+test('mosaico: centralizar linha incompleta, conteúdo no centro e contorno — e tudo fica salvo', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/atacado-celulares.txt'), 'utf8')]);
+  await pagina.selectOption('#layout', 'mosaico');
+  await pagina.fill('#mos-colunas', '5');
+  await pagina.fill('#mos-linhas', '8');
+  await pagina.check('#mos-centralizar');
+  await pagina.check('#mos-contorno');
+  await pagina.selectOption('#mos-disposicao', 'centro');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  const g = await pagina.evaluate(() => {
+    const p = document.querySelector('.moldura .pagina');
+    // MOTOROLA tem um aparelho só: a primeira linha é incompleta.
+    const linha = p.querySelector('.mosaico__linha');
+    const cartao = linha.querySelector('.mcard');
+    const cheia = [...p.querySelectorAll('.mosaico__linha')].find((l) => l.querySelectorAll('.mcard').length === 5);
+    const esquerda = cartao.offsetLeft - linha.offsetLeft;
+    const direita = linha.offsetLeft + linha.offsetWidth - (cartao.offsetLeft + cartao.offsetWidth);
+    // Conteúdo no centro: o vão de cima e o de baixo dentro do cartão quase iguais.
+    const topo = cartao.querySelector('.mcard__topo');
+    const precos = cartao.querySelector('.mcard__precos');
+    const vaoCima = topo.offsetTop - cartao.offsetTop;
+    const vaoBaixo = cartao.offsetTop + cartao.offsetHeight - (precos.offsetTop + precos.offsetHeight);
+    return {
+      centro: linha.classList.contains('mosaico__linha--centro'),
+      esquerda, direita,
+      larguraCartao: cartao.offsetWidth,
+      larguraNaCheia: cheia.querySelector('.mcard').offsetWidth,
+      vaoCima, vaoBaixo,
+      borda: parseFloat(getComputedStyle(cartao).borderTopWidth),
+    };
+  });
+  assert.equal(g.centro, true);
+  assert.ok(Math.abs(g.esquerda - g.direita) <= 2, `cartão fora do centro: ${g.esquerda} x ${g.direita}`);
+  assert.ok(Math.abs(g.larguraCartao - g.larguraNaCheia) <= 1, 'cartão centralizado mudou de tamanho');
+  assert.ok(Math.abs(g.vaoCima - g.vaoBaixo) <= 3, `conteúdo fora do centro: ${g.vaoCima} x ${g.vaoBaixo}`);
+  assert.ok(g.borda >= 2, `sem contorno: ${g.borda}px`);
+
+  await pagina.waitForTimeout(500);
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForSelector('#listas textarea');
+  assert.equal(await pagina.isChecked('#mos-centralizar'), true);
+  assert.equal(await pagina.isChecked('#mos-contorno'), true);
+  assert.equal(await pagina.inputValue('#mos-disposicao'), 'centro');
+  assert.equal(await pagina.inputValue('#mos-colunas'), '5');
+  assert.deepEqual(erros, []);
+});
