@@ -108,13 +108,14 @@ node tools/render.mjs lista.txt --layout mosaico --colunas 3 --linhas 4 --cartao
 
 O estúdio guarda sozinho, a cada mudança, todas as configurações — tema,
 layout, colunas e linhas, destaque, margens, alinhamentos, palavras a remover,
-assinatura, cor de fundo, marcadores — e as próprias listas, como rascunho.
-Recarregar ou fechar a página não perde nada.
+assinatura, cor de fundo, marcadores. Recarregar ou fechar a página não perde
+nenhuma escolha.
 
-Ficam de fora o título e a data personalizados, que valem para uma lista só e
-entrariam errados na do dia seguinte, e a foto de fundo, que o navegador não
-deixa devolver ao campo de arquivo. **Restaurar padrão** volta as configurações
-de fábrica sem apagar as listas.
+Ficam de fora o texto das listas — cada dia é uma lista nova —, o título e a
+data personalizados, que valem para uma lista só e entrariam errados na do dia
+seguinte, e a foto de fundo, que o navegador não deixa devolver ao campo de
+arquivo. **Restaurar padrão** volta as configurações de fábrica sem mexer nas
+listas que estão na tela.
 
 ### Salvar a imagem no celular
 

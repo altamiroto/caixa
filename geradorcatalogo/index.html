@@ -506,7 +506,7 @@
       </div>
 
       <div class="salvamento">
-        <p class="ajuda">Configurações e listas ficam salvas neste aparelho.</p>
+        <p class="ajuda">Configurações ficam salvas neste aparelho; o texto das listas, não.</p>
         <button type="button" class="secundario" id="restaurar">Restaurar padrão</button>
       </div>
 
@@ -612,7 +612,6 @@ R$ 965 (Dinheiro)`;
         remover.addEventListener('click', () => {
           bloco.remove();
           arrumarListas();
-          salvarListas();
         });
         cabeca.append(numero, remover);
 
@@ -632,12 +631,14 @@ R$ 965 (Dinheiro)`;
 
       /*
        * Tudo que é configuração fica guardado: quem acerta um visual não quer
-       * refazer a cada visita. Ficam de fora título e data personalizados —
-       * valem para uma lista só e entrariam errados na do dia seguinte — e a
-       * foto de fundo, que o navegador não deixa devolver ao campo de arquivo.
+       * refazer a cada visita. Ficam de fora o texto das listas (cada dia é
+       * uma lista nova), título e data personalizados — valem para uma lista
+       * só e entrariam errados na do dia seguinte — e a foto de fundo, que o
+       * navegador não deixa devolver ao campo de arquivo.
        */
       const CHAVE_PREFERENCIAS = 'gc:preferencias';
-      const CHAVE_LISTAS = 'gc:listas';
+      // Uma versão anterior guardava o texto das listas aqui; apagado ao abrir.
+      const CHAVE_LISTAS_ANTIGA = 'gc:listas';
       const CAMPOS_SALVOS = [
         'tom', 'tema', 'sobretitulo', 'marca', 'selo', 'layout', 'remover',
         'al-nome', 'al-cor', 'al-preco', 'margens', 'fundo',
@@ -695,17 +696,10 @@ R$ 965 (Dinheiro)`;
         ]));
       }
 
-      function salvarListas() {
-        guardar(CHAVE_LISTAS, caixas().map((c) => c.value));
-      }
-
       let temporizadorSalvar = null;
       function agendarSalvamento() {
         clearTimeout(temporizadorSalvar);
-        temporizadorSalvar = setTimeout(() => {
-          salvarConfiguracao();
-          salvarListas();
-        }, 300);
+        temporizadorSalvar = setTimeout(salvarConfiguracao, 300);
       }
 
       /* ------------------------------------------------------ painel do mosaico */
@@ -753,16 +747,13 @@ R$ 965 (Dinheiro)`;
       });
 
       aplicarConfiguracao(lerGuardado(CHAVE_PREFERENCIAS) ?? {});
-      const listasGuardadas = lerGuardado(CHAVE_LISTAS);
-      if (Array.isArray(listasGuardadas) && listasGuardadas.some((t) => String(t).trim())) {
-        for (const texto of listasGuardadas) adicionarLista(String(texto));
-      } else {
-        adicionarLista();
+      try {
+        localStorage.removeItem(CHAVE_LISTAS_ANTIGA);
+      } catch {
+        // sem armazenamento: nada a apagar
       }
-      $('adicionar').addEventListener('click', () => {
-        adicionarLista('', true);
-        salvarListas();
-      });
+      adicionarLista();
+      $('adicionar').addEventListener('click', () => adicionarLista('', true));
 
       // O exemplo entra na primeira caixa vazia, ou numa nova — assim carregar
       // um exemplo não apaga o que já foi colado.
@@ -773,7 +764,6 @@ R$ 965 (Dinheiro)`;
         const vaga = caixas().find((c) => !c.value.trim());
         if (vaga) vaga.value = texto;
         else adicionarLista(texto);
-        salvarListas();
         gerar();
       });
 

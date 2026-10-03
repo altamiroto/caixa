@@ -644,9 +644,12 @@ test('mosaico: grade fixa, o que não cabe vai para a imagem seguinte, sem cart�
   assert.deepEqual(erros, []);
 });
 
-test('configurações e listas ficam salvas ao recarregar, e "Restaurar padrão" volta tudo', async (t) => {
+test('configurações ficam salvas ao recarregar, o texto das listas não, e "Restaurar padrão" volta tudo', async (t) => {
   const { navegador, pagina, erros } = await abrirEstudio();
   t.after(() => navegador.close());
+
+  // Rascunho deixado por uma versão anterior: some ao abrir.
+  await pagina.evaluate(() => localStorage.setItem('gc:listas', JSON.stringify(['lista velha'])));
 
   const lista = await readFile(join(RAIZ, 'samples/atacado-celulares.txt'), 'utf8');
   await preencher(pagina, [lista, 'segunda lista']);
@@ -676,9 +679,14 @@ test('configurações e listas ficam salvas ao recarregar, e "Restaurar padrão"
   assert.equal(await pagina.isChecked('#mostrar-data'), false);
   // Título personalizado vale para uma lista só: não volta.
   assert.equal(await pagina.inputValue('#titulo'), '');
-  // As listas voltam, na ordem.
+  // O texto das listas não fica guardado: volta uma caixa vazia.
   const caixas = await pagina.locator('#listas textarea').evaluateAll((els) => els.map((e) => e.value));
-  assert.deepEqual(caixas, [lista, 'segunda lista']);
+  assert.deepEqual(caixas, ['']);
+  const guardado = await pagina.evaluate(() => JSON.stringify({ ...localStorage }));
+  assert.doesNotMatch(guardado, /LISTA EXCLUSIVA|segunda lista|lista velha/, 'texto de lista no armazenamento');
+  assert.equal(await pagina.evaluate(() => localStorage.getItem('gc:listas')), null);
+
+  await preencher(pagina, [lista, 'segunda lista']);
 
   await pagina.click('#restaurar');
   assert.equal(await pagina.inputValue('#layout'), 'tabela');
@@ -771,6 +779,8 @@ test('tons: a lista de temas e o sorteio seguem a escolha, e ela fica salva', as
   await pagina.waitForSelector('#listas textarea');
   assert.equal(await pagina.inputValue('#tom'), 'escuro');
   assert.equal(await pagina.inputValue('#al-nome'), 'justificado');
+  // O texto da lista não volta com a recarga; cola de novo.
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8')]);
   await pagina.click('#gerar');
   await pagina.waitForSelector('.moldura .pagina');
   assert.equal(await pagina.getAttribute('.moldura .pagina', 'data-alinha-nome'), 'justificado');
