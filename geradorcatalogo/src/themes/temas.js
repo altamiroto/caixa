@@ -16,6 +16,7 @@
  */
 
 import { catalogoGerado, sortearTema } from './gerador.js';
+import { coresDe, luminancia } from './cor.js';
 
 export { gerarTema, sortearTema, FAMILIAS, ESTILOS } from './gerador.js';
 
@@ -591,8 +592,29 @@ export function obterTema(temaOuId) {
 }
 
 export function listarTemas() {
-  return Object.values(TEMAS).map(({ id, nome, grupo }) => ({ id, nome, grupo }));
+  return Object.values(TEMAS).map((t) => ({ id: t.id, nome: t.nome, grupo: t.grupo, tom: tomDoTema(t) }));
 }
+
+/*
+ * Tom do tema: claro ou escuro, pela luminância média das cores do fundo.
+ * Medir em vez de confiar no grupo: há "Clássicos" e "Sazonais" de fundo
+ * claro. Nos 209 temas a separação é folgada — escuros até 0,05, claros a
+ * partir de 0,83 —, então o corte em 0,4 não tem caso de fronteira.
+ */
+export const TONS = ['qualquer', 'claro', 'escuro'];
+
+export function tomDoTema(temaOuId) {
+  const cores = coresDe(obterTema(temaOuId).vars['--fundo']);
+  if (!cores.length) return 'escuro';
+  const media = cores.reduce((soma, c) => soma + luminancia(c), 0) / cores.length;
+  return media > 0.4 ? 'claro' : 'escuro';
+}
+
+/** Famílias do gerador que produzem cada tom, para o sorteio respeitar a escolha. */
+export const FAMILIAS_POR_TOM = {
+  claro: ['claro'],
+  escuro: ['escuro', 'classico', 'vibrante'],
+};
 
 /** Ordem em que os grupos aparecem no seletor. Os curados vêm primeiro. */
 export const GRUPOS = [
@@ -601,8 +623,8 @@ export const GRUPOS = [
 ];
 
 /** Temas agrupados, para montar um seletor com 17 opções que não confunda. */
-export function temasPorGrupo() {
-  const todos = listarTemas();
+export function temasPorGrupo({ tom = 'qualquer' } = {}) {
+  const todos = listarTemas().filter((t) => tom === 'qualquer' || t.tom === tom);
   const conhecidos = GRUPOS.map((grupo) => ({
     grupo,
     temas: todos.filter((t) => t.grupo === grupo),

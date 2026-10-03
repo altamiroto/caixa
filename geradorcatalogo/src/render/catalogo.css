@@ -700,6 +700,36 @@
   text-align: right;
 }
 
+.pagina[data-alinha-nome='justificado'] .linha__nome {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/*
+ * Nos cartões o nome segue a mesma escolha. Esquerda é o padrão de sempre;
+ * as outras valem tanto para a tabela quanto para grade, vitrine e mosaico.
+ */
+.pagina[data-alinha-nome='centro'] :is(.cartao__nome, .mcard__nome) {
+  text-align: center;
+}
+
+.pagina[data-alinha-nome='direita'] :is(.cartao__nome, .mcard__nome) {
+  text-align: right;
+}
+
+.pagina[data-alinha-nome='justificado'] :is(.cartao__nome, .mcard__nome) {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.pagina[data-alinha-nome='centro'] .mcard__cor {
+  align-self: center;
+}
+
+.pagina[data-alinha-nome='direita'] .mcard__cor {
+  align-self: flex-end;
+}
+
 .pagina[data-alinha-cor='esquerda'] .linha__cor {
   text-align: left;
 }

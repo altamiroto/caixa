@@ -435,3 +435,20 @@ test('mosaico: preço único de atacado aparece uma vez, como "Preço"', async (
   assert.match(html, />755</);
   assert.doesNotMatch(html, /Cartão|Dinheiro/);
 });
+
+test('justificado vale para o nome, não para cor e preço', () => {
+  assert.equal(normalizarAlinhamento({ nome: 'justificado' }).nome, 'justificado');
+  assert.equal(normalizarAlinhamento({ preco: 'justificado' }).preco, ALINHAMENTO_PADRAO.preco);
+  assert.equal(normalizarAlinhamento({ cor: 'justificado' }).cor, ALINHAMENTO_PADRAO.cor);
+
+  const html = htmlPagina({
+    catalogo: catalogoFalso,
+    colunas: definirColunas(catalogoFalso),
+    blocos: [],
+    numero: 1,
+    total: 1,
+    escala: 1,
+    opcoes: { alinhar: { nome: 'justificado' }, layout: 'mosaico' },
+  });
+  assert.match(html, /data-alinha-nome="justificado"/);
+});

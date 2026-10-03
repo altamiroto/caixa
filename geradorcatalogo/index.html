@@ -371,6 +371,19 @@
       </div>
 
       <div>
+        <label for="tom">Tons</label>
+        <select id="tom">
+          <option value="qualquer">Claros e escuros</option>
+          <option value="claro">Só tons claros</option>
+          <option value="escuro">Só tons escuros</option>
+        </select>
+        <p class="ajuda">
+          Vale para o sorteio e para a lista de temas: com "só claros", o tema
+          aleatório nunca cai num fundo escuro.
+        </p>
+      </div>
+
+      <div>
         <label for="layout">Layout do corpo</label>
         <select id="layout">
           <option value="tabela">Tabela — uma linha por produto</option>
@@ -445,7 +458,8 @@
         </div>
         <p class="ajuda">
           Nome · Cor · Preço. Com nomes curtos, alinhar o nome à direita encosta
-          ele nos preços.
+          ele nos preços. "Justificado" deixa retas as duas bordas do nome que
+          quebra linha — vale também nos cartões.
         </p>
       </div>
 
@@ -496,6 +510,7 @@
         temasPorGrupo,
         TEMA_PADRAO,
         sortearTema,
+        FAMILIAS_POR_TOM,
       } from './src/themes/temas.js';
       import { paraPng, baixar, urlDe, liberarUrls, apelido } from './src/render/export.js';
 
@@ -509,15 +524,26 @@
         document.fonts.load('700 25px Inter'),
       ]).then(() => document.fonts.ready);
 
-      // 17 temas numa lista corrida confundem; o agrupamento vem do próprio módulo.
-      for (const { grupo, temas } of temasPorGrupo()) {
-        const bloco = document.createElement('optgroup');
-        bloco.label = grupo;
-        for (const t of temas) {
-          bloco.append(new Option(t.nome, t.id, t.id === TEMA_PADRAO, t.id === TEMA_PADRAO));
+      /*
+       * A lista de temas segue o tom escolhido. Mantém o tema atual quando ele
+       * ainda serve; senão fica com o primeiro do tom.
+       */
+      function montarTemas(preferido = $('tema').value || TEMA_PADRAO) {
+        const tom = $('tom').value;
+        const seletor = $('tema');
+        seletor.replaceChildren();
+        // 17 temas numa lista corrida confundem; o agrupamento vem do próprio módulo.
+        for (const { grupo, temas } of temasPorGrupo({ tom })) {
+          const bloco = document.createElement('optgroup');
+          bloco.label = grupo;
+          for (const t of temas) bloco.append(new Option(t.nome, t.id));
+          seletor.append(bloco);
         }
-        $('tema').append(bloco);
+        const existe = [...seletor.options].some((o) => o.value === preferido);
+        seletor.value = existe ? preferido : seletor.options[0]?.value ?? '';
       }
+      montarTemas(TEMA_PADRAO);
+      $('tom').addEventListener('change', () => montarTemas());
 
       const ALINHAMENTOS = [
         ['esquerda', 'Esquerda'],
@@ -529,6 +555,8 @@
           $(campo).append(new Option(rotulo, valor, valor === padrao, valor === padrao));
         }
       }
+      // Justificar só faz diferença em texto que quebra linha: o nome.
+      $('al-nome').append(new Option('Justificado', 'justificado'));
 
       /* ------------------------------------------------- as caixas de lista */
 
@@ -595,7 +623,7 @@ R$ 965 (Dinheiro)`;
       const CHAVE_PREFERENCIAS = 'gc:preferencias';
       const CHAVE_LISTAS = 'gc:listas';
       const CAMPOS_SALVOS = [
-        'tema', 'sobretitulo', 'marca', 'selo', 'layout', 'remover',
+        'tom', 'tema', 'sobretitulo', 'marca', 'selo', 'layout', 'remover',
         'al-nome', 'al-cor', 'al-preco', 'margens', 'fundo',
         'mos-colunas', 'mos-linhas', 'mos-enfase', 'mos-cartao',
       ];
@@ -626,6 +654,8 @@ R$ 965 (Dinheiro)`;
       function aplicarConfiguracao(dados) {
         for (const id of CAMPOS_SALVOS) {
           if (!(id in dados)) continue;
+          // O tom refaz a lista de temas antes de o tema ser escolhido nela.
+          if (id === 'tema') montarTemas(String(dados.tema));
           const campo = $(id);
           const valor = String(dados[id]);
           // Opção que não existe mais (tema renomeado) fica no padrão.
@@ -784,6 +814,7 @@ R$ 965 (Dinheiro)`;
         const tema = sortearTema({
           contador: estado.contador,
           evitar: estado.matizes.slice(-6),
+          familias: FAMILIAS_POR_TOM[$('tom').value],
         });
         gravarSorteio({
           contador: estado.contador + 1,

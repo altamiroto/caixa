@@ -51,6 +51,17 @@ export function normalizarMargens(margens = {}) {
 
 /** Alinhamentos aceitos por coluna, e o padrão de cada uma. */
 export const ALINHAMENTOS = ['esquerda', 'centro', 'direita'];
+/*
+ * O nome aceita também justificado: com nome longo, que quebra em duas ou
+ * três linhas, as duas bordas ficam retas. Em cor e preço, que são uma linha
+ * só, justificar não faria diferença nenhuma.
+ */
+export const ALINHAMENTOS_NOME = [...ALINHAMENTOS, 'justificado'];
+
+/** Alinhamentos aceitos numa coluna. */
+export function alinhamentosDe(coluna) {
+  return coluna === 'nome' ? ALINHAMENTOS_NOME : ALINHAMENTOS;
+}
 export const ALINHAMENTO_PADRAO = { nome: 'esquerda', cor: 'centro', preco: 'centro' };
 
 /** Descarta valor inválido em vez de gerar um atributo que o CSS ignora calado. */
@@ -58,7 +69,7 @@ export function normalizarAlinhamento(alinhar = {}) {
   const saida = { ...ALINHAMENTO_PADRAO };
   for (const coluna of Object.keys(ALINHAMENTO_PADRAO)) {
     const valor = alinhar[coluna];
-    if (valor && ALINHAMENTOS.includes(valor)) saida[coluna] = valor;
+    if (valor && alinhamentosDe(coluna).includes(valor)) saida[coluna] = valor;
   }
   return saida;
 }

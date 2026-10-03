@@ -213,3 +213,43 @@ test('obterTema aceita o objeto do tema, não só o id', () => {
   // E o id de um tema sorteado, sozinho, cai no padrão — como esperado.
   assert.equal(obterTema(sorteado.id).id, TEMA_PADRAO);
 });
+
+// ------------------------------------------------------------------ tons
+
+test('tomDoTema separa claros de escuros pelo fundo, sem caso de fronteira', async () => {
+  const { TEMAS, tomDoTema, listarTemas } = await import('../src/themes/temas.js');
+  const todos = Object.values(TEMAS);
+  for (const t of todos) {
+    if (t.grupo === 'Gerados · Claros') assert.equal(tomDoTema(t), 'claro', t.nome);
+    if (/^Gerados · (Escuros|Vibrantes|Clássicos)$/.test(t.grupo)) assert.equal(tomDoTema(t), 'escuro', t.nome);
+    if (t.grupo === 'Escuros') assert.equal(tomDoTema(t), 'escuro', t.nome);
+    if (/\(claro\)/.test(t.nome)) assert.equal(tomDoTema(t), 'claro', t.nome);
+  }
+  const contagem = listarTemas().reduce((c, t) => ({ ...c, [t.tom]: (c[t.tom] ?? 0) + 1 }), {});
+  assert.ok(contagem.claro >= 50 && contagem.escuro >= 140, JSON.stringify(contagem));
+});
+
+test('o sorteio respeita o tom pedido', async () => {
+  const { sortearTema, tomDoTema, FAMILIAS_POR_TOM } = await import('../src/themes/temas.js');
+  for (const tom of ['claro', 'escuro']) {
+    const tons = new Set();
+    const visuais = new Set();
+    for (let contador = 0; contador < 60; contador += 1) {
+      const tema = sortearTema({ contador, familias: FAMILIAS_POR_TOM[tom] });
+      tons.add(tomDoTema(tema));
+      visuais.add(`${Math.round(tema.matiz / 10)}-${tema.estilo}-${tema.geometria}-${tema.textura}`);
+    }
+    assert.deepEqual([...tons], [tom], `sorteio "${tom}" caiu em outro tom`);
+    // Restringir o tom não pode matar a variação dos outros eixos.
+    assert.ok(visuais.size >= 40, `só ${visuais.size} combinações distintas em 60 sorteios ${tom}s`);
+  }
+});
+
+test('temasPorGrupo filtra a lista pelo tom', async () => {
+  const { temasPorGrupo, tomDoTema, TEMAS } = await import('../src/themes/temas.js');
+  for (const tom of ['claro', 'escuro']) {
+    const ids = temasPorGrupo({ tom }).flatMap((g) => g.temas.map((t) => t.id));
+    assert.ok(ids.length > 0);
+    for (const id of ids) assert.equal(tomDoTema(TEMAS[id]), tom, id);
+  }
+});

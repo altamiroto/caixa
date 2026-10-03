@@ -40,6 +40,7 @@ npx serve .        # ou: python3 -m http.server
 |---|---|---|
 | `--tema` | `noite` | 121 temas, ou `aleatorio` para sortear |
 | `--semente` | relógio | Torna o sorteio reproduzível |
+| `--tom` | `qualquer` | Com `--tema aleatorio`: `claro` ou `escuro` sorteia só desse tom |
 | `--saida` | `./saida` | Diretório de destino |
 | `--marca` | — | Assinatura no rodapé |
 | `--sobretitulo` | `Lista de produtos` | Linha acima do título; vazio esconde |
@@ -60,7 +61,7 @@ npx serve .        # ou: python3 -m http.server
 Vários arquivos de entrada podem ser passados de uma vez; cada um vira a sua
 imagem.
 | `--remover` | — | Palavras a tirar do nome, separadas por vírgula |
-| `--alinhar-nome` | `esquerda` | `esquerda`, `centro` ou `direita` |
+| `--alinhar-nome` | `esquerda` | `esquerda`, `centro`, `direita` ou `justificado` (também nos cartões) |
 | `--alinhar-cor` | `centro` | idem |
 | `--alinhar-preco` | `centro` | idem |
 | `--margens` | `padrao` | `padrao` ou `stories` (reserva a área da interface) |

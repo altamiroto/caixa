@@ -732,3 +732,49 @@ test('a prévia não aparece ampliada enquanto a imagem é preparada', async (t)
   assert.equal(cabecalho.readUInt32BE(4), 3840, 'altura do PNG');
   assert.deepEqual(erros, []);
 });
+
+test('tons: a lista de temas e o sorteio seguem a escolha, e ela fica salva', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+
+  await preencher(pagina, [await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8')]);
+
+  // Lista de temas filtrada.
+  await pagina.selectOption('#tom', 'claro');
+  const tons = await pagina.evaluate(async () => {
+    const { tomDoTema, TEMAS } = await import('./src/themes/temas.js');
+    return [...document.querySelectorAll('#tema option')].map((o) => tomDoTema(TEMAS[o.value]));
+  });
+  assert.ok(tons.length > 0);
+  assert.deepEqual([...new Set(tons)], ['claro']);
+
+  // Sorteio só de claros, várias vezes.
+  await pagina.check('#tema-aleatorio');
+  for (let i = 0; i < 4; i += 1) {
+    await pagina.click('#gerar');
+    await pagina.waitForSelector('.moldura .pagina');
+    assert.match(await pagina.textContent('#resumo'), /temas: .* claro$/);
+  }
+
+  // Só escuros: nenhum sorteado claro.
+  await pagina.selectOption('#tom', 'escuro');
+  for (let i = 0; i < 4; i += 1) {
+    await pagina.click('#gerar');
+    await pagina.waitForSelector('.moldura .pagina');
+    assert.doesNotMatch(await pagina.textContent('#resumo'), /claro$/);
+  }
+
+  // Justificado no nome, e as duas escolhas sobrevivem à recarga.
+  await pagina.selectOption('#al-nome', 'justificado');
+  await pagina.waitForTimeout(500);
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForSelector('#listas textarea');
+  assert.equal(await pagina.inputValue('#tom'), 'escuro');
+  assert.equal(await pagina.inputValue('#al-nome'), 'justificado');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+  assert.equal(await pagina.getAttribute('.moldura .pagina', 'data-alinha-nome'), 'justificado');
+  const alinhamento = await pagina.$eval('.moldura .linha__nome', (el) => getComputedStyle(el).textAlign);
+  assert.equal(alinhamento, 'justify');
+  assert.deepEqual(erros, []);
+});
