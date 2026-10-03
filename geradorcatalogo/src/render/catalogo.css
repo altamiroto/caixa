@@ -493,6 +493,173 @@
   opacity: 0.78;
 }
 
+/* ----------------------------------------------------------------- mosaico */
+
+/*
+ * Grade fixa: cada linha divide a altura livre por igual (flex 1 1 0), então
+ * o tamanho do cartão sai da conta colunas × linhas, não do conteúdo. A letra
+ * é que se ajusta — por isso aqui não há os pisos de fonte dos outros
+ * layouts: com piso, um cartão pequeno estouraria em vez de encolher o texto.
+ */
+.pagina[data-layout='mosaico'] {
+  --mosaico-gap: calc(12px * min(var(--escala), 1.2));
+}
+
+.pagina[data-layout='mosaico'] .corpo {
+  gap: var(--mosaico-gap);
+}
+
+/* Faixa e cantos não acompanham a letra de cartão grande: escala até 2.4. */
+.pagina[data-layout='mosaico'] .secao {
+  --escala-faixa: min(var(--escala), 1.15);
+  flex: none;
+  margin-top: 0;
+  padding: calc(7px * var(--escala-faixa)) calc(20px * var(--escala-faixa));
+  font-size: max(calc(23px * var(--escala-faixa)), 15px);
+  letter-spacing: calc(2px * var(--escala-faixa));
+}
+
+.pagina[data-layout='mosaico'] .rodape {
+  --escala-rodape: min(var(--escala), 1.15);
+  gap: calc(16px * var(--escala-rodape));
+  padding-top: calc(14px * var(--escala-rodape));
+  font-size: calc(17px * var(--escala-rodape));
+}
+
+.secao--reserva {
+  visibility: hidden;
+}
+
+.mosaico__linha {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--mosaico-colunas, 3), minmax(0, 1fr));
+  gap: var(--mosaico-gap);
+}
+
+.mcard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: calc(8px * var(--escala));
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: calc(14px * var(--escala)) calc(14px * var(--escala));
+  border-radius: calc(14px * min(var(--escala), 1.3) * var(--raio-mult, 1));
+  border: 1px solid var(--linha-borda);
+  background: var(--linha-a);
+  color: var(--linha-tinta, var(--tinta));
+}
+
+.mosaico__linha .mcard:nth-child(even) {
+  background: var(--linha-b);
+}
+
+.mcard--vazio {
+  visibility: hidden;
+}
+
+.mcard__topo {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--escala));
+  min-width: 0;
+}
+
+.mcard__nome {
+  font-size: calc(26px * var(--escala));
+  line-height: 1.2;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mcard__cor {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: calc(3px * var(--escala)) calc(10px * var(--escala));
+  border-radius: 999px;
+  background: var(--pilula-fundo);
+  color: var(--pilula-tinta);
+  font-size: calc(18px * var(--escala));
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mcard__precos {
+  display: flex;
+  flex-direction: column;
+  gap: calc(7px * var(--escala));
+}
+
+.mcard__preco {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(6px * var(--escala)) calc(10px * var(--escala));
+  border-radius: calc(10px * var(--escala) * var(--raio-mult, 1));
+  line-height: 1.05;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.mcard__preco--avista {
+  background: var(--preco-avista-fundo);
+  color: var(--preco-avista-tinta);
+}
+
+.mcard__preco--parcelado {
+  background: var(--preco-parcelado-fundo);
+  color: var(--preco-parcelado-tinta);
+}
+
+.mcard__rotulo {
+  font-size: calc(13px * var(--escala));
+  font-weight: 800;
+  letter-spacing: calc(0.6px * var(--escala));
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.mcard__valor {
+  font-size: calc(30px * var(--escala));
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mcard__preco--forte .mcard__valor {
+  font-size: calc(46px * var(--escala));
+}
+
+/* Modo parcelas: a parcela do produto, e o total embaixo em destaque. */
+.mcard__parcelas {
+  font-size: calc(21px * var(--escala));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mcard__total {
+  font-size: calc(28px * var(--escala));
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mcard__total small {
+  font-size: 0.55em;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.mcard__preco--forte .mcard__parcelas {
+  font-size: calc(26px * var(--escala));
+}
+
+.mcard__preco--forte .mcard__total {
+  font-size: calc(42px * var(--escala));
+}
+
 /* ----------------------------------------------------------------- vitrine */
 
 .cartao--vitrine .cartao__heroi {
@@ -531,6 +698,36 @@
 .pagina[data-alinha-nome='direita'] .linha__nome,
 .pagina[data-alinha-nome='direita'] .rotulos > :first-child {
   text-align: right;
+}
+
+.pagina[data-alinha-nome='justificado'] .linha__nome {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/*
+ * Nos cartões o nome segue a mesma escolha. Esquerda é o padrão de sempre;
+ * as outras valem tanto para a tabela quanto para grade, vitrine e mosaico.
+ */
+.pagina[data-alinha-nome='centro'] :is(.cartao__nome, .mcard__nome) {
+  text-align: center;
+}
+
+.pagina[data-alinha-nome='direita'] :is(.cartao__nome, .mcard__nome) {
+  text-align: right;
+}
+
+.pagina[data-alinha-nome='justificado'] :is(.cartao__nome, .mcard__nome) {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.pagina[data-alinha-nome='centro'] .mcard__cor {
+  align-self: center;
+}
+
+.pagina[data-alinha-nome='direita'] .mcard__cor {
+  align-self: flex-end;
 }
 
 .pagina[data-alinha-cor='esquerda'] .linha__cor {

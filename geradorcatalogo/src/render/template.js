@@ -51,6 +51,17 @@ export function normalizarMargens(margens = {}) {
 
 /** Alinhamentos aceitos por coluna, e o padrão de cada uma. */
 export const ALINHAMENTOS = ['esquerda', 'centro', 'direita'];
+/*
+ * O nome aceita também justificado: com nome longo, que quebra em duas ou
+ * três linhas, as duas bordas ficam retas. Em cor e preço, que são uma linha
+ * só, justificar não faria diferença nenhuma.
+ */
+export const ALINHAMENTOS_NOME = [...ALINHAMENTOS, 'justificado'];
+
+/** Alinhamentos aceitos numa coluna. */
+export function alinhamentosDe(coluna) {
+  return coluna === 'nome' ? ALINHAMENTOS_NOME : ALINHAMENTOS;
+}
 export const ALINHAMENTO_PADRAO = { nome: 'esquerda', cor: 'centro', preco: 'centro' };
 
 /** Descarta valor inválido em vez de gerar um atributo que o CSS ignora calado. */
@@ -58,7 +69,7 @@ export function normalizarAlinhamento(alinhar = {}) {
   const saida = { ...ALINHAMENTO_PADRAO };
   for (const coluna of Object.keys(ALINHAMENTO_PADRAO)) {
     const valor = alinhar[coluna];
-    if (valor && ALINHAMENTOS.includes(valor)) saida[coluna] = valor;
+    if (valor && alinhamentosDe(coluna).includes(valor)) saida[coluna] = valor;
   }
   return saida;
 }
@@ -145,8 +156,33 @@ function htmlPreco(preco, classe, mostrarParcela) {
  * lista de TVs, com nome de 86 caracteres na mediana, metade da largura faz o
  * texto quebrar em cinco linhas e a página render menos, não mais.
  */
-export const LAYOUTS = ['tabela', 'grade', 'vitrine', 'duplo'];
+export const LAYOUTS = ['tabela', 'grade', 'vitrine', 'duplo', 'mosaico'];
 export const LAYOUT_PADRAO = 'tabela';
+
+/*
+ * Mosaico: grade fixa de colunas × linhas por imagem. Ao contrário dos outros
+ * layouts, que encolhem tudo até caber, aqui a grade manda — o que não cabe
+ * vai para a imagem seguinte — e só a letra se ajusta ao tamanho do cartão.
+ *
+ * `enfase` diz qual preço sai grande; a ordem não muda (dinheiro em cima,
+ * cartão embaixo). `cartao` diz como o preço de cartão aparece: o total, ou
+ * as parcelas do próprio produto ("6x de 82,99") com o total embaixo.
+ */
+export const MOSAICO_PADRAO = { colunas: 3, linhas: 4, enfase: 'avista', cartao: 'total' };
+export const MOSAICO_LIMITES = { colunas: [1, 6], linhas: [1, 10] };
+
+export function normalizarMosaico(m = {}) {
+  const inteiro = (v, [min, max], padrao) => {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) && n >= min && n <= max ? n : padrao;
+  };
+  return {
+    colunas: inteiro(m.colunas, MOSAICO_LIMITES.colunas, MOSAICO_PADRAO.colunas),
+    linhas: inteiro(m.linhas, MOSAICO_LIMITES.linhas, MOSAICO_PADRAO.linhas),
+    enfase: m.enfase === 'cartao' ? 'cartao' : 'avista',
+    cartao: m.cartao === 'parcelas' ? 'parcelas' : 'total',
+  };
+}
 
 /** O layout põe dois produtos lado a lado? */
 export function ehDuasColunas(layout) {
@@ -261,6 +297,70 @@ function htmlVitrine(produto, colunas, opcoes, pecas) {
   </div>`;
 }
 
+/**
+ * Cartão do mosaico: nome no topo; embaixo o preço de dinheiro e, abaixo dele,
+ * o de cartão. Produto com um preço só mostra só esse — num cartão com
+ * "Dinheiro" e "Cartão" escritos, repetir o mesmo valor nos dois confunde.
+ */
+function htmlCartaoMosaico(produto, colunas, opcoes, pecas) {
+  const mosaico = normalizarMosaico(opcoes.mosaico);
+  const avista = produto.avista;
+  const parcelado = produto.parcelado;
+  const cor = pecas.cores ? `<div class="mcard__cor">${escapar(pecas.cores)}</div>` : '';
+  const rotuloAvista = (colunas.rotuloAvista ?? { curto: 'Dinheiro / Pix' }).curto;
+
+  const blocoAvista = avista
+    ? `<div class="mcard__preco mcard__preco--avista${mosaico.enfase === 'avista' ? ' mcard__preco--forte' : ''}">
+        <span class="mcard__rotulo">${escapar(rotuloAvista)}</span>
+        <span class="mcard__valor">${escapar(formatarValor(avista.valor))}</span>
+      </div>`
+    : '';
+
+  let blocoCartao = '';
+  if (parcelado) {
+    const forte = mosaico.enfase === 'cartao' || !avista ? ' mcard__preco--forte' : '';
+    const n = parcelado.parcelas;
+    const parcela = parcelado.valorParcela ?? (n ? Math.round((parcelado.valor / n) * 100) / 100 : null);
+    if (mosaico.cartao === 'parcelas' && n && parcela) {
+      // Cada produto com o próprio parcelamento: 10x, 6x, 3x — e o total
+      // embaixo, em destaque.
+      blocoCartao = `<div class="mcard__preco mcard__preco--parcelado mcard__preco--parcelas${forte}">
+        <span class="mcard__rotulo">Cartão</span>
+        <span class="mcard__parcelas">${n}x de ${escapar(formatarValor(parcela, { comCentavos: true }))}</span>
+        <span class="mcard__total"><small>total</small> ${escapar(formatarValor(parcelado.valor))}</span>
+      </div>`;
+    } else {
+      blocoCartao = `<div class="mcard__preco mcard__preco--parcelado${forte}">
+        <span class="mcard__rotulo">Cartão${n ? ` · até ${n}x` : ''}</span>
+        <span class="mcard__valor">${escapar(formatarValor(parcelado.valor))}</span>
+      </div>`;
+    }
+  }
+
+  const precos = blocoAvista || blocoCartao
+    ? `${blocoAvista}${blocoCartao}`
+    : '<div class="mcard__preco mcard__preco--vazio">—</div>';
+
+  return `<div class="mcard">
+    <div class="mcard__topo">
+      <div class="mcard__nome">${pecas.selo}${escapar(pecas.nome)}${pecas.obs}</div>
+      ${cor}
+    </div>
+    <div class="mcard__precos">${precos}</div>
+  </div>`;
+}
+
+/** Uma linha do mosaico: sempre `colunas` vagas, as que sobram ficam vazias. */
+export function htmlLinhaMosaico(cartoes, colunasGrade) {
+  const vagas = Math.max(0, colunasGrade - cartoes.length);
+  return `<div class="mosaico__linha">${cartoes.join('')}${'<div class="mcard mcard--vazio"></div>'.repeat(vagas)}</div>`;
+}
+
+/** Linha só de vagas: mantém o cartão do mesmo tamanho na última imagem. */
+export function htmlLinhaMosaicoVazia() {
+  return '<div class="mosaico__linha mosaico__linha--vazia"></div>';
+}
+
 /** HTML de uma linha de produto, no layout pedido. */
 export function htmlProduto(produto, colunas, opcoes = {}) {
   // Por padrão o catálogo reproduz a palavra como ela veio na lista
@@ -271,6 +371,7 @@ export function htmlProduto(produto, colunas, opcoes = {}) {
   const pecas = pecasDoProduto(produto, colunas, opcoes);
 
   if (layout === 'grade') return htmlCartao(produto, colunas, opcoes, pecas);
+  if (layout === 'mosaico') return htmlCartaoMosaico(produto, colunas, opcoes, pecas);
   if (layout === 'vitrine') return htmlVitrine(produto, colunas, opcoes, pecas);
 
   // `tabela` e `duplo` compartilham o desenho da linha; o que muda é a largura,
@@ -370,6 +471,9 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     `--margem-topo:${margens.topo}px`,
     `--margem-lateral:${margens.lateral}px`,
     `--margem-base:${margens.base}px`,
+    normalizarLayout(opcoes.layout) === 'mosaico'
+      ? `--mosaico-colunas:${normalizarMosaico(opcoes.mosaico).colunas}`
+      : '',
   ]
     .filter(Boolean)
     .join(';');
@@ -400,7 +504,7 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     ${foto}
     <div class="pagina__brilho"></div>
     ${htmlCabecalho(catalogo, opcoes)}
-    ${['grade', 'vitrine'].includes(normalizarLayout(opcoes.layout))
+    ${['grade', 'vitrine', 'mosaico'].includes(normalizarLayout(opcoes.layout))
       ? '' // O cartão traz o rótulo do preço dentro de si.
       : htmlRotulos(catalogo, colunas)}
     <div class="corpo">${blocos.join('')}</div>

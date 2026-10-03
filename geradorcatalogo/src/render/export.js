@@ -44,6 +44,8 @@ export async function paraPng(elemento, { largura = 2160 } = {}) {
 
   const clone = elemento.cloneNode(true);
   clone.style.margin = '0';
+  // A prévia na tela é reduzida por CSS; a cópia sai sempre em tamanho real.
+  clone.style.transform = 'none';
 
   const css = coletarCss(documento);
   const conteudo = new XMLSerializer().serializeToString(clone);

@@ -26,6 +26,9 @@ import {
   definirColunas,
   normalizarLayout,
   ehDuasColunas,
+  normalizarMosaico,
+  htmlLinhaMosaico,
+  htmlLinhaMosaicoVazia,
   ALTURA,
 } from '../render/template.js';
 
@@ -208,6 +211,118 @@ function folgaExtra(indices, { alturas, margens, gap, disponivel, alturaSecao },
   return Math.min(extra, gap * 2.5);
 }
 
+/*
+ * Teto de escala do mosaico. Bem acima do dos outros layouts: numa grade 2×3
+ * o cartão é grande, e com o teto de 1.15 o texto ficaria perdido nele.
+ */
+export const ESCALA_MAX_MOSAICO = 2.4;
+
+/**
+ * Mosaico: grade fixa de colunas × linhas por imagem.
+ *
+ * A distribuição é aritmética — `linhas` linhas de `colunas` cartões por
+ * imagem, o resto vai para a seguinte. Seção abre uma linha nova com uma
+ * faixa, que não conta como linha. Medir no DOM serve só para a letra: a
+ * maior escala em que nenhum cartão estoura, igual em todas as imagens.
+ */
+function paginarMosaico({ documento, janela, catalogo, opcoes }) {
+  const colunas = definirColunas(catalogo, opcoes);
+  const { colunas: C, linhas: L } = normalizarMosaico(opcoes.mosaico);
+
+  // 1. Linhas da grade. Nunca atravessam seção.
+  const entradas = [];
+  for (const secao of catalogo.secoes) {
+    if (secao.titulo) entradas.push({ tipo: 'secao', titulo: secao.titulo });
+    for (let i = 0; i < secao.produtos.length; i += C) {
+      const grupo = secao.produtos.slice(i, i + C);
+      entradas.push({
+        tipo: 'linha',
+        secao: secao.titulo,
+        cartoes: grupo.map((p) => htmlProduto(p, colunas, opcoes)),
+      });
+    }
+  }
+  if (!entradas.some((e) => e.tipo === 'linha')) return { paginas: [], escala: 1, colunas, itens: [] };
+
+  // 2. Imagens com `L` linhas cada.
+  const paginas = [];
+  let atual;
+  const nova = () => {
+    atual = { blocos: [], linhas: 0, faixas: 0 };
+    paginas.push(atual);
+  };
+  nova();
+  for (const e of entradas) {
+    if (e.tipo === 'secao') {
+      // Faixa nunca fica sozinha no pé da imagem.
+      if (atual.linhas >= L) nova();
+      atual.blocos.push(htmlSecao(e.titulo));
+      atual.faixas += 1;
+      continue;
+    }
+    if (atual.linhas >= L) {
+      nova();
+      if (e.secao) {
+        atual.blocos.push(htmlSecao(e.secao, true));
+        atual.faixas += 1;
+      }
+    }
+    atual.blocos.push(htmlLinhaMosaico(e.cartoes, C));
+    atual.linhas += 1;
+  }
+
+  // 3. Cartão do mesmo tamanho em todas as imagens: a última ganha linhas
+  // vazias, e quem tem menos faixas de seção ganha faixas invisíveis.
+  const maxFaixas = Math.max(...paginas.map((p) => p.faixas));
+  for (const p of paginas) {
+    for (let k = p.linhas; k < L; k += 1) p.blocos.push(htmlLinhaMosaicoVazia());
+    for (let k = p.faixas; k < maxFaixas; k += 1) p.blocos.push('<div class="secao secao--reserva">&nbsp;</div>');
+  }
+
+  // 4. A maior escala em que nenhum cartão estoura.
+  const total = paginas.length;
+  const montar = (escala) =>
+    paginas.map((p, i) =>
+      htmlPagina({ catalogo, colunas, blocos: p.blocos, numero: i + 1, total, escala, opcoes }),
+    );
+  const host = obterMedidor(documento);
+  const cabe = (escala) => {
+    host.innerHTML = montar(escala).join('');
+    for (const cartao of host.querySelectorAll('.mcard:not(.mcard--vazio)')) {
+      if (cartao.scrollHeight > cartao.clientHeight + 1 || cartao.scrollWidth > cartao.clientWidth + 1) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  let lo = opcoes.escalaMin ?? ESCALA_MIN;
+  let hi = ESCALA_MAX_MOSAICO;
+  const avisos = [];
+  if (!cabe(lo)) {
+    avisos.push(
+      `${catalogo.titulo || 'Catálogo'}: o texto não cabe nos cartões nem na menor letra — diminua as colunas ou as linhas.`,
+    );
+  } else if (cabe(hi)) {
+    lo = hi;
+  } else {
+    for (let passo = 0; passo < 12; passo += 1) {
+      const meio = (lo + hi) / 2;
+      if (cabe(meio)) lo = meio;
+      else hi = meio;
+    }
+  }
+  void janela;
+
+  return {
+    paginas: montar(lo).map((html) => ({ html, indices: [] })),
+    escala: lo,
+    colunas,
+    itens: [],
+    avisos,
+  };
+}
+
 /**
  * Pagina um catálogo.
  *
@@ -219,6 +334,9 @@ function folgaExtra(indices, { alturas, margens, gap, disponivel, alturaSecao },
  * @returns {{paginas: {html:string, indices:number[]}[], escala:number, colunas:Object, itens:Array}}
  */
 export function paginar({ documento, janela, catalogo, opcoes = {} }) {
+  if (normalizarLayout(opcoes.layout) === 'mosaico') {
+    return paginarMosaico({ documento, janela, catalogo, opcoes });
+  }
   const colunas = definirColunas(catalogo, opcoes);
   const itens = montarItens(catalogo, colunas, opcoes);
   const temSecoes = itens.some((i) => i.tipo === 'secao');

@@ -23,6 +23,8 @@ import {
   definirColunas,
   ehDuasColunas,
   htmlRotulos,
+  normalizarMosaico,
+  MOSAICO_PADRAO,
   normalizarLayout,
 } from '../src/render/template.js';
 
@@ -367,4 +369,86 @@ test('coluna de preço sem forma de pagamento escrita se chama "Preço", não "D
   const faixaVarejo = htmlRotulos(varejo, definirColunas(varejo));
   assert.match(faixaVarejo, /Dinheiro<small>\/ Pix<\/small>/);
   assert.match(faixaVarejo, /Cartão/);
+});
+
+// ------------------------------------------------------------------ mosaico
+
+test('normalizarMosaico recusa valores fora da faixa em vez de aceitar calado', () => {
+  assert.deepEqual(normalizarMosaico(), MOSAICO_PADRAO);
+  assert.deepEqual(normalizarMosaico({ colunas: 9, linhas: 0, enfase: 'x', cartao: 'y' }), MOSAICO_PADRAO);
+  assert.deepEqual(normalizarMosaico({ colunas: '2', linhas: 5, enfase: 'cartao', cartao: 'parcelas' }), {
+    colunas: 2, linhas: 5, enfase: 'cartao', cartao: 'parcelas',
+  });
+});
+
+test('mosaico: dinheiro em cima, cartão embaixo, e o destaque troca de lado', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { parseVarios } = await import('../src/parser/parse.js');
+  const cat = parseVarios(readFileSync(new URL('../samples/acessorios-varejo.txt', import.meta.url), 'utf8'))[0];
+  const colunas = definirColunas(cat);
+  const aiwa = cat.secoes[0].produtos.find((p) => p.nome.startsWith('Caixa de Som Boombox Plus AIWA'));
+
+  const padrao = htmlProduto(aiwa, colunas, { layout: 'mosaico' });
+  assert.ok(padrao.indexOf('mcard__preco--avista') < padrao.indexOf('mcard__preco--parcelado'), 'dinheiro antes do cartão');
+  assert.match(padrao, /mcard__preco--avista mcard__preco--forte/);
+  assert.match(padrao, />1\.169</);
+  assert.match(padrao, /Cartão · até 10x/);
+  assert.match(padrao, />1\.320</);
+
+  const cartaoForte = htmlProduto(aiwa, colunas, { layout: 'mosaico', mosaico: { enfase: 'cartao' } });
+  assert.match(cartaoForte, /mcard__preco--parcelado mcard__preco--forte/);
+  assert.doesNotMatch(cartaoForte, /mcard__preco--avista mcard__preco--forte/);
+  assert.ok(cartaoForte.indexOf('mcard__preco--avista') < cartaoForte.indexOf('mcard__preco--parcelado'), 'a ordem não muda');
+});
+
+test('mosaico "parcelas + total": cada produto com o próprio parcelamento', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { parseVarios } = await import('../src/parser/parse.js');
+  const cat = parseVarios(readFileSync(new URL('../samples/acessorios-varejo.txt', import.meta.url), 'utf8'))[0];
+  const colunas = definirColunas(cat);
+  const achar = (inicio) => cat.secoes[0].produtos.find((p) => p.nome.startsWith(inicio));
+  const op = { layout: 'mosaico', mosaico: { cartao: 'parcelas' } };
+
+  const alexa = htmlProduto(achar('Alexa Echo Dot'), colunas, op);
+  assert.match(alexa, /6x de 82,99/);
+  assert.match(alexa, /<small>total<\/small> 497,94/);
+
+  const geladeira = htmlProduto(achar('Geladeira Electrolux'), colunas, op);
+  assert.match(geladeira, /10x de 399,90/);
+  assert.match(geladeira, /<small>total<\/small> 3\.999/);
+
+  const kabum = htmlProduto(achar('SmartWatch/Relogio KaBuM'), colunas, op);
+  assert.match(kabum, /3x de 30,00/);
+
+  // Só cartão: o bloco do cartão vira o destaque, e não aparece dinheiro inventado.
+  assert.match(alexa, /mcard__preco--parcelas mcard__preco--forte/);
+  assert.doesNotMatch(alexa, /mcard__preco--avista/);
+});
+
+test('mosaico: preço único de atacado aparece uma vez, como "Preço"', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { parseVarios } = await import('../src/parser/parse.js');
+  const cat = parseVarios(readFileSync(new URL('../samples/atacado-celulares.txt', import.meta.url), 'utf8'))[0];
+  const html = htmlProduto(cat.secoes[0].produtos[0], definirColunas(cat), { layout: 'mosaico' });
+  assert.equal((html.match(/class="mcard__preco /g) || []).length, 1, 'um bloco de preço só');
+  assert.match(html, />Preço</);
+  assert.match(html, />755</);
+  assert.doesNotMatch(html, /Cartão|Dinheiro/);
+});
+
+test('justificado vale para o nome, não para cor e preço', () => {
+  assert.equal(normalizarAlinhamento({ nome: 'justificado' }).nome, 'justificado');
+  assert.equal(normalizarAlinhamento({ preco: 'justificado' }).preco, ALINHAMENTO_PADRAO.preco);
+  assert.equal(normalizarAlinhamento({ cor: 'justificado' }).cor, ALINHAMENTO_PADRAO.cor);
+
+  const html = htmlPagina({
+    catalogo: catalogoFalso,
+    colunas: definirColunas(catalogoFalso),
+    blocos: [],
+    numero: 1,
+    total: 1,
+    escala: 1,
+    opcoes: { alinhar: { nome: 'justificado' }, layout: 'mosaico' },
+  });
+  assert.match(html, /data-alinha-nome="justificado"/);
 });

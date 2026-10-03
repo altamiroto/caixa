@@ -16,6 +16,8 @@
  *   --tema <id>       121 temas; veja o README                (padrão: noite)
  *                     use `aleatorio` para sortear um tema inédito a cada run
  *   --semente <n>     torna o sorteio reproduzível
+ *   --tom <t>         qualquer | claro | escuro — com --tema aleatorio, só
+ *                     sorteia temas desse tom             (padrão: qualquer)
  *   --saida <dir>     diretório de destino                   (padrão: ./saida)
  *   --marca <texto>   assinatura no rodapé
  *   --sobretitulo <t> linha acima do título; vazio esconde  (padrão: "Lista de produtos")
@@ -29,11 +31,18 @@
  *   --fundo-imagem <arquivo>  foto de fundo da página (jpg/png/webp)
  *   --veu <css>       cor/gradiente por cima da foto; o tema define um padrão
  *   --paginas-max <n> teto de páginas por catálogo            (padrão: 1)
- *   --layout <t>      tabela | grade | vitrine | duplo        (padrão: tabela)
- *                     os três últimos põem dois produtos por linha
+ *   --layout <t>      tabela | grade | vitrine | duplo | mosaico  (padrão: tabela)
+ *                     grade, vitrine e duplo põem dois produtos por linha;
+ *                     mosaico é uma grade fixa de cartões (ver abaixo)
+ *   --colunas <n>     mosaico: cartões por linha, 1 a 6       (padrão: 3)
+ *   --linhas <n>      mosaico: linhas por imagem, 1 a 10      (padrão: 4)
+ *                     o que não cabe vai para a imagem seguinte
+ *   --enfase <t>      mosaico: avista | cartao — qual preço sai grande
+ *   --cartao <t>      mosaico: total | parcelas — "parcelas" mostra o
+ *                     parcelamento de cada produto e o total embaixo
  *   --remover <lista> palavras a tirar do nome, separadas por vírgula
  *                     ex.: --remover "Smart TV,LANÇAMENTO"
- *   --alinhar-nome  <esquerda|centro|direita>  (padrão: esquerda)
+ *   --alinhar-nome  <esquerda|centro|direita|justificado>  (padrão: esquerda)
  *   --alinhar-cor   <esquerda|centro|direita>  (padrão: centro)
  *   --alinhar-preco <esquerda|centro|direita>  (padrão: centro)
  *   --margens <padrao|stories>  preset de margem; `stories` reserva a área
@@ -54,8 +63,8 @@ import { dirname, join, normalize } from 'node:path';
 import { chromium } from 'playwright';
 
 import { parseVarios } from '../src/parser/parse.js';
-import { LARGURA, ALTURA, ALINHAMENTOS, MARGENS, LAYOUTS } from '../src/render/template.js';
-import { TEMA_PADRAO, TEMAS, sortearTema } from '../src/themes/temas.js';
+import { LARGURA, ALTURA, alinhamentosDe, MARGENS, LAYOUTS } from '../src/render/template.js';
+import { TEMA_PADRAO, TEMAS, sortearTema, TONS, FAMILIAS_POR_TOM } from '../src/themes/temas.js';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HOST = 'http://gerador.local';
@@ -84,10 +93,12 @@ function lerArgumentos(argv) {
     veu: undefined,
     paginasMax: undefined,
     layout: undefined,
+    mosaico: {},
     remover: '',
     alinhar: {},
     margens: {},
     semente: undefined,
+    tom: 'qualquer',
     largura: 2160,
     html: false,
   };
@@ -109,6 +120,10 @@ function lerArgumentos(argv) {
     else if (a === '--veu') opcoes.veu = proximo();
     else if (a === '--paginas-max') opcoes.paginasMax = Number(proximo());
     else if (a === '--layout') opcoes.layout = proximo();
+    else if (a === '--colunas') opcoes.mosaico.colunas = Number(proximo());
+    else if (a === '--linhas') opcoes.mosaico.linhas = Number(proximo());
+    else if (a === '--enfase') opcoes.mosaico.enfase = proximo();
+    else if (a === '--cartao') opcoes.mosaico.cartao = proximo();
     else if (a === '--remover') opcoes.remover = proximo();
     else if (a === '--alinhar-nome') opcoes.alinhar.nome = proximo();
     else if (a === '--alinhar-cor') opcoes.alinhar.cor = proximo();
@@ -118,6 +133,7 @@ function lerArgumentos(argv) {
     else if (a === '--margem-lateral') opcoes.margens.lateral = Number(proximo());
     else if (a === '--margem-base') opcoes.margens.base = Number(proximo());
     else if (a === '--semente') opcoes.semente = Number(proximo());
+    else if (a === '--tom') opcoes.tom = proximo();
     else if (a === '--largura') opcoes.largura = Number(proximo());
     else if (a === '--html') opcoes.html = true;
     else if (a.startsWith('--')) throw new Error(`Opção desconhecida: ${a}`);
@@ -132,10 +148,13 @@ function lerArgumentos(argv) {
         `(ex.: ${amostra}...) — ou use "aleatorio".`,
     );
   }
+  if (!TONS.includes(opcoes.tom)) {
+    throw new Error(`Tom "${opcoes.tom}" inválido. Use: ${TONS.join(', ')}`);
+  }
   // Avisa em vez de aceitar calado: um valor errado viraria o padrão silencioso.
   for (const [coluna, valor] of Object.entries(opcoes.alinhar)) {
-    if (!ALINHAMENTOS.includes(valor)) {
-      throw new Error(`Alinhamento "${valor}" (${coluna}) inválido. Use: ${ALINHAMENTOS.join(', ')}`);
+    if (!alinhamentosDe(coluna).includes(valor)) {
+      throw new Error(`Alinhamento "${valor}" (${coluna}) inválido. Use: ${alinhamentosDe(coluna).join(', ')}`);
     }
   }
   if (opcoes.layout && !LAYOUTS.includes(opcoes.layout)) {
@@ -286,6 +305,7 @@ async function main() {
     paginasMax: opcoes.paginasMax,
     veu: opcoes.veu,
     layout: opcoes.layout,
+    mosaico: opcoes.mosaico,
     remover: opcoes.remover,
     alinhar: opcoes.alinhar,
     margens: opcoes.margens,
@@ -302,7 +322,7 @@ async function main() {
     const opcoesDoCatalogo = { ...opcoesLayout };
     let sorteado = null;
     if (opcoes.tema === 'aleatorio') {
-      sorteado = sortearTema({ contador: contadorBase + indice });
+      sorteado = sortearTema({ contador: contadorBase + indice, familias: FAMILIAS_POR_TOM[opcoes.tom] });
       opcoesDoCatalogo.tema = sorteado;
     }
 
@@ -342,6 +362,7 @@ async function main() {
         (avisos.length ? `, ${avisos.length} aviso(s)` : ''),
     );
     for (const a of avisos) console.log(`   [${a.nivel}] linha ${a.linha ?? '?'}: ${a.mensagem}`);
+    for (const m of resultado.avisos ?? []) console.log(`   [atencao] ${m}`);
   }
 
   await navegador.close();
