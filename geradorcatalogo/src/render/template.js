@@ -168,7 +168,21 @@ export const LAYOUT_PADRAO = 'tabela';
  * cartão embaixo). `cartao` diz como o preço de cartão aparece: o total, ou
  * as parcelas do próprio produto ("6x de 82,99") com o total embaixo.
  */
-export const MOSAICO_PADRAO = { colunas: 3, linhas: 4, enfase: 'avista', cartao: 'total' };
+export const MOSAICO_PADRAO = {
+  colunas: 3,
+  linhas: 4,
+  enfase: 'avista',
+  cartao: 'total',
+  // No modo parcelas: mostra o total embaixo, miúdo. Desligado, fica só a
+  // parcela — o valor baixo é o que chama a atenção.
+  total: true,
+  // separado: nome em cima, preço no pé · centro: tudo junto no meio · topo.
+  disposicao: 'separado',
+  // Linha incompleta com os cartões no meio, em vez de encostados à esquerda.
+  centralizar: false,
+  contorno: false,
+};
+export const DISPOSICOES = ['separado', 'centro', 'topo'];
 export const MOSAICO_LIMITES = { colunas: [1, 6], linhas: [1, 10] };
 
 export function normalizarMosaico(m = {}) {
@@ -181,6 +195,10 @@ export function normalizarMosaico(m = {}) {
     linhas: inteiro(m.linhas, MOSAICO_LIMITES.linhas, MOSAICO_PADRAO.linhas),
     enfase: m.enfase === 'cartao' ? 'cartao' : 'avista',
     cartao: m.cartao === 'parcelas' ? 'parcelas' : 'total',
+    total: m.total !== false,
+    disposicao: DISPOSICOES.includes(m.disposicao) ? m.disposicao : MOSAICO_PADRAO.disposicao,
+    centralizar: m.centralizar === true,
+    contorno: m.contorno === true,
   };
 }
 
@@ -322,12 +340,17 @@ function htmlCartaoMosaico(produto, colunas, opcoes, pecas) {
     const n = parcelado.parcelas;
     const parcela = parcelado.valorParcela ?? (n ? Math.round((parcelado.valor / n) * 100) / 100 : null);
     if (mosaico.cartao === 'parcelas' && n && parcela) {
-      // Cada produto com o próprio parcelamento: 10x, 6x, 3x — e o total
-      // embaixo, em destaque.
+      // Cada produto com o próprio parcelamento (10x, 6x, 3x). O destaque é o
+      // valor da parcela: "10x de" pequeno, "94,90" grande — sem cifrão, como
+      // o resto do catálogo. O total vai embaixo, miúdo, só para quem
+      // procurar — ou some, se pedido.
+      const total = mosaico.total
+        ? `<span class="mcard__total">Total ${escapar(formatarValor(parcelado.valor))}</span>`
+        : '';
       blocoCartao = `<div class="mcard__preco mcard__preco--parcelado mcard__preco--parcelas${forte}">
         <span class="mcard__rotulo">Cartão</span>
-        <span class="mcard__parcelas">${n}x de ${escapar(formatarValor(parcela, { comCentavos: true }))}</span>
-        <span class="mcard__total"><small>total</small> ${escapar(formatarValor(parcelado.valor))}</span>
+        <span class="mcard__parcelas"><span class="mcard__vezes">${n}x de</span> <span class="mcard__parcela">${escapar(formatarValor(parcela, { comCentavos: true }))}</span></span>
+        ${total}
       </div>`;
     } else {
       blocoCartao = `<div class="mcard__preco mcard__preco--parcelado${forte}">
@@ -350,9 +373,16 @@ function htmlCartaoMosaico(produto, colunas, opcoes, pecas) {
   </div>`;
 }
 
-/** Uma linha do mosaico: sempre `colunas` vagas, as que sobram ficam vazias. */
-export function htmlLinhaMosaico(cartoes, colunasGrade) {
+/**
+ * Uma linha do mosaico: sempre `colunas` vagas, as que sobram ficam vazias à
+ * direita. Com `centralizar`, a linha incompleta põe os cartões no meio — no
+ * mesmo tamanho dos outros, só deslocados.
+ */
+export function htmlLinhaMosaico(cartoes, colunasGrade, { centralizar = false } = {}) {
   const vagas = Math.max(0, colunasGrade - cartoes.length);
+  if (centralizar && vagas > 0) {
+    return `<div class="mosaico__linha mosaico__linha--centro">${cartoes.join('')}</div>`;
+  }
   return `<div class="mosaico__linha">${cartoes.join('')}${'<div class="mcard mcard--vazio"></div>'.repeat(vagas)}</div>`;
 }
 
@@ -499,6 +529,8 @@ export function htmlPagina({ catalogo, colunas, blocos, numero, total, escala, o
     data-alinha-cor="${alinhar.cor}"
     data-alinha-preco="${alinhar.preco}"
     data-layout="${normalizarLayout(opcoes.layout)}"
+    data-mosaico-disposicao="${normalizarMosaico(opcoes.mosaico).disposicao}"
+    data-mosaico-contorno="${normalizarMosaico(opcoes.mosaico).contorno ? 'sim' : 'nao'}"
     data-cabecalho="${cabecalho}"
     data-pagina="${numero}">
     ${foto}

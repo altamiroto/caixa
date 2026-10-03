@@ -56,7 +56,11 @@ npx serve .        # ou: python3 -m http.server
 | `--layout` | `tabela` | `tabela`, `duplo`, `grade`, `vitrine` ou `mosaico` |
 | `--colunas` / `--linhas` | `3` / `4` | Mosaico: cartões por linha (1–6) e linhas por imagem (1–10) |
 | `--enfase` | `avista` | Mosaico: `avista` ou `cartao` — qual preço sai grande |
-| `--cartao` | `total` | Mosaico: `total` ou `parcelas` (parcelamento do produto + total embaixo) |
+| `--cartao` | `total` | Mosaico: `total` ou `parcelas` (destaca o valor da parcela de cada produto) |
+| `--sem-total` | — | Mosaico/parcelas: só a parcela, sem o total miúdo embaixo |
+| `--disposicao` | `separado` | Mosaico: `separado` (nome em cima, preço embaixo), `centro` ou `topo` |
+| `--centralizar` | — | Mosaico: linha incompleta com os cartões no meio |
+| `--contorno` | — | Mosaico: contorno na cor de destaque do tema |
 
 Vários arquivos de entrada podem ser passados de uma vez; cada um vira a sua
 imagem.
@@ -82,8 +86,15 @@ o de cartão abaixo dele:
 
 - **Preço em destaque** escolhe qual sai grande (dinheiro ou cartão); a ordem
   não muda.
-- **Preço de cartão: "Parcelas + total"** mostra o parcelamento de cada
-  produto como está na lista — 10x, 6x, 3x — e o total embaixo, em destaque.
+- **Preço de cartão: "Parcelas"** destaca o valor da parcela de cada produto,
+  como está na lista: "10x de" pequeno, "94,90" grande, sem cifrão. O total
+  vai embaixo bem miúdo — ou some, desmarcando "Mostrar o total", para o
+  valor baixo da parcela chamar a atenção sozinho.
+- **Conteúdo do cartão:** nome em cima e preço embaixo (padrão), tudo no
+  centro, ou tudo em cima.
+- **Centralizar linhas incompletas:** a seção com 1 ou 3 aparelhos numa grade
+  de 5 põe os cartões no meio, no mesmo tamanho dos outros.
+- **Contorno:** borda na cor de destaque do tema, ligada ou não.
 - Produto com um preço só mostra só ele. Na lista de atacado, sem forma de
   pagamento escrita, o rótulo é "Preço".
 - Seção (MOTOROLA, SAMSUNG…) abre uma linha nova com uma faixa, que não conta

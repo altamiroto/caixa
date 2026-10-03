@@ -38,8 +38,12 @@
  *   --linhas <n>      mosaico: linhas por imagem, 1 a 10      (padrão: 4)
  *                     o que não cabe vai para a imagem seguinte
  *   --enfase <t>      mosaico: avista | cartao — qual preço sai grande
- *   --cartao <t>      mosaico: total | parcelas — "parcelas" mostra o
- *                     parcelamento de cada produto e o total embaixo
+ *   --cartao <t>      mosaico: total | parcelas — "parcelas" destaca o valor
+ *                     da parcela de cada produto, com o total miúdo embaixo
+ *   --sem-total       mosaico/parcelas: só a parcela, sem o total
+ *   --disposicao <t>  mosaico: separado | centro | topo — onde fica o conteúdo
+ *   --centralizar     mosaico: linha incompleta com os cartões no meio
+ *   --contorno        mosaico: contorno de destaque nos cartões
  *   --remover <lista> palavras a tirar do nome, separadas por vírgula
  *                     ex.: --remover "Smart TV,LANÇAMENTO"
  *   --alinhar-nome  <esquerda|centro|direita|justificado>  (padrão: esquerda)
@@ -124,6 +128,10 @@ function lerArgumentos(argv) {
     else if (a === '--linhas') opcoes.mosaico.linhas = Number(proximo());
     else if (a === '--enfase') opcoes.mosaico.enfase = proximo();
     else if (a === '--cartao') opcoes.mosaico.cartao = proximo();
+    else if (a === '--sem-total') opcoes.mosaico.total = false;
+    else if (a === '--disposicao') opcoes.mosaico.disposicao = proximo();
+    else if (a === '--centralizar') opcoes.mosaico.centralizar = true;
+    else if (a === '--contorno') opcoes.mosaico.contorno = true;
     else if (a === '--remover') opcoes.remover = proximo();
     else if (a === '--alinhar-nome') opcoes.alinhar.nome = proximo();
     else if (a === '--alinhar-cor') opcoes.alinhar.cor = proximo();
