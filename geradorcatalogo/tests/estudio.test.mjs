@@ -840,3 +840,89 @@ test('mosaico: centralizar linha incompleta, conteúdo no centro e contorno — 
   assert.equal(await pagina.inputValue('#mos-colunas'), '5');
   assert.deepEqual(erros, []);
 });
+
+test('perfis: criar, aplicar por lista, editar, voltar no dia seguinte e apagar', async (t) => {
+  const { navegador, pagina, erros } = await abrirEstudio();
+  t.after(() => navegador.close());
+  pagina.on('dialog', (d) => d.accept());
+
+  // Sem nome não salva.
+  await pagina.click('#perfil-salvar');
+  assert.match(await pagina.textContent('#perfil-estado'), /Dê um nome/);
+
+  // Perfil "Atacado": mosaico 3×5.
+  await pagina.selectOption('#layout', 'mosaico');
+  await pagina.click('[data-grade="3x5"]');
+  await pagina.selectOption('#tema', 'noite');
+  await pagina.fill('#perfil-nome', 'Atacado');
+  await pagina.click('#perfil-salvar');
+  assert.match(await pagina.textContent('#perfil-estado'), /Editando "Atacado" · salvo/);
+
+  // Perfil "Varejo": tabela com outro tema, a partir do Atacado, com outro nome.
+  await pagina.selectOption('#layout', 'tabela');
+  await pagina.selectOption('#tema', 'menta');
+  assert.match(await pagina.textContent('#perfil-estado'), /alterações não salvas/);
+  await pagina.fill('#perfil-nome', 'Varejo');
+  await pagina.click('#perfil-novo');
+  assert.match(await pagina.textContent('#perfil-estado'), /Editando "Varejo" · salvo/);
+
+  // Nome repetido é recusado.
+  await pagina.fill('#perfil-nome', 'atacado');
+  await pagina.click('#perfil-novo');
+  assert.match(await pagina.textContent('#perfil-estado'), /Já existe um perfil "atacado"/);
+  await pagina.fill('#perfil-nome', 'Varejo');
+
+  // Duas listas, cada uma com o seu perfil.
+  await preencher(pagina, [
+    await readFile(join(RAIZ, 'samples/atacado-celulares.txt'), 'utf8'),
+    await readFile(join(RAIZ, 'samples/tvs.txt'), 'utf8'),
+  ]);
+  const seletores = pagina.locator('#listas .lista__perfil');
+  const idDe = async (nome) => pagina.$eval('#perfil-edicao', (s, n) => [...s.options].find((o) => o.text === n).value, nome);
+  await seletores.nth(0).selectOption(await idDe('Atacado'));
+  await seletores.nth(1).selectOption(await idDe('Varejo'));
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+
+  const geradas = async () => pagina.$$eval('.previa', (ps) => ps.map((p) => ({
+    layout: p.querySelector('.pagina').dataset.layout,
+    rotulo: p.querySelector('.previa__acoes span').textContent,
+    cartoesPorLinha: p.querySelector('.mosaico__linha')?.querySelectorAll('.mcard').length ?? 0,
+  })));
+  let r = await geradas();
+  assert.equal(r[0].layout, 'mosaico');
+  assert.match(r[0].rotulo, /· Atacado$/);
+  assert.equal(r.at(-1).layout, 'tabela');
+  assert.match(r.at(-1).rotulo, /· Varejo$/);
+
+  // Editar o Atacado (4 colunas) e salvar muda a próxima geração dele.
+  await pagina.selectOption('#perfil-edicao', await idDe('Atacado'));
+  assert.equal(await pagina.inputValue('#layout'), 'mosaico', 'abrir o perfil traz as opções dele');
+  assert.equal(await pagina.inputValue('#mos-colunas'), '3');
+  await pagina.fill('#mos-colunas', '4');
+  await pagina.click('#perfil-salvar');
+  await pagina.click('#gerar');
+  await pagina.waitForSelector('.moldura .pagina');
+  r = await geradas();
+  assert.equal(r[0].cartoesPorLinha, 4);
+
+  // Dia seguinte: perfis e a escolha de cada caixa voltam; o texto, não.
+  await pagina.waitForTimeout(400);
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForSelector('#listas textarea');
+  const caixas = await pagina.$$eval('#listas .lista', (ls) => ls.map((l) => ({
+    texto: l.querySelector('textarea').value,
+    perfil: l.querySelector('.lista__perfil').selectedOptions[0].text,
+  })));
+  assert.deepEqual(caixas, [{ texto: '', perfil: 'Atacado' }, { texto: '', perfil: 'Varejo' }]);
+  const opcoesEditor = await pagina.$$eval('#perfil-edicao option', (os) => os.map((o) => o.text));
+  assert.deepEqual(opcoesEditor.slice(1), ['Atacado', 'Varejo']);
+
+  // Apagar o Varejo: a lista que usava ele passa para a configuração do painel.
+  await pagina.selectOption('#perfil-edicao', await idDe('Varejo'));
+  await pagina.click('#perfil-apagar');
+  assert.equal(await pagina.locator('#perfil-edicao option').count(), 2);
+  assert.equal(await seletores.nth(1).inputValue(), '');
+  assert.equal(await seletores.nth(0).evaluate((s) => s.selectedOptions[0].text), 'Atacado');
+  assert.deepEqual(erros, []);
+});

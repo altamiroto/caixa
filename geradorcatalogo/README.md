@@ -104,6 +104,26 @@ o de cartão abaixo dele:
 node tools/render.mjs lista.txt --layout mosaico --colunas 3 --linhas 4 --cartao parcelas
 ```
 
+### Perfis de configuração
+
+Quem publica listas diferentes — atacado num visual, varejo em outro — não
+precisa refazer as opções a cada lista. Um **perfil** guarda a configuração
+inteira com um nome:
+
+- **Criar:** ajuste as opções, dê um nome ("Atacado") e toque em *Salvar como
+  perfil*. Com um perfil aberto, *Salvar como novo* cria outro a partir dele.
+- **Editar:** escolha o perfil em "Perfis de configuração" — as opções do
+  painel passam a ser as dele —, mude o que quiser e toque em *Salvar*. Até
+  salvar, aparece "alterações não salvas".
+- **Apagar:** com o perfil aberto, *Apagar*. As listas que usavam ele passam
+  para a configuração do painel.
+- **Aplicar:** cada caixa de lista tem o seu seletor de perfil. Ao gerar, cada
+  lista sai com o seu, ao mesmo tempo, e a prévia mostra qual foi usado.
+
+A escolha de cada caixa fica guardada: no dia seguinte a Lista 1 abre em
+"Atacado" e a Lista 2 em "Varejo", vazias, esperando o texto do dia. Caixa sem
+perfil usa o que está no painel.
+
 ### O que fica salvo no aparelho
 
 O estúdio guarda sozinho, a cada mudança, todas as configurações — tema,
