@@ -106,6 +106,37 @@
         font-size: 12px;
         color: var(--ui-suave);
       }
+      .lista__perfil {
+        width: auto;
+        flex: 0 1 60%;
+        min-width: 0;
+        margin-left: auto;
+        margin-right: 6px;
+        padding: 3px 6px;
+        font-size: 12px;
+      }
+      .perfis {
+        padding: 12px;
+        border: 1px solid var(--ui-borda);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .perfis input {
+        margin-top: 8px;
+      }
+      .perfis__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .perfis__acoes button {
+        padding: 7px 12px;
+        font-size: 13px;
+      }
+      .painel .perfis__estado[data-sujo='sim'] {
+        color: #fbbf24;
+      }
       .lista__remover {
         padding: 2px 9px;
         border-color: transparent;
@@ -313,6 +344,25 @@
         </p>
       </div>
 
+      <div class="perfis">
+        <label for="perfil-edicao">Perfis de configuração</label>
+        <select id="perfil-edicao">
+          <option value="">— sem perfil (configuração do painel) —</option>
+        </select>
+        <input id="perfil-nome" placeholder="Nome do perfil — ex.: Atacado, Varejo" autocomplete="off" />
+        <div class="perfis__acoes">
+          <button type="button" id="perfil-salvar">Salvar</button>
+          <button type="button" class="secundario" id="perfil-novo">Salvar como novo</button>
+          <button type="button" class="secundario" id="perfil-apagar">Apagar</button>
+        </div>
+        <p class="ajuda perfis__estado" id="perfil-estado"></p>
+        <p class="ajuda">
+          Escolha um perfil para editar: as opções abaixo passam a ser as dele, e
+          "Salvar" grava. Cada lista escolhe o seu perfil no topo da caixa — e
+          continua com ele nas próximas vezes.
+        </p>
+      </div>
+
       <div class="dupla">
         <div>
           <label for="tema">Tema</label>
@@ -506,7 +556,7 @@
       </div>
 
       <div class="salvamento">
-        <p class="ajuda">Configurações e listas ficam salvas neste aparelho.</p>
+        <p class="ajuda">Configurações ficam salvas neste aparelho; o texto das listas, não.</p>
         <button type="button" class="secundario" id="restaurar">Restaurar padrão</button>
       </div>
 
@@ -596,7 +646,7 @@ R$ 965 (Dinheiro)`;
         $('listas').classList.toggle('listas--unica', blocos.length <= 1);
       }
 
-      function adicionarLista(texto = '', focar = false) {
+      function adicionarLista(texto = '', focar = false, perfilId = '') {
         const bloco = document.createElement('div');
         bloco.className = 'lista';
 
@@ -612,9 +662,17 @@ R$ 965 (Dinheiro)`;
         remover.addEventListener('click', () => {
           bloco.remove();
           arrumarListas();
-          salvarListas();
+          salvarPerfisDasListas();
         });
-        cabeca.append(numero, remover);
+
+        // Perfil desta lista. Vazio = usa o que está no painel.
+        const perfil = document.createElement('select');
+        perfil.className = 'lista__perfil';
+        perfil.setAttribute('aria-label', 'Perfil desta lista');
+        preencherSeletorDePerfis(perfil, perfilId, 'Configuração do painel');
+        perfil.addEventListener('change', salvarPerfisDasListas);
+
+        cabeca.append(numero, perfil, remover);
 
         const campo = document.createElement('textarea');
         campo.spellcheck = false;
@@ -632,12 +690,14 @@ R$ 965 (Dinheiro)`;
 
       /*
        * Tudo que é configuração fica guardado: quem acerta um visual não quer
-       * refazer a cada visita. Ficam de fora título e data personalizados —
-       * valem para uma lista só e entrariam errados na do dia seguinte — e a
-       * foto de fundo, que o navegador não deixa devolver ao campo de arquivo.
+       * refazer a cada visita. Ficam de fora o texto das listas (cada dia é
+       * uma lista nova), título e data personalizados — valem para uma lista
+       * só e entrariam errados na do dia seguinte — e a foto de fundo, que o
+       * navegador não deixa devolver ao campo de arquivo.
        */
       const CHAVE_PREFERENCIAS = 'gc:preferencias';
-      const CHAVE_LISTAS = 'gc:listas';
+      // Uma versão anterior guardava o texto das listas aqui; apagado ao abrir.
+      const CHAVE_LISTAS_ANTIGA = 'gc:listas';
       const CAMPOS_SALVOS = [
         'tom', 'tema', 'sobretitulo', 'marca', 'selo', 'layout', 'remover',
         'al-nome', 'al-cor', 'al-preco', 'margens', 'fundo',
@@ -688,24 +748,162 @@ R$ 965 (Dinheiro)`;
         atualizarPainelMosaico();
       }
 
-      function salvarConfiguracao() {
-        guardar(CHAVE_PREFERENCIAS, Object.fromEntries([
+      /** A configuração que está no painel agora. */
+      function lerPainel() {
+        return Object.fromEntries([
           ...CAMPOS_SALVOS.map((id) => [id, $(id).value]),
           ...MARCAS_SALVAS.map((id) => [id, $(id).checked]),
-        ]));
+        ]);
       }
 
-      function salvarListas() {
-        guardar(CHAVE_LISTAS, caixas().map((c) => c.value));
+      function salvarConfiguracao() {
+        guardar(CHAVE_PREFERENCIAS, lerPainel());
       }
+
+      /* ---------------------------------------------- perfis de configuração */
+
+      /*
+       * Perfil = nome + configuração completa. Fica guardado no aparelho. Cada
+       * caixa de lista escolhe um, e a escolha de cada caixa também fica:
+       * amanhã a Lista 1 abre em "Atacado" e a Lista 2 em "Varejo", vazias,
+       * esperando o texto do dia.
+       */
+      const CHAVE_PERFIS = 'gc:perfis';
+      const CHAVE_PERFIS_DAS_LISTAS = 'gc:perfis-das-listas';
+      const CHAVE_PERFIL_EM_EDICAO = 'gc:perfil-em-edicao';
+
+      let perfis = (() => {
+        const guardados = lerGuardado(CHAVE_PERFIS);
+        return Array.isArray(guardados)
+          ? guardados.filter((p) => p && typeof p.id === 'string' && typeof p.nome === 'string' && p.config)
+          : [];
+      })();
+
+      const perfilPorId = (id) => (id ? perfis.find((p) => p.id === id) ?? null : null);
+
+      function preencherSeletorDePerfis(seletor, valor, rotuloVazio) {
+        seletor.replaceChildren(new Option(rotuloVazio, ''));
+        for (const p of [...perfis].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))) {
+          seletor.append(new Option(p.nome, p.id));
+        }
+        seletor.value = perfilPorId(valor) ? valor : '';
+      }
+
+      function salvarPerfisDasListas() {
+        guardar(
+          CHAVE_PERFIS_DAS_LISTAS,
+          [...document.querySelectorAll('#listas .lista__perfil')].map((s) => s.value),
+        );
+      }
+
+      /** Redesenha os seletores depois de criar, renomear ou apagar um perfil. */
+      function atualizarSeletoresDePerfis() {
+        guardar(CHAVE_PERFIS, perfis);
+        preencherSeletorDePerfis($('perfil-edicao'), $('perfil-edicao').value, '— sem perfil (configuração do painel) —');
+        for (const s of document.querySelectorAll('#listas .lista__perfil')) {
+          preencherSeletorDePerfis(s, s.value, 'Configuração do painel');
+        }
+        salvarPerfisDasListas();
+        guardar(CHAVE_PERFIL_EM_EDICAO, $('perfil-edicao').value);
+        atualizarEstadoDoPerfil();
+      }
+
+      const mesmaConfiguracao = (a, b) =>
+        [...CAMPOS_SALVOS, ...MARCAS_SALVAS].every((id) => String(a[id]) === String(b[id]));
+
+      function atualizarEstadoDoPerfil() {
+        const perfil = perfilPorId($('perfil-edicao').value);
+        const estado = $('perfil-estado');
+        $('perfil-apagar').disabled = !perfil;
+        $('perfil-salvar').textContent = perfil ? 'Salvar' : 'Salvar como perfil';
+        $('perfil-novo').hidden = !perfil;
+        if (!perfil) {
+          estado.dataset.sujo = 'nao';
+          estado.textContent = perfis.length
+            ? 'Editando a configuração do painel — vale para as listas sem perfil.'
+            : 'Nenhum perfil ainda. Ajuste as opções, dê um nome e salve.';
+          return;
+        }
+        const sujo = !mesmaConfiguracao(lerPainel(), perfil.config) || $('perfil-nome').value.trim() !== perfil.nome;
+        estado.dataset.sujo = sujo ? 'sim' : 'nao';
+        estado.textContent = sujo
+          ? `Editando "${perfil.nome}" · alterações não salvas`
+          : `Editando "${perfil.nome}" · salvo`;
+      }
+
+      function nomeDisponivel(nome, menosId = '') {
+        return !perfis.some((p) => p.id !== menosId && p.nome.toLowerCase() === nome.toLowerCase());
+      }
+
+      function avisarPerfil(mensagem) {
+        const estado = $('perfil-estado');
+        estado.dataset.sujo = 'sim';
+        estado.textContent = mensagem;
+        $('perfil-nome').focus();
+      }
+
+      function criarPerfil() {
+        const nome = $('perfil-nome').value.trim();
+        if (!nome) return avisarPerfil('Dê um nome ao perfil antes de salvar.');
+        if (!nomeDisponivel(nome)) return avisarPerfil(`Já existe um perfil "${nome}".`);
+        const perfil = { id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, nome, config: lerPainel() };
+        perfis.push(perfil);
+        $('perfil-edicao').append(new Option(nome, perfil.id));
+        $('perfil-edicao').value = perfil.id;
+        atualizarSeletoresDePerfis();
+      }
+
+      $('perfil-salvar').addEventListener('click', () => {
+        const perfil = perfilPorId($('perfil-edicao').value);
+        if (!perfil) return criarPerfil();
+        const nome = $('perfil-nome').value.trim() || perfil.nome;
+        if (!nomeDisponivel(nome, perfil.id)) return avisarPerfil(`Já existe um perfil "${nome}".`);
+        perfil.nome = nome;
+        perfil.config = lerPainel();
+        $('perfil-nome').value = nome;
+        atualizarSeletoresDePerfis();
+      });
+
+      $('perfil-novo').addEventListener('click', () => {
+        // Com um perfil aberto, o nome no campo é o dele: pede um novo.
+        const atual = perfilPorId($('perfil-edicao').value);
+        if (atual && $('perfil-nome').value.trim() === atual.nome) {
+          return avisarPerfil('Troque o nome para salvar como um perfil novo.');
+        }
+        criarPerfil();
+      });
+
+      $('perfil-apagar').addEventListener('click', () => {
+        const perfil = perfilPorId($('perfil-edicao').value);
+        if (!perfil) return;
+        if (!confirm(`Apagar o perfil "${perfil.nome}"? As listas que usavam ele passam para a configuração do painel.`)) return;
+        perfis = perfis.filter((p) => p.id !== perfil.id);
+        $('perfil-edicao').value = '';
+        $('perfil-nome').value = '';
+        atualizarSeletoresDePerfis();
+      });
+
+      let perfilAberto = '';
+      $('perfil-edicao').addEventListener('change', (e) => {
+        const anterior = perfilPorId(perfilAberto);
+        if (anterior && !mesmaConfiguracao(lerPainel(), anterior.config) &&
+          !confirm(`Descartar as alterações não salvas de "${anterior.nome}"?`)) {
+          e.target.value = perfilAberto;
+          return;
+        }
+        const perfil = perfilPorId(e.target.value);
+        perfilAberto = e.target.value;
+        $('perfil-nome').value = perfil?.nome ?? '';
+        if (perfil) aplicarConfiguracao(perfil.config);
+        guardar(CHAVE_PERFIL_EM_EDICAO, e.target.value);
+        salvarConfiguracao();
+        atualizarEstadoDoPerfil();
+      });
 
       let temporizadorSalvar = null;
       function agendarSalvamento() {
         clearTimeout(temporizadorSalvar);
-        temporizadorSalvar = setTimeout(() => {
-          salvarConfiguracao();
-          salvarListas();
-        }, 300);
+        temporizadorSalvar = setTimeout(salvarConfiguracao, 300);
       }
 
       /* ------------------------------------------------------ painel do mosaico */
@@ -738,12 +936,17 @@ R$ 965 (Dinheiro)`;
         $(id).addEventListener('change', atualizarPainelMosaico);
       }
 
-      // Qualquer mudança no painel ou nas listas é salva.
-      document.querySelector('.painel').addEventListener('input', agendarSalvamento);
-      document.querySelector('.painel').addEventListener('change', agendarSalvamento);
+      // Qualquer mudança no painel é salva, e o perfil aberto mostra se ficou diferente.
+      for (const evento of ['input', 'change']) {
+        document.querySelector('.painel').addEventListener(evento, () => {
+          agendarSalvamento();
+          atualizarEstadoDoPerfil();
+        });
+      }
 
       $('restaurar').addEventListener('click', () => {
         aplicarConfiguracao(PADROES);
+        atualizarEstadoDoPerfil();
         try {
           localStorage.removeItem(CHAVE_PREFERENCIAS);
         } catch {
@@ -753,15 +956,25 @@ R$ 965 (Dinheiro)`;
       });
 
       aplicarConfiguracao(lerGuardado(CHAVE_PREFERENCIAS) ?? {});
-      const listasGuardadas = lerGuardado(CHAVE_LISTAS);
-      if (Array.isArray(listasGuardadas) && listasGuardadas.some((t) => String(t).trim())) {
-        for (const texto of listasGuardadas) adicionarLista(String(texto));
-      } else {
-        adicionarLista();
+      try {
+        localStorage.removeItem(CHAVE_LISTAS_ANTIGA);
+      } catch {
+        // sem armazenamento: nada a apagar
       }
+      preencherSeletorDePerfis($('perfil-edicao'), lerGuardado(CHAVE_PERFIL_EM_EDICAO) ?? '', '— sem perfil (configuração do painel) —');
+      perfilAberto = $('perfil-edicao').value;
+      $('perfil-nome').value = perfilPorId(perfilAberto)?.nome ?? '';
+
+      // As caixas voltam com os perfis de ontem — o texto, não.
+      const perfisDasListas = (lerGuardado(CHAVE_PERFIS_DAS_LISTAS) ?? []).map((id) => (perfilPorId(id) ? id : ''));
+      while (perfisDasListas.length && !perfisDasListas[perfisDasListas.length - 1]) perfisDasListas.pop();
+      if (perfisDasListas.length) for (const id of perfisDasListas) adicionarLista('', false, id);
+      else adicionarLista();
+      atualizarEstadoDoPerfil();
+
       $('adicionar').addEventListener('click', () => {
         adicionarLista('', true);
-        salvarListas();
+        salvarPerfisDasListas();
       });
 
       // O exemplo entra na primeira caixa vazia, ou numa nova — assim carregar
@@ -773,7 +986,6 @@ R$ 965 (Dinheiro)`;
         const vaga = caixas().find((c) => !c.value.trim());
         if (vaga) vaga.value = texto;
         else adicionarLista(texto);
-        salvarListas();
         gerar();
       });
 
@@ -829,13 +1041,13 @@ R$ 965 (Dinheiro)`;
         }
       }
 
-      /** Sorteia, registra e devolve o id do tema a usar nesta geração. */
-      function temaSorteado() {
+      /** Sorteia, registra e devolve o tema a usar nesta geração, no tom pedido. */
+      function temaSorteado(tom = $('tom').value) {
         const estado = lerSorteio();
         const tema = sortearTema({
           contador: estado.contador,
           evitar: estado.matizes.slice(-6),
-          familias: FAMILIAS_POR_TOM[$('tom').value],
+          familias: FAMILIAS_POR_TOM[tom],
         });
         gravarSorteio({
           contador: estado.contador + 1,
@@ -844,37 +1056,44 @@ R$ 965 (Dinheiro)`;
         return tema;
       }
 
-      function opcoesAtuais() {
+      /**
+       * Opções de geração a partir de uma configuração — a do painel ou a de
+       * um perfil. Título, data e foto não fazem parte de perfil: valem para a
+       * geração do momento e vêm sempre do painel.
+       */
+      function opcoesDe(configuracao) {
+        const c = { ...PADROES, ...configuracao };
+        const texto = (v) => String(v ?? '').trim();
         return {
-          tema: $('tema').value,
-          marca: $('marca').value.trim(),
-          sobretitulo: $('sobretitulo').value,
+          tema: c.tema,
+          marca: texto(c.marca),
+          sobretitulo: String(c.sobretitulo ?? ''),
           titulo: $('titulo').value.trim() || undefined,
           data: $('data').value.trim() || undefined,
-          mostrarData: $('mostrar-data').checked,
-          mostrarSubtitulo: $('mostrar-subtitulo').checked,
-          selo: $('selo').value.trim() || undefined,
-          fundo: $('fundo').value.trim() || undefined,
+          mostrarData: Boolean(c['mostrar-data']),
+          mostrarSubtitulo: Boolean(c['mostrar-subtitulo']),
+          selo: texto(c.selo) || undefined,
+          fundo: texto(c.fundo) || undefined,
           fundoImagem: fotoDeFundo,
-          layout: $('layout').value,
-          remover: $('remover').value,
-          alinhar: {
-            nome: $('al-nome').value,
-            cor: $('al-cor').value,
-            preco: $('al-preco').value,
-          },
-          margens: { preset: $('margens').value },
+          layout: c.layout,
+          remover: String(c.remover ?? ''),
+          alinhar: { nome: c['al-nome'], cor: c['al-cor'], preco: c['al-preco'] },
+          margens: { preset: c.margens },
           mosaico: {
-            colunas: Number($('mos-colunas').value),
-            linhas: Number($('mos-linhas').value),
-            enfase: $('mos-enfase').value,
-            cartao: $('mos-cartao').value,
-            total: $('mos-total').checked,
-            disposicao: $('mos-disposicao').value,
-            centralizar: $('mos-centralizar').checked,
-            contorno: $('mos-contorno').checked,
+            colunas: Number(c['mos-colunas']),
+            linhas: Number(c['mos-linhas']),
+            enfase: c['mos-enfase'],
+            cartao: c['mos-cartao'],
+            total: Boolean(c['mos-total']),
+            disposicao: c['mos-disposicao'],
+            centralizar: Boolean(c['mos-centralizar']),
+            contorno: Boolean(c['mos-contorno']),
           },
         };
+      }
+
+      function opcoesAtuais() {
+        return opcoesDe(lerPainel());
       }
 
       /*
@@ -931,11 +1150,17 @@ R$ 965 (Dinheiro)`;
 
         // Cada caixa é lida em separado: a fronteira entre listas é explícita,
         // sem depender de o parser adivinhar onde uma acaba e a outra começa.
+        // Cada lista com a configuração do seu perfil — ou a do painel.
+        const painel = lerPainel();
         caixas().forEach((campo, i) => {
           const texto = campo.value.trim();
           if (!texto) return;
+          const perfil = perfilPorId(campo.closest('.lista').querySelector('.lista__perfil').value);
+          const configuracao = perfil ? perfil.config : painel;
           try {
-            catalogos.push(...parseVarios(texto));
+            for (const catalogo of parseVarios(texto)) {
+              catalogos.push({ catalogo, configuracao, perfil: perfil?.nome ?? '' });
+            }
           } catch (erro) {
             avisos.push({ nivel: 'erro', mensagem: `Lista ${i + 1}: ${erro.message}` });
           }
@@ -947,19 +1172,17 @@ R$ 965 (Dinheiro)`;
           return;
         }
 
-        const base = opcoesAtuais();
-        const aleatorio = $('tema-aleatorio').checked;
         const sorteados = [];
         let totalPaginas = 0;
         let totalProdutos = 0;
 
-        for (const catalogo of catalogos) {
+        for (const { catalogo, configuracao, perfil } of catalogos) {
           // Com o sorteio ligado, cada catálogo ganha o seu tema: cada imagem
           // vai para um post diferente, e sair tudo da mesma cor anularia o
           // motivo de sortear.
-          const opcoes = { ...base };
-          if (aleatorio) {
-            const tema = temaSorteado();
+          const opcoes = opcoesDe(configuracao);
+          if (configuracao['tema-aleatorio']) {
+            const tema = temaSorteado(configuracao.tom);
             opcoes.tema = tema;
             sorteados.push(tema.nome);
           }
@@ -978,7 +1201,7 @@ R$ 965 (Dinheiro)`;
 
           const nomeBase = semRepetir(apelido(catalogo.titulo));
           resultado.paginas.forEach((p, i) => {
-            palco.append(montarPrevia(nomeBase, p, i, resultado.paginas.length));
+            palco.append(montarPrevia(nomeBase, p, i, resultado.paginas.length, perfil));
           });
         }
 
@@ -1064,7 +1287,7 @@ R$ 965 (Dinheiro)`;
         return barra;
       }
 
-      function montarPrevia(nomeBase, pagina, indice, total) {
+      function montarPrevia(nomeBase, pagina, indice, total, perfil = '') {
         const previa = document.createElement('div');
         previa.className = 'previa';
 
@@ -1075,7 +1298,8 @@ R$ 965 (Dinheiro)`;
         const acoes = document.createElement('div');
         acoes.className = 'previa__acoes';
         const rotulo = document.createElement('span');
-        rotulo.textContent = total > 1 ? `Página ${indice + 1} de ${total}` : 'Página única';
+        rotulo.textContent = (total > 1 ? `Página ${indice + 1} de ${total}` : 'Página única') +
+          (perfil ? ` · ${perfil}` : '');
 
         const botao = document.createElement('button');
         botao.className = 'secundario';
